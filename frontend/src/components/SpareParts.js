@@ -887,7 +887,7 @@ const CreateBill = () => {
             </Card>
 
             {/* Bill Items Table */}
-            {billData.items.length > 0 && (
+            {billItems.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle>Bill Items</CardTitle>
