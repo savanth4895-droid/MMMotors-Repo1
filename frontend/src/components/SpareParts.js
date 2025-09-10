@@ -318,6 +318,23 @@ const AddSparePart = () => {
             </div>
 
             <div>
+              <Label htmlFor="unit">Unit</Label>
+              <Select value={partData.unit} onValueChange={(value) => setPartData({...partData, unit: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Nos">Nos</SelectItem>
+                  <SelectItem value="Kg">Kg</SelectItem>
+                  <SelectItem value="Ltr">Ltr</SelectItem>
+                  <SelectItem value="Mtr">Mtr</SelectItem>
+                  <SelectItem value="Set">Set</SelectItem>
+                  <SelectItem value="Pair">Pair</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
               <Label htmlFor="unit_price">Unit Price (₹)</Label>
               <Input
                 id="unit_price"
@@ -328,6 +345,33 @@ const AddSparePart = () => {
                 onChange={(e) => setPartData({...partData, unit_price: e.target.value})}
                 required
               />
+            </div>
+
+            <div>
+              <Label htmlFor="hsn_sac">HSN/SAC Code</Label>
+              <Input
+                id="hsn_sac"
+                placeholder="Enter HSN/SAC code"
+                value={partData.hsn_sac}
+                onChange={(e) => setPartData({...partData, hsn_sac: e.target.value})}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="gst_percentage">GST Percentage</Label>
+              <Select value={partData.gst_percentage} onValueChange={(value) => setPartData({...partData, gst_percentage: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select GST%" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">0%</SelectItem>
+                  <SelectItem value="5">5%</SelectItem>
+                  <SelectItem value="12">12%</SelectItem>
+                  <SelectItem value="18">18%</SelectItem>
+                  <SelectItem value="28">28%</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
