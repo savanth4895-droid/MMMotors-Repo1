@@ -439,22 +439,25 @@ const Inventory = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredParts.map((part) => (
+                {filteredParts.map((part, index) => (
                   <tr key={part.id} className="border-b hover:bg-gray-50">
-                    <td className="p-2 font-medium">{part.name}</td>
-                    <td className="p-2">{part.part_number}</td>
-                    <td className="p-2">{part.brand}</td>
-                    <td className="p-2">{part.quantity}</td>
-                    <td className="p-2">₹{part.unit_price}</td>
-                    <td className="p-2">₹{(part.quantity * part.unit_price).toFixed(2)}</td>
-                    <td className="p-2">
+                    <td className="p-3 text-center">{index + 1}</td>
+                    <td className="p-3 font-medium">{part.name}</td>
+                    <td className="p-3 font-mono text-sm">{part.part_number}</td>
+                    <td className="p-3">{part.hsn_sac || 'N/A'}</td>
+                    <td className="p-3 text-right">{part.quantity}</td>
+                    <td className="p-3">{part.unit || 'Nos'}</td>
+                    <td className="p-3 text-right">₹{part.unit_price.toFixed(2)}</td>
+                    <td className="p-3 text-right">{part.gst_percentage || 18}%</td>
+                    <td className="p-3 text-right font-semibold">₹{(part.quantity * part.unit_price).toFixed(2)}</td>
+                    <td className="p-3">
                       {part.quantity <= part.low_stock_threshold ? (
                         <Badge variant="destructive">Low Stock</Badge>
                       ) : (
                         <Badge variant="success">In Stock</Badge>
                       )}
                     </td>
-                    <td className="p-2">
+                    <td className="p-3">
                       <Button size="sm" variant="outline">
                         <Eye className="w-4 h-4" />
                       </Button>
