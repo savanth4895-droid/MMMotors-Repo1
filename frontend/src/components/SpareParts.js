@@ -525,7 +525,6 @@ const Inventory = () => {
 };
 
 const CreateBill = () => {
-  const [customers, setCustomers] = useState([]);
   const [parts, setParts] = useState([]);
   const [customerData, setCustomerData] = useState({
     name: '',
