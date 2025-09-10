@@ -72,8 +72,10 @@ const Layout = ({ children }) => {
       <div className={`flex items-center p-6 border-b border-gray-200 ${collapsed ? 'justify-center' : 'space-x-3'}`}>
         <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
           <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19.44 9.03L15.41 5H13v2h1.59l2.83 2.83L16 11.24V15h2v-4.76l1.44-1.21zM12 11.5c0-.83-.67-1.5-1.5-1.5S9 10.67 9 11.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5zM21 15.5c0 1.11-.89 2-2 2s-2-.89-2-2 .89-2 2-2 2 .89 2 2zm-14 0c0 1.11-.89 2-2 2s-2-.89-2-2 .89-2 2-2 2 .89 2 2zm7-4.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/>
-            <path d="M4.47 15.5H7c.21-1.79 1.79-3 3.5-3s3.29 1.21 3.5 3h2.53c-.21-2.84-2.66-5-5.53-5s-5.32 2.16-5.53 5z"/>
+            <path d="M5 16c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zm12 0c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zm1.5-9H16l-3-3h-2v2h1.5l1.5 1.5H8L6 5.5H4.5C3.7 5.5 3 6.2 3 7s.7 1.5 1.5 1.5H6l2 2.5h8l2-2.5h.5c.8 0 1.5-.7 1.5-1.5s-.7-1.5-1.5-1.5z"/>
+            <circle cx="7" cy="16" r="1"/>
+            <circle cx="19" cy="16" r="1"/>
+            <path d="M8.5 12l1.5-1.5h4L15.5 12H8.5z"/>
           </svg>
         </div>
         {!collapsed && (
