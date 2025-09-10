@@ -377,6 +377,16 @@ const AddSparePart = () => {
             </div>
 
             <div>
+              <Label htmlFor="compatible_models">Compatible Models</Label>
+              <Input
+                id="compatible_models"
+                placeholder="Enter compatible models (e.g., Apache RTR 160, Activa 5G)"
+                value={partData.compatible_models}
+                onChange={(e) => setPartData({...partData, compatible_models: e.target.value})}
+              />
+            </div>
+
+            <div>
               <Label htmlFor="low_stock_threshold">Low Stock Threshold</Label>
               <Input
                 id="low_stock_threshold"
