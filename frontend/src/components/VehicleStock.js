@@ -67,31 +67,7 @@ const VehicleStock = () => {
   );
 };
 
-import React, { useState, useEffect } from 'react';
-import { Routes, Route, Link, useLocation, useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Badge } from './ui/badge';
-import { 
-  Plus, 
-  Car, 
-  Search, 
-  Filter,
-  Package,
-  TrendingUp,
-  Eye,
-  ArrowLeft
-} from 'lucide-react';
-import { toast } from 'sonner';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-const VehicleStock = () => {
+const BrandOverview = () => {
   const location = useLocation();
   
   const navigationItems = [
