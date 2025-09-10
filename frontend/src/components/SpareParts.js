@@ -508,18 +508,50 @@ const CreateBill = () => {
     }
   };
 
+  const calculateGST = (rate, quantity, discountPercent, gstPercent) => {
+    const subtotal = rate * quantity;
+    const discountAmount = (subtotal * discountPercent) / 100;
+    const taxableAmount = subtotal - discountAmount;
+    const cgstAmount = (taxableAmount * (gstPercent / 2)) / 100;
+    const sgstAmount = (taxableAmount * (gstPercent / 2)) / 100;
+    const totalTax = cgstAmount + sgstAmount;
+    const finalAmount = taxableAmount + totalTax;
+
+    return {
+      subtotal,
+      discountAmount,
+      taxableAmount,
+      cgstAmount,
+      sgstAmount,
+      totalTax,
+      finalAmount
+    };
+  };
+
   const addItem = () => {
-    if (!selectedPart || !quantity) {
-      toast.error('Please select a part and enter quantity');
+    if (!itemForm.part_id || !itemForm.quantity || !itemForm.rate) {
+      toast.error('Please fill all required fields');
       return;
     }
 
-    const part = parts.find(p => p.id === selectedPart);
+    const calculations = calculateGST(
+      parseFloat(itemForm.rate),
+      parseFloat(itemForm.quantity),
+      parseFloat(itemForm.discount_percent),
+      parseFloat(itemForm.gst_percent)
+    );
+
     const newItem = {
-      part_id: selectedPart,
-      part_name: part.name,
-      quantity: parseInt(quantity),
-      unit_price: part.unit_price
+      sl_no: billData.items.length + 1,
+      part_id: itemForm.part_id,
+      description: itemForm.description,
+      hsn_sac: itemForm.hsn_sac,
+      quantity: parseFloat(itemForm.quantity),
+      unit: itemForm.unit,
+      rate: parseFloat(itemForm.rate),
+      discount_percent: parseFloat(itemForm.discount_percent),
+      gst_percent: parseFloat(itemForm.gst_percent),
+      ...calculations
     };
 
     setBillData({
@@ -527,8 +559,17 @@ const CreateBill = () => {
       items: [...billData.items, newItem]
     });
 
-    setSelectedPart('');
-    setQuantity('');
+    // Reset form
+    setItemForm({
+      part_id: '',
+      description: '',
+      hsn_sac: '',
+      quantity: '',
+      unit: 'Nos',
+      rate: '',
+      discount_percent: '0',
+      gst_percent: '18'
+    });
   };
 
   const removeItem = (index) => {
