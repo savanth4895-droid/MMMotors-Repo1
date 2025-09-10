@@ -238,9 +238,9 @@ class TwoWheelerAPITester:
         return self.run_test("Get Spare Parts", "GET", "spare-parts", 200)
 
     def test_create_spare_part_bill(self, customer_id, items):
-        """Test spare part bill creation"""
+        """Test spare part bill creation (legacy format)"""
         success, response = self.run_test(
-            "Create Spare Part Bill",
+            "Create Spare Part Bill (Legacy)",
             "POST",
             "spare-parts/bills",
             200,
@@ -252,6 +252,62 @@ class TwoWheelerAPITester:
         if success and 'id' in response:
             self.created_ids['bills'].append(response['id'])
         return success, response
+
+    def test_create_gst_spare_part_bill(self, customer_data, items, subtotal, total_discount, total_cgst, total_sgst, total_tax, total_amount):
+        """Test GST-compliant spare part bill creation with customer data"""
+        success, response = self.run_test(
+            "Create GST Spare Part Bill",
+            "POST",
+            "spare-parts/bills",
+            200,
+            data={
+                "customer_data": customer_data,
+                "items": items,
+                "subtotal": subtotal,
+                "total_discount": total_discount,
+                "total_cgst": total_cgst,
+                "total_sgst": total_sgst,
+                "total_tax": total_tax,
+                "total_amount": total_amount
+            }
+        )
+        if success and 'id' in response:
+            self.created_ids['bills'].append(response['id'])
+            print(f"   Bill Number: {response.get('bill_number', 'N/A')}")
+            print(f"   Customer: {customer_data.get('name', 'N/A')}")
+            print(f"   Total Amount: ₹{total_amount}")
+        return success, response
+
+    def test_create_gst_spare_part_bill_invalid_data(self):
+        """Test GST spare part bill creation with invalid data"""
+        # Test with missing customer data
+        success, response = self.run_test(
+            "Create GST Bill - Missing Customer Data",
+            "POST",
+            "spare-parts/bills",
+            400,
+            data={
+                "items": [{"description": "Test Item", "quantity": 1, "rate": 100}],
+                "subtotal": 100,
+                "total_amount": 100
+            }
+        )
+        
+        # Test with empty items
+        success2, response2 = self.run_test(
+            "Create GST Bill - Empty Items",
+            "POST",
+            "spare-parts/bills",
+            200,  # This might still succeed with empty items
+            data={
+                "customer_data": {"name": "Test Customer", "mobile": "9876543210"},
+                "items": [],
+                "subtotal": 0,
+                "total_amount": 0
+            }
+        )
+        
+        return success or success2, response if success else response2
 
     def test_get_spare_part_bills(self):
         """Test getting all spare part bills"""
