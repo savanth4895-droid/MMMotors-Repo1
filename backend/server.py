@@ -184,7 +184,8 @@ class SparePartCreate(BaseModel):
 class SparePartBill(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     bill_number: str
-    customer_id: str
+    customer_id: Optional[str] = None  # For backwards compatibility
+    customer_data: Optional[Dict[str, str]] = None  # {name, mobile, vehicle_name, vehicle_number}
     items: List[Dict[str, Any]]  # Detailed GST items with all calculations
     subtotal: float
     total_discount: float
