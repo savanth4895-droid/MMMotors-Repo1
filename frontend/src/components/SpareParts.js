@@ -657,19 +657,19 @@ const CreateBill = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (billData.items.length === 0) {
-      toast.error('Please add at least one item');
+    if (billItems.length === 0) {
+      toast.error('Please add at least one item to generate bill');
       return;
     }
 
-    if (!billData.customer_id) {
-      toast.error('Please select a customer');
+    if (!customerData.name || !customerData.mobile) {
+      toast.error('Please enter customer name and mobile number');
       return;
     }
 
     const billPayload = {
-      customer_id: billData.customer_id,
-      items: billData.items,
+      customer_data: customerData,
+      items: billItems,
       subtotal: totals.subtotal,
       total_discount: totals.totalDiscount,
       total_cgst: totals.totalCGST,
@@ -680,10 +680,11 @@ const CreateBill = () => {
 
     try {
       await axios.post(`${API}/spare-parts/bills`, billPayload);
-      toast.success('GST Bill created successfully!');
-      setBillData({ customer_id: '', items: [] });
+      toast.success('GST Bill generated successfully!');
+      setCustomerData({ name: '', mobile: '', vehicle_name: '', vehicle_number: '' });
+      setBillItems([]);
     } catch (error) {
-      toast.error('Failed to create bill');
+      toast.error('Failed to generate bill');
     }
   };
 
