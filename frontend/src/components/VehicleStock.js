@@ -58,10 +58,10 @@ const VehicleStock = () => {
 
       {/* Routes */}
       <Routes>
-        <Route path="/" element={<VehicleOverview />} />
+        <Route path="/" element={<BrandOverview />} />
         <Route path="/add" element={<AddVehicle />} />
         <Route path="/stock" element={<StockView />} />
-        <Route path="/brand/:brand" element={<BrandStock />} />
+        <Route path="/brand/:brand" element={<BrandDetails />} />
       </Routes>
     </div>
   );
