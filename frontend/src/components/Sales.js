@@ -18,9 +18,26 @@ import {
   TrendingUp,
   Shield,
   Calendar,
-  Car
+  Car,
+  BarChart3,
+  PieChart,
+  Download
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart as RechartsPieChart,
+  Cell
+} from 'recharts';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
