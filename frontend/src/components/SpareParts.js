@@ -496,6 +496,7 @@ const Inventory = () => {
                   <th className="text-left p-3 font-semibold">Unit</th>
                   <th className="text-left p-3 font-semibold">Rate</th>
                   <th className="text-left p-3 font-semibold">GST%</th>
+                  <th className="text-left p-3 font-semibold">Compatible Models</th>
                   <th className="text-left p-3 font-semibold">Total Value</th>
                   <th className="text-left p-3 font-semibold">Status</th>
                   <th className="text-left p-3 font-semibold">Actions</th>
