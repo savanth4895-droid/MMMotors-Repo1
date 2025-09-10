@@ -2238,7 +2238,7 @@ const ViewCustomerDetails = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center">
-              <Car className="h-8 w-8 text-green-600" />
+              <MotorcycleIcon className="h-8 w-8 text-green-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">With Vehicles</p>
                 <p className="text-2xl font-bold text-gray-900">
