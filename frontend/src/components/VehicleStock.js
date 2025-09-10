@@ -887,6 +887,18 @@ const StockView = () => {
     setFilteredVehicles(filtered);
   };
 
+  const handleEditVehicle = (vehicle) => {
+    setEditVehicle(vehicle);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateVehicle = (updatedVehicle) => {
+    const updatedVehicles = vehicles.map(v => 
+      v.id === updatedVehicle.id ? updatedVehicle : v
+    );
+    setVehicles(updatedVehicles);
+  };
+
   const getStatusBadge = (status) => {
     const statusMap = {
       in_stock: { label: 'In Stock', variant: 'success' },
