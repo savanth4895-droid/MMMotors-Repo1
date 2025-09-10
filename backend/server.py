@@ -217,6 +217,11 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid authentication credentials")
 
+# Test endpoint
+@api_router.get("/")
+async def root():
+    return {"message": "Two Wheeler Business Management API is running"}
+
 # Authentication endpoints
 @api_router.post("/auth/register")
 async def register_user(user_data: UserCreate):
