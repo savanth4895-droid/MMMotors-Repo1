@@ -329,7 +329,7 @@ const CreateInvoice = () => {
             <div className="invoice-container">
               {/* Header */}
               <div className="header text-center mb-6">
-                <h1 className="text-3xl font-bold text-blue-600">MOTO MANAGER</h1>
+                <h1 className="text-3xl font-bold text-blue-600">M M MOTORS</h1>
                 <p className="text-lg text-gray-600">Two Wheeler Sales Invoice</p>
                 <div className="mt-4 grid grid-cols-2 gap-4">
                   <div className="text-left">
