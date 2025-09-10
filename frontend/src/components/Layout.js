@@ -62,7 +62,7 @@ const Layout = ({ children }) => {
     {
       name: 'Vehicle Stock',
       path: '/vehicles',
-      icon: Car
+      icon: MotorcycleIcon
     },
     {
       name: 'Spare Parts',
