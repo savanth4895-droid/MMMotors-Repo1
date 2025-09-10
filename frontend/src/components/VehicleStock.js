@@ -1003,8 +1003,14 @@ const StockView = () => {
                     <td className="p-2">{vehicle.inbound_location}</td>
                     <td className="p-2">{getStatusBadge(vehicle.status)}</td>
                     <td className="p-2">
-                      <Button size="sm" variant="outline">
-                        <Eye className="w-4 h-4" />
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleEditVehicle(vehicle)}
+                        className="flex items-center gap-1"
+                      >
+                        <Edit className="w-3 h-3" />
+                        Edit
                       </Button>
                     </td>
                   </tr>
