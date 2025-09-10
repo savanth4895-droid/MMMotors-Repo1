@@ -449,6 +449,16 @@ async def create_spare_part_bill(bill_data: SparePartBillCreate, current_user: U
     bill_dict['bill_number'] = bill_number
     bill_dict['created_by'] = current_user.id
     
+    # Handle customer data - prioritize customer_data over customer_id
+    if bill_dict.get('customer_data'):
+        # Use the new customer data format
+        bill_dict['customer_id'] = None  # Clear legacy field
+    elif bill_dict.get('customer_id'):
+        # For backwards compatibility, keep customer_id if no customer_data
+        pass
+    else:
+        raise HTTPException(status_code=400, detail="Customer information is required")
+    
     # Ensure all GST fields are present with defaults if not provided
     if 'subtotal' not in bill_dict:
         bill_dict['subtotal'] = 0
