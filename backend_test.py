@@ -5,7 +5,7 @@ from datetime import datetime
 import uuid
 
 class TwoWheelerAPITester:
-    def __init__(self, base_url="https://moto-management.preview.emergentagent.com/api"):
+    def __init__(self, base_url="https://wheeler-tracker.preview.emergentagent.com/api"):
         self.base_url = base_url
         self.token = None
         self.tests_run = 0
