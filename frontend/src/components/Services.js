@@ -189,46 +189,103 @@ const ServicesOverview = () => {
 };
 
 const NewService = () => {
-  const [customers, setCustomers] = useState([]);
   const [serviceData, setServiceData] = useState({
-    customer_id: '',
-    vehicle_number: '',
+    customer_name: '',
+    phone_number: '',
+    vehicle_brand: '',
+    vehicle_model: '',
+    vehicle_year: '',
+    vehicle_reg_no: '',
     service_type: '',
     description: '',
-    amount: ''
+    estimated_amount: ''
   });
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    fetchCustomers();
-  }, []);
+  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA'];
+  const serviceTypes = [
+    'Regular Service',
+    'Oil Change',
+    'Brake Service',
+    'Engine Repair',
+    'Electrical Work',
+    'Body Work',
+    'Tire Replacement',
+    'Chain & Sprocket',
+    'Clutch Service',
+    'Suspension Service',
+    'Other'
+  ];
 
-  const fetchCustomers = async () => {
-    try {
-      const response = await axios.get(`${API}/customers`);
-      setCustomers(response.data);
-    } catch (error) {
-      toast.error('Failed to fetch customers');
-    }
+  const handleInputChange = (field, value) => {
+    setServiceData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
-  const handleSubmit = async (e) => {
+  const resetForm = () => {
+    setServiceData({
+      customer_name: '',
+      phone_number: '',
+      vehicle_brand: '',
+      vehicle_model: '',
+      vehicle_year: '',
+      vehicle_reg_no: '',
+      service_type: '',
+      description: '',
+      estimated_amount: ''
+    });
+  };
+
+  const handleSave = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      // First, try to find existing customer or create new one
+      let customerId = null;
+      
+      try {
+        const customersResponse = await axios.get(`${API}/customers`);
+        const existingCustomer = customersResponse.data.find(
+          customer => customer.phone === serviceData.phone_number
+        );
+        
+        if (existingCustomer) {
+          customerId = existingCustomer.id;
+        } else {
+          // Create new customer
+          const customerResponse = await axios.post(`${API}/customers`, {
+            name: serviceData.customer_name,
+            phone: serviceData.phone_number,
+            email: '',
+            address: 'Service Registration'
+          });
+          customerId = customerResponse.data.id;
+        }
+      } catch (error) {
+        // Create customer if customer API fails
+        const customerResponse = await axios.post(`${API}/customers`, {
+          name: serviceData.customer_name,
+          phone: serviceData.phone_number,
+          email: '',
+          address: 'Service Registration'
+        });
+        customerId = customerResponse.data.id;
+      }
+
+      // Create service record
       await axios.post(`${API}/services`, {
-        ...serviceData,
-        amount: parseFloat(serviceData.amount)
+        customer_id: customerId,
+        vehicle_number: serviceData.vehicle_reg_no,
+        service_type: serviceData.service_type.toLowerCase().replace(' ', '_'),
+        description: `${serviceData.vehicle_brand} ${serviceData.vehicle_model} (${serviceData.vehicle_year}) - ${serviceData.description}`,
+        amount: parseFloat(serviceData.estimated_amount) || 0
       });
-      toast.success('Service registered successfully!');
-      setServiceData({
-        customer_id: '',
-        vehicle_number: '',
-        service_type: '',
-        description: '',
-        amount: ''
-      });
+
+      toast.success('Service registration completed successfully!');
+      resetForm();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to register service');
     } finally {
@@ -240,82 +297,155 @@ const NewService = () => {
     <Card>
       <CardHeader>
         <CardTitle>New Service Registration</CardTitle>
+        <CardDescription>Register a new vehicle for service with complete details</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="customer">Customer</Label>
-              <Select value={serviceData.customer_id} onValueChange={(value) => setServiceData({...serviceData, customer_id: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select customer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {customer.name} - {customer.phone}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <form onSubmit={handleSave} className="space-y-6">
+          {/* Customer Information Section */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-blue-600 border-b pb-2">Customer Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="customer_name">Customer Name</Label>
+                <Input
+                  id="customer_name"
+                  placeholder="Enter customer name"
+                  value={serviceData.customer_name}
+                  onChange={(e) => handleInputChange('customer_name', e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="phone_number">Phone Number</Label>
+                <Input
+                  id="phone_number"
+                  placeholder="Enter phone number"
+                  value={serviceData.phone_number}
+                  onChange={(e) => handleInputChange('phone_number', e.target.value)}
+                  required
+                />
+              </div>
             </div>
+          </div>
 
-            <div>
-              <Label htmlFor="vehicle_number">Vehicle Number</Label>
-              <Input
-                id="vehicle_number"
-                placeholder="Enter vehicle number"
-                value={serviceData.vehicle_number}
-                onChange={(e) => setServiceData({...serviceData, vehicle_number: e.target.value})}
-                required
-              />
+          {/* Vehicle Information Section */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-blue-600 border-b pb-2">Vehicle Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="vehicle_brand">Vehicle Brand</Label>
+                <Select value={serviceData.vehicle_brand} onValueChange={(value) => handleInputChange('vehicle_brand', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select vehicle brand" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {brands.map((brand) => (
+                      <SelectItem key={brand} value={brand}>
+                        {brand}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="vehicle_model">Vehicle Model</Label>
+                <Input
+                  id="vehicle_model"
+                  placeholder="Enter vehicle model"
+                  value={serviceData.vehicle_model}
+                  onChange={(e) => handleInputChange('vehicle_model', e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="vehicle_year">Vehicle Year</Label>
+                <Select value={serviceData.vehicle_year} onValueChange={(value) => handleInputChange('vehicle_year', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select vehicle year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({length: 25}, (_, i) => 2024 - i).map((year) => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="vehicle_reg_no">Vehicle Reg. No</Label>
+                <Input
+                  id="vehicle_reg_no"
+                  placeholder="Enter vehicle registration number"
+                  value={serviceData.vehicle_reg_no}
+                  onChange={(e) => handleInputChange('vehicle_reg_no', e.target.value)}
+                  required
+                />
+              </div>
             </div>
+          </div>
 
-            <div>
-              <Label htmlFor="service_type">Service Type</Label>
-              <Select value={serviceData.service_type} onValueChange={(value) => setServiceData({...serviceData, service_type: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select service type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="regular_service">Regular Service</SelectItem>
-                  <SelectItem value="oil_change">Oil Change</SelectItem>
-                  <SelectItem value="brake_service">Brake Service</SelectItem>
-                  <SelectItem value="engine_repair">Engine Repair</SelectItem>
-                  <SelectItem value="electrical_work">Electrical Work</SelectItem>
-                  <SelectItem value="body_work">Body Work</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
+          {/* Service Information Section */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-blue-600 border-b pb-2">Service Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="service_type">Service Type</Label>
+                <Select value={serviceData.service_type} onValueChange={(value) => handleInputChange('service_type', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select service type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {serviceTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="estimated_amount">Estimated Amount (₹)</Label>
+                <Input
+                  id="estimated_amount"
+                  type="number"
+                  placeholder="Enter estimated amount"
+                  value={serviceData.estimated_amount}
+                  onChange={(e) => handleInputChange('estimated_amount', e.target.value)}
+                />
+              </div>
             </div>
-
             <div>
-              <Label htmlFor="amount">Estimated Amount (₹)</Label>
-              <Input
-                id="amount"
-                type="number"
-                placeholder="Enter estimated amount"
-                value={serviceData.amount}
-                onChange={(e) => setServiceData({...serviceData, amount: e.target.value})}
+              <Label htmlFor="description">Service Description</Label>
+              <Textarea
+                id="description"
+                placeholder="Describe the service work required or issues reported"
+                value={serviceData.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+                rows={4}
                 required
               />
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="description">Service Description</Label>
-            <Textarea
-              id="description"
-              placeholder="Describe the service work required"
-              value={serviceData.description}
-              onChange={(e) => setServiceData({...serviceData, description: e.target.value})}
-              required
-            />
+          {/* Form Actions */}
+          <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t">
+            <Button 
+              type="submit" 
+              disabled={loading} 
+              className="flex-1 sm:flex-none sm:px-8"
+            >
+              {loading ? 'Saving Service Registration...' : 'Save Service Registration'}
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={resetForm}
+              className="flex-1 sm:flex-none sm:px-8"
+            >
+              Reset Form
+            </Button>
           </div>
-
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? 'Registering...' : 'Register Service'}
-          </Button>
         </form>
       </CardContent>
     </Card>
