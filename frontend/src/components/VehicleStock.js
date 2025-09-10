@@ -251,7 +251,8 @@ const EditVehicleModal = ({ vehicle, isOpen, onClose, onUpdate }) => {
         inbound_location: vehicle.inbound_location || '',
         page_number: vehicle.page_number || '',
         outbound_location: vehicle.outbound_location || '',
-        status: vehicle.status || 'in_stock'
+        status: vehicle.status || 'in_stock',
+        date_returned: vehicle.date_returned ? new Date(vehicle.date_returned).toISOString().split('T')[0] : ''
       });
     }
   }, [vehicle, isOpen]);
