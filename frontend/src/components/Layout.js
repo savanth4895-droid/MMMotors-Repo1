@@ -13,7 +13,9 @@ import {
   LogOut, 
   Menu,
   User,
-  Bell
+  Bell,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { toast } from 'sonner';
 
