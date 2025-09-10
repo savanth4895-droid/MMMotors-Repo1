@@ -508,6 +508,21 @@ const CreateBill = () => {
     }
   };
 
+  const handlePartSelection = (partId) => {
+    const selectedPart = parts.find(p => p.id === partId);
+    if (selectedPart) {
+      setItemForm({
+        ...itemForm,
+        part_id: partId,
+        description: selectedPart.name,
+        hsn_sac: selectedPart.hsn_sac || '',
+        unit: selectedPart.unit || 'Nos',
+        rate: selectedPart.unit_price.toString(),
+        gst_percent: selectedPart.gst_percentage?.toString() || '18'
+      });
+    }
+  };
+
   const calculateGST = (rate, quantity, discountPercent, gstPercent) => {
     const subtotal = rate * quantity;
     const discountAmount = (subtotal * discountPercent) / 100;
