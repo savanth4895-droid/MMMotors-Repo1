@@ -123,37 +123,40 @@ const SalesOverview = () => {
 };
 
 const CreateInvoice = () => {
-  const [customers, setCustomers] = useState([]);
-  const [vehicles, setVehicles] = useState([]);
   const [invoiceData, setInvoiceData] = useState({
-    customer_id: '',
-    vehicle_id: '',
+    date: new Date().toISOString().split('T')[0],
+    name: '',
+    care_of: '',
+    mobile: '',
+    address: '',
+    brand: '',
+    model: '',
+    color: '',
+    chassis_no: '',
+    engine_no: '',
+    vehicle_no: '',
+    insurance_nominee: '',
+    relation: '',
+    age: '',
     amount: '',
     payment_method: 'cash'
   });
   const [loading, setLoading] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [generatedInvoice, setGeneratedInvoice] = useState(null);
 
-  useEffect(() => {
-    fetchCustomers();
-    fetchVehicles();
-  }, []);
+  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA'];
 
-  const fetchCustomers = async () => {
-    try {
-      const response = await axios.get(`${API}/customers`);
-      setCustomers(response.data);
-    } catch (error) {
-      toast.error('Failed to fetch customers');
-    }
+  const handleInputChange = (field, value) => {
+    setInvoiceData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
-  const fetchVehicles = async () => {
-    try {
-      const response = await axios.get(`${API}/vehicles?status=in_stock`);
-      setVehicles(response.data);
-    } catch (error) {
-      toast.error('Failed to fetch vehicles');
-    }
+  const generateInvoiceNumber = () => {
+    const timestamp = Date.now();
+    return `INV-${timestamp.toString().slice(-8)}`;
   };
 
   const handleSubmit = async (e) => {
@@ -161,96 +164,471 @@ const CreateInvoice = () => {
     setLoading(true);
 
     try {
-      await axios.post(`${API}/sales`, {
-        ...invoiceData,
+      // Create customer first
+      const customerResponse = await axios.post(`${API}/customers`, {
+        name: invoiceData.name,
+        phone: invoiceData.mobile,
+        email: '',
+        address: invoiceData.address
+      });
+
+      // Create vehicle
+      const vehicleResponse = await axios.post(`${API}/vehicles`, {
+        brand: invoiceData.brand,
+        model: invoiceData.model,
+        chassis_no: invoiceData.chassis_no,
+        engine_no: invoiceData.engine_no,
+        color: invoiceData.color,
+        key_no: 'N/A',
+        inbound_location: 'Showroom'
+      });
+
+      // Create sale
+      const saleResponse = await axios.post(`${API}/sales`, {
+        customer_id: customerResponse.data.id,
+        vehicle_id: vehicleResponse.data.id,
         amount: parseFloat(invoiceData.amount)
       });
-      toast.success('Invoice created successfully!');
-      setInvoiceData({
-        customer_id: '',
-        vehicle_id: '',
-        amount: '',
-        payment_method: 'cash'
-      });
-      fetchVehicles(); // Refresh vehicles list
+
+      const invoice = {
+        ...saleResponse.data,
+        invoice_number: generateInvoiceNumber(),
+        customer: {
+          name: invoiceData.name,
+          care_of: invoiceData.care_of,
+          mobile: invoiceData.mobile,
+          address: invoiceData.address
+        },
+        vehicle: {
+          brand: invoiceData.brand,
+          model: invoiceData.model,
+          color: invoiceData.color,
+          chassis_no: invoiceData.chassis_no,
+          engine_no: invoiceData.engine_no,
+          vehicle_no: invoiceData.vehicle_no
+        },
+        insurance: {
+          nominee: invoiceData.insurance_nominee,
+          relation: invoiceData.relation,
+          age: invoiceData.age
+        },
+        date: invoiceData.date,
+        amount: parseFloat(invoiceData.amount),
+        payment_method: invoiceData.payment_method
+      };
+
+      setGeneratedInvoice(invoice);
+      setShowPreview(true);
+      toast.success('Invoice generated successfully!');
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to create invoice');
+      toast.error(error.response?.data?.detail || 'Failed to generate invoice');
     } finally {
       setLoading(false);
     }
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleDownload = () => {
+    const element = document.getElementById('invoice-preview');
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Invoice ${generatedInvoice?.invoice_number}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .invoice-container { max-width: 800px; margin: 0 auto; }
+            .header { text-align: center; margin-bottom: 20px; }
+            .section { margin: 15px 0; }
+            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+            .field { margin-bottom: 8px; }
+            .label { font-weight: bold; }
+            .total { font-size: 18px; font-weight: bold; text-align: right; }
+            @media print { body { margin: 0; } }
+          </style>
+        </head>
+        <body>${element.innerHTML}</body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  const resetForm = () => {
+    setInvoiceData({
+      date: new Date().toISOString().split('T')[0],
+      name: '',
+      care_of: '',
+      mobile: '',
+      address: '',
+      brand: '',
+      model: '',
+      color: '',
+      chassis_no: '',
+      engine_no: '',
+      vehicle_no: '',
+      insurance_nominee: '',
+      relation: '',
+      age: '',
+      amount: '',
+      payment_method: 'cash'
+    });
+    setShowPreview(false);
+    setGeneratedInvoice(null);
+  };
+
+  if (showPreview && generatedInvoice) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center no-print">
+          <h2 className="text-2xl font-bold">Invoice Preview</h2>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowPreview(false)} variant="outline">
+              Back to Form
+            </Button>
+            <Button onClick={handlePrint} variant="outline">
+              Print
+            </Button>
+            <Button onClick={handleDownload}>
+              Download
+            </Button>
+            <Button onClick={resetForm}>
+              New Invoice
+            </Button>
+          </div>
+        </div>
+
+        <Card id="invoice-preview" className="print-full-width">
+          <CardContent className="p-8">
+            <div className="invoice-container">
+              {/* Header */}
+              <div className="header text-center mb-6">
+                <h1 className="text-3xl font-bold text-blue-600">MOTO MANAGER</h1>
+                <p className="text-lg text-gray-600">Two Wheeler Sales Invoice</p>
+                <div className="mt-4 grid grid-cols-2 gap-4">
+                  <div className="text-left">
+                    <p><strong>Invoice No:</strong> {generatedInvoice.invoice_number}</p>
+                  </div>
+                  <div className="text-right">
+                    <p><strong>Date:</strong> {new Date(generatedInvoice.date).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Customer Details */}
+              <div className="section border rounded-lg p-4 mb-4">
+                <h3 className="text-lg font-semibold mb-3 text-blue-600">Customer Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="field">
+                    <span className="label">Name:</span> {generatedInvoice.customer.name}
+                  </div>
+                  <div className="field">
+                    <span className="label">C/O:</span> {generatedInvoice.customer.care_of}
+                  </div>
+                  <div className="field">
+                    <span className="label">Mobile:</span> {generatedInvoice.customer.mobile}
+                  </div>
+                  <div className="field">
+                    <span className="label">Address:</span> {generatedInvoice.customer.address}
+                  </div>
+                </div>
+              </div>
+
+              {/* Vehicle Details */}
+              <div className="section border rounded-lg p-4 mb-4">
+                <h3 className="text-lg font-semibold mb-3 text-blue-600">Vehicle Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="field">
+                    <span className="label">Brand:</span> {generatedInvoice.vehicle.brand}
+                  </div>
+                  <div className="field">
+                    <span className="label">Model:</span> {generatedInvoice.vehicle.model}
+                  </div>
+                  <div className="field">
+                    <span className="label">Color:</span> {generatedInvoice.vehicle.color}
+                  </div>
+                  <div className="field">
+                    <span className="label">Chassis No:</span> {generatedInvoice.vehicle.chassis_no}
+                  </div>
+                  <div className="field">
+                    <span className="label">Engine No:</span> {generatedInvoice.vehicle.engine_no}
+                  </div>
+                  <div className="field">
+                    <span className="label">Vehicle No:</span> {generatedInvoice.vehicle.vehicle_no}
+                  </div>
+                </div>
+              </div>
+
+              {/* Insurance Details */}
+              <div className="section border rounded-lg p-4 mb-4">
+                <h3 className="text-lg font-semibold mb-3 text-blue-600">Insurance Nominee Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="field">
+                    <span className="label">Nominee Name:</span> {generatedInvoice.insurance.nominee}
+                  </div>
+                  <div className="field">
+                    <span className="label">Relation:</span> {generatedInvoice.insurance.relation}
+                  </div>
+                  <div className="field">
+                    <span className="label">Age:</span> {generatedInvoice.insurance.age}
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Details */}
+              <div className="section border rounded-lg p-4 mb-6">
+                <h3 className="text-lg font-semibold mb-3 text-blue-600">Payment Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="field">
+                    <span className="label">Payment Method:</span> {generatedInvoice.payment_method.toUpperCase()}
+                  </div>
+                  <div className="field total text-right">
+                    <span className="label">Amount:</span> ₹{generatedInvoice.amount.toLocaleString()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="text-center mt-8 pt-4 border-t">
+                <p className="text-sm text-gray-600">Thank you for choosing Moto Manager!</p>
+                <p className="text-xs text-gray-500 mt-2">This is a computer-generated invoice.</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Create New Invoice</CardTitle>
+        <CardDescription>Fill in all details to generate a comprehensive invoice</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="customer">Customer</Label>
-              <Select value={invoiceData.customer_id} onValueChange={(value) => setInvoiceData({...invoiceData, customer_id: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select customer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {customer.name} - {customer.phone}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Date */}
+          <div>
+            <Label htmlFor="date">Date</Label>
+            <Input
+              id="date"
+              type="date"
+              value={invoiceData.date}
+              onChange={(e) => handleInputChange('date', e.target.value)}
+              required
+            />
+          </div>
 
-            <div>
-              <Label htmlFor="vehicle">Vehicle</Label>
-              <Select value={invoiceData.vehicle_id} onValueChange={(value) => setInvoiceData({...invoiceData, vehicle_id: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select vehicle" />
-                </SelectTrigger>
-                <SelectContent>
-                  {vehicles.map((vehicle) => (
-                    <SelectItem key={vehicle.id} value={vehicle.id}>
-                      {vehicle.brand} {vehicle.model} - {vehicle.chassis_no}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="amount">Amount (₹)</Label>
-              <Input
-                id="amount"
-                type="number"
-                placeholder="Enter amount"
-                value={invoiceData.amount}
-                onChange={(e) => setInvoiceData({...invoiceData, amount: e.target.value})}
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="payment_method">Payment Method</Label>
-              <Select value={invoiceData.payment_method} onValueChange={(value) => setInvoiceData({...invoiceData, payment_method: value})}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="card">Card</SelectItem>
-                  <SelectItem value="upi">UPI</SelectItem>
-                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                </SelectContent>
-              </Select>
+          {/* Customer Details */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-blue-600">Customer Details</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  placeholder="Enter customer name"
+                  value={invoiceData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="care_of">C/O (Care Of)</Label>
+                <Input
+                  id="care_of"
+                  placeholder="S/O, D/O, W/O"
+                  value={invoiceData.care_of}
+                  onChange={(e) => handleInputChange('care_of', e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="mobile">Mobile Number</Label>
+                <Input
+                  id="mobile"
+                  placeholder="Enter mobile number"
+                  value={invoiceData.mobile}
+                  onChange={(e) => handleInputChange('mobile', e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="address">Address</Label>
+                <Textarea
+                  id="address"
+                  placeholder="Enter complete address"
+                  value={invoiceData.address}
+                  onChange={(e) => handleInputChange('address', e.target.value)}
+                  required
+                />
+              </div>
             </div>
           </div>
 
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? 'Creating...' : 'Create Invoice'}
-          </Button>
+          {/* Vehicle Details */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-blue-600">Vehicle Details</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="brand">Brand</Label>
+                <Select value={invoiceData.brand} onValueChange={(value) => handleInputChange('brand', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select brand" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {brands.map((brand) => (
+                      <SelectItem key={brand} value={brand}>
+                        {brand}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="model">Model</Label>
+                <Input
+                  id="model"
+                  placeholder="Enter model name"
+                  value={invoiceData.model}
+                  onChange={(e) => handleInputChange('model', e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="color">Color</Label>
+                <Input
+                  id="color"
+                  placeholder="Enter color"
+                  value={invoiceData.color}
+                  onChange={(e) => handleInputChange('color', e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="chassis_no">Chassis No</Label>
+                <Input
+                  id="chassis_no"
+                  placeholder="Enter chassis number"
+                  value={invoiceData.chassis_no}
+                  onChange={(e) => handleInputChange('chassis_no', e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="engine_no">Engine No</Label>
+                <Input
+                  id="engine_no"
+                  placeholder="Enter engine number"
+                  value={invoiceData.engine_no}
+                  onChange={(e) => handleInputChange('engine_no', e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="vehicle_no">Vehicle No</Label>
+                <Input
+                  id="vehicle_no"
+                  placeholder="Enter vehicle registration number"
+                  value={invoiceData.vehicle_no}
+                  onChange={(e) => handleInputChange('vehicle_no', e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Insurance Nominee Details */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-blue-600">Insurance Nominee Details</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="insurance_nominee">Nominee Name</Label>
+                <Input
+                  id="insurance_nominee"
+                  placeholder="Enter nominee name"
+                  value={invoiceData.insurance_nominee}
+                  onChange={(e) => handleInputChange('insurance_nominee', e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="relation">Relation</Label>
+                <Select value={invoiceData.relation} onValueChange={(value) => handleInputChange('relation', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select relation" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="father">Father</SelectItem>
+                    <SelectItem value="mother">Mother</SelectItem>
+                    <SelectItem value="spouse">Spouse</SelectItem>
+                    <SelectItem value="son">Son</SelectItem>
+                    <SelectItem value="daughter">Daughter</SelectItem>
+                    <SelectItem value="brother">Brother</SelectItem>
+                    <SelectItem value="sister">Sister</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="age">Age</Label>
+                <Input
+                  id="age"
+                  type="number"
+                  placeholder="Enter age"
+                  value={invoiceData.age}
+                  onChange={(e) => handleInputChange('age', e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Payment Details */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-blue-600">Payment Details</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="amount">Amount (₹)</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  placeholder="Enter amount"
+                  value={invoiceData.amount}
+                  onChange={(e) => handleInputChange('amount', e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="payment_method">Payment Method</Label>
+                <Select value={invoiceData.payment_method} onValueChange={(value) => handleInputChange('payment_method', value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="card">Card</SelectItem>
+                    <SelectItem value="upi">UPI</SelectItem>
+                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                    <SelectItem value="finance">Finance</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-4">
+            <Button type="submit" disabled={loading} className="flex-1">
+              {loading ? 'Generating Invoice...' : 'Generate Invoice'}
+            </Button>
+            <Button type="button" variant="outline" onClick={resetForm}>
+              Reset Form
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>
