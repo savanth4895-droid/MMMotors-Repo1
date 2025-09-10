@@ -142,8 +142,27 @@ const Layout = ({ children }) => {
     <div className="flex h-screen bg-gray-50">
       {/* Desktop Sidebar */}
       <div className="hidden lg:flex lg:flex-shrink-0">
-        <div className="flex flex-col w-64 bg-white shadow-sm">
-          <SidebarContent />
+        <div className={`flex flex-col bg-white shadow-sm transition-all duration-300 ${
+          isSidebarCollapsed ? 'w-16' : 'w-64'
+        }`}>
+          <SidebarContent collapsed={isSidebarCollapsed} />
+          
+          {/* Toggle Button */}
+          <div className="border-t border-gray-200 p-2">
+            <Button
+              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              variant="ghost"
+              size="sm"
+              className="w-full justify-center hover:bg-gray-100"
+              title={isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+            >
+              {isSidebarCollapsed ? (
+                <ChevronRight className="w-4 h-4" />
+              ) : (
+                <ChevronLeft className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
         </div>
       </div>
 
