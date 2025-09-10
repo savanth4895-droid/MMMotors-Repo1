@@ -227,7 +227,8 @@ const EditVehicleModal = ({ vehicle, isOpen, onClose, onUpdate }) => {
     inbound_location: '',
     page_number: '',
     outbound_location: '',
-    status: 'in_stock'
+    status: 'in_stock',
+    date_returned: ''
   });
   const [loading, setLoading] = useState(false);
 
