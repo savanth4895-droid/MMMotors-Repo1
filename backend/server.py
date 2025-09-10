@@ -185,7 +185,12 @@ class SparePartBill(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     bill_number: str
     customer_id: str
-    items: List[Dict[str, Any]]  # [{part_id, quantity, unit_price}]
+    items: List[Dict[str, Any]]  # Detailed GST items with all calculations
+    subtotal: float
+    total_discount: float
+    total_cgst: float
+    total_sgst: float
+    total_tax: float
     total_amount: float
     bill_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     created_by: str
