@@ -19,7 +19,11 @@ import {
   AlertCircle,
   Search,
   FileText,
-  Users
+  Users,
+  Calculator,
+  Download,
+  Printer,
+  Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
