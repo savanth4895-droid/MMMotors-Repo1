@@ -194,7 +194,7 @@ const BrandOverview = () => {
               <CardContent className="p-6">
                 <div className="text-center">
                   <div className={`w-16 h-16 mx-auto mb-4 bg-gradient-to-r ${brand.color} rounded-full flex items-center justify-center`}>
-                    <Car className="w-8 h-8 text-white" />
+                    <MotorcycleIcon className="w-8 h-8 text-white" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">{brand.name}</h3>
                   <div className="space-y-1 text-sm">
