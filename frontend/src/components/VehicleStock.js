@@ -627,6 +627,7 @@ const BrandDetails = () => {
                   <th className="text-left p-3 font-semibold">Status</th>
                   <th className="text-left p-3 font-semibold">Page Number</th>
                   <th className="text-left p-3 font-semibold">Outbound Location</th>
+                  <th className="text-left p-3 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
