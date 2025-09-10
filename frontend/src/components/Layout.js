@@ -73,7 +73,7 @@ const Layout = ({ children }) => {
         </div>
         {!collapsed && (
           <div>
-            <h1 className="text-xl font-bold text-gray-800">Moto Manager</h1>
+            <h1 className="text-xl font-bold text-gray-800">M M Motors</h1>
             <p className="text-xs text-gray-500">Business System</p>
           </div>
         )}
