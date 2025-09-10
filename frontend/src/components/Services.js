@@ -1403,6 +1403,426 @@ const JobCards = () => {
   );
 };
 
+const ServicesBilling = () => {
+  const [customers, setCustomers] = useState([]);
+  const [billItems, setBillItems] = useState([{
+    sl_no: 1,
+    description: '',
+    hsn_sac: '',
+    qty: 1,
+    unit: 'Nos',
+    rate: 0,
+    labor: 0,
+    disc_percent: 0,
+    gst_percent: 18,
+    cgst_amount: 0,
+    sgst_amount: 0,
+    total_tax: 0,
+    amount: 0
+  }]);
+  const [selectedCustomer, setSelectedCustomer] = useState('');
+  const [billNumber, setBillNumber] = useState(`SB-${Date.now().toString().slice(-6)}`);
+  const [billDate, setBillDate] = useState(new Date().toISOString().split('T')[0]);
+  const [loading, setLoading] = useState(false);
+
+  const units = ['Nos', 'Kgs', 'Ltrs', 'Hrs', 'Days', 'Pcs'];
+  const gstRates = [0, 5, 12, 18, 28];
+
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
+  const fetchCustomers = async () => {
+    try {
+      const response = await axios.get(`${API}/customers`);
+      setCustomers(response.data);
+    } catch (error) {
+      toast.error('Failed to fetch customers');
+    }
+  };
+
+  const calculateItemAmounts = (item) => {
+    const baseAmount = (item.qty * item.rate) + item.labor;
+    const discountAmount = (baseAmount * item.disc_percent) / 100;
+    const taxableAmount = baseAmount - discountAmount;
+    
+    const gstAmount = (taxableAmount * item.gst_percent) / 100;
+    const cgstAmount = gstAmount / 2;
+    const sgstAmount = gstAmount / 2;
+    const totalTax = cgstAmount + sgstAmount;
+    const finalAmount = taxableAmount + totalTax;
+
+    return {
+      cgst_amount: parseFloat(cgstAmount.toFixed(2)),
+      sgst_amount: parseFloat(sgstAmount.toFixed(2)),
+      total_tax: parseFloat(totalTax.toFixed(2)),
+      amount: parseFloat(finalAmount.toFixed(2))
+    };
+  };
+
+  const updateBillItem = (index, field, value) => {
+    const updatedItems = [...billItems];
+    updatedItems[index] = { ...updatedItems[index], [field]: value };
+    
+    // Recalculate amounts for this item
+    const calculatedAmounts = calculateItemAmounts(updatedItems[index]);
+    updatedItems[index] = { ...updatedItems[index], ...calculatedAmounts };
+    
+    setBillItems(updatedItems);
+  };
+
+  const addBillItem = () => {
+    const newItem = {
+      sl_no: billItems.length + 1,
+      description: '',
+      hsn_sac: '',
+      qty: 1,
+      unit: 'Nos',
+      rate: 0,
+      labor: 0,
+      disc_percent: 0,
+      gst_percent: 18,
+      cgst_amount: 0,
+      sgst_amount: 0,
+      total_tax: 0,
+      amount: 0
+    };
+    setBillItems([...billItems, newItem]);
+  };
+
+  const removeBillItem = (index) => {
+    if (billItems.length > 1) {
+      const updatedItems = billItems.filter((_, i) => i !== index);
+      // Update serial numbers
+      const reNumberedItems = updatedItems.map((item, i) => ({
+        ...item,
+        sl_no: i + 1
+      }));
+      setBillItems(reNumberedItems);
+    }
+  };
+
+  const calculateTotals = () => {
+    const subtotal = billItems.reduce((sum, item) => sum + (item.qty * item.rate) + item.labor, 0);
+    const totalDiscount = billItems.reduce((sum, item) => sum + ((item.qty * item.rate + item.labor) * item.disc_percent / 100), 0);
+    const totalCGST = billItems.reduce((sum, item) => sum + item.cgst_amount, 0);
+    const totalSGST = billItems.reduce((sum, item) => sum + item.sgst_amount, 0);
+    const totalTax = billItems.reduce((sum, item) => sum + item.total_tax, 0);
+    const grandTotal = billItems.reduce((sum, item) => sum + item.amount, 0);
+
+    return {
+      subtotal: parseFloat(subtotal.toFixed(2)),
+      totalDiscount: parseFloat(totalDiscount.toFixed(2)),
+      totalCGST: parseFloat(totalCGST.toFixed(2)),
+      totalSGST: parseFloat(totalSGST.toFixed(2)),
+      totalTax: parseFloat(totalTax.toFixed(2)),
+      grandTotal: parseFloat(grandTotal.toFixed(2))
+    };
+  };
+
+  const handleSaveBill = async () => {
+    if (!selectedCustomer) {
+      toast.error('Please select a customer');
+      return;
+    }
+
+    if (billItems.length === 0 || billItems.every(item => !item.description)) {
+      toast.error('Please add at least one item with description');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Create a service bill record (you might need to create a new API endpoint for this)
+      const billData = {
+        bill_number: billNumber,
+        bill_date: billDate,
+        customer_id: selectedCustomer,
+        items: billItems,
+        totals: calculateTotals()
+      };
+
+      // For now, we'll create a service record with the bill details
+      await axios.post(`${API}/services`, {
+        customer_id: selectedCustomer,
+        vehicle_number: 'Service Bill',
+        service_type: 'billing',
+        description: `Service Bill ${billNumber} - ${billItems.length} items`,
+        amount: calculateTotals().grandTotal
+      });
+
+      toast.success('Service bill saved successfully!');
+      
+      // Reset form
+      setBillItems([{
+        sl_no: 1,
+        description: '',
+        hsn_sac: '',
+        qty: 1,
+        unit: 'Nos',
+        rate: 0,
+        labor: 0,
+        disc_percent: 0,
+        gst_percent: 18,
+        cgst_amount: 0,
+        sgst_amount: 0,
+        total_tax: 0,
+        amount: 0
+      }]);
+      setSelectedCustomer('');
+      setBillNumber(`SB-${Date.now().toString().slice(-6)}`);
+      setBillDate(new Date().toISOString().split('T')[0]);
+      
+    } catch (error) {
+      toast.error('Failed to save service bill');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePrintBill = () => {
+    window.print();
+  };
+
+  const totals = calculateTotals();
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Services Billing</h2>
+          <p className="text-gray-600">Create GST-compliant service bills</p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={handlePrintBill} variant="outline" className="flex items-center gap-2">
+            <Printer className="w-4 h-4" />
+            Print Bill
+          </Button>
+          <Button onClick={handleSaveBill} disabled={loading} className="flex items-center gap-2">
+            <Calculator className="w-4 h-4" />
+            {loading ? 'Saving...' : 'Save Bill'}
+          </Button>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Service Bill Details</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Bill Header */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="bill_number">Bill Number</Label>
+              <Input
+                id="bill_number"
+                value={billNumber}
+                onChange={(e) => setBillNumber(e.target.value)}
+                placeholder="Enter bill number"
+              />
+            </div>
+            <div>
+              <Label htmlFor="bill_date">Bill Date</Label>
+              <Input
+                id="bill_date"
+                type="date"
+                value={billDate}
+                onChange={(e) => setBillDate(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="customer">Customer</Label>
+              <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select customer" />
+                </SelectTrigger>
+                <SelectContent>
+                  {customers.map((customer) => (
+                    <SelectItem key={customer.id} value={customer.id}>
+                      {customer.name} - {customer.phone}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Bill Items Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-gray-300">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="border border-gray-300 p-2 text-left font-semibold">Sl. No.</th>
+                  <th className="border border-gray-300 p-2 text-left font-semibold">Description of Goods</th>
+                  <th className="border border-gray-300 p-2 text-left font-semibold">HSN/SAC</th>
+                  <th className="border border-gray-300 p-2 text-left font-semibold">Qty.</th>
+                  <th className="border border-gray-300 p-2 text-left font-semibold">Unit</th>
+                  <th className="border border-gray-300 p-2 text-left font-semibold">Rate</th>
+                  <th className="border border-gray-300 p-2 text-left font-semibold">Labor</th>
+                  <th className="border border-gray-300 p-2 text-left font-semibold">Disc%</th>
+                  <th className="border border-gray-300 p-2 text-left font-semibold">GST%</th>
+                  <th className="border border-gray-300 p-2 text-left font-semibold">CGST Amount</th>
+                  <th className="border border-gray-300 p-2 text-left font-semibold">SGST Amount</th>
+                  <th className="border border-gray-300 p-2 text-left font-semibold">Total Tax</th>
+                  <th className="border border-gray-300 p-2 text-left font-semibold">Amount</th>
+                  <th className="border border-gray-300 p-2 text-left font-semibold no-print">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {billItems.map((item, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="border border-gray-300 p-2 text-center font-medium">{item.sl_no}</td>
+                    <td className="border border-gray-300 p-2">
+                      <Input
+                        value={item.description}
+                        onChange={(e) => updateBillItem(index, 'description', e.target.value)}
+                        placeholder="Enter description"
+                        className="border-0 p-1"
+                      />
+                    </td>
+                    <td className="border border-gray-300 p-2">
+                      <Input
+                        value={item.hsn_sac}
+                        onChange={(e) => updateBillItem(index, 'hsn_sac', e.target.value)}
+                        placeholder="HSN/SAC"
+                        className="border-0 p-1 w-20"
+                      />
+                    </td>
+                    <td className="border border-gray-300 p-2">
+                      <Input
+                        type="number"
+                        value={item.qty}
+                        onChange={(e) => updateBillItem(index, 'qty', parseFloat(e.target.value) || 0)}
+                        className="border-0 p-1 w-16"
+                        min="0"
+                        step="0.01"
+                      />
+                    </td>
+                    <td className="border border-gray-300 p-2">
+                      <Select value={item.unit} onValueChange={(value) => updateBillItem(index, 'unit', value)}>
+                        <SelectTrigger className="border-0 p-1 w-16">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {units.map((unit) => (
+                            <SelectItem key={unit} value={unit}>
+                              {unit}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="border border-gray-300 p-2">
+                      <Input
+                        type="number"
+                        value={item.rate}
+                        onChange={(e) => updateBillItem(index, 'rate', parseFloat(e.target.value) || 0)}
+                        className="border-0 p-1 w-20"
+                        min="0"
+                        step="0.01"
+                      />
+                    </td>
+                    <td className="border border-gray-300 p-2">
+                      <Input
+                        type="number"
+                        value={item.labor}
+                        onChange={(e) => updateBillItem(index, 'labor', parseFloat(e.target.value) || 0)}
+                        className="border-0 p-1 w-20"
+                        min="0"
+                        step="0.01"
+                      />
+                    </td>
+                    <td className="border border-gray-300 p-2">
+                      <Input
+                        type="number"
+                        value={item.disc_percent}
+                        onChange={(e) => updateBillItem(index, 'disc_percent', parseFloat(e.target.value) || 0)}
+                        className="border-0 p-1 w-16"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                      />
+                    </td>
+                    <td className="border border-gray-300 p-2">
+                      <Select value={item.gst_percent.toString()} onValueChange={(value) => updateBillItem(index, 'gst_percent', parseFloat(value))}>
+                        <SelectTrigger className="border-0 p-1 w-16">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {gstRates.map((rate) => (
+                            <SelectItem key={rate} value={rate.toString()}>
+                              {rate}%
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="border border-gray-300 p-2 text-right font-medium">₹{item.cgst_amount}</td>
+                    <td className="border border-gray-300 p-2 text-right font-medium">₹{item.sgst_amount}</td>
+                    <td className="border border-gray-300 p-2 text-right font-medium">₹{item.total_tax}</td>
+                    <td className="border border-gray-300 p-2 text-right font-bold">₹{item.amount}</td>
+                    <td className="border border-gray-300 p-2 text-center no-print">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => removeBillItem(index)}
+                        disabled={billItems.length === 1}
+                        className="w-8 h-8 p-1"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Add Item Button */}
+          <div className="no-print">
+            <Button onClick={addBillItem} variant="outline" className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              Add Item
+            </Button>
+          </div>
+
+          {/* Bill Summary */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div></div>
+            <div className="space-y-2">
+              <div className="flex justify-between py-1 border-b">
+                <span>Subtotal:</span>
+                <span className="font-medium">₹{totals.subtotal}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b">
+                <span>Total Discount:</span>
+                <span className="font-medium text-red-600">-₹{totals.totalDiscount}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b">
+                <span>Total CGST:</span>
+                <span className="font-medium">₹{totals.totalCGST}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b">
+                <span>Total SGST:</span>
+                <span className="font-medium">₹{totals.totalSGST}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b">
+                <span>Total Tax:</span>
+                <span className="font-medium">₹{totals.totalTax}</span>
+              </div>
+              <div className="flex justify-between py-2 border-t-2 border-gray-400">
+                <span className="font-bold text-lg">Grand Total:</span>
+                <span className="font-bold text-lg text-green-600">₹{totals.grandTotal}</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 const ServiceDue = () => {
   return (
     <Card>
