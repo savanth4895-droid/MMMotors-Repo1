@@ -1010,6 +1010,7 @@ const StockView = () => {
                   <th className="text-left p-2">Key No</th>
                   <th className="text-left p-2">Location</th>
                   <th className="text-left p-2">Status</th>
+                  <th className="text-left p-2">Return Date</th>
                   <th className="text-left p-2">Actions</th>
                 </tr>
               </thead>
