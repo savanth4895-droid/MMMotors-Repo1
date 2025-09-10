@@ -976,7 +976,7 @@ const StockView = () => {
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="in_stock">In Stock</SelectItem>
                   <SelectItem value="sold">Sold</SelectItem>
-                  <SelectItem value="reserved">Reserved</SelectItem>
+                  <SelectItem value="returned">Returned</SelectItem>
                 </SelectContent>
               </Select>
             </div>
