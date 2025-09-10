@@ -509,7 +509,7 @@ const BrandDetails = () => {
   const exportBrandData = () => {
     try {
       const csvContent = [
-        ['Date', 'Chassis No', 'Engine No', 'Model', 'Color', 'Key No', 'Inbound Location', 'Status', 'Page Number', 'Outbound Location'].join(','),
+        ['Date', 'Chassis No', 'Engine No', 'Model', 'Color', 'Key No', 'Inbound Location', 'Status', 'Return Date', 'Page Number', 'Outbound Location'].join(','),
         ...filteredVehicles.map(vehicle => [
           new Date(vehicle.date_received).toLocaleDateString('en-IN'),
           vehicle.chassis_no || '',
@@ -519,6 +519,9 @@ const BrandDetails = () => {
           vehicle.key_no || '',
           vehicle.inbound_location || '',
           vehicle.status || '',
+          vehicle.status === 'returned' && vehicle.date_returned 
+            ? new Date(vehicle.date_returned).toLocaleDateString('en-IN')
+            : '',
           vehicle.page_number || '',
           vehicle.outbound_location || ''
         ].map(field => `"${field}"`).join(','))
