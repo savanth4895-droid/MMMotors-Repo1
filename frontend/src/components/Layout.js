@@ -193,6 +193,17 @@ const Layout = ({ children }) => {
                 </SheetTrigger>
               </Sheet>
 
+              {/* Desktop sidebar toggle button */}
+              <Button
+                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                variant="ghost"
+                size="sm"
+                className="hidden lg:flex"
+                title={isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+              >
+                <Menu className="w-5 h-5" />
+              </Button>
+
               {/* Page Title */}
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">
