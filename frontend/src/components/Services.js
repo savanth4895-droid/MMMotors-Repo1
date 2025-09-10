@@ -16,7 +16,10 @@ import {
   Calendar,
   CheckCircle,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Search,
+  FileText,
+  Users
 } from 'lucide-react';
 import { toast } from 'sonner';
 
