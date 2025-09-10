@@ -233,14 +233,16 @@ async def register_user(user_data: UserCreate):
     # Hash password
     hashed_password = hash_password(user_data.password)
     
-    # Create user
+    # Create user document for database
     user_dict = user_data.dict()
     user_dict.pop('password')
     user_dict['hashed_password'] = hashed_password
-    user = User(**user_dict)
+    user_dict['id'] = str(uuid.uuid4())
+    user_dict['is_active'] = True
+    user_dict['created_at'] = datetime.now(timezone.utc)
     
-    await db.users.insert_one(user.dict())
-    return {"message": "User registered successfully", "user_id": user.id}
+    await db.users.insert_one(user_dict)
+    return {"message": "User registered successfully", "user_id": user_dict['id']}
 
 @api_router.post("/auth/login")
 async def login_user(user_credentials: UserLogin):
