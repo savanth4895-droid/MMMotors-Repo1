@@ -669,6 +669,12 @@ const BrandDetails = () => {
                       <td className="p-3">
                         {getStatusBadge(vehicle.status)}
                       </td>
+                      <td className="p-3 text-gray-600">
+                        {vehicle.status === 'returned' && vehicle.date_returned 
+                          ? new Date(vehicle.date_returned).toLocaleDateString('en-IN')
+                          : (vehicle.status === 'returned' ? 'Not Set' : 'N/A')
+                        }
+                      </td>
                       <td className="p-3 text-gray-600">{vehicle.page_number || 'N/A'}</td>
                       <td className="p-3 text-gray-600">{vehicle.outbound_location || 'N/A'}</td>
                       <td className="p-3">
