@@ -241,6 +241,7 @@ const AddSparePart = () => {
         ...partData,
         quantity: parseInt(partData.quantity),
         unit_price: parseFloat(partData.unit_price),
+        gst_percentage: parseFloat(partData.gst_percentage),
         low_stock_threshold: parseInt(partData.low_stock_threshold)
       });
       toast.success('Spare part added successfully!');
