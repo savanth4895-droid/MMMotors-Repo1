@@ -358,7 +358,11 @@ async def get_services(status: Optional[ServiceStatus] = None, current_user: Use
     return [Service(**service) for service in services]
 
 @api_router.put("/services/{service_id}/status")
-async def update_service_status(service_id: str, status: ServiceStatus, current_user: User = Depends(get_current_user)):
+async def update_service_status(service_id: str, status_data: dict, current_user: User = Depends(get_current_user)):
+    status = status_data.get("status")
+    if not status:
+        raise HTTPException(status_code=400, detail="Status is required")
+    
     update_data = {"status": status}
     if status == ServiceStatus.COMPLETED:
         update_data["completion_date"] = datetime.now(timezone.utc)
