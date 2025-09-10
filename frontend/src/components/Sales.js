@@ -17,7 +17,8 @@ import {
   Users, 
   TrendingUp,
   Shield,
-  Calendar
+  Calendar,
+  Car
 } from 'lucide-react';
 import { toast } from 'sonner';
 
