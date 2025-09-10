@@ -438,6 +438,8 @@ async def get_spare_parts(low_stock: bool = False, current_user: User = Depends(
             part['gst_percentage'] = 18.0
         if 'unit' not in part:
             part['unit'] = 'Nos'
+        if 'compatible_models' not in part:
+            part['compatible_models'] = None
         processed_parts.append(SparePart(**part))
     return processed_parts
 
