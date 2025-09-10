@@ -399,6 +399,20 @@ const EditVehicleModal = ({ vehicle, isOpen, onClose, onUpdate }) => {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Return Date Field - Only shown when status is 'returned' */}
+            {editData.status === 'returned' && (
+              <div>
+                <Label htmlFor="edit-return-date">Return Date</Label>
+                <Input
+                  id="edit-return-date"
+                  type="date"
+                  value={editData.date_returned}
+                  onChange={(e) => setEditData({...editData, date_returned: e.target.value})}
+                  required
+                />
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
