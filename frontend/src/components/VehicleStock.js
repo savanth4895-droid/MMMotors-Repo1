@@ -654,6 +654,17 @@ const BrandDetails = () => {
                       </td>
                       <td className="p-3 text-gray-600">{vehicle.page_number || 'N/A'}</td>
                       <td className="p-3 text-gray-600">{vehicle.outbound_location || 'N/A'}</td>
+                      <td className="p-3">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleEditVehicle(vehicle)}
+                          className="flex items-center gap-1"
+                        >
+                          <Edit className="w-3 h-3" />
+                          Edit
+                        </Button>
+                      </td>
                     </tr>
                   ))
                 )}
