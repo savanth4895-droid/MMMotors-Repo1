@@ -633,7 +633,7 @@ const BrandDetails = () => {
               <tbody>
                 {filteredVehicles.length === 0 ? (
                   <tr>
-                    <td colSpan="10" className="p-8 text-center text-gray-500">
+                    <td colSpan="11" className="p-8 text-center text-gray-500">
                       {searchTerm ? `No ${brand} vehicles found matching your search` : `No ${brand} vehicles found`}
                     </td>
                   </tr>
