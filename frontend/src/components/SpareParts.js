@@ -255,6 +255,7 @@ const AddSparePart = () => {
         unit_price: '',
         hsn_sac: '',
         gst_percentage: '18',
+        compatible_models: '',
         low_stock_threshold: '5',
         supplier: ''
       });
