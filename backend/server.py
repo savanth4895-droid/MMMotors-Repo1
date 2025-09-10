@@ -161,7 +161,10 @@ class SparePart(BaseModel):
     part_number: str
     brand: str
     quantity: int
+    unit: str = "Nos"  # Unit of measurement (Nos, Kg, Ltr, etc.)
     unit_price: float
+    hsn_sac: str  # HSN/SAC code
+    gst_percentage: float = 18.0  # GST percentage
     low_stock_threshold: int = 5
     supplier: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
