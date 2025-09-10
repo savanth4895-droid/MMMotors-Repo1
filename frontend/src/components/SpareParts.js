@@ -474,8 +474,16 @@ const CreateBill = () => {
     customer_id: '',
     items: []
   });
-  const [selectedPart, setSelectedPart] = useState('');
-  const [quantity, setQuantity] = useState('');
+  const [itemForm, setItemForm] = useState({
+    part_id: '',
+    description: '',
+    hsn_sac: '',
+    quantity: '',
+    unit: 'Nos',
+    rate: '',
+    discount_percent: '0',
+    gst_percent: '18'
+  });
 
   useEffect(() => {
     fetchCustomers();
