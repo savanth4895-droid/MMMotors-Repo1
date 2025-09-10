@@ -822,7 +822,7 @@ const ViewInvoices = () => {
           </div>
           
           <div style="text-align: center; margin-top: 40px; border-top: 1px solid #ccc; padding-top: 20px;">
-            <p>Thank you for choosing Moto Manager!</p>
+            <p>Thank you for choosing M M Motors!</p>
           </div>
         </body>
       </html>
