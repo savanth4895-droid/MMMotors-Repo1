@@ -44,7 +44,7 @@ class UserRole(str, Enum):
 class VehicleStatus(str, Enum):
     IN_STOCK = "in_stock"
     SOLD = "sold"
-    RESERVED = "reserved"
+    RETURNED = "returned"
 
 class ServiceStatus(str, Enum):
     PENDING = "pending"
