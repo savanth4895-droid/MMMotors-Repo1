@@ -763,18 +763,6 @@ const StockView = () => {
   );
 };
 
-const BrandStock = () => {
-  // This would be a detailed view for a specific brand
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Brand Stock Details</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p>Detailed brand-specific stock view coming soon...</p>
-      </CardContent>
-    </Card>
-  );
-};
+
 
 export default VehicleStock;
