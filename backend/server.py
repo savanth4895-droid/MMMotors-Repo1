@@ -179,6 +179,7 @@ class SparePartCreate(BaseModel):
     unit_price: float
     hsn_sac: Optional[str] = None
     gst_percentage: float = 18.0
+    compatible_models: Optional[str] = None
     low_stock_threshold: int = 5
     supplier: Optional[str] = None
 
