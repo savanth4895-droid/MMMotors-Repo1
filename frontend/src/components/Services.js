@@ -870,107 +870,530 @@ const ViewRegistration = () => {
 };
 
 const JobCards = () => {
-  const [services, setServices] = useState([]);
+  const [jobCards, setJobCards] = useState([]);
+  const [filteredJobCards, setFilteredJobCards] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedJobCard, setSelectedJobCard] = useState(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
-    fetchServices();
+    fetchAllData();
   }, []);
 
-  const fetchServices = async () => {
+  useEffect(() => {
+    filterJobCards();
+  }, [jobCards, searchTerm]);
+
+  const fetchAllData = async () => {
     try {
-      const response = await axios.get(`${API}/services`);
-      setServices(response.data);
+      const [servicesRes, customersRes] = await Promise.all([
+        axios.get(`${API}/services`),
+        axios.get(`${API}/customers`)
+      ]);
+
+      const services = servicesRes.data;
+      const customers = customersRes.data;
+
+      // Combine service and customer data to create job card records
+      const combined = services.map(service => {
+        const customer = customers.find(c => c.id === service.customer_id);
+        
+        // Extract vehicle information from service description
+        const vehicleInfo = extractVehicleInfo(service.description, service.vehicle_number);
+
+        return {
+          id: service.id,
+          job_card_id: service.job_card_number || `JOB-${service.id.slice(-6)}`,
+          customer_name: customer?.name || 'Unknown',
+          phone_number: customer?.phone || 'N/A',
+          vehicle_brand: vehicleInfo.brand,
+          vehicle_model: vehicleInfo.model,
+          vehicle_year: vehicleInfo.year,
+          vehicle_reg_no: service.vehicle_number || 'N/A',
+          complaint: vehicleInfo.complaint || service.description || 'No complaint specified',
+          status: service.status || 'pending',
+          service_type: service.service_type,
+          amount: service.amount,
+          service_date: service.service_date,
+          completion_date: service.completion_date,
+          created_by: service.created_by,
+          customer_address: customer?.address || 'N/A'
+        };
+      });
+
+      setJobCards(combined);
+      setCustomers(customers);
     } catch (error) {
-      toast.error('Failed to fetch services');
+      toast.error('Failed to fetch job cards data');
     } finally {
       setLoading(false);
     }
   };
 
-  const updateServiceStatus = async (serviceId, status) => {
-    try {
-      await axios.put(`${API}/services/${serviceId}/status?status=${status}`);
-      toast.success('Service status updated');
-      fetchServices();
-    } catch (error) {
-      toast.error('Failed to update service status');
+  const extractVehicleInfo = (description, vehicleNumber) => {
+    const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA'];
+    let brand = 'N/A';
+    let model = 'N/A';
+    let year = 'N/A';
+    let complaint = 'General service';
+
+    if (description) {
+      // Find brand in description
+      const foundBrand = brands.find(b => description.toUpperCase().includes(b));
+      if (foundBrand) {
+        brand = foundBrand;
+        
+        // Try to extract model (text after brand, before year or dash)
+        const brandIndex = description.toUpperCase().indexOf(foundBrand);
+        const afterBrand = description.substring(brandIndex + foundBrand.length).trim();
+        const modelMatch = afterBrand.match(/^([A-Za-z0-9\s+\-]+?)(?:\s*\(|\s*-|$)/);
+        if (modelMatch) {
+          model = modelMatch[1].trim();
+        }
+        
+        // Try to extract year (4 digits in parentheses)
+        const yearMatch = description.match(/\((\d{4})\)/);
+        if (yearMatch) {
+          year = yearMatch[1];
+        }
+        
+        // Extract complaint (text after the dash or after vehicle info)
+        const complaintMatch = description.match(/(?:-\s*(.+)|(?:\(\d{4}\)\s*-?\s*(.+)))/);
+        if (complaintMatch) {
+          complaint = complaintMatch[1] || complaintMatch[2] || complaint;
+        }
+      } else {
+        // If no brand found, treat entire description as complaint
+        complaint = description;
+      }
     }
+
+    return { brand, model, year, complaint };
+  };
+
+  const filterJobCards = () => {
+    let filtered = jobCards;
+
+    if (searchTerm) {
+      filtered = jobCards.filter(job =>
+        job.job_card_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        job.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        job.phone_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        job.vehicle_brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        job.vehicle_model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        job.vehicle_year?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        job.vehicle_reg_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        job.complaint?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        job.status?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    setFilteredJobCards(filtered);
   };
 
   const getStatusBadge = (status) => {
-    const statusMap = {
-      pending: { label: 'Pending', variant: 'secondary' },
-      in_progress: { label: 'In Progress', variant: 'default' },
-      completed: { label: 'Completed', variant: 'success' }
+    const statusConfig = {
+      pending: { label: 'Pending', className: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+      in_progress: { label: 'In Progress', className: 'bg-blue-100 text-blue-800 border-blue-200' },
+      completed: { label: 'Completed', className: 'bg-green-100 text-green-800 border-green-200' },
+      cancelled: { label: 'Cancelled', className: 'bg-red-100 text-red-800 border-red-200' }
     };
-    const config = statusMap[status] || statusMap.pending;
-    return <Badge variant={config.variant}>{config.label}</Badge>;
+
+    const config = statusConfig[status] || statusConfig.pending;
+    
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${config.className}`}>
+        {config.label}
+      </span>
+    );
+  };
+
+  const handleViewJobCard = (jobCard) => {
+    setSelectedJobCard(jobCard);
+    setShowViewModal(true);
+  };
+
+  const handleEditJobCard = (jobCard) => {
+    toast.info('Edit functionality will be implemented in the next update');
+    // TODO: Implement edit functionality
+  };
+
+  const handleAddNewJob = () => {
+    setShowAddModal(true);
+  };
+
+  const updateJobStatus = async (jobId, newStatus) => {
+    try {
+      await axios.put(`${API}/services/${jobId}/status`, { status: newStatus });
+      toast.success('Job card status updated successfully');
+      fetchAllData();
+    } catch (error) {
+      toast.error('Failed to update job card status');
+    }
+  };
+
+  const exportJobCards = () => {
+    try {
+      const csvContent = [
+        ['Job Card ID', 'Customer Name', 'Phone Number', 'Vehicle Brand', 'Vehicle Model', 'Vehicle Year', 'Vehicle Reg No', 'Complaint', 'Status', 'Amount'].join(','),
+        ...filteredJobCards.map(job => [
+          job.job_card_id || '',
+          job.customer_name || '',
+          job.phone_number || '',
+          job.vehicle_brand || '',
+          job.vehicle_model || '',
+          job.vehicle_year || '',
+          job.vehicle_reg_no || '',
+          job.complaint || '',
+          job.status || '',
+          job.amount || ''
+        ].map(field => `"${field}"`).join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `job_cards_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Job cards exported successfully!');
+    } catch (error) {
+      toast.error('Failed to export job cards');
+    }
   };
 
   if (loading) {
     return <div className="flex justify-center p-8"><div className="spinner"></div></div>;
   }
 
+  const pendingCount = jobCards.filter(job => job.status === 'pending').length;
+  const inProgressCount = jobCards.filter(job => job.status === 'in_progress').length;
+  const completedCount = jobCards.filter(job => job.status === 'completed').length;
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Job Cards</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left p-2">Job Card #</th>
-                <th className="text-left p-2">Date</th>
-                <th className="text-left p-2">Vehicle</th>
-                <th className="text-left p-2">Service Type</th>
-                <th className="text-left p-2">Amount</th>
-                <th className="text-left p-2">Status</th>
-                <th className="text-left p-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {services.map((service) => (
-                <tr key={service.id} className="border-b hover:bg-gray-50">
-                  <td className="p-2">{service.job_card_number}</td>
-                  <td className="p-2">{new Date(service.service_date).toLocaleDateString()}</td>
-                  <td className="p-2">{service.vehicle_number}</td>
-                  <td className="p-2">{service.service_type.replace('_', ' ')}</td>
-                  <td className="p-2">₹{service.amount}</td>
-                  <td className="p-2">{getStatusBadge(service.status)}</td>
-                  <td className="p-2">
-                    <div className="flex gap-1">
-                      {service.status === 'pending' && (
-                        <Button 
-                          size="sm" 
-                          onClick={() => updateServiceStatus(service.id, 'in_progress')}
+    <div className="space-y-6">
+      {/* Header with Search and Add Button */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Job Cards Management</h2>
+          <p className="text-gray-600">Manage and track all service job cards</p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={handleAddNewJob} className="flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            Add New Job
+          </Button>
+          <Button onClick={exportJobCards} variant="outline" className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            Export CSV
+          </Button>
+        </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative">
+        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+        <Input
+          placeholder="Search by job card ID, customer name, phone, vehicle details, complaint, or status..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <ClipboardList className="h-8 w-8 text-blue-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Job Cards</p>
+                <p className="text-2xl font-bold text-gray-900">{jobCards.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <Clock className="h-8 w-8 text-yellow-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Pending</p>
+                <p className="text-2xl font-bold text-yellow-600">{pendingCount}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <AlertCircle className="h-8 w-8 text-blue-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">In Progress</p>
+                <p className="text-2xl font-bold text-blue-600">{inProgressCount}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <CheckCircle className="h-8 w-8 text-green-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Completed</p>
+                <p className="text-2xl font-bold text-green-600">{completedCount}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Job Cards Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            Job Cards ({filteredJobCards.length} records)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b bg-gray-50">
+                  <th className="text-left p-3 font-semibold">Job Card ID</th>
+                  <th className="text-left p-3 font-semibold">Customer Name</th>
+                  <th className="text-left p-3 font-semibold">Phone Number</th>
+                  <th className="text-left p-3 font-semibold">Vehicle Brand</th>
+                  <th className="text-left p-3 font-semibold">Vehicle Model</th>
+                  <th className="text-left p-3 font-semibold">Vehicle Year</th>
+                  <th className="text-left p-3 font-semibold">Vehicle Reg. No</th>
+                  <th className="text-left p-3 font-semibold">Complaint</th>
+                  <th className="text-left p-3 font-semibold">Status</th>
+                  <th className="text-left p-3 font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredJobCards.length === 0 ? (
+                  <tr>
+                    <td colSpan="10" className="p-8 text-center text-gray-500">
+                      {searchTerm ? 'No job cards found matching your search' : 'No job cards found'}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredJobCards.map((jobCard) => (
+                    <tr key={jobCard.id} className="border-b hover:bg-gray-50 transition-colors">
+                      <td className="p-3">
+                        <span className="font-medium text-blue-600">{jobCard.job_card_id}</span>
+                      </td>
+                      <td className="p-3">
+                        <div className="font-medium text-gray-900">{jobCard.customer_name}</div>
+                      </td>
+                      <td className="p-3 text-gray-600">{jobCard.phone_number}</td>
+                      <td className="p-3">
+                        <span className={`font-medium ${jobCard.vehicle_brand !== 'N/A' ? 'text-blue-600' : 'text-gray-400'}`}>
+                          {jobCard.vehicle_brand}
+                        </span>
+                      </td>
+                      <td className="p-3 text-gray-600">{jobCard.vehicle_model}</td>
+                      <td className="p-3 text-gray-600">{jobCard.vehicle_year}</td>
+                      <td className="p-3 text-gray-600 font-mono">{jobCard.vehicle_reg_no}</td>
+                      <td className="p-3 max-w-xs">
+                        <div className="truncate" title={jobCard.complaint}>
+                          {jobCard.complaint}
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        {getStatusBadge(jobCard.status)}
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleViewJobCard(jobCard)}
+                            className="flex items-center gap-1"
+                          >
+                            <Eye className="w-4 h-4" />
+                            View
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditJobCard(jobCard)}
+                            className="flex items-center gap-1"
+                          >
+                            <FileText className="w-4 h-4" />
+                            Edit
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* View Job Card Modal */}
+      {showViewModal && selectedJobCard && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Job Card Details</h2>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowViewModal(false)}
+                >
+                  Close
+                </Button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Job Card Information */}
+                <div className="border rounded-lg p-4">
+                  <h3 className="text-lg font-semibold mb-3 text-blue-600">Job Card Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><strong>Job Card ID:</strong> {selectedJobCard.job_card_id}</div>
+                    <div><strong>Service Date:</strong> {new Date(selectedJobCard.service_date).toLocaleDateString('en-IN')}</div>
+                    <div><strong>Service Type:</strong> {selectedJobCard.service_type?.replace('_', ' ')}</div>
+                    <div><strong>Status:</strong> {getStatusBadge(selectedJobCard.status)}</div>
+                    {selectedJobCard.completion_date && (
+                      <div><strong>Completion Date:</strong> {new Date(selectedJobCard.completion_date).toLocaleDateString('en-IN')}</div>
+                    )}
+                    <div><strong>Amount:</strong> ₹{selectedJobCard.amount?.toLocaleString() || '0'}</div>
+                  </div>
+                </div>
+
+                {/* Customer Information */}
+                <div className="border rounded-lg p-4">
+                  <h3 className="text-lg font-semibold mb-3 text-blue-600">Customer Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><strong>Name:</strong> {selectedJobCard.customer_name}</div>
+                    <div><strong>Phone:</strong> {selectedJobCard.phone_number}</div>
+                    <div className="md:col-span-2"><strong>Address:</strong> {selectedJobCard.customer_address}</div>
+                  </div>
+                </div>
+
+                {/* Vehicle Information */}
+                <div className="border rounded-lg p-4">
+                  <h3 className="text-lg font-semibold mb-3 text-blue-600">Vehicle Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><strong>Brand:</strong> {selectedJobCard.vehicle_brand}</div>
+                    <div><strong>Model:</strong> {selectedJobCard.vehicle_model}</div>
+                    <div><strong>Year:</strong> {selectedJobCard.vehicle_year}</div>
+                    <div><strong>Registration No:</strong> {selectedJobCard.vehicle_reg_no}</div>
+                  </div>
+                </div>
+
+                {/* Complaint/Service Details */}
+                <div className="border rounded-lg p-4">
+                  <h3 className="text-lg font-semibold mb-3 text-blue-600">Service Details</h3>
+                  <div>
+                    <strong>Complaint/Description:</strong>
+                    <p className="mt-1 text-gray-600">{selectedJobCard.complaint}</p>
+                  </div>
+                </div>
+
+                {/* Status Update Actions */}
+                {selectedJobCard.status !== 'completed' && (
+                  <div className="border rounded-lg p-4">
+                    <h3 className="text-lg font-semibold mb-3 text-blue-600">Update Status</h3>
+                    <div className="flex gap-2">
+                      {selectedJobCard.status === 'pending' && (
+                        <Button
+                          onClick={() => {
+                            updateJobStatus(selectedJobCard.id, 'in_progress');
+                            setShowViewModal(false);
+                          }}
+                          className="bg-blue-600 hover:bg-blue-700"
                         >
-                          Start
+                          Start Work
                         </Button>
                       )}
-                      {service.status === 'in_progress' && (
-                        <Button 
-                          size="sm" 
-                          onClick={() => updateServiceStatus(service.id, 'completed')}
+                      {selectedJobCard.status === 'in_progress' && (
+                        <Button
+                          onClick={() => {
+                            updateJobStatus(selectedJobCard.id, 'completed');
+                            setShowViewModal(false);
+                          }}
                           className="bg-green-600 hover:bg-green-700"
                         >
-                          Complete
+                          Mark Completed
                         </Button>
                       )}
-                      <Button size="sm" variant="outline">
-                        <Eye className="w-4 h-4" />
-                      </Button>
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6 flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowViewModal(false);
+                    handleEditJobCard(selectedJobCard);
+                  }}
+                >
+                  Edit Job Card
+                </Button>
+                <Button onClick={() => setShowViewModal(false)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      )}
+
+      {/* Add New Job Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Add New Job Card</h2>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowAddModal(false)}
+                >
+                  Close
+                </Button>
+              </div>
+
+              <div className="text-center py-8">
+                <ClipboardList className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Add New Job Card</h3>
+                <p className="text-gray-500 mb-4">
+                  To add a new job card, please use the "New Service" registration form.
+                  This will automatically create a job card with all necessary details.
+                </p>
+                <div className="flex gap-2 justify-center">
+                  <Link to="/services/new">
+                    <Button onClick={() => setShowAddModal(false)}>
+                      Go to New Service
+                    </Button>
+                  </Link>
+                  <Button variant="outline" onClick={() => setShowAddModal(false)}>
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
