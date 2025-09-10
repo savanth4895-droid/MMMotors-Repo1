@@ -617,7 +617,7 @@ const CreateBill = () => {
     );
 
     const newItem = {
-      sl_no: billData.items.length + 1,
+      sl_no: billItems.length + 1,
       part_id: itemForm.part_id,
       description: itemForm.description,
       hsn_sac: itemForm.hsn_sac,
@@ -629,10 +629,7 @@ const CreateBill = () => {
       ...calculations
     };
 
-    setBillData({
-      ...billData,
-      items: [...billData.items, newItem]
-    });
+    setBillItems([...billItems, newItem]);
 
     // Reset form
     setItemForm({
