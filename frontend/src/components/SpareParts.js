@@ -609,7 +609,7 @@ const CreateBill = () => {
 
     const newItem = {
       sl_no: billItems.length + 1,
-      part_id: itemForm.part_id,
+      part_id: itemForm.part_id || `MANUAL-${Date.now()}`, // Generate ID for manual entries
       description: itemForm.description,
       hsn_sac: itemForm.hsn_sac,
       quantity: parseFloat(itemForm.quantity),
