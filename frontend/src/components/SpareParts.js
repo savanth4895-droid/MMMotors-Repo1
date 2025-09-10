@@ -424,15 +424,18 @@ const Inventory = () => {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2">Part Name</th>
-                  <th className="text-left p-2">Part Number</th>
-                  <th className="text-left p-2">Brand</th>
-                  <th className="text-left p-2">Quantity</th>
-                  <th className="text-left p-2">Unit Price</th>
-                  <th className="text-left p-2">Total Value</th>
-                  <th className="text-left p-2">Status</th>
-                  <th className="text-left p-2">Actions</th>
+                <tr className="border-b bg-gray-50">
+                  <th className="text-left p-3 font-semibold">Sl. No.</th>
+                  <th className="text-left p-3 font-semibold">Description of Goods</th>
+                  <th className="text-left p-3 font-semibold">Part Number</th>
+                  <th className="text-left p-3 font-semibold">HSN/SAC</th>
+                  <th className="text-left p-3 font-semibold">Qty.</th>
+                  <th className="text-left p-3 font-semibold">Unit</th>
+                  <th className="text-left p-3 font-semibold">Rate</th>
+                  <th className="text-left p-3 font-semibold">GST%</th>
+                  <th className="text-left p-3 font-semibold">Total Value</th>
+                  <th className="text-left p-3 font-semibold">Status</th>
+                  <th className="text-left p-3 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
