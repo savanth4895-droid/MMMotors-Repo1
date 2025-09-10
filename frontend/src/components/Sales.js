@@ -1572,6 +1572,399 @@ const CustomersManagement = () => {
   );
 };
 
+const ViewCustomerDetails = () => {
+  const [customers, setCustomers] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [sales, setSales] = useState([]);
+  const [customerDetails, setCustomerDetails] = useState([]);
+  const [filteredDetails, setFilteredDetails] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+
+  useEffect(() => {
+    fetchAllData();
+  }, []);
+
+  useEffect(() => {
+    if (customers.length > 0 && vehicles.length > 0) {
+      combineCustomerVehicleData();
+    }
+  }, [customers, vehicles, sales]);
+
+  useEffect(() => {
+    filterCustomerDetails();
+  }, [customerDetails, searchTerm]);
+
+  const fetchAllData = async () => {
+    try {
+      const [customersRes, vehiclesRes, salesRes] = await Promise.all([
+        axios.get(`${API}/customers`),
+        axios.get(`${API}/vehicles`),
+        axios.get(`${API}/sales`)
+      ]);
+      
+      setCustomers(customersRes.data);
+      setVehicles(vehiclesRes.data);
+      setSales(salesRes.data);
+    } catch (error) {
+      toast.error('Failed to fetch customer details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const combineCustomerVehicleData = () => {
+    const combined = customers.map(customer => {
+      // Find customer's sale to get vehicle information
+      const customerSale = sales.find(sale => sale.customer_id === customer.id);
+      let customerVehicle = null;
+      
+      if (customerSale) {
+        customerVehicle = vehicles.find(vehicle => vehicle.id === customerSale.vehicle_id);
+      }
+      
+      // If no sale found, check if vehicle is directly linked to customer
+      if (!customerVehicle) {
+        customerVehicle = vehicles.find(vehicle => vehicle.customer_id === customer.id);
+      }
+
+      return {
+        id: customer.id,
+        date: customerSale ? customerSale.sale_date : customer.created_at,
+        name: customer.name,
+        mobile: customer.phone,
+        address: customer.address,
+        email: customer.email,
+        brand: customerVehicle?.brand || 'N/A',
+        model: customerVehicle?.model || 'N/A',
+        color: customerVehicle?.color || 'N/A',
+        chassis_no: customerVehicle?.chassis_no || 'N/A',
+        engine_no: customerVehicle?.engine_no || 'N/A',
+        vehicle_no: customerVehicle?.vehicle_no || 'N/A',
+        vehicle_status: customerVehicle?.status || 'N/A',
+        sale_amount: customerSale?.amount || null,
+        payment_method: customerSale?.payment_method || null
+      };
+    });
+    
+    setCustomerDetails(combined);
+  };
+
+  const filterCustomerDetails = () => {
+    let filtered = customerDetails;
+    
+    if (searchTerm) {
+      filtered = customerDetails.filter(detail =>
+        detail.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        detail.mobile?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        detail.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        detail.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        detail.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        detail.chassis_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        detail.engine_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        detail.vehicle_no?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    setFilteredDetails(filtered);
+  };
+
+  const handleViewCustomer = (customer) => {
+    setSelectedCustomer(customer);
+    setShowViewModal(true);
+  };
+
+  const handleEditCustomer = (customer) => {
+    toast.info('Edit functionality will be implemented in the next update');
+    // TODO: Implement edit functionality
+  };
+
+  const exportToCSV = () => {
+    try {
+      const csvContent = [
+        ['Date', 'Name', 'Mobile Number', 'Address', 'Brand', 'Model', 'Color', 'Chassis No', 'Engine No', 'Vehicle No'].join(','),
+        ...filteredDetails.map(detail => [
+          new Date(detail.date).toLocaleDateString('en-IN'),
+          detail.name || '',
+          detail.mobile || '',
+          detail.address || '',
+          detail.brand || '',
+          detail.model || '',
+          detail.color || '',
+          detail.chassis_no || '',
+          detail.engine_no || '',
+          detail.vehicle_no || ''
+        ].map(field => `"${field}"`).join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `customer_details_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Customer details exported successfully!');
+    } catch (error) {
+      toast.error('Failed to export customer details');
+    }
+  };
+
+  if (loading) {
+    return <div className="flex justify-center p-8"><div className="spinner"></div></div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">View Customer Details</h2>
+          <p className="text-gray-600">Complete customer information with vehicle details</p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={exportToCSV} variant="outline" className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            Export CSV
+          </Button>
+          <Button variant="outline" className="flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            Print Report
+          </Button>
+        </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative">
+        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+        <Input
+          placeholder="Search by name, mobile, address, brand, model, chassis no, engine no, or vehicle no..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center">
+              <Users className="h-8 w-8 text-blue-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Customers</p>
+                <p className="text-2xl font-bold text-gray-900">{customerDetails.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center">
+              <Car className="h-8 w-8 text-green-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">With Vehicles</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {customerDetails.filter(c => c.brand !== 'N/A').length}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center">
+              <TrendingUp className="h-8 w-8 text-purple-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Sales</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  ₹{customerDetails.reduce((sum, c) => sum + (c.sale_amount || 0), 0).toLocaleString()}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center">
+              <FileText className="h-8 w-8 text-orange-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Filtered Results</p>
+                <p className="text-2xl font-bold text-gray-900">{filteredDetails.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Customer Details Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            Customer Details ({filteredDetails.length} records)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b bg-gray-50">
+                  <th className="text-left p-3 font-semibold">Date</th>
+                  <th className="text-left p-3 font-semibold">Name</th>
+                  <th className="text-left p-3 font-semibold">Mobile Number</th>
+                  <th className="text-left p-3 font-semibold">Address</th>
+                  <th className="text-left p-3 font-semibold">Brand</th>
+                  <th className="text-left p-3 font-semibold">Model</th>
+                  <th className="text-left p-3 font-semibold">Color</th>
+                  <th className="text-left p-3 font-semibold">Chassis NO.</th>
+                  <th className="text-left p-3 font-semibold">Engine NO.</th>
+                  <th className="text-left p-3 font-semibold">Vehicle No.</th>
+                  <th className="text-left p-3 font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredDetails.length === 0 ? (
+                  <tr>
+                    <td colSpan="11" className="p-8 text-center text-gray-500">
+                      {searchTerm ? 'No customer details found matching your search' : 'No customer details found'}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredDetails.map((detail) => (
+                    <tr key={detail.id} className="border-b hover:bg-gray-50 transition-colors">
+                      <td className="p-3 text-gray-600">
+                        {new Date(detail.date).toLocaleDateString('en-IN')}
+                      </td>
+                      <td className="p-3">
+                        <div className="font-medium text-gray-900">{detail.name}</div>
+                      </td>
+                      <td className="p-3 text-gray-600">{detail.mobile}</td>
+                      <td className="p-3 text-gray-600 max-w-xs truncate" title={detail.address}>
+                        {detail.address}
+                      </td>
+                      <td className="p-3">
+                        <span className={`font-medium ${detail.brand !== 'N/A' ? 'text-blue-600' : 'text-gray-400'}`}>
+                          {detail.brand}
+                        </span>
+                      </td>
+                      <td className="p-3 text-gray-600">{detail.model}</td>
+                      <td className="p-3 text-gray-600">{detail.color}</td>
+                      <td className="p-3 text-gray-600 font-mono text-sm">{detail.chassis_no}</td>
+                      <td className="p-3 text-gray-600 font-mono text-sm">{detail.engine_no}</td>
+                      <td className="p-3 text-gray-600 font-mono text-sm">{detail.vehicle_no}</td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleViewCustomer(detail)}
+                            className="flex items-center gap-1"
+                          >
+                            <Eye className="w-4 h-4" />
+                            View
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditCustomer(detail)}
+                            className="flex items-center gap-1"
+                          >
+                            <FileText className="w-4 h-4" />
+                            Edit
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* View Customer Modal */}
+      {showViewModal && selectedCustomer && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Customer Details</h2>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowViewModal(false)}
+                >
+                  Close
+                </Button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Customer Information */}
+                <div className="border rounded-lg p-4">
+                  <h3 className="text-lg font-semibold mb-3 text-blue-600">Customer Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><strong>Name:</strong> {selectedCustomer.name}</div>
+                    <div><strong>Mobile:</strong> {selectedCustomer.mobile}</div>
+                    <div><strong>Email:</strong> {selectedCustomer.email || 'N/A'}</div>
+                    <div><strong>Registration Date:</strong> {new Date(selectedCustomer.date).toLocaleDateString('en-IN')}</div>
+                    <div className="md:col-span-2"><strong>Address:</strong> {selectedCustomer.address}</div>
+                  </div>
+                </div>
+
+                {/* Vehicle Information */}
+                <div className="border rounded-lg p-4">
+                  <h3 className="text-lg font-semibold mb-3 text-blue-600">Vehicle Information</h3>
+                  {selectedCustomer.brand !== 'N/A' ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div><strong>Brand:</strong> {selectedCustomer.brand}</div>
+                      <div><strong>Model:</strong> {selectedCustomer.model}</div>
+                      <div><strong>Color:</strong> {selectedCustomer.color}</div>
+                      <div><strong>Vehicle Status:</strong> {selectedCustomer.vehicle_status}</div>
+                      <div><strong>Chassis Number:</strong> {selectedCustomer.chassis_no}</div>
+                      <div><strong>Engine Number:</strong> {selectedCustomer.engine_no}</div>
+                      <div className="md:col-span-2"><strong>Vehicle Registration:</strong> {selectedCustomer.vehicle_no}</div>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 italic">No vehicle information available</p>
+                  )}
+                </div>
+
+                {/* Sales Information */}
+                {selectedCustomer.sale_amount && (
+                  <div className="border rounded-lg p-4">
+                    <h3 className="text-lg font-semibold mb-3 text-blue-600">Sales Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div><strong>Sale Amount:</strong> ₹{selectedCustomer.sale_amount?.toLocaleString()}</div>
+                      <div><strong>Payment Method:</strong> {selectedCustomer.payment_method?.toUpperCase()}</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6 flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleEditCustomer(selectedCustomer)}
+                >
+                  Edit Customer
+                </Button>
+                <Button onClick={() => setShowViewModal(false)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const InsuranceManagement = () => {
   return (
     <Card>
