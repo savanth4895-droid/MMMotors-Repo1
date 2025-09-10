@@ -913,7 +913,7 @@ const CreateBill = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {billData.items.map((item, index) => (
+                        {billItems.map((item, index) => (
                           <tr key={index} className="border-t hover:bg-gray-50">
                             <td className="p-2 border text-center">{item.sl_no}</td>
                             <td className="p-2 border">{item.description}</td>
