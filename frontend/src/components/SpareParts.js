@@ -1017,26 +1017,44 @@ const Bills = () => {
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="border-b">
-                <th className="text-left p-2">Bill Number</th>
-                <th className="text-left p-2">Date</th>
-                <th className="text-left p-2">Customer</th>
-                <th className="text-left p-2">Items</th>
-                <th className="text-left p-2">Total Amount</th>
-                <th className="text-left p-2">Actions</th>
+              <tr className="border-b bg-gray-50">
+                <th className="text-left p-3 font-semibold">Bill Number</th>
+                <th className="text-left p-3 font-semibold">Date</th>
+                <th className="text-left p-3 font-semibold">Customer Name</th>
+                <th className="text-left p-3 font-semibold">Mobile</th>
+                <th className="text-left p-3 font-semibold">Vehicle</th>
+                <th className="text-left p-3 font-semibold">Items</th>
+                <th className="text-left p-3 font-semibold">Total Amount</th>
+                <th className="text-left p-3 font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>
               {bills.map((bill) => (
                 <tr key={bill.id} className="border-b hover:bg-gray-50">
-                  <td className="p-2">{bill.bill_number}</td>
-                  <td className="p-2">{new Date(bill.bill_date).toLocaleDateString()}</td>
-                  <td className="p-2">{bill.customer_id}</td>
-                  <td className="p-2">{bill.items.length} items</td>
-                  <td className="p-2">₹{bill.total_amount}</td>
-                  <td className="p-2">
+                  <td className="p-3 font-mono">{bill.bill_number}</td>
+                  <td className="p-3">{new Date(bill.bill_date).toLocaleDateString('en-IN')}</td>
+                  <td className="p-3 font-medium">
+                    {bill.customer_data?.name || 'N/A'}
+                  </td>
+                  <td className="p-3">
+                    {bill.customer_data?.mobile || 'N/A'}
+                  </td>
+                  <td className="p-3">
+                    {bill.customer_data?.vehicle_name && bill.customer_data?.vehicle_number
+                      ? `${bill.customer_data.vehicle_name} (${bill.customer_data.vehicle_number})`
+                      : bill.customer_data?.vehicle_name || bill.customer_data?.vehicle_number || 'N/A'
+                    }
+                  </td>
+                  <td className="p-3 text-center">
+                    <Badge variant="outline">
+                      {bill.items.length} items
+                    </Badge>
+                  </td>
+                  <td className="p-3 font-semibold text-green-600">₹{bill.total_amount.toFixed(2)}</td>
+                  <td className="p-3">
                     <Button size="sm" variant="outline">
-                      <Eye className="w-4 h-4" />
+                      <Eye className="w-4 h-4 mr-1" />
+                      View
                     </Button>
                   </td>
                 </tr>
