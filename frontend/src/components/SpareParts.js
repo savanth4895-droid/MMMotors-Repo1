@@ -527,10 +527,13 @@ const Inventory = () => {
 const CreateBill = () => {
   const [customers, setCustomers] = useState([]);
   const [parts, setParts] = useState([]);
-  const [billData, setBillData] = useState({
-    customer_id: '',
-    items: []
+  const [customerData, setCustomerData] = useState({
+    name: '',
+    mobile: '',
+    vehicle_name: '',
+    vehicle_number: ''
   });
+  const [billItems, setBillItems] = useState([]);
   const [itemForm, setItemForm] = useState({
     part_id: '',
     description: '',
