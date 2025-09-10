@@ -299,8 +299,30 @@ async def get_vehicles(brand: Optional[str] = None, status: Optional[VehicleStat
 
 @api_router.get("/vehicles/brands")
 async def get_vehicle_brands(current_user: User = Depends(get_current_user)):
-    brands = ["TVS", "BAJAJ", "HERO", "HONDA", "TRIUMPH", "KTM", "SUZUKI", "APRILIA"]
+    brands = ["TVS", "BAJAJ", "HERO", "HONDA", "TRIUMPH, "KTM", "SUZUKI", "APRILIA"]
     return brands
+
+@api_router.put("/vehicles/{vehicle_id}", response_model=Vehicle)
+async def update_vehicle(vehicle_id: str, vehicle_data: VehicleCreate, current_user: User = Depends(get_current_user)):
+    # Check if vehicle exists
+    existing_vehicle = await db.vehicles.find_one({"id": vehicle_id})
+    if not existing_vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Update vehicle data
+    update_data = vehicle_data.dict()
+    update_data["id"] = vehicle_id  # Keep the original ID
+    
+    updated_vehicle = Vehicle(**{**existing_vehicle, **update_data})
+    await db.vehicles.replace_one({"id": vehicle_id}, updated_vehicle.dict())
+    return updated_vehicle
+
+@api_router.get("/vehicles/{vehicle_id}", response_model=Vehicle)
+async def get_vehicle(vehicle_id: str, current_user: User = Depends(get_current_user)):
+    vehicle = await db.vehicles.find_one({"id": vehicle_id})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    return Vehicle(**vehicle)
 
 # Sales endpoints
 @api_router.post("/sales", response_model=Sale)
