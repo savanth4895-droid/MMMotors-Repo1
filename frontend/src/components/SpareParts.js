@@ -595,8 +595,8 @@ const CreateBill = () => {
   };
 
   const addItem = () => {
-    if (!itemForm.part_id || !itemForm.quantity || !itemForm.rate) {
-      toast.error('Please fill all required fields');
+    if (!itemForm.description || !itemForm.hsn_sac || !itemForm.quantity || !itemForm.rate) {
+      toast.error('Please fill all required fields: Description, HSN/SAC, Quantity, and Rate');
       return;
     }
 
