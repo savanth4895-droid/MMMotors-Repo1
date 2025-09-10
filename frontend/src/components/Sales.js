@@ -920,9 +920,12 @@ const ViewInvoices = () => {
                   filteredInvoices.map((invoice) => (
                     <tr key={invoice.id} className="border-b hover:bg-gray-50 transition-colors">
                       <td className="p-3">
-                        <span className="font-medium text-blue-600">
+                        <button
+                          onClick={() => handleViewInvoice(invoice)}
+                          className="font-medium text-blue-600 hover:text-blue-800 cursor-pointer"
+                        >
                           {invoice.invoice_number}
-                        </span>
+                        </button>
                       </td>
                       <td className="p-3 text-gray-600">
                         {new Date(invoice.sale_date).toLocaleDateString('en-IN')}
