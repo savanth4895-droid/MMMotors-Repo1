@@ -547,6 +547,7 @@ const CreateBill = () => {
     vehicle_number: ''
   });
   const [billItems, setBillItems] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [itemForm, setItemForm] = useState({
     part_id: '',
     description: '',
