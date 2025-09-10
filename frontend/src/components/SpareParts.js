@@ -777,50 +777,96 @@ const CreateBill = () => {
               </CardContent>
             </Card>
 
+            {/* Bill Items Table */}
             {billData.items.length > 0 && (
-              <div>
-                <h3 className="font-medium mb-2">Bill Items</h3>
-                <div className="border rounded-lg overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="text-left p-2">Part</th>
-                        <th className="text-left p-2">Qty</th>
-                        <th className="text-left p-2">Rate</th>
-                        <th className="text-left p-2">Amount</th>
-                        <th className="text-left p-2">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {billData.items.map((item, index) => (
-                        <tr key={index} className="border-t">
-                          <td className="p-2">{item.part_name}</td>
-                          <td className="p-2">{item.quantity}</td>
-                          <td className="p-2">₹{item.unit_price}</td>
-                          <td className="p-2">₹{(item.quantity * item.unit_price).toFixed(2)}</td>
-                          <td className="p-2">
-                            <Button 
-                              type="button" 
-                              size="sm" 
-                              variant="outline" 
-                              onClick={() => removeItem(index)}
-                            >
-                              Remove
-                            </Button>
-                          </td>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Bill Items</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse text-sm">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="text-left p-2 border">Sl. No.</th>
+                          <th className="text-left p-2 border">Description of Goods</th>
+                          <th className="text-left p-2 border">HSN/SAC</th>
+                          <th className="text-left p-2 border">Qty.</th>
+                          <th className="text-left p-2 border">Unit</th>
+                          <th className="text-left p-2 border">Rate</th>
+                          <th className="text-left p-2 border">Disc%</th>
+                          <th className="text-left p-2 border">GST%</th>
+                          <th className="text-left p-2 border">CGST Amount</th>
+                          <th className="text-left p-2 border">SGST Amount</th>
+                          <th className="text-left p-2 border">Total Tax</th>
+                          <th className="text-left p-2 border">Amount</th>
+                          <th className="text-left p-2 border">Action</th>
                         </tr>
-                      ))}
-                    </tbody>
-                    <tfoot className="bg-gray-50">
-                      <tr>
-                        <td colSpan="3" className="p-2 font-medium">Total:</td>
-                        <td className="p-2 font-bold">₹{totalAmount.toFixed(2)}</td>
-                        <td></td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-              </div>
+                      </thead>
+                      <tbody>
+                        {billData.items.map((item, index) => (
+                          <tr key={index} className="border-t hover:bg-gray-50">
+                            <td className="p-2 border text-center">{item.sl_no}</td>
+                            <td className="p-2 border">{item.description}</td>
+                            <td className="p-2 border">{item.hsn_sac}</td>
+                            <td className="p-2 border text-right">{item.quantity}</td>
+                            <td className="p-2 border">{item.unit}</td>
+                            <td className="p-2 border text-right">₹{item.rate.toFixed(2)}</td>
+                            <td className="p-2 border text-right">{item.discount_percent}%</td>
+                            <td className="p-2 border text-right">{item.gst_percent}%</td>
+                            <td className="p-2 border text-right">₹{item.cgstAmount.toFixed(2)}</td>
+                            <td className="p-2 border text-right">₹{item.sgstAmount.toFixed(2)}</td>
+                            <td className="p-2 border text-right">₹{item.totalTax.toFixed(2)}</td>
+                            <td className="p-2 border text-right font-semibold">₹{item.finalAmount.toFixed(2)}</td>
+                            <td className="p-2 border text-center">
+                              <Button 
+                                type="button" 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={() => removeItem(index)}
+                              >
+                                Remove
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Bill Summary */}
+                  <div className="mt-6 bg-gray-50 p-4 rounded-lg">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-600">Subtotal:</span>
+                        <div className="font-semibold">₹{totals.subtotal.toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Total Discount:</span>
+                        <div className="font-semibold">₹{totals.totalDiscount.toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Total CGST:</span>
+                        <div className="font-semibold">₹{totals.totalCGST.toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Total SGST:</span>
+                        <div className="font-semibold">₹{totals.totalSGST.toFixed(2)}</div>
+                      </div>
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-gray-300">
+                      <div className="flex justify-between items-center">
+                        <span className="text-lg font-semibold">Total Tax:</span>
+                        <span className="text-lg font-bold">₹{totals.totalTax.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-xl font-bold text-green-600">
+                        <span>Final Amount:</span>
+                        <span>₹{totals.totalAmount.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             <Button type="submit" className="w-full">Create Bill</Button>
