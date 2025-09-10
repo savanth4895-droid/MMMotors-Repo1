@@ -199,6 +199,12 @@ class SparePartBill(BaseModel):
 class SparePartBillCreate(BaseModel):
     customer_id: str
     items: List[Dict[str, Any]]
+    subtotal: Optional[float] = 0
+    total_discount: Optional[float] = 0
+    total_cgst: Optional[float] = 0
+    total_sgst: Optional[float] = 0
+    total_tax: Optional[float] = 0
+    total_amount: Optional[float] = 0
 
 # Utility functions
 def hash_password(password: str) -> str:
