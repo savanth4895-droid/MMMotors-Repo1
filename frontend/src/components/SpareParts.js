@@ -688,12 +688,12 @@ const CreateBill = () => {
   };
 
   const calculateTotals = () => {
-    const subtotal = billData.items.reduce((sum, item) => sum + item.subtotal, 0);
-    const totalDiscount = billData.items.reduce((sum, item) => sum + item.discountAmount, 0);
-    const totalCGST = billData.items.reduce((sum, item) => sum + item.cgstAmount, 0);
-    const totalSGST = billData.items.reduce((sum, item) => sum + item.sgstAmount, 0);
-    const totalTax = billData.items.reduce((sum, item) => sum + item.totalTax, 0);
-    const totalAmount = billData.items.reduce((sum, item) => sum + item.finalAmount, 0);
+    const subtotal = billItems.reduce((sum, item) => sum + item.subtotal, 0);
+    const totalDiscount = billItems.reduce((sum, item) => sum + item.discountAmount, 0);
+    const totalCGST = billItems.reduce((sum, item) => sum + item.cgstAmount, 0);
+    const totalSGST = billItems.reduce((sum, item) => sum + item.sgstAmount, 0);
+    const totalTax = billItems.reduce((sum, item) => sum + item.totalTax, 0);
+    const totalAmount = billItems.reduce((sum, item) => sum + item.finalAmount, 0);
 
     return { subtotal, totalDiscount, totalCGST, totalSGST, totalTax, totalAmount };
   };
