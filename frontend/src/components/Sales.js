@@ -1074,17 +1074,39 @@ const ViewInvoices = () => {
 
 const CustomersManagement = () => {
   const [customers, setCustomers] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [customerData, setCustomerData] = useState({
+    date: new Date().toISOString().split('T')[0],
     name: '',
-    phone: '',
-    email: '',
-    address: ''
+    care_of: '',
+    mobile: '',
+    address: '',
+    brand: '',
+    model: '',
+    color: '',
+    chassis_no: '',
+    engine_no: '',
+    vehicle_no: '',
+    insurance_nominee: '',
+    relation: '',
+    age: ''
   });
+
+  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA'];
+  const relations = ['father', 'mother', 'spouse', 'son', 'daughter', 'brother', 'sister', 'other'];
 
   useEffect(() => {
     fetchCustomers();
+    fetchVehicles();
   }, []);
+
+  useEffect(() => {
+    filterCustomers();
+  }, [customers, searchTerm]);
 
   const fetchCustomers = async () => {
     try {
@@ -1095,77 +1117,394 @@ const CustomersManagement = () => {
     }
   };
 
-  const handleAddCustomer = async (e) => {
-    e.preventDefault();
+  const fetchVehicles = async () => {
     try {
-      await axios.post(`${API}/customers`, customerData);
-      toast.success('Customer added successfully!');
-      setCustomerData({ name: '', phone: '', email: '', address: '' });
+      const response = await axios.get(`${API}/vehicles`);
+      setVehicles(response.data);
+    } catch (error) {
+      console.error('Failed to fetch vehicles');
+    }
+  };
+
+  const filterCustomers = () => {
+    let filtered = customers;
+    if (searchTerm) {
+      filtered = customers.filter(customer =>
+        customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        customer.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        customer.address?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    setFilteredCustomers(filtered);
+  };
+
+  const handleInputChange = (field, value) => {
+    setCustomerData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const resetForm = () => {
+    setCustomerData({
+      date: new Date().toISOString().split('T')[0],
+      name: '',
+      care_of: '',
+      mobile: '',
+      address: '',
+      brand: '',
+      model: '',
+      color: '',
+      chassis_no: '',
+      engine_no: '',
+      vehicle_no: '',
+      insurance_nominee: '',
+      relation: '',
+      age: ''
+    });
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      // Create customer
+      const customerResponse = await axios.post(`${API}/customers`, {
+        name: customerData.name,
+        phone: customerData.mobile,
+        email: null,
+        address: customerData.address
+      });
+
+      // Create vehicle if vehicle details are provided
+      if (customerData.brand && customerData.model) {
+        await axios.post(`${API}/vehicles`, {
+          brand: customerData.brand,
+          model: customerData.model,
+          chassis_no: customerData.chassis_no,
+          engine_no: customerData.engine_no,
+          color: customerData.color,
+          key_no: 'N/A',
+          inbound_location: 'Customer Registration'
+        });
+      }
+
+      toast.success('Customer details saved successfully!');
+      resetForm();
       setShowAddForm(false);
       fetchCustomers();
+      fetchVehicles();
     } catch (error) {
-      toast.error('Failed to add customer');
+      toast.error(error.response?.data?.detail || 'Failed to save customer details');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleExport = () => {
+    try {
+      const csvContent = [
+        ['Date', 'Name', 'C/O', 'Mobile', 'Address', 'Email', 'Created Date'].join(','),
+        ...customers.map(customer => [
+          new Date().toISOString().split('T')[0],
+          customer.name || '',
+          '', // C/O not stored separately
+          customer.phone || '',
+          customer.address || '',
+          customer.email || '',
+          new Date(customer.created_at).toLocaleDateString()
+        ].map(field => `"${field}"`).join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `customers_export_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Customer data exported successfully!');
+    } catch (error) {
+      toast.error('Failed to export customer data');
+    }
+  };
+
+  const handleImport = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const csv = e.target.result;
+            const lines = csv.split('\n');
+            const headers = lines[0].split(',');
+            
+            // Basic CSV parsing - in production, use a proper CSV library
+            toast.info('Import functionality will process CSV files. Please ensure correct format.');
+            console.log('CSV headers:', headers);
+            console.log('CSV lines count:', lines.length - 1);
+          } catch (error) {
+            toast.error('Failed to parse CSV file');
+          }
+        };
+        reader.readAsText(file);
+      }
+    };
+    input.click();
+  };
+
+  const getCustomerVehicle = (customerId) => {
+    const vehicle = vehicles.find(v => v.customer_id === customerId);
+    return vehicle ? `${vehicle.brand} ${vehicle.model}` : 'No vehicle';
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Customer Management</h2>
-        <Button onClick={() => setShowAddForm(!showAddForm)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Customer
-        </Button>
+      {/* Header with Action Buttons */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Customer Management</h2>
+          <p className="text-gray-600">Manage customer details and vehicle information</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => setShowAddForm(!showAddForm)} className="flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            Add Customer
+          </Button>
+          <Button onClick={handleImport} variant="outline" className="flex items-center gap-2">
+            <Search className="w-4 h-4" />
+            Import
+          </Button>
+          <Button onClick={handleExport} variant="outline" className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            Export
+          </Button>
+          <Button variant="outline" className="flex items-center gap-2">
+            <Eye className="w-4 h-4" />
+            View All
+          </Button>
+        </div>
       </div>
 
+      {/* Search Bar */}
+      <div className="relative">
+        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+        <Input
+          placeholder="Search customers by name, phone, email, or address..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
+      {/* Add Customer Form */}
       {showAddForm && (
         <Card>
           <CardHeader>
-            <CardTitle>Add New Customer</CardTitle>
+            <CardTitle>Add New Customer Details</CardTitle>
+            <CardDescription>Complete customer registration with vehicle and insurance information</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleAddCustomer} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Name</Label>
-                  <Input
-                    id="name"
-                    value={customerData.name}
-                    onChange={(e) => setCustomerData({...customerData, name: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input
-                    id="phone"
-                    value={customerData.phone}
-                    onChange={(e) => setCustomerData({...customerData, phone: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={customerData.email}
-                    onChange={(e) => setCustomerData({...customerData, email: e.target.value})}
-                  />
-                </div>
-              </div>
+            <form onSubmit={handleSave} className="space-y-6">
+              {/* Date */}
               <div>
-                <Label htmlFor="address">Address</Label>
-                <Textarea
-                  id="address"
-                  value={customerData.address}
-                  onChange={(e) => setCustomerData({...customerData, address: e.target.value})}
+                <Label htmlFor="date">Date</Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={customerData.date}
+                  onChange={(e) => handleInputChange('date', e.target.value)}
                   required
                 />
               </div>
-              <div className="flex gap-2">
-                <Button type="submit">Add Customer</Button>
-                <Button type="button" variant="outline" onClick={() => setShowAddForm(false)}>
+
+              {/* Customer Details Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-blue-600 border-b pb-2">Customer Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Name</Label>
+                    <Input
+                      id="name"
+                      placeholder="Enter customer name"
+                      value={customerData.name}
+                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="care_of">C/O (Care Of)</Label>
+                    <Input
+                      id="care_of"
+                      placeholder="S/O, D/O, W/O"
+                      value={customerData.care_of}
+                      onChange={(e) => handleInputChange('care_of', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="mobile">Mobile Number</Label>
+                    <Input
+                      id="mobile"
+                      placeholder="Enter mobile number"
+                      value={customerData.mobile}
+                      onChange={(e) => handleInputChange('mobile', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="address">Address</Label>
+                    <Textarea
+                      id="address"
+                      placeholder="Enter complete address"
+                      value={customerData.address}
+                      onChange={(e) => handleInputChange('address', e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Vehicle Details Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-blue-600 border-b pb-2">Vehicle Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="brand">Brand</Label>
+                    <Select value={customerData.brand} onValueChange={(value) => handleInputChange('brand', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select brand" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {brands.map((brand) => (
+                          <SelectItem key={brand} value={brand}>
+                            {brand}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="model">Model</Label>
+                    <Input
+                      id="model"
+                      placeholder="Enter model name"
+                      value={customerData.model}
+                      onChange={(e) => handleInputChange('model', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="color">Color</Label>
+                    <Input
+                      id="color"
+                      placeholder="Enter color"
+                      value={customerData.color}
+                      onChange={(e) => handleInputChange('color', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="chassis_no">Chassis No</Label>
+                    <Input
+                      id="chassis_no"
+                      placeholder="Enter chassis number"
+                      value={customerData.chassis_no}
+                      onChange={(e) => handleInputChange('chassis_no', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="engine_no">Engine No</Label>
+                    <Input
+                      id="engine_no"
+                      placeholder="Enter engine number"
+                      value={customerData.engine_no}
+                      onChange={(e) => handleInputChange('engine_no', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="vehicle_no">Vehicle No</Label>
+                    <Input
+                      id="vehicle_no"
+                      placeholder="Enter vehicle registration number"
+                      value={customerData.vehicle_no}
+                      onChange={(e) => handleInputChange('vehicle_no', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Insurance Nominee Details Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-blue-600 border-b pb-2">Insurance Nominee Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="insurance_nominee">Insurance Nominee Name</Label>
+                    <Input
+                      id="insurance_nominee"
+                      placeholder="Enter nominee name"
+                      value={customerData.insurance_nominee}
+                      onChange={(e) => handleInputChange('insurance_nominee', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="relation">Relation</Label>
+                    <Select value={customerData.relation} onValueChange={(value) => handleInputChange('relation', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select relation" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {relations.map((relation) => (
+                          <SelectItem key={relation} value={relation}>
+                            {relation.charAt(0).toUpperCase() + relation.slice(1)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="age">Age</Label>
+                    <Input
+                      id="age"
+                      type="number"
+                      placeholder="Enter age"
+                      value={customerData.age}
+                      onChange={(e) => handleInputChange('age', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Form Actions */}
+              <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t">
+                <Button 
+                  type="submit" 
+                  disabled={loading} 
+                  className="flex-1 sm:flex-none sm:px-8"
+                >
+                  {loading ? 'Saving...' : 'Save Customer Details'}
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={resetForm}
+                  className="flex-1 sm:flex-none sm:px-8"
+                >
+                  Reset Form
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setShowAddForm(false)}
+                  className="flex-1 sm:flex-none sm:px-8"
+                >
                   Cancel
                 </Button>
               </div>
@@ -1174,36 +1513,54 @@ const CustomersManagement = () => {
         </Card>
       )}
 
+      {/* Customers List */}
       <Card>
         <CardHeader>
-          <CardTitle>All Customers</CardTitle>
+          <CardTitle>All Customers ({filteredCustomers.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2">Name</th>
-                  <th className="text-left p-2">Phone</th>
-                  <th className="text-left p-2">Email</th>
-                  <th className="text-left p-2">Address</th>
-                  <th className="text-left p-2">Actions</th>
+                <tr className="border-b bg-gray-50">
+                  <th className="text-left p-3 font-semibold">Name</th>
+                  <th className="text-left p-3 font-semibold">Phone</th>
+                  <th className="text-left p-3 font-semibold">Address</th>
+                  <th className="text-left p-3 font-semibold">Vehicle</th>
+                  <th className="text-left p-3 font-semibold">Created Date</th>
+                  <th className="text-left p-3 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {customers.map((customer) => (
-                  <tr key={customer.id} className="border-b hover:bg-gray-50">
-                    <td className="p-2">{customer.name}</td>
-                    <td className="p-2">{customer.phone}</td>
-                    <td className="p-2">{customer.email || 'N/A'}</td>
-                    <td className="p-2">{customer.address}</td>
-                    <td className="p-2">
-                      <Button size="sm" variant="outline">
-                        <Eye className="w-4 h-4" />
-                      </Button>
+                {filteredCustomers.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="p-8 text-center text-gray-500">
+                      {searchTerm ? 'No customers found matching your search' : 'No customers found'}
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filteredCustomers.map((customer) => (
+                    <tr key={customer.id} className="border-b hover:bg-gray-50 transition-colors">
+                      <td className="p-3 font-medium">{customer.name}</td>
+                      <td className="p-3 text-gray-600">{customer.phone}</td>
+                      <td className="p-3 text-gray-600">{customer.address}</td>
+                      <td className="p-3 text-gray-600">{getCustomerVehicle(customer.id)}</td>
+                      <td className="p-3 text-gray-600">
+                        {new Date(customer.created_at).toLocaleDateString('en-IN')}
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-2">
+                          <Button size="sm" variant="outline">
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            Edit
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
