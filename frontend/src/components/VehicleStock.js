@@ -1027,6 +1027,12 @@ const StockView = () => {
                     <td className="p-2">{vehicle.inbound_location}</td>
                     <td className="p-2">{getStatusBadge(vehicle.status)}</td>
                     <td className="p-2">
+                      {vehicle.status === 'returned' && vehicle.date_returned 
+                        ? new Date(vehicle.date_returned).toLocaleDateString('en-IN')
+                        : (vehicle.status === 'returned' ? 'Not Set' : 'N/A')
+                      }
+                    </td>
+                    <td className="p-2">
                       <Button 
                         size="sm" 
                         variant="outline"
