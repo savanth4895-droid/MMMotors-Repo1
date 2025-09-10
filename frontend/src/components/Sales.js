@@ -791,7 +791,7 @@ const ViewInvoices = () => {
         </head>
         <body>
           <div class="header">
-            <h1>MOTO MANAGER</h1>
+            <h1>M M MOTORS</h1>
             <p>Two Wheeler Sales Invoice</p>
             <div class="grid">
               <div><strong>Invoice No:</strong> ${invoice.invoice_number}</div>
