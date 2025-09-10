@@ -422,19 +422,28 @@ async def get_spare_parts(low_stock: bool = False, current_user: User = Depends(
 
 @api_router.post("/spare-parts/bills", response_model=SparePartBill)
 async def create_spare_part_bill(bill_data: SparePartBillCreate, current_user: User = Depends(get_current_user)):
-    # Calculate total amount
-    total_amount = 0
-    for item in bill_data.items:
-        total_amount += item['quantity'] * item['unit_price']
-    
     # Generate bill number
     count = await db.spare_part_bills.count_documents({})
     bill_number = f"SPB-{count + 1:06d}"
     
     bill_dict = bill_data.dict()
     bill_dict['bill_number'] = bill_number
-    bill_dict['total_amount'] = total_amount
     bill_dict['created_by'] = current_user.id
+    
+    # Ensure all GST fields are present with defaults if not provided
+    if 'subtotal' not in bill_dict:
+        bill_dict['subtotal'] = 0
+    if 'total_discount' not in bill_dict:
+        bill_dict['total_discount'] = 0
+    if 'total_cgst' not in bill_dict:
+        bill_dict['total_cgst'] = 0
+    if 'total_sgst' not in bill_dict:
+        bill_dict['total_sgst'] = 0
+    if 'total_tax' not in bill_dict:
+        bill_dict['total_tax'] = 0
+    if 'total_amount' not in bill_dict:
+        bill_dict['total_amount'] = bill_dict['subtotal'] + bill_dict['total_tax'] - bill_dict['total_discount']
+    
     bill = SparePartBill(**bill_dict)
     
     await db.spare_part_bills.insert_one(bill.dict())
