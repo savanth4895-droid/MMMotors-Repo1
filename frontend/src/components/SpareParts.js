@@ -978,11 +978,11 @@ const CreateBill = () => {
               </Card>
             )}
 
-            {billData.items.length > 0 && (
+            {billItems.length > 0 && (
               <div className="flex justify-end">
                 <Button type="submit" className="px-8 py-3 text-lg">
                   <ShoppingCart className="w-5 h-5 mr-2" />
-                  Create GST Bill
+                  Generate GST Bill
                 </Button>
               </div>
             )}
