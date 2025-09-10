@@ -638,11 +638,23 @@ const CreateInvoice = () => {
 
 const ViewInvoices = () => {
   const [invoices, setInvoices] = useState([]);
+  const [filteredInvoices, setFilteredInvoices] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
   useEffect(() => {
     fetchInvoices();
+    fetchCustomers();
+    fetchVehicles();
   }, []);
+
+  useEffect(() => {
+    filterInvoices();
+  }, [invoices, searchTerm]);
 
   const fetchInvoices = async () => {
     try {
@@ -655,50 +667,403 @@ const ViewInvoices = () => {
     }
   };
 
+  const fetchCustomers = async () => {
+    try {
+      const response = await axios.get(`${API}/customers`);
+      setCustomers(response.data);
+    } catch (error) {
+      console.error('Failed to fetch customers');
+    }
+  };
+
+  const fetchVehicles = async () => {
+    try {
+      const response = await axios.get(`${API}/vehicles`);
+      setVehicles(response.data);
+    } catch (error) {
+      console.error('Failed to fetch vehicles');
+    }
+  };
+
+  const filterInvoices = () => {
+    let filtered = invoices;
+
+    if (searchTerm) {
+      filtered = invoices.filter(invoice => {
+        const customer = customers.find(c => c.id === invoice.customer_id);
+        const vehicle = vehicles.find(v => v.id === invoice.vehicle_id);
+        
+        return (
+          invoice.invoice_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          customer?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          vehicle?.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          invoice.amount?.toString().includes(searchTerm) ||
+          invoice.payment_method?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      });
+    }
+
+    setFilteredInvoices(filtered);
+  };
+
+  const getCustomerName = (customerId) => {
+    const customer = customers.find(c => c.id === customerId);
+    return customer ? customer.name : 'Unknown Customer';
+  };
+
+  const getVehicleModel = (vehicleId) => {
+    const vehicle = vehicles.find(v => v.id === vehicleId);
+    return vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Unknown Vehicle';
+  };
+
+  const getStatusBadge = (status) => {
+    const statusColors = {
+      'paid': 'bg-green-100 text-green-800',
+      'pending': 'bg-yellow-100 text-yellow-800',
+      'overdue': 'bg-red-100 text-red-800',
+      'cancelled': 'bg-gray-100 text-gray-800'
+    };
+
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[status] || statusColors.paid}`}>
+        {status || 'Paid'}
+      </span>
+    );
+  };
+
+  const handleViewInvoice = (invoice) => {
+    const customer = customers.find(c => c.id === invoice.customer_id);
+    const vehicle = vehicles.find(v => v.id === invoice.vehicle_id);
+    
+    setSelectedInvoice({
+      ...invoice,
+      customer,
+      vehicle
+    });
+    setShowInvoiceModal(true);
+  };
+
+  const handleEditInvoice = (invoice) => {
+    toast.info('Edit functionality will be implemented in the next update');
+    // TODO: Implement edit functionality
+  };
+
+  const handlePrintInvoice = (invoice) => {
+    const customer = customers.find(c => c.id === invoice.customer_id);
+    const vehicle = vehicles.find(v => v.id === invoice.vehicle_id);
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Invoice ${invoice.invoice_number}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .header { text-align: center; margin-bottom: 20px; }
+            .section { margin: 15px 0; }
+            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+            .field { margin-bottom: 8px; }
+            .label { font-weight: bold; }
+            .total { font-size: 18px; font-weight: bold; text-align: right; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>MOTO MANAGER</h1>
+            <p>Two Wheeler Sales Invoice</p>
+            <div class="grid">
+              <div><strong>Invoice No:</strong> ${invoice.invoice_number}</div>
+              <div><strong>Date:</strong> ${new Date(invoice.sale_date).toLocaleDateString()}</div>
+            </div>
+          </div>
+          
+          <div class="section">
+            <h3>Customer Details</h3>
+            <div class="field"><span class="label">Name:</span> ${customer?.name || 'N/A'}</div>
+            <div class="field"><span class="label">Phone:</span> ${customer?.phone || 'N/A'}</div>
+            <div class="field"><span class="label">Address:</span> ${customer?.address || 'N/A'}</div>
+          </div>
+          
+          <div class="section">
+            <h3>Vehicle Details</h3>
+            <div class="field"><span class="label">Brand & Model:</span> ${vehicle?.brand || 'N/A'} ${vehicle?.model || ''}</div>
+            <div class="field"><span class="label">Color:</span> ${vehicle?.color || 'N/A'}</div>
+            <div class="field"><span class="label">Chassis No:</span> ${vehicle?.chassis_no || 'N/A'}</div>
+            <div class="field"><span class="label">Engine No:</span> ${vehicle?.engine_no || 'N/A'}</div>
+          </div>
+          
+          <div class="section">
+            <div class="total">
+              <div><span class="label">Payment Method:</span> ${invoice.payment_method?.toUpperCase() || 'CASH'}</div>
+              <div><span class="label">Total Amount:</span> ₹${invoice.amount?.toLocaleString() || '0'}</div>
+            </div>
+          </div>
+          
+          <div style="text-align: center; margin-top: 40px; border-top: 1px solid #ccc; padding-top: 20px;">
+            <p>Thank you for choosing Moto Manager!</p>
+          </div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
   if (loading) {
     return <div className="flex justify-center p-8"><div className="spinner"></div></div>;
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>All Invoices</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left p-2">Invoice #</th>
-                <th className="text-left p-2">Date</th>
-                <th className="text-left p-2">Customer</th>
-                <th className="text-left p-2">Amount</th>
-                <th className="text-left p-2">Payment</th>
-                <th className="text-left p-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {invoices.map((invoice) => (
-                <tr key={invoice.id} className="border-b hover:bg-gray-50">
-                  <td className="p-2">{invoice.invoice_number}</td>
-                  <td className="p-2">{new Date(invoice.sale_date).toLocaleDateString()}</td>
-                  <td className="p-2">{invoice.customer_id}</td>
-                  <td className="p-2">₹{invoice.amount}</td>
-                  <td className="p-2">
-                    <Badge variant="outline">{invoice.payment_method}</Badge>
-                  </td>
-                  <td className="p-2">
-                    <Button size="sm" variant="outline">
-                      <Eye className="w-4 h-4" />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+    <div className="space-y-6">
+      {/* Header and Search */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">All Invoices</h2>
+          <p className="text-gray-600">Manage and view all sales invoices</p>
         </div>
-      </CardContent>
-    </Card>
+        <div className="relative">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Search by invoice no, customer, vehicle, or amount..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 w-full sm:w-80"
+          />
+        </div>
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center">
+              <FileText className="h-8 w-8 text-blue-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Invoices</p>
+                <p className="text-2xl font-bold text-gray-900">{invoices.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center">
+              <TrendingUp className="h-8 w-8 text-green-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  ₹{invoices.reduce((sum, inv) => sum + (inv.amount || 0), 0).toLocaleString()}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center">
+              <Calendar className="h-8 w-8 text-purple-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">This Month</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {invoices.filter(inv => 
+                    new Date(inv.sale_date).getMonth() === new Date().getMonth()
+                  ).length}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center">
+              <Users className="h-8 w-8 text-orange-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Unique Customers</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {new Set(invoices.map(inv => inv.customer_id)).size}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Invoices Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            Invoice List ({filteredInvoices.length} {filteredInvoices.length === 1 ? 'invoice' : 'invoices'})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b bg-gray-50">
+                  <th className="text-left p-3 font-semibold">Invoice No.</th>
+                  <th className="text-left p-3 font-semibold">Date</th>
+                  <th className="text-left p-3 font-semibold">Customer Name</th>
+                  <th className="text-left p-3 font-semibold">Vehicle Model</th>
+                  <th className="text-left p-3 font-semibold">Amount</th>
+                  <th className="text-left p-3 font-semibold">Status</th>
+                  <th className="text-left p-3 font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredInvoices.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="p-8 text-center text-gray-500">
+                      {searchTerm ? 'No invoices found matching your search' : 'No invoices found'}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredInvoices.map((invoice) => (
+                    <tr key={invoice.id} className="border-b hover:bg-gray-50 transition-colors">
+                      <td className="p-3">
+                        <span className="font-medium text-blue-600">
+                          {invoice.invoice_number}
+                        </span>
+                      </td>
+                      <td className="p-3 text-gray-600">
+                        {new Date(invoice.sale_date).toLocaleDateString('en-IN')}
+                      </td>
+                      <td className="p-3">
+                        <div className="font-medium text-gray-900">
+                          {getCustomerName(invoice.customer_id)}
+                        </div>
+                      </td>
+                      <td className="p-3 text-gray-600">
+                        {getVehicleModel(invoice.vehicle_id)}
+                      </td>
+                      <td className="p-3">
+                        <span className="font-semibold text-gray-900">
+                          ₹{invoice.amount?.toLocaleString() || '0'}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        {getStatusBadge(invoice.status || 'paid')}
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleViewInvoice(invoice)}
+                            className="flex items-center gap-1"
+                          >
+                            <Eye className="w-4 h-4" />
+                            View
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditInvoice(invoice)}
+                            className="flex items-center gap-1"
+                          >
+                            <FileText className="w-4 h-4" />
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handlePrintInvoice(invoice)}
+                            className="flex items-center gap-1"
+                          >
+                            Print
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Invoice View Modal */}
+      {showInvoiceModal && selectedInvoice && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Invoice Details</h2>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowInvoiceModal(false)}
+                >
+                  Close
+                </Button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Invoice Header */}
+                <div className="text-center border-b pb-4">
+                  <h1 className="text-3xl font-bold text-blue-600">MOTO MANAGER</h1>
+                  <p className="text-lg text-gray-600">Two Wheeler Sales Invoice</p>
+                  <div className="mt-4 grid grid-cols-2 gap-4">
+                    <div className="text-left">
+                      <p><strong>Invoice No:</strong> {selectedInvoice.invoice_number}</p>
+                    </div>
+                    <div className="text-right">
+                      <p><strong>Date:</strong> {new Date(selectedInvoice.sale_date).toLocaleDateString('en-IN')}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Customer Details */}
+                <div className="border rounded-lg p-4">
+                  <h3 className="text-lg font-semibold mb-3 text-blue-600">Customer Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><strong>Name:</strong> {selectedInvoice.customer?.name || 'N/A'}</div>
+                    <div><strong>Phone:</strong> {selectedInvoice.customer?.phone || 'N/A'}</div>
+                    <div className="md:col-span-2"><strong>Address:</strong> {selectedInvoice.customer?.address || 'N/A'}</div>
+                  </div>
+                </div>
+
+                {/* Vehicle Details */}
+                <div className="border rounded-lg p-4">
+                  <h3 className="text-lg font-semibold mb-3 text-blue-600">Vehicle Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><strong>Brand:</strong> {selectedInvoice.vehicle?.brand || 'N/A'}</div>
+                    <div><strong>Model:</strong> {selectedInvoice.vehicle?.model || 'N/A'}</div>
+                    <div><strong>Color:</strong> {selectedInvoice.vehicle?.color || 'N/A'}</div>
+                    <div><strong>Chassis No:</strong> {selectedInvoice.vehicle?.chassis_no || 'N/A'}</div>
+                    <div><strong>Engine No:</strong> {selectedInvoice.vehicle?.engine_no || 'N/A'}</div>
+                  </div>
+                </div>
+
+                {/* Payment Details */}
+                <div className="border rounded-lg p-4">
+                  <h3 className="text-lg font-semibold mb-3 text-blue-600">Payment Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><strong>Payment Method:</strong> {selectedInvoice.payment_method?.toUpperCase() || 'CASH'}</div>
+                    <div className="text-right">
+                      <span className="text-2xl font-bold text-green-600">
+                        Total: ₹{selectedInvoice.amount?.toLocaleString() || '0'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => handlePrintInvoice(selectedInvoice)}
+                >
+                  Print Invoice
+                </Button>
+                <Button onClick={() => setShowInvoiceModal(false)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
