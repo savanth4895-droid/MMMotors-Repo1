@@ -216,6 +216,209 @@ const BrandOverview = () => {
   );
 };
 
+const EditVehicleModal = ({ vehicle, isOpen, onClose, onUpdate }) => {
+  const [editData, setEditData] = useState({
+    brand: '',
+    model: '',
+    chassis_no: '',
+    engine_no: '',
+    color: '',
+    key_no: '',
+    inbound_location: '',
+    page_number: '',
+    outbound_location: '',
+    status: 'in_stock'
+  });
+  const [loading, setLoading] = useState(false);
+
+  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA'];
+  const statusOptions = [
+    { value: 'in_stock', label: 'In Stock' },
+    { value: 'sold', label: 'Sold' },
+    { value: 'reserved', label: 'Reserved' }
+  ];
+
+  useEffect(() => {
+    if (vehicle && isOpen) {
+      setEditData({
+        brand: vehicle.brand || '',
+        model: vehicle.model || '',
+        chassis_no: vehicle.chassis_no || '',
+        engine_no: vehicle.engine_no || '',
+        color: vehicle.color || '',
+        key_no: vehicle.key_no || '',
+        inbound_location: vehicle.inbound_location || '',
+        page_number: vehicle.page_number || '',
+        outbound_location: vehicle.outbound_location || '',
+        status: vehicle.status || 'in_stock'
+      });
+    }
+  }, [vehicle, isOpen]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const response = await axios.put(`${API}/vehicles/${vehicle.id}`, editData);
+      toast.success('Vehicle updated successfully!');
+      onUpdate(response.data);
+      onClose();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update vehicle');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Vehicle Details</DialogTitle>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="edit-brand">Brand</Label>
+              <Select value={editData.brand} onValueChange={(value) => setEditData({...editData, brand: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select brand" />
+                </SelectTrigger>
+                <SelectContent>
+                  {brands.map((brand) => (
+                    <SelectItem key={brand} value={brand}>
+                      {brand}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-model">Model</Label>
+              <Input
+                id="edit-model"
+                placeholder="Enter model name"
+                value={editData.model}
+                onChange={(e) => setEditData({...editData, model: e.target.value})}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-chassis">Chassis Number</Label>
+              <Input
+                id="edit-chassis"
+                placeholder="Enter chassis number"
+                value={editData.chassis_no}
+                onChange={(e) => setEditData({...editData, chassis_no: e.target.value})}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-engine">Engine Number</Label>
+              <Input
+                id="edit-engine"
+                placeholder="Enter engine number"
+                value={editData.engine_no}
+                onChange={(e) => setEditData({...editData, engine_no: e.target.value})}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-color">Color</Label>
+              <Input
+                id="edit-color"
+                placeholder="Enter color"
+                value={editData.color}
+                onChange={(e) => setEditData({...editData, color: e.target.value})}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-key">Key Number</Label>
+              <Input
+                id="edit-key"
+                placeholder="Enter key number"
+                value={editData.key_no}
+                onChange={(e) => setEditData({...editData, key_no: e.target.value})}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-inbound">Inbound Location</Label>
+              <Input
+                id="edit-inbound"
+                placeholder="Enter inbound location"
+                value={editData.inbound_location}
+                onChange={(e) => setEditData({...editData, inbound_location: e.target.value})}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-outbound">Outbound Location</Label>
+              <Input
+                id="edit-outbound"
+                placeholder="Enter outbound location"
+                value={editData.outbound_location}
+                onChange={(e) => setEditData({...editData, outbound_location: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-page">Page Number</Label>
+              <Input
+                id="edit-page"
+                placeholder="Enter page number"
+                value={editData.page_number}
+                onChange={(e) => setEditData({...editData, page_number: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-status">Status</Label>
+              <Select value={editData.status} onValueChange={(value) => setEditData({...editData, status: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {statusOptions.map((status) => (
+                    <SelectItem key={status.value} value={status.value}>
+                      {status.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button type="button" variant="outline" onClick={onClose}>
+              <X className="w-4 h-4 mr-2" />
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? (
+                <div className="spinner w-4 h-4 mr-2"></div>
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              {loading ? 'Updating...' : 'Update Vehicle'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const BrandDetails = () => {
   const { brand } = useParams();
   const navigate = useNavigate();
