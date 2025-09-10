@@ -16,7 +16,8 @@ import {
   Bell,
   ChevronLeft,
   ChevronRight,
-  Zap
+  Zap,
+  Fuel
 } from 'lucide-react';
 import { toast } from 'sonner';
 
