@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Complete the Vehicle Stock functionality first. The user wants brand-specific clickable tiles (TVS, BAJAJ, HERO, HONDA, TRIUMPH, KTM, SUZUKI, APRILIA) that open detailed views showing vehicle information (Date, Chassis No, Engine No, Model, Color, Key no., Inbound/Outbound Location, Status, Page Number)."
+user_problem_statement: "COMPREHENSIVE TESTING of the enhanced Spare Parts module with GST-compliant billing and inventory. Testing GST billing form with all required fields (Customer Selection, Item Entry Fields with GST fields, Unit Dropdown, GST Dropdown, Add Item, GST Calculations), Bill Items Table with comprehensive GST columns, Inventory Page with GST-compliant table, Add Spare Part Form with GST fields, and end-to-end GST workflow integration."
 
 backend:
   - task: "Vehicle API endpoints"
