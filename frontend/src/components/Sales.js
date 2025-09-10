@@ -168,7 +168,7 @@ const CreateInvoice = () => {
       const customerResponse = await axios.post(`${API}/customers`, {
         name: invoiceData.name,
         phone: invoiceData.mobile,
-        email: '',
+        email: null,
         address: invoiceData.address
       });
 
