@@ -645,8 +645,13 @@ const CreateBill = () => {
   };
 
   const removeItem = (index) => {
-    const newItems = billData.items.filter((_, i) => i !== index);
-    setBillData({ ...billData, items: newItems });
+    const updatedItems = billItems.filter((_, i) => i !== index);
+    // Update serial numbers
+    const reIndexedItems = updatedItems.map((item, i) => ({
+      ...item,
+      sl_no: i + 1
+    }));
+    setBillItems(reIndexedItems);
   };
 
   const handleSubmit = async (e) => {
