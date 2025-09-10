@@ -165,6 +165,7 @@ class SparePart(BaseModel):
     unit_price: float
     hsn_sac: Optional[str] = None  # HSN/SAC code
     gst_percentage: float = 18.0  # GST percentage
+    compatible_models: Optional[str] = None  # Compatible vehicle models
     low_stock_threshold: int = 5
     supplier: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
