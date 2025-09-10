@@ -708,23 +708,54 @@ const CreateBill = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Customer Selection */}
+            {/* Customer & Vehicle Information */}
             <Card>
-              <CardContent className="p-4">
-                <div>
-                  <Label htmlFor="customer">Customer *</Label>
-                  <Select value={billData.customer_id} onValueChange={(value) => setBillData({...billData, customer_id: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select customer" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customers.map((customer) => (
-                        <SelectItem key={customer.id} value={customer.id}>
-                          {customer.name} - {customer.phone}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              <CardHeader>
+                <CardTitle>Customer & Vehicle Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="customer_name">Customer Name *</Label>
+                    <Input
+                      id="customer_name"
+                      placeholder="Enter customer name"
+                      value={customerData.name}
+                      onChange={(e) => setCustomerData({...customerData, name: e.target.value})}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="mobile">Mobile Number *</Label>
+                    <Input
+                      id="mobile"
+                      placeholder="Enter mobile number"
+                      value={customerData.mobile}
+                      onChange={(e) => setCustomerData({...customerData, mobile: e.target.value})}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="vehicle_name">Vehicle Name</Label>
+                    <Input
+                      id="vehicle_name"
+                      placeholder="Enter vehicle name (e.g., TVS Apache)"
+                      value={customerData.vehicle_name}
+                      onChange={(e) => setCustomerData({...customerData, vehicle_name: e.target.value})}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="vehicle_number">Vehicle Number</Label>
+                    <Input
+                      id="vehicle_number"
+                      placeholder="Enter vehicle number (e.g., TN01AB1234)"
+                      value={customerData.vehicle_number}
+                      onChange={(e) => setCustomerData({...customerData, vehicle_number: e.target.value})}
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
