@@ -629,53 +629,153 @@ const CreateBill = () => {
           <CardTitle>Create Spare Parts Bill</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="customer">Customer</Label>
-              <Select value={billData.customer_id} onValueChange={(value) => setBillData({...billData, customer_id: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select customer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {customer.name} - {customer.phone}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Customer Selection */}
+            <Card>
+              <CardContent className="p-4">
+                <div>
+                  <Label htmlFor="customer">Customer *</Label>
+                  <Select value={billData.customer_id} onValueChange={(value) => setBillData({...billData, customer_id: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select customer" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {customers.map((customer) => (
+                        <SelectItem key={customer.id} value={customer.id}>
+                          {customer.name} - {customer.phone}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-              <div>
-                <Label htmlFor="part">Select Part</Label>
-                <Select value={selectedPart} onValueChange={setSelectedPart}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select part" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {parts.map((part) => (
-                      <SelectItem key={part.id} value={part.id}>
-                        {part.name} - ₹{part.unit_price}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Item Entry Form */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Add Items to Bill</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="part">Select Part</Label>
+                    <Select value={itemForm.part_id} onValueChange={handlePartSelection}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select part" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {parts.map((part) => (
+                          <SelectItem key={part.id} value={part.id}>
+                            {part.name} - {part.part_number}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div>
-                <Label htmlFor="quantity">Quantity</Label>
-                <Input
-                  id="quantity"
-                  type="number"
-                  placeholder="Enter quantity"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                />
-              </div>
+                  <div>
+                    <Label htmlFor="description">Description of Goods *</Label>
+                    <Input
+                      id="description"
+                      placeholder="Enter description"
+                      value={itemForm.description}
+                      onChange={(e) => setItemForm({...itemForm, description: e.target.value})}
+                      required
+                    />
+                  </div>
 
-              <Button type="button" onClick={addItem}>Add Item</Button>
-            </div>
+                  <div>
+                    <Label htmlFor="hsn_sac">HSN/SAC *</Label>
+                    <Input
+                      id="hsn_sac"
+                      placeholder="Enter HSN/SAC code"
+                      value={itemForm.hsn_sac}
+                      onChange={(e) => setItemForm({...itemForm, hsn_sac: e.target.value})}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="quantity">Quantity *</Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      step="0.01"
+                      placeholder="Enter quantity"
+                      value={itemForm.quantity}
+                      onChange={(e) => setItemForm({...itemForm, quantity: e.target.value})}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="unit">Unit</Label>
+                    <Select value={itemForm.unit} onValueChange={(value) => setItemForm({...itemForm, unit: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select unit" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Nos">Nos</SelectItem>
+                        <SelectItem value="Kg">Kg</SelectItem>
+                        <SelectItem value="Ltr">Ltr</SelectItem>
+                        <SelectItem value="Mtr">Mtr</SelectItem>
+                        <SelectItem value="Set">Set</SelectItem>
+                        <SelectItem value="Pair">Pair</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="rate">Rate (₹) *</Label>
+                    <Input
+                      id="rate"
+                      type="number"
+                      step="0.01"
+                      placeholder="Enter rate"
+                      value={itemForm.rate}
+                      onChange={(e) => setItemForm({...itemForm, rate: e.target.value})}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="discount">Disc% </Label>
+                    <Input
+                      id="discount"
+                      type="number"
+                      step="0.01"
+                      placeholder="Enter discount %"
+                      value={itemForm.discount_percent}
+                      onChange={(e) => setItemForm({...itemForm, discount_percent: e.target.value})}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="gst">GST% *</Label>
+                    <Select value={itemForm.gst_percent} onValueChange={(value) => setItemForm({...itemForm, gst_percent: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select GST%" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">0%</SelectItem>
+                        <SelectItem value="5">5%</SelectItem>
+                        <SelectItem value="12">12%</SelectItem>
+                        <SelectItem value="18">18%</SelectItem>
+                        <SelectItem value="28">28%</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-end">
+                    <Button type="button" onClick={addItem} className="w-full">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Item
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {billData.items.length > 0 && (
               <div>
