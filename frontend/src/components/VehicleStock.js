@@ -1020,6 +1020,14 @@ const StockView = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit Vehicle Modal */}
+      <EditVehicleModal
+        vehicle={editVehicle}
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onUpdate={handleUpdateVehicle}
+      />
     </div>
   );
 };
