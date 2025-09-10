@@ -197,7 +197,8 @@ class SparePartBill(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class SparePartBillCreate(BaseModel):
-    customer_id: str
+    customer_data: Optional[Dict[str, str]] = None  # {name, mobile, vehicle_name, vehicle_number}
+    customer_id: Optional[str] = None  # For backwards compatibility
     items: List[Dict[str, Any]]
     subtotal: Optional[float] = 0
     total_discount: Optional[float] = 0
