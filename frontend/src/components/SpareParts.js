@@ -513,6 +513,7 @@ const Inventory = () => {
                     <td className="p-3">{part.unit || 'Nos'}</td>
                     <td className="p-3 text-right">₹{part.unit_price.toFixed(2)}</td>
                     <td className="p-3 text-right">{part.gst_percentage || 18}%</td>
+                    <td className="p-3">{part.compatible_models || 'N/A'}</td>
                     <td className="p-3 text-right font-semibold">₹{(part.quantity * part.unit_price).toFixed(2)}</td>
                     <td className="p-3">
                       {part.quantity <= part.low_stock_threshold ? (
