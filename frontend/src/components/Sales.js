@@ -31,7 +31,8 @@ const Sales = () => {
     { name: 'Overview', path: '/sales', icon: TrendingUp },
     { name: 'Create Invoice', path: '/sales/create-invoice', icon: Plus },
     { name: 'View Invoices', path: '/sales/invoices', icon: FileText },
-    { name: 'Customers', path: '/sales/customers', icon: Users },
+    { name: 'Add Customer', path: '/sales/customers', icon: Users },
+    { name: 'View Customer Details', path: '/sales/customer-details', icon: Eye },
     { name: 'Insurance', path: '/sales/insurance', icon: Shield }
   ];
 
@@ -65,6 +66,7 @@ const Sales = () => {
         <Route path="/create-invoice" element={<CreateInvoice />} />
         <Route path="/invoices" element={<ViewInvoices />} />
         <Route path="/customers" element={<CustomersManagement />} />
+        <Route path="/customer-details" element={<ViewCustomerDetails />} />
         <Route path="/insurance" element={<InsuranceManagement />} />
       </Routes>
     </div>
