@@ -424,7 +424,18 @@ async def get_spare_parts(low_stock: bool = False, current_user: User = Depends(
         filter_dict = {"$expr": {"$lte": ["$quantity", "$low_stock_threshold"]}}
     
     spare_parts = await db.spare_parts.find(filter_dict).to_list(1000)
-    return [SparePart(**spare_part) for spare_part in spare_parts]
+    # Handle legacy spare parts that don't have GST fields
+    processed_parts = []
+    for part in spare_parts:
+        # Add default values for missing GST fields
+        if 'hsn_sac' not in part:
+            part['hsn_sac'] = None
+        if 'gst_percentage' not in part:
+            part['gst_percentage'] = 18.0
+        if 'unit' not in part:
+            part['unit'] = 'Nos'
+        processed_parts.append(SparePart(**part))
+    return processed_parts
 
 @api_router.post("/spare-parts/bills", response_model=SparePartBill)
 async def create_spare_part_bill(bill_data: SparePartBillCreate, current_user: User = Depends(get_current_user)):
