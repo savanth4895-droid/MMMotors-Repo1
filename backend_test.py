@@ -406,12 +406,63 @@ def main():
     
     tester.test_get_spare_parts()
     
+    # Test legacy spare part bill creation
     if customer_id and spare_part_id:
         tester.test_create_spare_part_bill(
             customer_id, 
             [{"part_id": spare_part_id, "quantity": 2, "unit_price": 250.0}]
         )
     
+    # Test GST-compliant spare part bill creation (as requested in review)
+    print("\n💰 Testing GST-Compliant Spare Parts Billing...")
+    
+    # Test data from the review request
+    customer_data = {
+        "name": "Test Customer",
+        "mobile": "9876543210",
+        "vehicle_name": "Honda Activa",
+        "vehicle_number": "TN12CD5678"
+    }
+    
+    items = [
+        {
+            "sl_no": 1,
+            "part_id": "MANUAL-123456",
+            "description": "Test Brake Pad",
+            "hsn_sac": "87083000",
+            "quantity": 2,
+            "unit": "Nos",
+            "rate": 500,
+            "discount_percent": 5,
+            "gst_percent": 18,
+            "subtotal": 1000,
+            "discountAmount": 50,
+            "taxableAmount": 950,
+            "cgstAmount": 85.5,
+            "sgstAmount": 85.5,
+            "totalTax": 171,
+            "finalAmount": 1121
+        }
+    ]
+    
+    # Test successful GST bill creation
+    success, gst_bill_data = tester.test_create_gst_spare_part_bill(
+        customer_data,
+        items,
+        subtotal=1000,
+        total_discount=50,
+        total_cgst=85.5,
+        total_sgst=85.5,
+        total_tax=171,
+        total_amount=1121
+    )
+    
+    # Test error handling with invalid data
+    print("\n❌ Testing Error Handling...")
+    tester.test_create_gst_spare_part_bill_invalid_data()
+    
+    # Get all bills to verify the created bill appears
+    print("\n📋 Verifying Bills List...")
     tester.test_get_spare_part_bills()
 
     # Test dashboard stats
