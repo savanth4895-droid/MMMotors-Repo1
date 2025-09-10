@@ -68,50 +68,6 @@ const VehicleStock = () => {
 };
 
 const BrandOverview = () => {
-  const location = useLocation();
-  
-  const navigationItems = [
-    { name: 'Brand Overview', path: '/vehicles', icon: TrendingUp },
-    { name: 'Add Vehicle', path: '/vehicles/add', icon: Plus },
-    { name: 'All Stock', path: '/vehicles/stock', icon: Package }
-  ];
-
-  return (
-    <div className="space-y-6">
-      {/* Sub Navigation */}
-      <div className="bg-white rounded-lg border border-gray-200 p-1">
-        <div className="flex flex-wrap gap-1">
-          {navigationItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            return (
-              <Link key={item.path} to={item.path}>
-                <Button
-                  variant={isActive ? "default" : "ghost"}
-                  size="sm"
-                  className="flex items-center space-x-2"
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.name}</span>
-                </Button>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Routes */}
-      <Routes>
-        <Route path="/" element={<BrandOverview />} />
-        <Route path="/add" element={<AddVehicle />} />
-        <Route path="/stock" element={<StockView />} />
-        <Route path="/brand/:brand" element={<BrandDetails />} />
-      </Routes>
-    </div>
-  );
-};
-
-const BrandOverview = () => {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
