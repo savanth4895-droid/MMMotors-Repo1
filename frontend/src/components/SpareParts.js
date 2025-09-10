@@ -673,6 +673,8 @@ const CreateBill = () => {
       return;
     }
 
+    setLoading(true);
+
     const billPayload = {
       customer_data: customerData,
       items: billItems,
@@ -685,12 +687,17 @@ const CreateBill = () => {
     };
 
     try {
-      await axios.post(`${API}/spare-parts/bills`, billPayload);
+      console.log('Submitting bill payload:', billPayload);
+      const response = await axios.post(`${API}/spare-parts/bills`, billPayload);
+      console.log('Bill response:', response.data);
       toast.success('GST Bill generated successfully!');
       setCustomerData({ name: '', mobile: '', vehicle_name: '', vehicle_number: '' });
       setBillItems([]);
     } catch (error) {
-      toast.error('Failed to generate bill');
+      console.error('Bill generation error:', error);
+      toast.error(error.response?.data?.detail || 'Failed to generate bill');
+    } finally {
+      setLoading(false);
     }
   };
 
