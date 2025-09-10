@@ -478,6 +478,18 @@ const BrandDetails = () => {
     );
   };
 
+  const handleEditVehicle = (vehicle) => {
+    setEditVehicle(vehicle);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateVehicle = (updatedVehicle) => {
+    const updatedVehicles = vehicles.map(v => 
+      v.id === updatedVehicle.id ? updatedVehicle : v
+    );
+    setVehicles(updatedVehicles);
+  };
+
   const exportBrandData = () => {
     try {
       const csvContent = [
