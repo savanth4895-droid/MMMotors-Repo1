@@ -79,7 +79,7 @@ const Dashboard = () => {
     {
       title: 'Vehicle Stock',
       description: 'Track inventory across all brands',
-      icon: Car,
+      icon: MotorcycleIcon,
       color: 'from-purple-500 to-pink-500',
       link: '/vehicles',
       stats: [
