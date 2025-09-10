@@ -481,7 +481,7 @@ async def create_spare_part_bill(bill_data: SparePartBillCreate, current_user: U
 @api_router.get("/spare-parts/bills", response_model=List[SparePartBill])
 async def get_spare_part_bills(current_user: User = Depends(get_current_user)):
     bills = await db.spare_part_bills.find().to_list(1000)
-    # Handle legacy bills that don't have GST fields
+    # Handle legacy bills that don't have GST fields or customer data
     processed_bills = []
     for bill in bills:
         # Add default values for missing GST fields
@@ -495,6 +495,11 @@ async def get_spare_part_bills(current_user: User = Depends(get_current_user)):
             bill['total_sgst'] = 0
         if 'total_tax' not in bill:
             bill['total_tax'] = 0
+        # Handle customer data backwards compatibility
+        if 'customer_data' not in bill:
+            bill['customer_data'] = None
+        if 'customer_id' not in bill:
+            bill['customer_id'] = None
         processed_bills.append(SparePartBill(**bill))
     return processed_bills
 
