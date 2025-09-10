@@ -174,7 +174,10 @@ class SparePartCreate(BaseModel):
     part_number: str
     brand: str
     quantity: int
+    unit: str = "Nos"
     unit_price: float
+    hsn_sac: str
+    gst_percentage: float = 18.0
     low_stock_threshold: int = 5
     supplier: Optional[str] = None
 
