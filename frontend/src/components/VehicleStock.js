@@ -235,7 +235,7 @@ const EditVehicleModal = ({ vehicle, isOpen, onClose, onUpdate }) => {
   const statusOptions = [
     { value: 'in_stock', label: 'In Stock' },
     { value: 'sold', label: 'Sold' },
-    { value: 'reserved', label: 'Reserved' }
+    { value: 'returned', label: 'Returned' }
   ];
 
   useEffect(() => {
