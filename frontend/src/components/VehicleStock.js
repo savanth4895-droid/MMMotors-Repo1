@@ -919,7 +919,7 @@ const StockView = () => {
     const statusMap = {
       in_stock: { label: 'In Stock', variant: 'success' },
       sold: { label: 'Sold', variant: 'secondary' },
-      reserved: { label: 'Reserved', variant: 'default' }
+      returned: { label: 'Returned', variant: 'default' }
     };
     const config = statusMap[status] || statusMap.in_stock;
     return <Badge variant={config.variant}>{config.label}</Badge>;
