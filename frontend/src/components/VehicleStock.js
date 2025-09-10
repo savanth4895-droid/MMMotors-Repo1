@@ -641,6 +641,7 @@ const BrandDetails = () => {
                   <th className="text-left p-3 font-semibold">Key no.</th>
                   <th className="text-left p-3 font-semibold">Inbound Location</th>
                   <th className="text-left p-3 font-semibold">Status</th>
+                  <th className="text-left p-3 font-semibold">Return Date</th>
                   <th className="text-left p-3 font-semibold">Page Number</th>
                   <th className="text-left p-3 font-semibold">Outbound Location</th>
                   <th className="text-left p-3 font-semibold">Actions</th>
