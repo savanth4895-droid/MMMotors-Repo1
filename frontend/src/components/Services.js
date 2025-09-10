@@ -34,6 +34,7 @@ const Services = () => {
     { name: 'New Service', path: '/services/new', icon: Plus },
     { name: 'View Registration', path: '/services/registrations', icon: Eye },
     { name: 'Job Cards', path: '/services/job-cards', icon: ClipboardList },
+    { name: 'Service Bills', path: '/services/billing', icon: FileText },
     { name: 'Service Due', path: '/services/due', icon: Calendar }
   ];
 
@@ -67,6 +68,7 @@ const Services = () => {
         <Route path="/new" element={<NewService />} />
         <Route path="/registrations" element={<ViewRegistration />} />
         <Route path="/job-cards" element={<JobCards />} />
+        <Route path="/billing" element={<ServicesBilling />} />
         <Route path="/due" element={<ServiceDue />} />
       </Routes>
     </div>
