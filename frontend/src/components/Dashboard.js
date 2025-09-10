@@ -134,7 +134,7 @@ const Dashboard = () => {
     <div className="space-y-6 fade-in">
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white">
-        <h1 className="text-2xl font-bold mb-2">Welcome to Moto Manager Dashboard</h1>
+        <h1 className="text-2xl font-bold mb-2">Welcome to M M Motors Dashboard</h1>
         <p className="text-blue-100">
           Manage your two-wheeler business efficiently with our comprehensive system.
         </p>
