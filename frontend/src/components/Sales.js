@@ -187,7 +187,8 @@ const CreateInvoice = () => {
       const saleResponse = await axios.post(`${API}/sales`, {
         customer_id: customerResponse.data.id,
         vehicle_id: vehicleResponse.data.id,
-        amount: parseFloat(invoiceData.amount)
+        amount: parseFloat(invoiceData.amount),
+        payment_method: invoiceData.payment_method
       });
 
       const invoice = {
