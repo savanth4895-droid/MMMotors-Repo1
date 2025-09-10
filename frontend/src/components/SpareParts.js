@@ -545,7 +545,6 @@ const CreateBill = () => {
   });
 
   useEffect(() => {
-    fetchCustomers();
     fetchParts();
   }, []);
 
