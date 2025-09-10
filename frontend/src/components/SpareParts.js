@@ -600,9 +600,25 @@ const CreateBill = () => {
       return;
     }
 
+    if (!billData.customer_id) {
+      toast.error('Please select a customer');
+      return;
+    }
+
+    const billPayload = {
+      customer_id: billData.customer_id,
+      items: billData.items,
+      subtotal: totals.subtotal,
+      total_discount: totals.totalDiscount,
+      total_cgst: totals.totalCGST,
+      total_sgst: totals.totalSGST,
+      total_tax: totals.totalTax,
+      total_amount: totals.totalAmount
+    };
+
     try {
-      await axios.post(`${API}/spare-parts/bills`, billData);
-      toast.success('Bill created successfully!');
+      await axios.post(`${API}/spare-parts/bills`, billPayload);
+      toast.success('GST Bill created successfully!');
       setBillData({ customer_id: '', items: [] });
     } catch (error) {
       toast.error('Failed to create bill');
