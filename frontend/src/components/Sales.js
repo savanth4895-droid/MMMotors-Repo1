@@ -34,6 +34,7 @@ const Sales = () => {
     { name: 'View Invoices', path: '/sales/invoices', icon: FileText },
     { name: 'Add Customer', path: '/sales/customers', icon: Users },
     { name: 'View Customer Details', path: '/sales/customer-details', icon: Eye },
+    { name: 'Sales Report', path: '/sales/reports', icon: TrendingUp },
     { name: 'Insurance', path: '/sales/insurance', icon: Shield }
   ];
 
@@ -68,6 +69,7 @@ const Sales = () => {
         <Route path="/invoices" element={<ViewInvoices />} />
         <Route path="/customers" element={<CustomersManagement />} />
         <Route path="/customer-details" element={<ViewCustomerDetails />} />
+        <Route path="/reports" element={<SalesReports />} />
         <Route path="/insurance" element={<InsuranceManagement />} />
       </Routes>
     </div>
