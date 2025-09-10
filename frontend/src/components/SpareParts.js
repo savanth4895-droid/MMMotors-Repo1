@@ -549,14 +549,7 @@ const CreateBill = () => {
     fetchParts();
   }, []);
 
-  const fetchCustomers = async () => {
-    try {
-      const response = await axios.get(`${API}/customers`);
-      setCustomers(response.data);
-    } catch (error) {
-      toast.error('Failed to fetch customers');
-    }
-  };
+
 
   const fetchParts = async () => {
     try {
