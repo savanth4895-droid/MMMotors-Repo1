@@ -29,6 +29,7 @@ const Services = () => {
   const navigationItems = [
     { name: 'Overview', path: '/services', icon: Wrench },
     { name: 'New Service', path: '/services/new', icon: Plus },
+    { name: 'View Registration', path: '/services/registrations', icon: Eye },
     { name: 'Job Cards', path: '/services/job-cards', icon: ClipboardList },
     { name: 'Service Due', path: '/services/due', icon: Calendar }
   ];
@@ -61,6 +62,7 @@ const Services = () => {
       <Routes>
         <Route path="/" element={<ServicesOverview />} />
         <Route path="/new" element={<NewService />} />
+        <Route path="/registrations" element={<ViewRegistration />} />
         <Route path="/job-cards" element={<JobCards />} />
         <Route path="/due" element={<ServiceDue />} />
       </Routes>
