@@ -482,7 +482,7 @@ const BrandDetails = () => {
     const statusConfig = {
       in_stock: { label: 'In Stock', className: 'bg-green-100 text-green-800 border-green-200' },
       sold: { label: 'Sold', className: 'bg-orange-100 text-orange-800 border-orange-200' },
-      reserved: { label: 'Reserved', className: 'bg-blue-100 text-blue-800 border-blue-200' }
+      returned: { label: 'Returned', className: 'bg-blue-100 text-blue-800 border-blue-200' }
     };
 
     const config = statusConfig[status] || statusConfig.in_stock;
