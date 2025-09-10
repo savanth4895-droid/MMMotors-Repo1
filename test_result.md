@@ -326,6 +326,7 @@ test_plan:
     - "Updated Spare Parts Billing System with Customer Fields - Comprehensive testing completed"
     - "Compatible Models Field in Spare Parts Add Part and Inventory - Comprehensive testing completed successfully"
     - "Sidebar Toggle Functionality - Comprehensive testing completed successfully"
+    - "Comprehensive Spare Parts Create Bill Testing - All GST functionality and customer fields tested and verified successfully"
 
 agent_communication:
   - agent: "main"
