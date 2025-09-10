@@ -223,7 +223,10 @@ const AddSparePart = () => {
     part_number: '',
     brand: '',
     quantity: '',
+    unit: 'Nos',
     unit_price: '',
+    hsn_sac: '',
+    gst_percentage: '18',
     low_stock_threshold: '5',
     supplier: ''
   });
