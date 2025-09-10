@@ -1592,6 +1592,449 @@ const CustomersManagement = () => {
   );
 };
 
+const SalesReports = () => {
+  const [sales, setSales] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [monthlyData, setMonthlyData] = useState([]);
+  const [brandData, setBrandData] = useState([]);
+  const [totalStats, setTotalStats] = useState({
+    totalSales: 0,
+    totalRevenue: 0,
+    averageOrderValue: 0,
+    topBrand: ''
+  });
+
+  useEffect(() => {
+    fetchAllData();
+  }, []);
+
+  useEffect(() => {
+    if (sales.length > 0 && vehicles.length > 0) {
+      processMonthlyData();
+      processBrandData();
+      calculateStats();
+    }
+  }, [sales, vehicles]);
+
+  const fetchAllData = async () => {
+    try {
+      const [salesRes, vehiclesRes, customersRes] = await Promise.all([
+        axios.get(`${API}/sales`),
+        axios.get(`${API}/vehicles`),
+        axios.get(`${API}/customers`)
+      ]);
+      
+      setSales(salesRes.data);
+      setVehicles(vehiclesRes.data);
+      setCustomers(customersRes.data);
+    } catch (error) {
+      toast.error('Failed to fetch sales data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const processMonthlyData = () => {
+    const monthlyMap = {};
+    
+    sales.forEach(sale => {
+      const date = new Date(sale.sale_date);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const monthName = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      
+      if (!monthlyMap[monthKey]) {
+        monthlyMap[monthKey] = {
+          month: monthName,
+          sales: 0,
+          revenue: 0,
+          count: 0
+        };
+      }
+      
+      monthlyMap[monthKey].sales += 1;
+      monthlyMap[monthKey].revenue += sale.amount || 0;
+      monthlyMap[monthKey].count += 1;
+    });
+
+    // Sort by month and get last 12 months or available data
+    const sortedData = Object.values(monthlyMap)
+      .sort((a, b) => new Date(a.month + ' 01') - new Date(b.month + ' 01'))
+      .slice(-12);
+    
+    setMonthlyData(sortedData);
+  };
+
+  const processBrandData = () => {
+    const brandMap = {};
+    
+    sales.forEach(sale => {
+      const vehicle = vehicles.find(v => v.id === sale.vehicle_id);
+      if (vehicle) {
+        const brand = vehicle.brand;
+        if (!brandMap[brand]) {
+          brandMap[brand] = {
+            brand: brand,
+            sales: 0,
+            revenue: 0,
+            count: 0
+          };
+        }
+        
+        brandMap[brand].sales += 1;
+        brandMap[brand].revenue += sale.amount || 0;
+        brandMap[brand].count += 1;
+      }
+    });
+
+    const sortedBrandData = Object.values(brandMap)
+      .sort((a, b) => b.revenue - a.revenue);
+    
+    setBrandData(sortedBrandData);
+  };
+
+  const calculateStats = () => {
+    const totalSales = sales.length;
+    const totalRevenue = sales.reduce((sum, sale) => sum + (sale.amount || 0), 0);
+    const averageOrderValue = totalSales > 0 ? totalRevenue / totalSales : 0;
+    
+    // Find top brand by revenue
+    const brandRevenue = {};
+    sales.forEach(sale => {
+      const vehicle = vehicles.find(v => v.id === sale.vehicle_id);
+      if (vehicle) {
+        brandRevenue[vehicle.brand] = (brandRevenue[vehicle.brand] || 0) + (sale.amount || 0);
+      }
+    });
+    
+    const topBrand = Object.keys(brandRevenue).reduce((a, b) => 
+      brandRevenue[a] > brandRevenue[b] ? a : b, '');
+
+    setTotalStats({
+      totalSales,
+      totalRevenue,
+      averageOrderValue,
+      topBrand
+    });
+  };
+
+  const exportReport = () => {
+    try {
+      const reportData = {
+        totalStats,
+        monthlyData,
+        brandData,
+        generatedAt: new Date().toISOString()
+      };
+
+      const csvContent = [
+        ['Sales Report Generated:', new Date().toLocaleDateString()].join(','),
+        [],
+        ['Monthly Sales Data:'],
+        ['Month', 'Sales Count', 'Revenue'].join(','),
+        ...monthlyData.map(item => [item.month, item.sales, item.revenue].join(',')),
+        [],
+        ['Brand Sales Data:'],
+        ['Brand', 'Sales Count', 'Revenue'].join(','),
+        ...brandData.map(item => [item.brand, item.sales, item.revenue].join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sales_report_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Sales report exported successfully!');
+    } catch (error) {
+      toast.error('Failed to export sales report');
+    }
+  };
+
+  // Colors for charts
+  const chartColors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+
+  if (loading) {
+    return <div className="flex justify-center p-8"><div className="spinner"></div></div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Sales Reports</h2>
+          <p className="text-gray-600">Comprehensive sales analytics and performance metrics</p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={exportReport} variant="outline" className="flex items-center gap-2">
+            <Download className="w-4 h-4" />
+            Export Report
+          </Button>
+          <Button variant="outline" className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            Print Report
+          </Button>
+        </div>
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <BarChart3 className="h-8 w-8 text-blue-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Sales</p>
+                <p className="text-2xl font-bold text-gray-900">{totalStats.totalSales}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <TrendingUp className="h-8 w-8 text-green-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+                <p className="text-2xl font-bold text-gray-900">₹{totalStats.totalRevenue.toLocaleString()}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <PieChart className="h-8 w-8 text-purple-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Average Order</p>
+                <p className="text-2xl font-bold text-gray-900">₹{Math.round(totalStats.averageOrderValue).toLocaleString()}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <Car className="h-8 w-8 text-orange-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Top Brand</p>
+                <p className="text-2xl font-bold text-gray-900">{totalStats.topBrand || 'N/A'}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Monthly Sales Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-blue-600" />
+              Monthly Sales Performance
+            </CardTitle>
+            <CardDescription>
+              Sales count and revenue trends over time
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                  <XAxis 
+                    dataKey="month" 
+                    tick={{ fontSize: 12 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={60}
+                  />
+                  <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
+                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'white', 
+                      border: '1px solid #ccc',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                    }}
+                    formatter={(value, name) => [
+                      name === 'revenue' ? `₹${value.toLocaleString()}` : value,
+                      name === 'revenue' ? 'Revenue' : 'Sales Count'
+                    ]}
+                  />
+                  <Legend />
+                  <Bar yAxisId="left" dataKey="sales" fill="#3b82f6" name="Sales Count" />
+                  <Line 
+                    yAxisId="right" 
+                    type="monotone" 
+                    dataKey="revenue" 
+                    stroke="#ef4444" 
+                    strokeWidth={3}
+                    name="Revenue (₹)"
+                    dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Brand-wise Sales Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <PieChart className="w-5 h-5 text-green-600" />
+              Brand-wise Sales Distribution
+            </CardTitle>
+            <CardDescription>
+              Revenue breakdown by vehicle brands
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={brandData} layout="horizontal">
+                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                  <XAxis type="number" tick={{ fontSize: 12 }} />
+                  <YAxis 
+                    type="category" 
+                    dataKey="brand" 
+                    tick={{ fontSize: 12 }}
+                    width={80}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'white', 
+                      border: '1px solid #ccc',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                    }}
+                    formatter={(value, name) => [
+                      name === 'revenue' ? `₹${value.toLocaleString()}` : value,
+                      name === 'revenue' ? 'Revenue' : 'Sales Count'
+                    ]}
+                  />
+                  <Legend />
+                  <Bar dataKey="revenue" fill="#10b981" name="Revenue (₹)" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Detailed Tables */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Monthly Data Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Monthly Sales Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b bg-gray-50">
+                    <th className="text-left p-3 font-semibold">Month</th>
+                    <th className="text-right p-3 font-semibold">Sales</th>
+                    <th className="text-right p-3 font-semibold">Revenue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {monthlyData.map((item, index) => (
+                    <tr key={index} className="border-b hover:bg-gray-50">
+                      <td className="p-3">{item.month}</td>
+                      <td className="p-3 text-right font-medium">{item.sales}</td>
+                      <td className="p-3 text-right font-medium text-green-600">
+                        ₹{item.revenue.toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Brand Data Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Brand Performance Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b bg-gray-50">
+                    <th className="text-left p-3 font-semibold">Brand</th>
+                    <th className="text-right p-3 font-semibold">Sales</th>
+                    <th className="text-right p-3 font-semibold">Revenue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {brandData.map((item, index) => (
+                    <tr key={index} className="border-b hover:bg-gray-50">
+                      <td className="p-3 font-medium">{item.brand}</td>
+                      <td className="p-3 text-right">{item.sales}</td>
+                      <td className="p-3 text-right font-medium text-green-600">
+                        ₹{item.revenue.toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Performance Insights */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Performance Insights</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <h4 className="font-semibold text-blue-900">Best Performing Month</h4>
+              <p className="text-blue-700">
+                {monthlyData.length > 0 
+                  ? monthlyData.reduce((max, item) => item.revenue > max.revenue ? item : max, monthlyData[0]).month
+                  : 'N/A'
+                }
+              </p>
+            </div>
+            <div className="p-4 bg-green-50 rounded-lg">
+              <h4 className="font-semibold text-green-900">Top Revenue Brand</h4>
+              <p className="text-green-700">
+                {brandData.length > 0 ? brandData[0].brand : 'N/A'}
+              </p>
+            </div>
+            <div className="p-4 bg-purple-50 rounded-lg">
+              <h4 className="font-semibold text-purple-900">Growth Trend</h4>
+              <p className="text-purple-700">
+                {monthlyData.length >= 2 
+                  ? monthlyData[monthlyData.length - 1].revenue > monthlyData[monthlyData.length - 2].revenue 
+                    ? 'Increasing' : 'Stable'
+                  : 'Insufficient Data'
+                }
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 const ViewCustomerDetails = () => {
   const [customers, setCustomers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
