@@ -31,6 +31,7 @@ const BackupManagement = () => {
   const [backupJobs, setBackupJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [exportFormat, setExportFormat] = useState('json');
 
   useEffect(() => {
     fetchBackupData();
