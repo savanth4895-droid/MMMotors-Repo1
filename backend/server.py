@@ -248,6 +248,7 @@ class BackupJob(BaseModel):
 
 class BackupJobCreate(BaseModel):
     backup_type: str = "manual"  # manual or scheduled
+    export_format: str = "json"  # json, excel
 
 class BackupStats(BaseModel):
     total_backups: int
