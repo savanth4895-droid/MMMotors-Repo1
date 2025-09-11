@@ -284,15 +284,15 @@ const Dashboard = () => {
             {backupStats.last_backup_date && (
               <div className="mt-3 text-center">
                 <p className="text-sm text-gray-600">
-                  Last backup: {new Date(backupStats.last_backup_date).toLocaleString('en-US', {
+                  Last backup: {new Date(backupStats.last_backup_date).toLocaleString('en-IN', {
                     month: 'short',
                     day: 'numeric',
                     year: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit',
                     hour12: false,
-                    timeZone: 'UTC'
-                  })} UTC
+                    timeZone: 'Asia/Kolkata'
+                  })} IST
                 </p>
               </div>
             )}
