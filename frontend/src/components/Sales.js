@@ -109,6 +109,54 @@ const SalesOverview = () => {
     pendingInvoices: 0,
     topCustomers: []
   });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      const [salesRes, customersRes] = await Promise.all([
+        axios.get(`${API}/sales`),
+        axios.get(`${API}/customers`)
+      ]);
+
+      const sales = salesRes.data;
+      const customers = customersRes.data;
+
+      // Calculate current month revenue
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      const monthlyRevenue = sales
+        .filter(sale => {
+          const saleDate = new Date(sale.sale_date);
+          return saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear;
+        })
+        .reduce((sum, sale) => sum + (sale.amount || 0), 0);
+
+      setStats({
+        totalSales: sales.length,
+        monthlyRevenue: monthlyRevenue,
+        pendingInvoices: 0, // This would need a separate status field in sales
+        topCustomers: customers.slice(0, 5) // Top 5 customers by recent creation
+      });
+    } catch (error) {
+      console.error('Failed to fetch sales overview stats:', error);
+      toast.error('Failed to fetch sales data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
