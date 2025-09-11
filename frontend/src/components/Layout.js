@@ -69,6 +69,11 @@ const Layout = ({ children }) => {
       name: 'Spare Parts',
       path: '/spare-parts',
       icon: Package
+    },
+    {
+      name: 'Backup',
+      path: '/backup',
+      icon: Database
     }
   ];
 
