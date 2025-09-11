@@ -220,6 +220,78 @@ const Dashboard = () => {
         })}
       </div>
 
+      {/* Backup Status */}
+      {backupStats && (
+        <Card className="border-l-4 border-l-blue-500">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Database className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Data Backup Status</CardTitle>
+                  <CardDescription>System backup and data protection</CardDescription>
+                </div>
+              </div>
+              <Link to="/backup">
+                <Button variant="outline" size="sm">
+                  Manage Backups
+                </Button>
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center p-3 bg-gray-50 rounded-lg">
+                <p className="text-2xl font-bold text-blue-600">{backupStats.total_backups}</p>
+                <p className="text-xs text-gray-600">Total Backups</p>
+              </div>
+              <div className="text-center p-3 bg-gray-50 rounded-lg">
+                <p className="text-2xl font-bold text-green-600">
+                  {backupStats.total_backups > 0 
+                    ? Math.round((backupStats.successful_backups / backupStats.total_backups) * 100)
+                    : 0}%
+                </p>
+                <p className="text-xs text-gray-600">Success Rate</p>
+              </div>
+              <div className="text-center p-3 bg-gray-50 rounded-lg">
+                <p className="text-2xl font-bold text-purple-600">
+                  {backupStats.total_storage_used_mb > 1024 
+                    ? `${(backupStats.total_storage_used_mb / 1024).toFixed(1)}GB`
+                    : `${backupStats.total_storage_used_mb.toFixed(0)}MB`}
+                </p>
+                <p className="text-xs text-gray-600">Storage Used</p>
+              </div>
+              <div className="text-center p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-center space-x-1">
+                  {backupStats.last_backup_date ? (
+                    <>
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <span className="text-sm font-bold text-green-600">Active</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="w-4 h-4 text-red-500" />
+                      <span className="text-sm font-bold text-red-600">No Backups</span>
+                    </>
+                  )}
+                </div>
+                <p className="text-xs text-gray-600">Backup Status</p>
+              </div>
+            </div>
+            {backupStats.last_backup_date && (
+              <div className="mt-3 text-center">
+                <p className="text-sm text-gray-600">
+                  Last backup: {new Date(backupStats.last_backup_date).toLocaleDateString()} at{' '}
+                  {new Date(backupStats.last_backup_date).toLocaleTimeString()}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Recent Activity */}
       <Card>
         <CardHeader>
