@@ -37,6 +37,8 @@ class TwoWheelerAPITester:
                 response = requests.post(url, json=data, headers=headers)
             elif method == 'PUT':
                 response = requests.put(url, json=data, headers=headers)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, params=params)
 
             print(f"   Status Code: {response.status_code}")
             
