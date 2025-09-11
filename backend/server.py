@@ -681,6 +681,126 @@ class BackupService:
         
         return job
     
+    async def create_excel_backup(self, backup_dir: Path, collection_data: dict, records_by_collection: dict, user_id: str, backup_type: str):
+        """Create Excel backup with multiple sheets"""
+        try:
+            # Create comprehensive Excel file
+            excel_file = backup_dir / "backup_data.xlsx"
+            
+            # Create workbook and remove default sheet
+            workbook = Workbook()
+            workbook.remove(workbook.active)
+            
+            # Define header style
+            header_font = Font(bold=True, color="FFFFFF")
+            header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+            header_alignment = Alignment(horizontal="center", vertical="center")
+            
+            # Create sheets for each collection
+            for collection_name, documents in collection_data.items():
+                if not documents:
+                    continue
+                    
+                # Create sheet
+                sheet = workbook.create_sheet(title=collection_name.replace('_', ' ').title())
+                
+                # Convert to DataFrame for easier Excel manipulation
+                df = pd.DataFrame(documents)
+                
+                # Add data to sheet
+                for row_num, row_data in enumerate(dataframe_to_rows(df, index=False, header=True), 1):
+                    for col_num, value in enumerate(row_data, 1):
+                        cell = sheet.cell(row=row_num, column=col_num, value=value)
+                        
+                        # Apply header styling
+                        if row_num == 1:
+                            cell.font = header_font
+                            cell.fill = header_fill
+                            cell.alignment = header_alignment
+                
+                # Auto-adjust column widths
+                for column in sheet.columns:
+                    max_length = 0
+                    column_letter = column[0].column_letter
+                    for cell in column:
+                        try:
+                            if len(str(cell.value)) > max_length:
+                                max_length = len(str(cell.value))
+                        except:
+                            pass
+                    adjusted_width = min(max_length + 2, 50)
+                    sheet.column_dimensions[column_letter].width = adjusted_width
+            
+            # Create summary sheet
+            summary_sheet = workbook.create_sheet(title="Backup Summary", index=0)
+            
+            # Summary data
+            summary_data = [
+                ["Backup Information", ""],
+                ["Backup Date", datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")],
+                ["Backup Type", backup_type.title()],
+                ["Created By", user_id],
+                ["Total Records", sum(records_by_collection.values())],
+                ["", ""],
+                ["Collection Statistics", "Records"],
+            ]
+            
+            # Add collection statistics
+            for collection, count in records_by_collection.items():
+                summary_data.append([collection.replace('_', ' ').title(), count])
+            
+            # Add summary data to sheet
+            for row_num, (key, value) in enumerate(summary_data, 1):
+                summary_sheet.cell(row=row_num, column=1, value=key)
+                summary_sheet.cell(row=row_num, column=2, value=value)
+                
+                # Style headers
+                if key in ["Backup Information", "Collection Statistics"]:
+                    summary_sheet.cell(row=row_num, column=1).font = Font(bold=True, size=14)
+                    summary_sheet.cell(row=row_num, column=2).font = Font(bold=True, size=14)
+            
+            # Auto-adjust summary sheet columns
+            summary_sheet.column_dimensions['A'].width = 25
+            summary_sheet.column_dimensions['B'].width = 15
+            
+            # Save workbook
+            workbook.save(excel_file)
+            
+        except Exception as e:
+            # Fallback to JSON if Excel creation fails
+            logger.error(f"Excel backup creation failed: {e}, falling back to JSON")
+            await self.create_json_csv_backup(backup_dir, collection_data, records_by_collection, user_id, backup_type)
+    
+    async def create_json_csv_backup(self, backup_dir: Path, collection_data: dict, records_by_collection: dict, user_id: str, backup_type: str):
+        """Create JSON and CSV backup files"""
+        for collection_name, documents in collection_data.items():
+            # Save as JSON
+            json_file = backup_dir / f"{collection_name}.json"
+            async with aiofiles.open(json_file, 'w') as f:
+                await f.write(json.dumps(documents, default=str, indent=2))
+            
+            # Save as CSV if data exists
+            if documents:
+                try:
+                    df = pd.DataFrame(documents)
+                    csv_file = backup_dir / f"{collection_name}.csv"
+                    df.to_csv(csv_file, index=False)
+                except Exception as e:
+                    logger.warning(f"Failed to create CSV for {collection_name}: {e}")
+        
+        # Create backup summary
+        summary = {
+            'backup_date': datetime.utcnow().isoformat(),
+            'total_records': sum(records_by_collection.values()),
+            'records_by_collection': records_by_collection,
+            'backup_type': backup_type,
+            'created_by': user_id
+        }
+        
+        summary_file = backup_dir / 'backup_summary.json'
+        async with aiofiles.open(summary_file, 'w') as f:
+            await f.write(json.dumps(summary, indent=2))
+    
     async def get_backup_stats(self) -> BackupStats:
         """Get backup statistics"""
         jobs = await self.db.backup_jobs.find().to_list(length=None)
