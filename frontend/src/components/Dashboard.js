@@ -45,8 +45,13 @@ const Dashboard = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get(`${API}/dashboard/stats`);
-      setStats(response.data);
+      const [dashboardRes, backupRes] = await Promise.all([
+        axios.get(`${API}/dashboard/stats`),
+        axios.get(`${API}/backup/stats`).catch(() => ({ data: null }))
+      ]);
+      
+      setStats(dashboardRes.data);
+      setBackupStats(backupRes.data);
     } catch (error) {
       toast.error('Failed to fetch dashboard statistics');
     } finally {
