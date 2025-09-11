@@ -155,7 +155,7 @@ const BackupManagement = () => {
   const formatDateShort = (dateString) => {
     const date = new Date(dateString);
     // Short format for compact display
-    return date.toLocaleString('en-US', {
+    const formatted = date.toLocaleString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -164,6 +164,7 @@ const BackupManagement = () => {
       hour12: false,
       timeZone: 'UTC'
     });
+    return `${formatted} UTC`;
   };
 
   const getStatusBadge = (status) => {
