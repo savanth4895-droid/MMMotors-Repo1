@@ -755,6 +755,102 @@ async def get_backup_service():
     
     return backup_service
 
+# Backup API Endpoints
+@app.get("/api/backup/config", response_model=BackupConfig)
+async def get_backup_config(current_user: dict = Depends(verify_token)):
+    """Get backup configuration"""
+    config_doc = await db.backup_config.find_one()
+    if not config_doc:
+        # Create default config
+        default_config = BackupConfig()
+        await db.backup_config.insert_one(default_config.dict())
+        return default_config
+    return BackupConfig(**config_doc)
+
+@app.put("/api/backup/config", response_model=BackupConfig)
+async def update_backup_config(
+    config_update: dict,
+    current_user: dict = Depends(verify_token)
+):
+    """Update backup configuration"""
+    config_update['updated_at'] = datetime.utcnow()
+    
+    result = await db.backup_config.update_one(
+        {}, 
+        {"$set": config_update},
+        upsert=True
+    )
+    
+    # Refresh backup service with new config
+    global backup_service
+    backup_service = None
+    
+    updated_config = await db.backup_config.find_one()
+    return BackupConfig(**updated_config)
+
+@app.post("/api/backup/create", response_model=BackupJob)
+async def create_manual_backup(
+    backup_create: BackupJobCreate,
+    current_user: dict = Depends(verify_token)
+):
+    """Create a manual backup"""
+    service = await get_backup_service()
+    job = await service.create_backup(current_user['user_id'], backup_create.backup_type)
+    return job
+
+@app.get("/api/backup/jobs", response_model=List[BackupJob])
+async def get_backup_jobs(
+    skip: int = 0,
+    limit: int = 50,
+    current_user: dict = Depends(verify_token)
+):
+    """Get backup job history"""
+    jobs = await db.backup_jobs.find().skip(skip).limit(limit).sort("created_at", -1).to_list(length=None)
+    return [BackupJob(**job) for job in jobs]
+
+@app.get("/api/backup/stats", response_model=BackupStats)
+async def get_backup_statistics(current_user: dict = Depends(verify_token)):
+    """Get backup system statistics"""
+    service = await get_backup_service()
+    return await service.get_backup_stats()
+
+@app.delete("/api/backup/cleanup")
+async def cleanup_old_backups(
+    retention_days: int = 30,
+    current_user: dict = Depends(verify_token)
+):
+    """Clean up old backups"""
+    service = await get_backup_service()
+    await service.cleanup_old_backups(retention_days)
+    return {"message": f"Cleanup completed for backups older than {retention_days} days"}
+
+@app.get("/api/backup/download/{job_id}")
+async def download_backup(
+    job_id: str,
+    current_user: dict = Depends(verify_token)
+):
+    """Download a backup file"""
+    from fastapi.responses import FileResponse
+    
+    job = await db.backup_jobs.find_one({"id": job_id})
+    if not job:
+        raise HTTPException(status_code=404, detail="Backup job not found")
+    
+    if job['status'] != 'completed':
+        raise HTTPException(status_code=400, detail="Backup is not completed")
+    
+    backup_path = Path(job['backup_file_path'])
+    if not backup_path.exists():
+        raise HTTPException(status_code=404, detail="Backup file not found")
+    
+    return FileResponse(
+        path=backup_path,
+        filename=backup_path.name,
+        media_type='application/octet-stream'
+    )
+
+app.include_router(api_router)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
