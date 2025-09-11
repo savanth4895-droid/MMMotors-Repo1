@@ -9,7 +9,8 @@ import {
   Package, 
   TrendingUp,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  Database
 } from 'lucide-react';
 
 // Custom Motorcycle Icon Component
