@@ -68,14 +68,15 @@ const BackupManagement = () => {
     }
   };
 
-  const createManualBackup = async () => {
+  const createManualBackup = async (format = 'json') => {
     try {
       setCreating(true);
       const response = await axios.post(`${API}/backup/create`, {
-        backup_type: 'manual'
+        backup_type: 'manual',
+        export_format: format
       });
       
-      toast.success('Backup started successfully');
+      toast.success(`${format.toUpperCase()} backup started successfully`);
       
       // Refresh data after a short delay
       setTimeout(() => {
