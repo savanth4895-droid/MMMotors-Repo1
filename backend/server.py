@@ -598,8 +598,8 @@ class BackupService:
         self.backup_root = Path(backup_config.backup_location)
         self.backup_root.mkdir(parents=True, exist_ok=True)
     
-    async def create_backup(self, user_id: str, backup_type: str = "manual") -> BackupJob:
-        """Create a new backup job"""
+    async def create_backup(self, user_id: str, backup_type: str = "manual", export_format: str = "json") -> BackupJob:
+        """Create a new backup job with specified format"""
         job = BackupJob(
             status="running",
             start_time=datetime.utcnow(),
@@ -617,6 +617,7 @@ class BackupService:
             collections = ['users', 'customers', 'vehicles', 'sales', 'services', 'spare_parts', 'spare_part_bills']
             total_records = 0
             records_by_collection = {}
+            collection_data = {}
             
             for collection_name in collections:
                 collection = getattr(self.db, collection_name)
@@ -627,34 +628,28 @@ class BackupService:
                     if '_id' in doc:
                         doc['_id'] = str(doc['_id'])
                 
-                # Save as JSON
-                json_file = backup_dir / f"{collection_name}.json"
-                async with aiofiles.open(json_file, 'w') as f:
-                    await f.write(json.dumps(documents, default=str, indent=2))
-                
+                collection_data[collection_name] = documents
                 record_count = len(documents)
                 records_by_collection[collection_name] = record_count
                 total_records += record_count
             
-            # Create backup summary
-            summary = {
-                'backup_date': datetime.utcnow().isoformat(),
-                'total_records': total_records,
-                'records_by_collection': records_by_collection,
-                'backup_type': backup_type,
-                'created_by': user_id
-            }
-            
-            summary_file = backup_dir / 'backup_summary.json'
-            async with aiofiles.open(summary_file, 'w') as f:
-                await f.write(json.dumps(summary, indent=2))
+            # Create files based on export format
+            if export_format.lower() == "excel":
+                await self.create_excel_backup(backup_dir, collection_data, records_by_collection, user_id, backup_type)
+            else:
+                # Default JSON/CSV format
+                await self.create_json_csv_backup(backup_dir, collection_data, records_by_collection, user_id, backup_type)
             
             # Compress backup if enabled
             final_path = str(backup_dir)
             backup_size = 0
             
             if self.config.compress_backups:
-                zip_path = f"{backup_dir}.zip"
+                if export_format.lower() == "excel":
+                    zip_path = f"{backup_dir}_excel.zip"
+                else:
+                    zip_path = f"{backup_dir}.zip"
+                
                 with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
                     for file_path in backup_dir.rglob('*'):
                         if file_path.is_file():
