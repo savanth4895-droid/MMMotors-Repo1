@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "COMPREHENSIVE TESTING of the enhanced Spare Parts module with GST-compliant billing and inventory. Testing GST billing form with all required fields (Customer Selection, Item Entry Fields with GST fields, Unit Dropdown, GST Dropdown, Add Item, GST Calculations), Bill Items Table with comprehensive GST columns, Inventory Page with GST-compliant table, Add Spare Part Form with GST fields, and end-to-end GST workflow integration."
+user_problem_statement: "FIX API FETCH FAILURES: User reported 'Failed to fetch sales data' and 'Failed to fetch insurance data' errors in the Sales module of the two-wheeler business management system. Investigation shows backend API endpoints are working correctly, but frontend has authentication and data fetching issues. Need to fix: 1) Sales Overview component not fetching/displaying actual sales statistics, 2) Insurance Management component failing to fetch data despite working backend APIs, 3) Frontend authentication flow stuck on login page. Backend testing confirmed all endpoints (/api/sales, /api/customers, /api/vehicles) return proper data with valid authentication."
 
 backend:
   - task: "Vehicle API endpoints"
