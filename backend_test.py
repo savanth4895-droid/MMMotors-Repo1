@@ -317,6 +317,142 @@ class TwoWheelerAPITester:
         """Test getting dashboard statistics"""
         return self.run_test("Get Dashboard Stats", "GET", "dashboard/stats", 200)
 
+    # Backup System API Tests
+    def test_get_backup_config(self):
+        """Test getting backup configuration"""
+        return self.run_test("Get Backup Configuration", "GET", "backup/config", 200)
+
+    def test_update_backup_config(self, config_data):
+        """Test updating backup configuration"""
+        return self.run_test(
+            "Update Backup Configuration",
+            "PUT",
+            "backup/config",
+            200,
+            data=config_data
+        )
+
+    def test_create_manual_backup(self):
+        """Test creating a manual backup"""
+        success, response = self.run_test(
+            "Create Manual Backup",
+            "POST",
+            "backup/create",
+            200,
+            data={"backup_type": "manual"}
+        )
+        if success and 'id' in response:
+            print(f"   Backup Job ID: {response['id']}")
+            print(f"   Status: {response.get('status', 'N/A')}")
+            print(f"   Total Records: {response.get('total_records', 0)}")
+            if response.get('backup_size_mb'):
+                print(f"   Backup Size: {response['backup_size_mb']} MB")
+        return success, response
+
+    def test_get_backup_jobs(self):
+        """Test getting backup job history"""
+        return self.run_test("Get Backup Jobs", "GET", "backup/jobs", 200)
+
+    def test_get_backup_stats(self):
+        """Test getting backup statistics"""
+        success, response = self.run_test("Get Backup Statistics", "GET", "backup/stats", 200)
+        if success:
+            print(f"   Total Backups: {response.get('total_backups', 0)}")
+            print(f"   Successful Backups: {response.get('successful_backups', 0)}")
+            print(f"   Failed Backups: {response.get('failed_backups', 0)}")
+            print(f"   Total Storage Used: {response.get('total_storage_used_mb', 0)} MB")
+        return success, response
+
+    def test_download_backup(self, job_id):
+        """Test downloading a backup file"""
+        url = f"{self.base_url}/backup/download/{job_id}"
+        headers = {}
+        if self.token:
+            headers['Authorization'] = f'Bearer {self.token}'
+
+        self.tests_run += 1
+        print(f"\n🔍 Testing Download Backup File...")
+        print(f"   URL: {url}")
+        
+        try:
+            response = requests.get(url, headers=headers)
+            print(f"   Status Code: {response.status_code}")
+            
+            if response.status_code == 200:
+                self.tests_passed += 1
+                print(f"✅ Passed - Backup file download successful")
+                print(f"   Content Type: {response.headers.get('content-type', 'N/A')}")
+                print(f"   Content Length: {len(response.content)} bytes")
+                return True, {"content_length": len(response.content)}
+            elif response.status_code == 404:
+                print(f"❌ Failed - Backup file not found (404)")
+                return False, {}
+            else:
+                print(f"❌ Failed - Status: {response.status_code}")
+                try:
+                    error_detail = response.json()
+                    print(f"   Error: {error_detail}")
+                except:
+                    print(f"   Error: {response.text}")
+                return False, {}
+
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            return False, {}
+
+    def test_cleanup_old_backups(self, retention_days=30):
+        """Test cleaning up old backups"""
+        return self.run_test(
+            f"Cleanup Old Backups ({retention_days} days)",
+            "DELETE",
+            f"backup/cleanup?retention_days={retention_days}",
+            200
+        )
+
+    def test_backup_endpoints_without_auth(self):
+        """Test backup endpoints without authentication (should fail)"""
+        original_token = self.token
+        self.token = None  # Remove token temporarily
+        
+        print("\n🔒 Testing Backup Endpoints Without Authentication...")
+        
+        # Test each endpoint without auth - should return 401/403
+        endpoints_to_test = [
+            ("GET", "backup/config", 401),
+            ("PUT", "backup/config", 401),
+            ("POST", "backup/create", 401),
+            ("GET", "backup/jobs", 401),
+            ("GET", "backup/stats", 401),
+            ("DELETE", "backup/cleanup", 401)
+        ]
+        
+        all_passed = True
+        for method, endpoint, expected_status in endpoints_to_test:
+            success, _ = self.run_test(
+                f"Unauthorized {method} {endpoint}",
+                method,
+                endpoint,
+                expected_status,
+                data={"test": "data"} if method in ["POST", "PUT"] else None
+            )
+            if not success:
+                all_passed = False
+        
+        self.token = original_token  # Restore token
+        return all_passed, {}
+
+    def test_backup_download_invalid_job_id(self):
+        """Test downloading backup with invalid job ID"""
+        invalid_job_id = "invalid-job-id-12345"
+        success, response = self.test_download_backup(invalid_job_id)
+        # This should fail with 404, so we expect success to be False
+        if not success:
+            print("✅ Correctly handled invalid job ID")
+            return True, response
+        else:
+            print("❌ Should have failed with invalid job ID")
+            return False, response
+
 def main():
     print("🚀 Starting Two Wheeler Business Management System API Tests")
     print("=" * 60)
