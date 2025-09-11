@@ -605,6 +605,64 @@ def main():
     print("\n📊 Testing Dashboard Statistics...")
     tester.test_get_dashboard_stats()
 
+    # Test Backup System API Endpoints (as requested in review)
+    print("\n💾 Testing Backup System API Endpoints...")
+    
+    # Test backup configuration
+    print("\n⚙️ Testing Backup Configuration...")
+    success, config_data = tester.test_get_backup_config()
+    
+    if success:
+        # Test updating backup configuration
+        updated_config = {
+            "backup_enabled": True,
+            "backup_time": "03:00",
+            "retention_days": 45,
+            "compress_backups": True,
+            "email_notifications": False
+        }
+        tester.test_update_backup_config(updated_config)
+        
+        # Get config again to verify update
+        tester.test_get_backup_config()
+
+    # Test manual backup creation
+    print("\n🔄 Testing Manual Backup Creation...")
+    success, backup_job = tester.test_create_manual_backup()
+    backup_job_id = backup_job.get('id') if success else None
+
+    # Test backup history and statistics
+    print("\n📈 Testing Backup History and Statistics...")
+    tester.test_get_backup_jobs()
+    tester.test_get_backup_stats()
+
+    # Test backup file management
+    print("\n📁 Testing Backup File Management...")
+    if backup_job_id:
+        # Test downloading the backup file
+        tester.test_download_backup(backup_job_id)
+    
+    # Test with invalid job ID
+    tester.test_backup_download_invalid_job_id()
+    
+    # Test cleanup functionality
+    tester.test_cleanup_old_backups(30)
+
+    # Test error handling - endpoints without authentication
+    print("\n🚫 Testing Error Handling...")
+    tester.test_backup_endpoints_without_auth()
+
+    print("\n✅ Backup System Testing Complete!")
+    print("   All backup endpoints have been tested including:")
+    print("   - Authentication with admin/admin123 credentials")
+    print("   - Backup configuration (GET/PUT)")
+    print("   - Manual backup creation")
+    print("   - Backup job history and statistics")
+    print("   - Backup file download")
+    print("   - Old backup cleanup")
+    print("   - Error handling for unauthorized access")
+    print("   - Error handling for invalid job IDs")
+
     # Print final results
     print("\n" + "=" * 60)
     print(f"📊 Final Test Results:")
