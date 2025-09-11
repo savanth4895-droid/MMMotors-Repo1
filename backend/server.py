@@ -215,6 +215,43 @@ class SparePartBillCreate(BaseModel):
     total_tax: Optional[float] = 0
     total_amount: Optional[float] = 0
 
+# Backup Models
+class BackupConfig(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    backup_enabled: bool = True
+    backup_time: str = "02:00"  # 24-hour format
+    retention_days: int = 30
+    compress_backups: bool = True
+    email_notifications: bool = False
+    email_recipients: List[str] = []
+    backup_location: str = "./backups"
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class BackupJob(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    status: str  # running, completed, failed
+    start_time: datetime
+    end_time: Optional[datetime] = None
+    total_records: int = 0
+    backup_size_mb: float = 0
+    backup_file_path: str = ""
+    error_message: Optional[str] = None
+    records_backed_up: Dict[str, int] = {}
+    created_by: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class BackupJobCreate(BaseModel):
+    backup_type: str = "manual"  # manual or scheduled
+
+class BackupStats(BaseModel):
+    total_backups: int
+    successful_backups: int
+    failed_backups: int
+    last_backup_date: Optional[datetime]
+    total_storage_used_mb: float
+    oldest_backup_date: Optional[datetime]
+
 # Utility functions
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
