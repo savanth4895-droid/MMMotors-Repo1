@@ -843,9 +843,14 @@ class BackupService:
                 except Exception as e:
                     logger.warning(f"Failed to create CSV for {collection_name}: {e}")
         
-        # Create backup summary
+        # Create backup summary with IST timezone
+        current_utc = datetime.utcnow()
+        ist_time = current_utc + timedelta(hours=5, minutes=30)
+        
         summary = {
-            'backup_date': datetime.utcnow().isoformat(),
+            'backup_date': ist_time.isoformat(),
+            'backup_date_utc': current_utc.isoformat(),
+            'timezone': 'IST (UTC+5:30)',
             'total_records': sum(records_by_collection.values()),
             'records_by_collection': records_by_collection,
             'backup_type': backup_type,
