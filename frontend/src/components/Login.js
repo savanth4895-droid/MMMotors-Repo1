@@ -31,17 +31,27 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    console.log('Login attempt started with:', loginData);
 
     try {
+      console.log('Making API call to:', `${API}/auth/login`);
       const response = await axios.post(`${API}/auth/login`, loginData);
+      console.log('Login API response:', response.data);
+      
       const { access_token, user } = response.data;
+      console.log('Extracted token and user:', { token: access_token ? 'present' : 'missing', user });
       
       login(user, access_token);
+      console.log('Called login function, should redirect now');
+      
       toast.success('Login successful!');
     } catch (error) {
+      console.error('Login error:', error);
+      console.error('Error response:', error.response?.data);
       toast.error(error.response?.data?.detail || 'Login failed');
     } finally {
       setIsLoading(false);
+      console.log('Login process completed, loading set to false');
     }
   };
 
