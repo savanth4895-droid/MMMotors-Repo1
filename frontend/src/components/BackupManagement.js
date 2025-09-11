@@ -90,11 +90,18 @@ const BackupManagement = () => {
     }
   };
 
-  const downloadBackup = async (jobId, fileName) => {
+  const downloadBackup = async (jobId, jobData) => {
     try {
       const response = await axios.get(`${API}/backup/download/${jobId}`, {
         responseType: 'blob'
       });
+      
+      // Determine file extension based on backup content
+      const isExcel = jobData.backup_file_path?.includes('_excel.zip') || 
+                      jobData.backup_file_path?.includes('backup_data.xlsx');
+      
+      const fileExtension = isExcel ? 'xlsx.zip' : 'zip';
+      const fileName = `backup_${jobData.start_time.split('T')[0]}.${fileExtension}`;
       
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
@@ -104,7 +111,7 @@ const BackupManagement = () => {
       link.click();
       link.remove();
       
-      toast.success('Backup download started');
+      toast.success(`${isExcel ? 'Excel' : 'Standard'} backup download started`);
     } catch (error) {
       console.error('Failed to download backup:', error);
       toast.error('Failed to download backup file');
