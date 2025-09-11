@@ -470,12 +470,27 @@ const BackupManagement = () => {
 
               <div>
                 <label className="block text-sm font-medium mb-2">Backup Time</label>
-                <Input
-                  type="time"
-                  value={backupConfig.backup_time}
-                  onChange={(e) => updateBackupConfig({ backup_time: e.target.value })}
-                />
-                <p className="text-sm text-gray-500 mt-1">Time for daily automatic backups</p>
+                <div className="space-y-2">
+                  <Input
+                    type="time"
+                    value={backupConfig.backup_time}
+                    onChange={(e) => updateBackupConfig({ backup_time: e.target.value })}
+                  />
+                  <div className="flex justify-between items-center text-xs text-gray-500">
+                    <span>Time for daily automatic backups</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const now = new Date();
+                        const currentTime = now.toTimeString().slice(0, 5);
+                        updateBackupConfig({ backup_time: currentTime });
+                      }}
+                      className="text-blue-600 hover:text-blue-800 underline"
+                    >
+                      Use current time ({new Date().toTimeString().slice(0, 5)})
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div>
