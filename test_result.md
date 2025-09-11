@@ -129,6 +129,42 @@ backend:
       - agent: "testing"
       - comment: "✅ COMPREHENSIVE SPARE PARTS CREATE BILL API TESTING COMPLETED SUCCESSFULLY: Conducted thorough testing of POST /api/spare-parts/bills endpoint as requested in review. AUTHENTICATION TESTING: Successfully authenticated using admin/admin123 credentials, JWT token obtained and working properly. GST BILL CREATION TESTING: POST /api/spare-parts/bills endpoint working perfectly with exact payload from review request - Customer data (name: Test Customer, mobile: 9876543210, vehicle_name: Honda Activa, vehicle_number: TN12CD5678), Items with GST details (part_id: MANUAL-123456, description: Test Brake Pad, hsn_sac: 87083000, quantity: 2, unit: Nos, rate: 500, discount_percent: 5, gst_percent: 18), All GST calculations verified correct (subtotal: 1000, total_discount: 50, total_cgst: 85.5, total_sgst: 85.5, total_tax: 171, total_amount: 1121). RESPONSE VERIFICATION: API returns 200 status code, Bill created successfully with proper bill number (SPB-000009), Customer data stored correctly, GST calculations match expected values (CGST = SGST = 85.5, Total = 1121). GET BILLS TESTING: GET /api/spare-parts/bills endpoint working correctly, Created bill appears in bills list, Retrieved 9 total bills with 3 GST bills (customer_data format), Latest bill shows correct customer and vehicle information. ERROR HANDLING TESTING: Missing customer data returns 400 status (correct), Empty items array handled gracefully with 200 status, Invalid data scenarios properly handled. BACKEND INTEGRATION: Backend logs show successful API calls, No errors or warnings in backend logs, All database operations working correctly, Legacy bill compatibility maintained. ALL EXPECTED RESULTS ACHIEVED: ✅ POST request returns 200/201 status with bill details, ✅ Bill created successfully in database, ✅ Bill appears in GET /api/spare-parts/bills response, ✅ Proper error handling for invalid requests, ✅ GST calculations are mathematically correct, ✅ Customer data format working as expected. The Spare Parts Create Bill API endpoint is fully operational and meets all specified requirements from the review request."
 
+  - task: "Sales Overview Page Data Fetching"
+    implemented: false
+    working: false
+    file: "/app/frontend/src/components/Sales.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+      - agent: "main"
+      - comment: "IDENTIFIED ISSUE: SalesOverview component has stats state initialized with default values but never fetches data from API. No API calls in SalesOverview component to populate sales statistics. Need to add fetchStats function to retrieve and display actual sales data."
+
+  - task: "Insurance Management Data Fetching"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/components/Sales.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+      - agent: "main"
+      - comment: "IDENTIFIED ISSUE: InsuranceManagement component makes 3 API calls (/api/sales, /api/customers, /api/vehicles) but failing with 'Failed to fetch insurance data' error. Backend API endpoints confirmed working via curl testing. Issue likely related to frontend authentication token or API call timing."
+
+  - task: "Frontend Authentication Flow"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/App.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+      - agent: "main"
+      - comment: "IDENTIFIED ISSUE: Frontend authentication stuck on login page, not redirecting to dashboard after successful login. Backend authentication confirmed working with admin/admin123 credentials. Issue likely in authentication state management or token handling in React app."
+
 frontend:
   - task: "Vehicle Stock Brand Overview Page"
     implemented: true
