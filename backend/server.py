@@ -569,7 +569,175 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
     }
 
 # Include the router in the main app
-app.include_router(api_router)
+# Backup Service Class
+class BackupService:
+    def __init__(self, db, backup_config: BackupConfig):
+        self.db = db
+        self.config = backup_config
+        self.backup_root = Path(backup_config.backup_location)
+        self.backup_root.mkdir(parents=True, exist_ok=True)
+    
+    async def create_backup(self, user_id: str, backup_type: str = "manual") -> BackupJob:
+        """Create a new backup job"""
+        job = BackupJob(
+            status="running",
+            start_time=datetime.utcnow(),
+            created_by=user_id,
+            backup_type=backup_type
+        )
+        
+        try:
+            # Create backup directory
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            backup_dir = self.backup_root / f"backup_{timestamp}"
+            backup_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Backup all collections
+            collections = ['users', 'customers', 'vehicles', 'sales', 'services', 'spare_parts', 'spare_part_bills']
+            total_records = 0
+            records_by_collection = {}
+            
+            for collection_name in collections:
+                collection = getattr(self.db, collection_name)
+                documents = await collection.find().to_list(length=None)
+                
+                # Convert ObjectId to string for JSON serialization
+                for doc in documents:
+                    if '_id' in doc:
+                        doc['_id'] = str(doc['_id'])
+                
+                # Save as JSON
+                json_file = backup_dir / f"{collection_name}.json"
+                async with aiofiles.open(json_file, 'w') as f:
+                    await f.write(json.dumps(documents, default=str, indent=2))
+                
+                record_count = len(documents)
+                records_by_collection[collection_name] = record_count
+                total_records += record_count
+            
+            # Create backup summary
+            summary = {
+                'backup_date': datetime.utcnow().isoformat(),
+                'total_records': total_records,
+                'records_by_collection': records_by_collection,
+                'backup_type': backup_type,
+                'created_by': user_id
+            }
+            
+            summary_file = backup_dir / 'backup_summary.json'
+            async with aiofiles.open(summary_file, 'w') as f:
+                await f.write(json.dumps(summary, indent=2))
+            
+            # Compress backup if enabled
+            final_path = str(backup_dir)
+            backup_size = 0
+            
+            if self.config.compress_backups:
+                zip_path = f"{backup_dir}.zip"
+                with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                    for file_path in backup_dir.rglob('*'):
+                        if file_path.is_file():
+                            zipf.write(file_path, file_path.relative_to(backup_dir))
+                
+                # Remove original directory and get compressed size
+                shutil.rmtree(backup_dir)
+                backup_size = os.path.getsize(zip_path) / (1024 * 1024)  # MB
+                final_path = zip_path
+            else:
+                # Calculate directory size
+                backup_size = sum(f.stat().st_size for f in backup_dir.rglob('*') if f.is_file()) / (1024 * 1024)
+            
+            # Update job with completion details
+            job.status = "completed"
+            job.end_time = datetime.utcnow()
+            job.total_records = total_records
+            job.backup_size_mb = round(backup_size, 2)
+            job.backup_file_path = final_path
+            job.records_backed_up = records_by_collection
+            
+        except Exception as e:
+            job.status = "failed"
+            job.end_time = datetime.utcnow()
+            job.error_message = str(e)
+        
+        # Save job to database
+        await self.db.backup_jobs.insert_one(job.dict())
+        
+        return job
+    
+    async def get_backup_stats(self) -> BackupStats:
+        """Get backup statistics"""
+        jobs = await self.db.backup_jobs.find().to_list(length=None)
+        
+        total_backups = len(jobs)
+        successful_backups = len([j for j in jobs if j['status'] == 'completed'])
+        failed_backups = len([j for j in jobs if j['status'] == 'failed'])
+        
+        last_backup = None
+        oldest_backup = None
+        total_size = 0
+        
+        if jobs:
+            sorted_jobs = sorted(jobs, key=lambda x: x['created_at'], reverse=True)
+            last_backup = sorted_jobs[0]['created_at']
+            oldest_backup = sorted_jobs[-1]['created_at']
+            
+            # Calculate total storage used
+            for job in jobs:
+                if job['status'] == 'completed':
+                    total_size += job.get('backup_size_mb', 0)
+        
+        return BackupStats(
+            total_backups=total_backups,
+            successful_backups=successful_backups,
+            failed_backups=failed_backups,
+            last_backup_date=last_backup,
+            oldest_backup_date=oldest_backup,
+            total_storage_used_mb=round(total_size, 2)
+        )
+    
+    async def cleanup_old_backups(self, retention_days: int):
+        """Clean up backups older than retention period"""
+        cutoff_date = datetime.utcnow() - timedelta(days=retention_days)
+        
+        # Remove old backup files
+        for backup_path in self.backup_root.glob('backup_*'):
+            if backup_path.stat().st_mtime < cutoff_date.timestamp():
+                try:
+                    if backup_path.is_file():
+                        backup_path.unlink()
+                    else:
+                        shutil.rmtree(backup_path)
+                    
+                    # Update database to mark as cleaned up
+                    await self.db.backup_jobs.update_one(
+                        {"backup_file_path": str(backup_path)},
+                        {"$set": {"cleaned_up": True}}
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to cleanup backup {backup_path}: {e}")
+
+# Initialize backup service
+backup_service = None
+
+async def get_backup_service():
+    """Get or create backup service instance"""
+    global backup_service
+    
+    if backup_service is None:
+        # Get backup config from database or create default
+        config_doc = await db.backup_config.find_one()
+        if not config_doc:
+            # Create default config
+            default_config = BackupConfig()
+            await db.backup_config.insert_one(default_config.dict())
+            config = default_config
+        else:
+            config = BackupConfig(**config_doc)
+        
+        backup_service = BackupService(db, config)
+    
+    return backup_service
 
 app.add_middleware(
     CORSMiddleware,
