@@ -139,8 +139,8 @@ const BackupManagement = () => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    // Format to 24-hour time with consistent timezone
-    return date.toLocaleString('en-US', {
+    // Format to 24-hour time with IST timezone (UTC+5:30)
+    return date.toLocaleString('en-IN', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -148,23 +148,23 @@ const BackupManagement = () => {
       minute: '2-digit',
       second: '2-digit',
       hour12: false, // Use 24-hour format
-      timeZone: 'UTC' // Use UTC timezone for consistency
+      timeZone: 'Asia/Kolkata' // India Standard Time (UTC+5:30)
     });
   };
 
   const formatDateShort = (dateString) => {
     const date = new Date(dateString);
-    // Short format for compact display
-    const formatted = date.toLocaleString('en-US', {
+    // Short format for compact display in IST
+    const formatted = date.toLocaleString('en-IN', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
-      timeZone: 'UTC'
+      timeZone: 'Asia/Kolkata' // India Standard Time (UTC+5:30)
     });
-    return `${formatted} UTC`;
+    return `${formatted} IST`;
   };
 
   const getStatusBadge = (status) => {
