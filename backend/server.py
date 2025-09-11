@@ -916,7 +916,11 @@ async def create_manual_backup(
 ):
     """Create a manual backup"""
     service = await get_backup_service()
-    job = await service.create_backup(current_user['user_id'], backup_create.backup_type)
+    job = await service.create_backup(
+        current_user['user_id'], 
+        backup_create.backup_type,
+        backup_create.export_format
+    )
     return job
 
 @app.get("/api/backup/jobs", response_model=List[BackupJob])
