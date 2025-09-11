@@ -21,9 +21,28 @@ axios.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    console.log('Axios request:', config.method?.toUpperCase(), config.url, config.headers.Authorization ? 'with auth' : 'no auth');
     return config;
   },
   (error) => {
+    console.error('Axios request error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Axios response interceptor for handling auth errors
+axios.interceptors.response.use(
+  (response) => {
+    console.log('Axios response:', response.status, response.config.url);
+    return response;
+  },
+  (error) => {
+    console.error('Axios response error:', error);
+    if (error.response?.status === 401) {
+      console.log('Authentication error - clearing token');
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
     return Promise.reject(error);
   }
 );
