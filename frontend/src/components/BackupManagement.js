@@ -138,7 +138,18 @@ const BackupManagement = () => {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString();
+    const date = new Date(dateString);
+    // Format to 24-hour time with consistent timezone
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false, // Use 24-hour format
+      timeZone: 'UTC' // Use UTC timezone for consistency
+    });
   };
 
   const getStatusBadge = (status) => {
