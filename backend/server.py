@@ -754,14 +754,18 @@ class BackupService:
             # Create summary sheet
             summary_sheet = workbook.create_sheet(title="Backup Summary", index=0)
             
-            # Summary data
+            # Summary data with IST timezone
+            current_utc = datetime.utcnow()
+            ist_time = current_utc + timedelta(hours=5, minutes=30)
+            
             summary_data = [
                 ["Backup Information", ""],
-                ["Backup Date", datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")],
+                ["Backup Date", ist_time.strftime("%Y-%m-%d %H:%M:%S IST")],
                 ["Backup Type", backup_type.title()],
                 ["Created By", user_id],
                 ["Total Records", sum(records_by_collection.values())],
                 ["Export Format", "Excel Workbook"],
+                ["Timezone", "IST (UTC+5:30)"],
                 ["", ""],
                 ["Collection Statistics", "Records"],
             ]
