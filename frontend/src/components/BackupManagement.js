@@ -381,7 +381,7 @@ const BackupManagement = () => {
                       <div className="flex items-center gap-4">
                         {getStatusBadge(job.status)}
                         <div>
-                          <p className="font-medium">{formatDate(job.start_time)}</p>
+                          <p className="font-medium">{formatDateShort(job.start_time)}</p>
                           <p className="text-sm text-gray-500">
                             {job.total_records} records • {formatFileSize(job.backup_size_mb)}
                           </p>
