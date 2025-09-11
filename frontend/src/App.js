@@ -56,8 +56,10 @@ function App() {
   }, []);
 
   const login = (userData, token) => {
+    console.log('AuthContext login called with:', { userData, token: token ? 'present' : 'missing' });
     setUser(userData);
     localStorage.setItem('token', token);
+    console.log('User state set and token stored in localStorage');
   };
 
   const logout = () => {
