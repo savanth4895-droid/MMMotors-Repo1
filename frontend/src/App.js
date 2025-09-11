@@ -79,6 +79,11 @@ function App() {
     setUser(userData);
     localStorage.setItem('token', token);
     console.log('User state set and token stored in localStorage');
+    console.log('Current window location:', window.location.href);
+    // Force navigation to dashboard
+    setTimeout(() => {
+      window.location.href = '/dashboard';
+    }, 100);
   };
 
   const logout = () => {
