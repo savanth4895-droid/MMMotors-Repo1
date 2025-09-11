@@ -508,12 +508,18 @@ const BackupManagement = () => {
                       type="button"
                       onClick={() => {
                         const now = new Date();
-                        const currentTime = now.toTimeString().slice(0, 5);
+                        // Get current time in IST (UTC+5:30)
+                        const istTime = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+                        const currentTime = istTime.toTimeString().slice(0, 5);
                         updateBackupConfig({ backup_time: currentTime });
                       }}
                       className="text-blue-600 hover:text-blue-800 underline"
                     >
-                      Use current time ({new Date().toTimeString().slice(0, 5)})
+                      Use current time ({(() => {
+                        const now = new Date();
+                        const istTime = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+                        return istTime.toTimeString().slice(0, 5);
+                      })()})
                     </button>
                   </div>
                 </div>
