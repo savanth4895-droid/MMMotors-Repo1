@@ -36,6 +36,7 @@ const Dashboard = () => {
     pending_services: 0,
     low_stock_parts: 0
   });
+  const [backupStats, setBackupStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
