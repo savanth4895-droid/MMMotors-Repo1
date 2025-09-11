@@ -133,6 +133,10 @@ function App() {
               path="/spare-parts/*"
               element={user ? <Layout><SpareParts /></Layout> : <Navigate to="/login" />}
             />
+            <Route
+              path="/backup"
+              element={user ? <Layout><BackupManagement /></Layout> : <Navigate to="/login" />}
+            />
           </Routes>
         </BrowserRouter>
         <Toaster position="top-right" />
