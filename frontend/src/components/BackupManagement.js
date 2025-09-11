@@ -267,32 +267,48 @@ const BackupManagement = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-wrap gap-4">
-                <Button
-                  onClick={createManualBackup}
-                  disabled={creating}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  {creating ? <Loader className="w-4 h-4 mr-2 animate-spin" /> : <Play className="w-4 h-4 mr-2" />}
-                  Create Backup Now
-                </Button>
+              <div className="space-y-4">
+                {/* Export Format Selection */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">Backup Format</label>
+                  <select
+                    value={exportFormat}
+                    onChange={(e) => setExportFormat(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md bg-white"
+                  >
+                    <option value="json">JSON + CSV (Standard)</option>
+                    <option value="excel">Excel Workbook (.xlsx)</option>
+                  </select>
+                </div>
                 
-                <Button
-                  onClick={fetchBackupData}
-                  variant="outline"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Refresh Data
-                </Button>
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-4">
+                  <Button
+                    onClick={() => createManualBackup(exportFormat)}
+                    disabled={creating}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {creating ? <Loader className="w-4 h-4 mr-2 animate-spin" /> : <Play className="w-4 h-4 mr-2" />}
+                    Create {exportFormat.toUpperCase()} Backup
+                  </Button>
+                  
+                  <Button
+                    onClick={fetchBackupData}
+                    variant="outline"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Refresh Data
+                  </Button>
 
-                <Button
-                  onClick={cleanupOldBackups}
-                  variant="outline"
-                  className="text-red-600 border-red-300 hover:bg-red-50"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Cleanup Old Backups
-                </Button>
+                  <Button
+                    onClick={cleanupOldBackups}
+                    variant="outline"
+                    className="text-red-600 border-red-300 hover:bg-red-50"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Cleanup Old Backups
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
