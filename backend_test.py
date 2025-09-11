@@ -420,12 +420,12 @@ class TwoWheelerAPITester:
         
         # Test each endpoint without auth - should return 401/403
         endpoints_to_test = [
-            ("GET", "backup/config", 401),
-            ("PUT", "backup/config", 401),
-            ("POST", "backup/create", 401),
-            ("GET", "backup/jobs", 401),
-            ("GET", "backup/stats", 401),
-            ("DELETE", "backup/cleanup", 401)
+            ("GET", "backup/config", 403),
+            ("PUT", "backup/config", 403),
+            ("POST", "backup/create", 403),
+            ("GET", "backup/jobs", 403),
+            ("GET", "backup/stats", 403),
+            ("DELETE", "backup/cleanup", 403)
         ]
         
         all_passed = True
