@@ -35,36 +35,29 @@ const Login = () => {
 
     try {
       console.log('Making API call to:', `${API}/auth/login`);
-      console.log('API constant value:', API);
       
-      const response = await axios.post(`${API}/auth/login`, loginData, {
-        timeout: 10000, // 10 second timeout
-        headers: {
-          'Content-Type': 'application/json'
-        }
+      const response = await axios.post(`${API}/auth/login`, {
+        username: loginData.username,
+        password: loginData.password
       });
       
-      console.log('Login API response received:', response.status);
-      console.log('Response data:', response.data);
+      console.log('Login API response received:', response.status, response.data);
       
-      const { access_token, user } = response.data;
-      console.log('Extracted token and user:', { token: access_token ? 'present' : 'missing', user });
-      
-      login(user, access_token);
-      console.log('Called login function, should redirect now');
-      
-      toast.success('Login successful!');
+      if (response.data.access_token && response.data.user) {
+        const { access_token, user } = response.data;
+        console.log('Login successful, calling login function');
+        
+        login(user, access_token);
+        toast.success('Login successful! Redirecting...');
+      } else {
+        throw new Error('Invalid response format');
+      }
     } catch (error) {
-      console.error('Login error occurred:', error);
-      console.error('Error message:', error.message);
-      console.error('Error response:', error.response?.data);
-      console.error('Error status:', error.response?.status);
-      console.error('Network error:', error.code);
-      
+      console.error('Login error:', error);
       const errorMessage = error.response?.data?.detail || error.message || 'Login failed';
       toast.error(errorMessage);
     } finally {
-      console.log('Login process completed, setting loading to false');
+      console.log('Setting loading to false');
       setIsLoading(false);
     }
   };
