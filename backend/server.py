@@ -705,32 +705,51 @@ class BackupService:
                 # Create sheet
                 sheet = workbook.create_sheet(title=collection_name.replace('_', ' ').title())
                 
-                # Convert to DataFrame for easier Excel manipulation
-                df = pd.DataFrame(documents)
-                
-                # Add data to sheet
-                for row_num, row_data in enumerate(dataframe_to_rows(df, index=False, header=True), 1):
-                    for col_num, value in enumerate(row_data, 1):
-                        cell = sheet.cell(row=row_num, column=col_num, value=value)
+                try:
+                    # Flatten nested data for Excel compatibility
+                    flattened_documents = []
+                    for doc in documents:
+                        flat_doc = self.flatten_document(doc)
+                        flattened_documents.append(flat_doc)
+                    
+                    # Convert to DataFrame for easier Excel manipulation
+                    df = pd.DataFrame(flattened_documents)
+                    
+                    # Add data to sheet
+                    for row_num, row_data in enumerate(dataframe_to_rows(df, index=False, header=True), 1):
+                        for col_num, value in enumerate(row_data, 1):
+                            # Convert non-serializable values to strings
+                            if value is None:
+                                value = ""
+                            elif isinstance(value, (dict, list)):
+                                value = str(value)
+                            
+                            cell = sheet.cell(row=row_num, column=col_num, value=str(value))
+                            
+                            # Apply header styling
+                            if row_num == 1:
+                                cell.font = header_font
+                                cell.fill = header_fill
+                                cell.alignment = header_alignment
+                    
+                    # Auto-adjust column widths
+                    for column in sheet.columns:
+                        max_length = 0
+                        column_letter = column[0].column_letter
+                        for cell in column:
+                            try:
+                                if len(str(cell.value)) > max_length:
+                                    max_length = len(str(cell.value))
+                            except:
+                                pass
+                        adjusted_width = min(max_length + 2, 50)
+                        sheet.column_dimensions[column_letter].width = adjusted_width
                         
-                        # Apply header styling
-                        if row_num == 1:
-                            cell.font = header_font
-                            cell.fill = header_fill
-                            cell.alignment = header_alignment
-                
-                # Auto-adjust column widths
-                for column in sheet.columns:
-                    max_length = 0
-                    column_letter = column[0].column_letter
-                    for cell in column:
-                        try:
-                            if len(str(cell.value)) > max_length:
-                                max_length = len(str(cell.value))
-                        except:
-                            pass
-                    adjusted_width = min(max_length + 2, 50)
-                    sheet.column_dimensions[column_letter].width = adjusted_width
+                except Exception as e:
+                    logger.warning(f"Failed to create Excel sheet for {collection_name}: {e}")
+                    # Create a simple sheet with error message
+                    sheet.cell(row=1, column=1, value=f"Error processing {collection_name}")
+                    sheet.cell(row=2, column=1, value=str(e))
             
             # Create summary sheet
             summary_sheet = workbook.create_sheet(title="Backup Summary", index=0)
@@ -742,6 +761,7 @@ class BackupService:
                 ["Backup Type", backup_type.title()],
                 ["Created By", user_id],
                 ["Total Records", sum(records_by_collection.values())],
+                ["Export Format", "Excel Workbook"],
                 ["", ""],
                 ["Collection Statistics", "Records"],
             ]
@@ -752,8 +772,8 @@ class BackupService:
             
             # Add summary data to sheet
             for row_num, (key, value) in enumerate(summary_data, 1):
-                summary_sheet.cell(row=row_num, column=1, value=key)
-                summary_sheet.cell(row=row_num, column=2, value=value)
+                summary_sheet.cell(row=row_num, column=1, value=str(key))
+                summary_sheet.cell(row=row_num, column=2, value=str(value))
                 
                 # Style headers
                 if key in ["Backup Information", "Collection Statistics"]:
@@ -766,11 +786,41 @@ class BackupService:
             
             # Save workbook
             workbook.save(excel_file)
+            logger.info(f"Excel backup created successfully: {excel_file}")
             
         except Exception as e:
             # Fallback to JSON if Excel creation fails
             logger.error(f"Excel backup creation failed: {e}, falling back to JSON")
             await self.create_json_csv_backup(backup_dir, collection_data, records_by_collection, user_id, backup_type)
+    
+    def flatten_document(self, doc: dict, prefix: str = "") -> dict:
+        """Flatten nested dictionary for Excel compatibility"""
+        flattened = {}
+        
+        for key, value in doc.items():
+            new_key = f"{prefix}_{key}" if prefix else key
+            
+            if isinstance(value, dict):
+                # Recursively flatten nested dictionaries
+                nested_flattened = self.flatten_document(value, new_key)
+                flattened.update(nested_flattened)
+            elif isinstance(value, list):
+                # Convert lists to comma-separated strings
+                if value and isinstance(value[0], dict):
+                    # For list of dictionaries, create a summary
+                    flattened[new_key] = f"[{len(value)} items]"
+                    # Add first item details if available
+                    if value:
+                        first_item = self.flatten_document(value[0], f"{new_key}_item1")
+                        flattened.update(first_item)
+                else:
+                    # For simple lists, join as string
+                    flattened[new_key] = ", ".join(str(item) for item in value)
+            else:
+                # Simple values
+                flattened[new_key] = value
+        
+        return flattened
     
     async def create_json_csv_backup(self, backup_dir: Path, collection_data: dict, records_by_collection: dict, user_id: str, backup_type: str):
         """Create JSON and CSV backup files"""
