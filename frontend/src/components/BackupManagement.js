@@ -326,9 +326,21 @@ const BackupManagement = () => {
                 <div className="text-center py-8">
                   <Database className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-500">No backups created yet</p>
-                  <Button onClick={createManualBackup} className="mt-4">
-                    Create Your First Backup
-                  </Button>
+                  <div className="mt-4 space-y-2">
+                    <div>
+                      <select
+                        value={exportFormat}
+                        onChange={(e) => setExportFormat(e.target.value)}
+                        className="p-2 border border-gray-300 rounded-md bg-white"
+                      >
+                        <option value="json">JSON + CSV</option>
+                        <option value="excel">Excel (.xlsx)</option>
+                      </select>
+                    </div>
+                    <Button onClick={() => createManualBackup(exportFormat)}>
+                      Create Your First {exportFormat.toUpperCase()} Backup
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-4">
