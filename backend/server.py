@@ -281,6 +281,22 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid authentication credentials")
 
+async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Verify JWT token and return user data"""
+    try:
+        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+        
+        user = await db.users.find_one({"username": username})
+        if user is None:
+            raise HTTPException(status_code=401, detail="User not found")
+        
+        return {"user_id": user["id"], "username": user["username"], "role": user["role"]}
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+
 # Test endpoint
 @api_router.get("/")
 async def root():
