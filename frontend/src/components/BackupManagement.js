@@ -152,6 +152,20 @@ const BackupManagement = () => {
     });
   };
 
+  const formatDateShort = (dateString) => {
+    const date = new Date(dateString);
+    // Short format for compact display
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone: 'UTC'
+    });
+  };
+
   const getStatusBadge = (status) => {
     const statusConfig = {
       running: { color: 'bg-yellow-500', icon: Loader, text: 'Running' },
