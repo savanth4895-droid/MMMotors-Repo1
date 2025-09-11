@@ -35,8 +35,17 @@ const Login = () => {
 
     try {
       console.log('Making API call to:', `${API}/auth/login`);
-      const response = await axios.post(`${API}/auth/login`, loginData);
-      console.log('Login API response:', response.data);
+      console.log('API constant value:', API);
+      
+      const response = await axios.post(`${API}/auth/login`, loginData, {
+        timeout: 10000, // 10 second timeout
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('Login API response received:', response.status);
+      console.log('Response data:', response.data);
       
       const { access_token, user } = response.data;
       console.log('Extracted token and user:', { token: access_token ? 'present' : 'missing', user });
@@ -46,12 +55,17 @@ const Login = () => {
       
       toast.success('Login successful!');
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Login error occurred:', error);
+      console.error('Error message:', error.message);
       console.error('Error response:', error.response?.data);
-      toast.error(error.response?.data?.detail || 'Login failed');
+      console.error('Error status:', error.response?.status);
+      console.error('Network error:', error.code);
+      
+      const errorMessage = error.response?.data?.detail || error.message || 'Login failed';
+      toast.error(errorMessage);
     } finally {
+      console.log('Login process completed, setting loading to false');
       setIsLoading(false);
-      console.log('Login process completed, loading set to false');
     }
   };
 
