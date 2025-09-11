@@ -400,7 +400,7 @@ const BackupManagement = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => downloadBackup(job.id, `backup_${job.start_time.split('T')[0]}.zip`)}
+                        onClick={() => downloadBackup(job.id, job)}
                       >
                         <Download className="w-4 h-4 mr-1" />
                         Download
