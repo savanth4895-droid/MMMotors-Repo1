@@ -2573,7 +2573,7 @@ const ServiceDue = () => {
                 <tr>
                   <th className="p-3 text-left text-sm font-medium text-gray-500">Customer</th>
                   <th className="p-3 text-left text-sm font-medium text-gray-500">Vehicle</th>
-                  <th className="p-3 text-left text-sm font-medium text-gray-500">Last Service</th>
+                  <th className="p-3 text-left text-sm font-medium text-gray-500">Base Date</th>
                   <th className="p-3 text-left text-sm font-medium text-gray-500">Service Type</th>
                   <th className="p-3 text-left text-sm font-medium text-gray-500">Due Date</th>
                   <th className="p-3 text-left text-sm font-medium text-gray-500">Status</th>
@@ -2603,14 +2603,22 @@ const ServiceDue = () => {
                         {service.vehicle_reg_no || 'N/A'}
                       </td>
                       <td className="p-3 text-sm text-gray-600">
-                        {service.completion_date ? 
-                          new Date(service.completion_date).toLocaleDateString() : 
-                          new Date(service.created_at).toLocaleDateString()
+                        {service.base_date ? 
+                          new Date(service.base_date).toLocaleDateString() : 
+                          'N/A'
                         }
+                        <br />
+                        <span className="text-xs text-gray-400">
+                          {service.last_service_date ? 'Last Service' : 'Purchase Date'}
+                        </span>
                       </td>
                       <td className="p-3 text-sm">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {service.service_type?.replace('_', ' ').toUpperCase() || 'N/A'}
+                          {service.last_service_date ? 'Regular Service' : 'First Service'}
+                        </span>
+                        <br />
+                        <span className="text-xs text-gray-500">
+                          {service.last_service_date ? '90 days cycle' : '30 days from purchase'}
                         </span>
                       </td>
                       <td className="p-3 text-sm font-medium">
