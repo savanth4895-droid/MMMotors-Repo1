@@ -838,6 +838,27 @@ def main():
     
     tester.test_get_spare_parts()
     
+    # Test spare parts update operations (NEW)
+    if spare_part_id:
+        print("\n✏️ Testing Spare Parts Update Operations...")
+        tester.test_get_spare_part_by_id(spare_part_id)
+        
+        tester.test_update_spare_part(
+            spare_part_id,
+            "Premium Brake Pad Set",  # Updated name
+            "BP001-PREMIUM",  # Updated part number
+            "TVS",  # Same brand
+            75,  # Updated quantity
+            350.0,  # Updated price
+            unit="Set",  # Updated unit
+            hsn_sac="87083000",  # Added HSN/SAC
+            gst_percentage=18.0  # GST percentage
+        )
+        
+        # Test error handling for spare parts updates
+        tester.test_update_spare_part_not_found("invalid-part-id-12345")
+        tester.test_update_spare_part_without_auth(spare_part_id)
+    
     # Test legacy spare part bill creation
     if customer_id and spare_part_id:
         tester.test_create_spare_part_bill(
