@@ -235,6 +235,62 @@ class TwoWheelerAPITester:
         """Test getting all sales"""
         return self.run_test("Get Sales", "GET", "sales", 200)
 
+    def test_get_sale_by_id(self, sale_id):
+        """Test getting sale by ID"""
+        return self.run_test(f"Get Sale {sale_id}", "GET", f"sales/{sale_id}", 200)
+
+    def test_update_sale(self, sale_id, customer_id, vehicle_id, amount, payment_method):
+        """Test updating sale information"""
+        success, response = self.run_test(
+            f"Update Sale {sale_id}",
+            "PUT",
+            f"sales/{sale_id}",
+            200,
+            data={
+                "customer_id": customer_id,
+                "vehicle_id": vehicle_id,
+                "amount": amount,
+                "payment_method": payment_method
+            }
+        )
+        return success, response
+
+    def test_update_sale_not_found(self, invalid_sale_id):
+        """Test updating non-existent sale (should return 404)"""
+        return self.run_test(
+            f"Update Non-existent Sale {invalid_sale_id}",
+            "PUT",
+            f"sales/{invalid_sale_id}",
+            404,
+            data={
+                "customer_id": "test-customer-id",
+                "vehicle_id": "test-vehicle-id",
+                "amount": 50000.0,
+                "payment_method": "Cash"
+            }
+        )
+
+    def test_update_sale_without_auth(self, sale_id):
+        """Test updating sale without authentication (should return 401/403)"""
+        original_token = self.token
+        self.token = None  # Remove token temporarily
+        
+        success, response = self.run_test(
+            f"Update Sale Without Auth {sale_id}",
+            "PUT",
+            f"sales/{sale_id}",
+            403,
+            data={
+                "customer_id": "test-customer-id",
+                "vehicle_id": "test-vehicle-id",
+                "amount": 50000.0,
+                "payment_method": "Cash"
+            }
+        )
+        
+        self.token = original_token  # Restore token
+        return success, response
+
     def test_create_service(self, customer_id, vehicle_number, service_type, description, amount):
         """Test service creation"""
         success, response = self.run_test(
