@@ -2451,24 +2451,6 @@ const ServiceDue = () => {
     }
   };
 
-  const getServiceInterval = (serviceType) => {
-    // Service intervals in days
-    const intervals = {
-      'regular_service': 90,      // 3 months
-      'oil_change': 30,           // 1 month
-      'brake_service': 180,       // 6 months
-      'engine_repair': 365,       // 1 year
-      'electrical_work': 180,     // 6 months
-      'body_work': 365,           // 1 year
-      'tire_replacement': 365,    // 1 year
-      'chain_sprocket': 90,       // 3 months
-      'clutch_service': 180,      // 6 months
-      'suspension_service': 180,  // 6 months
-      'other': 90                 // Default 3 months
-    };
-    return intervals[serviceType] || 90;
-  };
-
   const filterServices = () => {
     let filtered = dueServices;
 
