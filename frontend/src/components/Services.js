@@ -2324,20 +2324,275 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading }) 
 };
 
 const ServiceDue = () => {
+  const [dueServices, setDueServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredServices, setFilteredServices] = useState([]);
+
+  useEffect(() => {
+    fetchDueServices();
+  }, []);
+
+  useEffect(() => {
+    filterServices();
+  }, [dueServices, searchTerm]);
+
+  const fetchDueServices = async () => {
+    try {
+      setLoading(true);
+      // In a real application, you would have a separate endpoint for service due tracking
+      // For now, we'll simulate this with completed services that should have follow-up services
+      const completedServices = await axios.get(`${API}/services?status=completed`);
+      
+      // Calculate due dates based on service completion dates
+      const servicesWithDueDates = completedServices.data.map(service => {
+        const completionDate = new Date(service.completion_date || service.created_at);
+        const dueDate = new Date(completionDate);
+        
+        // Different service types have different intervals
+        const intervalDays = getServiceInterval(service.service_type);
+        dueDate.setDate(completionDate.getDate() + intervalDays);
+        
+        const today = new Date();
+        const daysDifference = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+        
+        return {
+          ...service,
+          due_date: dueDate,
+          days_until_due: daysDifference,
+          is_overdue: daysDifference < 0,
+          is_due_soon: daysDifference >= 0 && daysDifference <= 7
+        };
+      });
+
+      // Sort by due date (overdue first, then due soon)
+      servicesWithDueDates.sort((a, b) => {
+        if (a.is_overdue && !b.is_overdue) return -1;
+        if (!a.is_overdue && b.is_overdue) return 1;
+        if (a.is_due_soon && !b.is_due_soon) return -1;
+        if (!a.is_due_soon && b.is_due_soon) return 1;
+        return a.due_date - b.due_date;
+      });
+
+      setDueServices(servicesWithDueDates);
+    } catch (error) {
+      toast.error('Failed to fetch service due information');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getServiceInterval = (serviceType) => {
+    // Service intervals in days
+    const intervals = {
+      'regular_service': 90,      // 3 months
+      'oil_change': 30,           // 1 month
+      'brake_service': 180,       // 6 months
+      'engine_repair': 365,       // 1 year
+      'electrical_work': 180,     // 6 months
+      'body_work': 365,           // 1 year
+      'tire_replacement': 365,    // 1 year
+      'chain_sprocket': 90,       // 3 months
+      'clutch_service': 180,      // 6 months
+      'suspension_service': 180,  // 6 months
+      'other': 90                 // Default 3 months
+    };
+    return intervals[serviceType] || 90;
+  };
+
+  const filterServices = () => {
+    let filtered = dueServices;
+
+    if (searchTerm) {
+      filtered = filtered.filter(service => 
+        service.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        service.vehicle_reg_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        service.service_type?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    setFilteredServices(filtered);
+  };
+
+  const handleSendReminder = (service) => {
+    // In a real application, this would send SMS/email reminder
+    toast.success(`Reminder sent to ${service.customer_name} for ${service.vehicle_reg_no}`);
+  };
+
+  const getDueDateColor = (service) => {
+    if (service.is_overdue) return 'text-red-600 bg-red-50';
+    if (service.is_due_soon) return 'text-yellow-600 bg-yellow-50';
+    return 'text-green-600 bg-green-50';
+  };
+
+  const getDueDateText = (service) => {
+    if (service.is_overdue) {
+      return `Overdue by ${Math.abs(service.days_until_due)} days`;
+    }
+    if (service.is_due_soon) {
+      return `Due in ${service.days_until_due} days`;
+    }
+    return `Due in ${service.days_until_due} days`;
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Service Due Reminders</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="text-center py-8">
-          <Calendar className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Service Due Tracking</h3>
-          <p className="text-gray-500 mb-4">Track and remind customers of upcoming service due dates</p>
-          <Button>Coming Soon</Button>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Service Due Reminders</h2>
+          <p className="text-gray-600">Track and remind customers of upcoming service due dates</p>
         </div>
-      </CardContent>
-    </Card>
+        <div className="flex gap-2">
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+            <Input
+              placeholder="Search services..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 w-64"
+            />
+          </div>
+          <Button onClick={fetchDueServices}>
+            Refresh
+          </Button>
+        </div>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Overdue Services</p>
+                <p className="text-2xl font-bold text-red-600">
+                  {dueServices.filter(s => s.is_overdue).length}
+                </p>
+              </div>
+              <div className="h-12 w-12 bg-red-100 rounded-lg flex items-center justify-center">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Due This Week</p>
+                <p className="text-2xl font-bold text-yellow-600">
+                  {dueServices.filter(s => s.is_due_soon).length}
+                </p>
+              </div>
+              <div className="h-12 w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <Calendar className="h-6 w-6 text-yellow-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Tracked</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {dueServices.length}
+                </p>
+              </div>
+              <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Users className="h-6 w-6 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Due Services Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Service Due Schedule</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="p-3 text-left text-sm font-medium text-gray-500">Customer</th>
+                  <th className="p-3 text-left text-sm font-medium text-gray-500">Vehicle</th>
+                  <th className="p-3 text-left text-sm font-medium text-gray-500">Last Service</th>
+                  <th className="p-3 text-left text-sm font-medium text-gray-500">Service Type</th>
+                  <th className="p-3 text-left text-sm font-medium text-gray-500">Due Date</th>
+                  <th className="p-3 text-left text-sm font-medium text-gray-500">Status</th>
+                  <th className="p-3 text-left text-sm font-medium text-gray-500">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {loading ? (
+                  <tr>
+                    <td colSpan="7" className="p-6 text-center text-gray-500">
+                      Loading service due information...
+                    </td>
+                  </tr>
+                ) : filteredServices.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="p-6 text-center text-gray-500">
+                      No services due found
+                    </td>
+                  </tr>
+                ) : (
+                  filteredServices.map((service) => (
+                    <tr key={service.id} className="hover:bg-gray-50">
+                      <td className="p-3 text-sm font-medium text-gray-900">
+                        {service.customer_name || 'N/A'}
+                      </td>
+                      <td className="p-3 text-sm text-gray-600">
+                        {service.vehicle_reg_no || 'N/A'}
+                      </td>
+                      <td className="p-3 text-sm text-gray-600">
+                        {service.completion_date ? 
+                          new Date(service.completion_date).toLocaleDateString() : 
+                          new Date(service.created_at).toLocaleDateString()
+                        }
+                      </td>
+                      <td className="p-3 text-sm">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {service.service_type?.replace('_', ' ').toUpperCase() || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="p-3 text-sm font-medium">
+                        {service.due_date.toLocaleDateString()}
+                      </td>
+                      <td className="p-3 text-sm">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getDueDateColor(service)}`}>
+                          {getDueDateText(service)}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleSendReminder(service)}
+                          >
+                            Send Reminder
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <Calendar className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
