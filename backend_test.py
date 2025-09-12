@@ -132,6 +132,58 @@ class TwoWheelerAPITester:
         """Test getting customer by ID"""
         return self.run_test(f"Get Customer {customer_id}", "GET", f"customers/{customer_id}", 200)
 
+    def test_update_customer(self, customer_id, name, phone, email, address):
+        """Test updating customer information"""
+        success, response = self.run_test(
+            f"Update Customer {customer_id}",
+            "PUT",
+            f"customers/{customer_id}",
+            200,
+            data={
+                "name": name,
+                "phone": phone,
+                "email": email,
+                "address": address
+            }
+        )
+        return success, response
+
+    def test_update_customer_not_found(self, invalid_customer_id):
+        """Test updating non-existent customer (should return 404)"""
+        return self.run_test(
+            f"Update Non-existent Customer {invalid_customer_id}",
+            "PUT",
+            f"customers/{invalid_customer_id}",
+            404,
+            data={
+                "name": "Test Name",
+                "phone": "9876543210",
+                "email": "test@example.com",
+                "address": "Test Address"
+            }
+        )
+
+    def test_update_customer_without_auth(self, customer_id):
+        """Test updating customer without authentication (should return 401/403)"""
+        original_token = self.token
+        self.token = None  # Remove token temporarily
+        
+        success, response = self.run_test(
+            f"Update Customer Without Auth {customer_id}",
+            "PUT",
+            f"customers/{customer_id}",
+            403,
+            data={
+                "name": "Test Name",
+                "phone": "9876543210",
+                "email": "test@example.com",
+                "address": "Test Address"
+            }
+        )
+        
+        self.token = original_token  # Restore token
+        return success, response
+
     def test_create_vehicle(self, brand, model, chassis_no, engine_no, color, key_no, inbound_location):
         """Test vehicle creation"""
         success, response = self.run_test(
