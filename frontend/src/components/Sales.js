@@ -464,9 +464,12 @@ const CreateInvoice = () => {
               {/* Payment Details */}
               <div className="section border rounded-lg p-4 mb-6">
                 <h3 className="text-lg font-semibold mb-3 text-blue-600">Payment Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="field">
                     <span className="label">Payment Method:</span> {generatedInvoice.payment_method.toUpperCase()}
+                  </div>
+                  <div className="field">
+                    <span className="label">Hypothecation:</span> {generatedInvoice.hypothecation.toUpperCase()}
                   </div>
                   <div className="field total text-right">
                     <span className="label">Amount:</span> ₹{generatedInvoice.amount.toLocaleString()}
