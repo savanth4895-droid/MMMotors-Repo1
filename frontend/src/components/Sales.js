@@ -1441,6 +1441,19 @@ const CustomersManagement = () => {
       ...prev,
       [field]: value
     }));
+
+    // Mark field as touched
+    setTouched(prev => ({
+      ...prev,
+      [field]: true
+    }));
+
+    // Validate field and update errors
+    const error = validateField(field, value);
+    setValidationErrors(prev => ({
+      ...prev,
+      [field]: error
+    }));
   };
 
   const resetForm = () => {
