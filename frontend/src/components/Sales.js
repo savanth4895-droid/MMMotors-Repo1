@@ -356,7 +356,8 @@ const CreateInvoice = () => {
       relation: '',
       age: '',
       amount: '',
-      payment_method: 'cash'
+      payment_method: 'cash',
+      hypothecation: 'cash'
     });
     setShowPreview(false);
     setGeneratedInvoice(null);
