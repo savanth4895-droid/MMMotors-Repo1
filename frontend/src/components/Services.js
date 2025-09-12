@@ -2492,7 +2492,7 @@ const ServiceDue = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Service Due Reminders</h2>
-          <p className="text-gray-600">Track and remind customers of upcoming service due dates</p>
+          <p className="text-gray-600">Track service due dates: 30 days from purchase, 90 days from last service</p>
         </div>
         <div className="flex gap-2">
           <div className="relative">
