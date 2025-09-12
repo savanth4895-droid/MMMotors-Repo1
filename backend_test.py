@@ -720,6 +720,20 @@ def main():
     tester.test_get_customers()
     if customer_id:
         tester.test_get_customer_by_id(customer_id)
+        
+        # Test customer update operations (NEW)
+        print("\n✏️ Testing Customer Update Operations...")
+        tester.test_update_customer(
+            customer_id,
+            "John Doe Updated",
+            "9876543211", 
+            "john.updated@example.com",
+            "456 Updated St, New City"
+        )
+        
+        # Test error handling for customer updates
+        tester.test_update_customer_not_found("invalid-customer-id-12345")
+        tester.test_update_customer_without_auth(customer_id)
 
     # Test vehicle operations
     print("\n🏍️ Testing Vehicle Operations...")
