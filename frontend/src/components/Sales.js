@@ -1700,14 +1700,18 @@ const CustomersManagement = () => {
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="address">Address</Label>
+                    <Label htmlFor="address">Address *</Label>
                     <Textarea
                       id="address"
                       placeholder="Enter complete address"
                       value={customerData.address}
                       onChange={(e) => handleInputChange('address', e.target.value)}
                       required
+                      className={touched.address && validationErrors.address ? 'border-red-500' : ''}
                     />
+                    {touched.address && validationErrors.address && (
+                      <p className="text-red-500 text-sm mt-1">{validationErrors.address}</p>
+                    )}
                   </div>
                 </div>
               </div>
