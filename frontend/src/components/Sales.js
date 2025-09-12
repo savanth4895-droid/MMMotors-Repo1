@@ -826,8 +826,42 @@ const ViewInvoices = () => {
   };
 
   const handleEditInvoice = (invoice) => {
-    toast.info('Edit functionality will be implemented in the next update');
-    // TODO: Implement edit functionality
+    const customer = customers.find(c => c.id === invoice.customer_id);
+    const vehicle = vehicles.find(v => v.id === invoice.vehicle_id);
+    
+    setEditingInvoice(invoice);
+    setEditFormData({
+      customer_id: invoice.customer_id,
+      vehicle_id: invoice.vehicle_id,
+      amount: invoice.amount,
+      payment_method: invoice.payment_method,
+      insurance_details: invoice.insurance_details || {}
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingInvoice) return;
+    
+    try {
+      setLoading(true);
+      await axios.put(`${API}/sales/${editingInvoice.id}`, editFormData);
+      toast.success('Invoice updated successfully!');
+      setShowEditModal(false);
+      setEditingInvoice(null);
+      setEditFormData({});
+      fetchInvoices(); // Refresh the list
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update invoice');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setShowEditModal(false);
+    setEditingInvoice(null);
+    setEditFormData({});
   };
 
   const handlePrintInvoice = (invoice) => {
