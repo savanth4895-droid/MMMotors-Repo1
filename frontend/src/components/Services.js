@@ -471,6 +471,9 @@ const ViewRegistration = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRegistration, setSelectedRegistration] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingRegistration, setEditingRegistration] = useState(null);
+  const [editFormData, setEditFormData] = useState({});
 
   useEffect(() => {
     fetchAllData();
