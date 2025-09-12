@@ -1684,7 +1684,11 @@ const JobCards = () => {
 };
 
 const ServicesBilling = () => {
+  const [activeTab, setActiveTab] = useState('create');
   const [customers, setCustomers] = useState([]);
+  const [serviceBills, setServiceBills] = useState([]);
+  const [filteredBills, setFilteredBills] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [billItems, setBillItems] = useState([{
     sl_no: 1,
     description: '',
