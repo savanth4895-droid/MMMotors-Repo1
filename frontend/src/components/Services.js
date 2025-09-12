@@ -1908,10 +1908,74 @@ const ServicesBilling = () => {
 
   return (
     <div className="space-y-6">
+      {/* Tab Navigation */}
+      <div className="bg-white rounded-lg border border-gray-200 p-1">
+        <div className="flex gap-1">
+          <Button 
+            variant={activeTab === 'create' ? 'default' : 'ghost'}
+            className="flex-1"
+            onClick={() => setActiveTab('create')}
+          >
+            Create Bill
+          </Button>
+          <Button 
+            variant={activeTab === 'view' ? 'default' : 'ghost'}
+            className="flex-1"
+            onClick={() => setActiveTab('view')}
+          >
+            View Bills
+          </Button>
+        </div>
+      </div>
+
+      {activeTab === 'create' ? (
+        <CreateBillContent 
+          customers={customers}
+          billItems={billItems}
+          setBillItems={setBillItems}
+          selectedCustomer={selectedCustomer}
+          setSelectedCustomer={setSelectedCustomer}
+          billNumber={billNumber}
+          setBillNumber={setBillNumber}
+          billDate={billDate}
+          setBillDate={setBillDate}
+          loading={loading}
+          calculateItemAmounts={calculateItemAmounts}
+          calculateTotals={calculateTotals}
+          updateBillItem={updateBillItem}
+          addBillItem={addBillItem}
+          removeBillItem={removeBillItem}
+          handleSaveBill={handleSaveBill}
+          handlePrintBill={handlePrintBill}
+          units={units}
+          gstRates={gstRates}
+        />
+      ) : (
+        <ViewBillsContent 
+          serviceBills={filteredBills}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          loading={loading}
+        />
+      )}
+    </div>
+  );
+};
+
+const CreateBillContent = ({ 
+  customers, billItems, setBillItems, selectedCustomer, setSelectedCustomer,
+  billNumber, setBillNumber, billDate, setBillDate, loading,
+  calculateItemAmounts, calculateTotals, updateBillItem, addBillItem, removeBillItem,
+  handleSaveBill, handlePrintBill, units, gstRates
+}) => {
+  const totals = calculateTotals();
+
+  return (
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Services Billing</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Create Service Bill</h2>
           <p className="text-gray-600">Create GST-compliant service bills</p>
         </div>
         <div className="flex gap-2">
