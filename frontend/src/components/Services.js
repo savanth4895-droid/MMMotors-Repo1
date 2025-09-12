@@ -584,8 +584,39 @@ const ViewRegistration = () => {
   };
 
   const handleEditRegistration = (registration) => {
-    toast.info('Edit functionality will be implemented in the next update');
-    // TODO: Implement edit functionality
+    setEditingRegistration(registration);
+    setEditFormData({
+      customer_id: customers.find(c => c.name === registration.customer_name)?.id || '',
+      vehicle_number: registration.vehicle_reg_no,
+      service_type: registration.service_type,
+      description: registration.description,
+      amount: registration.amount
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingRegistration) return;
+    
+    try {
+      setLoading(true);
+      await axios.put(`${API}/services/${editingRegistration.id}`, editFormData);
+      toast.success('Service registration updated successfully!');
+      setShowEditModal(false);
+      setEditingRegistration(null);
+      setEditFormData({});
+      fetchAllData(); // Refresh the data
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update service registration');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setShowEditModal(false);
+    setEditingRegistration(null);
+    setEditFormData({});
   };
 
   const exportRegistrations = () => {
