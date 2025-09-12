@@ -1573,6 +1573,112 @@ const JobCards = () => {
           </div>
         </div>
       )}
+
+      {/* Edit Job Card Modal */}
+      {showEditModal && editingJobCard && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Edit Job Card</h2>
+                <Button variant="outline" onClick={handleCancelEdit}>
+                  Cancel
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="customer_id">Customer</Label>
+                  <Select 
+                    value={editFormData.customer_id} 
+                    onValueChange={(value) => setEditFormData({...editFormData, customer_id: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select customer" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {customers.map((customer) => (
+                        <SelectItem key={customer.id} value={customer.id}>
+                          {customer.name} - {customer.phone}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="vehicle_number">Vehicle Registration Number</Label>
+                  <Input
+                    id="vehicle_number"
+                    placeholder="Enter vehicle registration number"
+                    value={editFormData.vehicle_number || ''}
+                    onChange={(e) => setEditFormData({...editFormData, vehicle_number: e.target.value})}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="service_type">Service Type</Label>
+                  <Select 
+                    value={editFormData.service_type} 
+                    onValueChange={(value) => setEditFormData({...editFormData, service_type: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select service type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="regular_service">Regular Service</SelectItem>
+                      <SelectItem value="oil_change">Oil Change</SelectItem>
+                      <SelectItem value="brake_service">Brake Service</SelectItem>
+                      <SelectItem value="engine_repair">Engine Repair</SelectItem>
+                      <SelectItem value="electrical_work">Electrical Work</SelectItem>
+                      <SelectItem value="body_work">Body Work</SelectItem>
+                      <SelectItem value="tire_replacement">Tire Replacement</SelectItem>
+                      <SelectItem value="chain_sprocket">Chain & Sprocket</SelectItem>
+                      <SelectItem value="clutch_service">Clutch Service</SelectItem>
+                      <SelectItem value="suspension_service">Suspension Service</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="amount">Amount (₹)</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    step="0.01"
+                    placeholder="Enter service amount"
+                    value={editFormData.amount || ''}
+                    onChange={(e) => setEditFormData({...editFormData, amount: parseFloat(e.target.value)})}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="description">Complaint/Description</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Enter complaint or service description"
+                    value={editFormData.description || ''}
+                    onChange={(e) => setEditFormData({...editFormData, description: e.target.value})}
+                    rows={4}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-2">
+                <Button variant="outline" onClick={handleCancelEdit}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveEdit} disabled={loading}>
+                  {loading ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
