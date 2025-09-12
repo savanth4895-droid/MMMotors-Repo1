@@ -911,6 +911,7 @@ const ViewInvoices = () => {
         <body>
           <div class="header">
             <h1>M M MOTORS</h1>
+            <p>Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130</p>
             <p>Two Wheeler Sales Invoice</p>
             <div class="grid">
               <div><strong>Invoice No:</strong> ${invoice.invoice_number}</div>
@@ -936,6 +937,7 @@ const ViewInvoices = () => {
           <div class="section">
             <div class="total">
               <div><span class="label">Payment Method:</span> ${invoice.payment_method?.toUpperCase() || 'CASH'}</div>
+              <div><span class="label">Hypothecation:</span> ${invoice.hypothecation?.toUpperCase() || 'CASH'}</div>
               <div><span class="label">Total Amount:</span> ₹${invoice.amount?.toLocaleString() || '0'}</div>
             </div>
           </div>
