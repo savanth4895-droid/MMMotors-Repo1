@@ -2207,6 +2207,122 @@ const CreateBillContent = ({
   );
 };
 
+const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading }) => {
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Service Bills</h2>
+          <p className="text-gray-600">View all service bills and invoices</p>
+        </div>
+        <div className="flex gap-2">
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+            <Input
+              placeholder="Search bills..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 w-64"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Bills Table */}
+      <Card>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="p-3 text-left text-sm font-medium text-gray-500">Job Card #</th>
+                  <th className="p-3 text-left text-sm font-medium text-gray-500">Customer</th>
+                  <th className="p-3 text-left text-sm font-medium text-gray-500">Vehicle</th>
+                  <th className="p-3 text-left text-sm font-medium text-gray-500">Service Type</th>
+                  <th className="p-3 text-left text-sm font-medium text-gray-500">Amount</th>
+                  <th className="p-3 text-left text-sm font-medium text-gray-500">Status</th>
+                  <th className="p-3 text-left text-sm font-medium text-gray-500">Date</th>
+                  <th className="p-3 text-left text-sm font-medium text-gray-500">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {loading ? (
+                  <tr>
+                    <td colSpan="8" className="p-6 text-center text-gray-500">
+                      Loading service bills...
+                    </td>
+                  </tr>
+                ) : serviceBills.length === 0 ? (
+                  <tr>
+                    <td colSpan="8" className="p-6 text-center text-gray-500">
+                      No service bills found
+                    </td>
+                  </tr>
+                ) : (
+                  serviceBills.map((bill) => (
+                    <tr key={bill.id} className="hover:bg-gray-50">
+                      <td className="p-3 text-sm font-medium text-blue-600">
+                        {bill.job_card_number || 'N/A'}
+                      </td>
+                      <td className="p-3 text-sm text-gray-900">
+                        {bill.customer_name || 'N/A'}
+                      </td>
+                      <td className="p-3 text-sm text-gray-600">
+                        {bill.vehicle_reg_no || 'N/A'}
+                      </td>
+                      <td className="p-3 text-sm text-gray-600">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {bill.service_type?.replace('_', ' ').toUpperCase() || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="p-3 text-sm font-medium text-green-600">
+                        ₹{bill.amount?.toLocaleString() || '0'}
+                      </td>
+                      <td className="p-3 text-sm">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          bill.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          bill.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {bill.status?.replace('_', ' ').toUpperCase() || 'PENDING'}
+                        </span>
+                      </td>
+                      <td className="p-3 text-sm text-gray-600">
+                        {bill.created_at ? new Date(bill.created_at).toLocaleDateString() : 'N/A'}
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-2">
+                          <Button size="sm" variant="outline">
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <Printer className="w-4 h-4" />
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <Download className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {serviceBills.length > 0 && (
+        <div className="flex justify-between items-center text-sm text-gray-500">
+          <span>Showing {serviceBills.length} service bills</span>
+          <span>Total Revenue: ₹{serviceBills.reduce((sum, bill) => sum + (bill.amount || 0), 0).toLocaleString()}</span>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ServiceDue = () => {
   return (
     <Card>
