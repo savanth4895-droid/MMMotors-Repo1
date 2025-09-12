@@ -677,7 +677,7 @@ const CreateInvoice = () => {
           {/* Payment Details */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-blue-600">Payment Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="amount">Amount (₹)</Label>
                 <Input
@@ -701,6 +701,24 @@ const CreateInvoice = () => {
                     <SelectItem value="upi">UPI</SelectItem>
                     <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
                     <SelectItem value="finance">Finance</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="hypothecation">Hypothecation</Label>
+                <Select value={invoiceData.hypothecation} onValueChange={(value) => handleInputChange('hypothecation', value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="bajaj_finserv">Bajaj Finserv</SelectItem>
+                    <SelectItem value="hdfc_bank">HDFC Bank</SelectItem>
+                    <SelectItem value="icici_bank">ICICI Bank</SelectItem>
+                    <SelectItem value="sbi">State Bank of India</SelectItem>
+                    <SelectItem value="axis_bank">Axis Bank</SelectItem>
+                    <SelectItem value="kotak_bank">Kotak Bank</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
