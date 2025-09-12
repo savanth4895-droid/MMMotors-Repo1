@@ -481,6 +481,7 @@ const CreateInvoice = () => {
               {/* Footer */}
               <div className="text-center mt-8 pt-4 border-t">
                 <p className="text-sm text-gray-600">Thank you for choosing M M Motors!</p>
+                <p className="text-xs text-gray-500 mt-1">Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130</p>
                 <p className="text-xs text-gray-500 mt-2">This is a computer-generated invoice.</p>
               </div>
             </div>
