@@ -365,6 +365,22 @@ async def get_customer(customer_id: str, current_user: User = Depends(get_curren
         raise HTTPException(status_code=404, detail="Customer not found")
     return Customer(**customer)
 
+@api_router.put("/customers/{customer_id}", response_model=Customer)
+async def update_customer(customer_id: str, customer_data: CustomerCreate, current_user: User = Depends(get_current_user)):
+    # Check if customer exists
+    existing_customer = await db.customers.find_one({"id": customer_id})
+    if not existing_customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    
+    # Update customer data
+    update_data = customer_data.dict()
+    update_data["id"] = customer_id  # Keep the original ID
+    update_data["created_at"] = existing_customer["created_at"]  # Keep original creation date
+    
+    updated_customer = Customer(**update_data)
+    await db.customers.replace_one({"id": customer_id}, updated_customer.dict())
+    return updated_customer
+
 # Vehicle endpoints
 @api_router.post("/vehicles", response_model=Vehicle)
 async def create_vehicle(vehicle_data: VehicleCreate, current_user: User = Depends(get_current_user)):
