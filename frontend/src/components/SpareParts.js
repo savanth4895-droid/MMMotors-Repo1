@@ -460,6 +460,48 @@ const Inventory = () => {
     setFilteredParts(filtered);
   };
 
+  const handleEditPart = (part) => {
+    setEditingPart(part);
+    setEditFormData({
+      name: part.name,
+      part_number: part.part_number,
+      brand: part.brand,
+      quantity: part.quantity,
+      unit: part.unit || 'Nos',
+      unit_price: part.unit_price,
+      hsn_sac: part.hsn_sac || '',
+      gst_percentage: part.gst_percentage || 18,
+      compatible_models: part.compatible_models || '',
+      low_stock_threshold: part.low_stock_threshold || 5,
+      supplier: part.supplier || ''
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingPart) return;
+    
+    try {
+      setLoading(true);
+      await axios.put(`${API}/spare-parts/${editingPart.id}`, editFormData);
+      toast.success('Spare part updated successfully!');
+      setShowEditModal(false);
+      setEditingPart(null);
+      setEditFormData({});
+      fetchParts(); // Refresh the data
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update spare part');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setShowEditModal(false);
+    setEditingPart(null);
+    setEditFormData({});
+  };
+
   if (loading) {
     return <div className="flex justify-center p-8"><div className="spinner"></div></div>;
   }
