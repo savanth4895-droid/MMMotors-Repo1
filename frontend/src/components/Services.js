@@ -2606,7 +2606,27 @@ const ServiceDue = () => {
       {/* Due Services Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Service Due Schedule</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Service Due Schedule</CardTitle>
+            {activeFilter !== 'all' && (
+              <div className="flex items-center gap-2">
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  activeFilter === 'overdue' ? 'bg-red-100 text-red-800' :
+                  activeFilter === 'due_soon' ? 'bg-yellow-100 text-yellow-800' : ''
+                }`}>
+                  {activeFilter === 'overdue' ? 'Showing Overdue Only' : 
+                   activeFilter === 'due_soon' ? 'Showing Due This Week Only' : ''}
+                </span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleFilterClick('all')}
+                >
+                  Clear Filter
+                </Button>
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
