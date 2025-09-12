@@ -1479,6 +1479,24 @@ const CustomersManagement = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    
+    // Validate form
+    const errors = validateForm();
+    setValidationErrors(errors);
+    
+    // Mark all fields as touched to show errors
+    const allTouched = {};
+    Object.keys(customerData).forEach(field => {
+      allTouched[field] = true;
+    });
+    setTouched(allTouched);
+
+    // Check if there are any errors
+    if (Object.keys(errors).length > 0) {
+      toast.error('Please fix the errors before submitting');
+      return;
+    }
+
     setLoading(true);
 
     try {
