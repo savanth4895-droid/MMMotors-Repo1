@@ -2530,13 +2530,21 @@ const ServiceDue = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
+        <Card 
+          className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
+            activeFilter === 'overdue' ? 'ring-2 ring-red-500 bg-red-50' : 'hover:bg-red-50'
+          }`}
+          onClick={() => handleFilterClick('overdue')}
+        >
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Overdue Services</p>
                 <p className="text-2xl font-bold text-red-600">
                   {dueServices.filter(s => s.is_overdue).length}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {activeFilter === 'overdue' ? 'Currently filtered' : 'Click to filter'}
                 </p>
               </div>
               <div className="h-12 w-12 bg-red-100 rounded-lg flex items-center justify-center">
@@ -2546,13 +2554,21 @@ const ServiceDue = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card 
+          className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
+            activeFilter === 'due_soon' ? 'ring-2 ring-yellow-500 bg-yellow-50' : 'hover:bg-yellow-50'
+          }`}
+          onClick={() => handleFilterClick('due_soon')}
+        >
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Due This Week</p>
                 <p className="text-2xl font-bold text-yellow-600">
-                  {dueServices.filter(s => s.is_due_soon).length}
+                  {dueServices.filter(s => s.is_due_soon && !s.is_overdue).length}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {activeFilter === 'due_soon' ? 'Currently filtered' : 'Click to filter'}
                 </p>
               </div>
               <div className="h-12 w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -2562,13 +2578,21 @@ const ServiceDue = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card 
+          className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
+            activeFilter === 'all' ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:bg-blue-50'
+          }`}
+          onClick={() => handleFilterClick('all')}
+        >
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Tracked</p>
                 <p className="text-2xl font-bold text-blue-600">
                   {dueServices.length}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {activeFilter === 'all' ? 'Showing all' : 'Click to show all'}
                 </p>
               </div>
               <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
