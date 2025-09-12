@@ -520,6 +520,18 @@ test_plan:
       - agent: "testing"
       - comment: "✅ COMPREHENSIVE EXPORT DOWNLOAD FUNCTIONALITY TESTING COMPLETED SUCCESSFULLY: Conducted thorough end-to-end testing of the export download functionality for the Add Customer Details page in the Sales module as requested in review. AUTHENTICATION & NAVIGATION: Successfully authenticated using admin/admin123 credentials, JWT token working properly, successfully navigated to Sales > Add Customer section, Customer Management page loaded correctly. EXPORT BUTTON VERIFICATION: Export button found, visible, and enabled in the header action buttons section, button properly styled with FileText icon, accessible on both desktop and mobile viewports. EXPORT FUNCTIONALITY: CSV download initiated successfully by clicking Export button, filename format correct (customers_export_2025-09-12.csv) with today's date as specified, success toast notification 'Customer data exported successfully!' appeared as expected. EXPORT CONTENT VERIFICATION: CSV file contains proper headers exactly as specified (Date, Name, C/O, Mobile, Address, Email, Created Date), CSV contains 13 customer records with properly formatted data, fields are properly quoted to handle commas and special characters, dates formatted correctly in the CSV output. ERROR HANDLING: Multiple export clicks handled without errors, proper error handling implemented for edge cases, no crashes or failures during testing. UI/UX VERIFICATION: Export button properly styled with appropriate classes and FileText icon, button responsive and works on different screen sizes (tested desktop 1920x1080 and mobile 390x844), professional appearance maintained across viewports. TECHNICAL INTEGRATION: All API calls working correctly (GET /api/customers, GET /api/vehicles), authentication working with Bearer tokens, frontend-backend integration functional, no console errors during export process. ALL EXPECTED RESULTS ACHIEVED: ✅ Login with admin/admin123 credentials working, ✅ Navigation to Sales > Add Customer section successful, ✅ Export button visible and accessible, ✅ CSV file download initiated with correct filename format, ✅ Success toast notification appears, ✅ CSV contains proper headers and customer data, ✅ Fields properly quoted and dates formatted correctly, ✅ Error handling works properly, ✅ Button styled correctly and responsive. The export download functionality for the Add Customer Details page is fully operational and meets all specified requirements from the comprehensive testing request."
 
+  - task: "Service Due Reminder Functionality with Business Rules"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/Services.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+      - agent: "testing"
+      - comment: "Service Due functionality implemented with business rules: 30 days from purchase for first service, 90 days from last service for regular service. Ready for comprehensive testing to verify page description, table columns, business logic calculations, status indicators, and summary cards."
+
 agent_communication:
   - agent: "main"
   - message: "🔍 INVESTIGATING API FETCH FAILURES: User reported 'Failed to fetch sales data' and 'Failed to fetch insurance data' errors in the application. Backend analysis shows all API endpoints (/api/sales, /api/customers, /api/vehicles) are working correctly and returning proper data when tested with curl. Issue appears to be in frontend authentication flow or API call handling. Frontend is stuck on login page and not properly redirecting after successful authentication. Need to fix frontend authentication state management and ensure API calls include proper authentication tokens."
