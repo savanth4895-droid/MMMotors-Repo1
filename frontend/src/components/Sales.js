@@ -389,6 +389,7 @@ const CreateInvoice = () => {
               {/* Header */}
               <div className="header text-center mb-6">
                 <h1 className="text-3xl font-bold text-blue-600">M M MOTORS</h1>
+                <p className="text-lg text-gray-600">Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130</p>
                 <p className="text-lg text-gray-600">Two Wheeler Sales Invoice</p>
                 <div className="mt-4 grid grid-cols-2 gap-4">
                   <div className="text-left">
