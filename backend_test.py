@@ -406,6 +406,68 @@ class TwoWheelerAPITester:
         """Test getting all spare parts"""
         return self.run_test("Get Spare Parts", "GET", "spare-parts", 200)
 
+    def test_get_spare_part_by_id(self, part_id):
+        """Test getting spare part by ID"""
+        return self.run_test(f"Get Spare Part {part_id}", "GET", f"spare-parts/{part_id}", 200)
+
+    def test_update_spare_part(self, part_id, name, part_number, brand, quantity, unit_price, unit="Nos", hsn_sac=None, gst_percentage=18.0):
+        """Test updating spare part information"""
+        success, response = self.run_test(
+            f"Update Spare Part {part_id}",
+            "PUT",
+            f"spare-parts/{part_id}",
+            200,
+            data={
+                "name": name,
+                "part_number": part_number,
+                "brand": brand,
+                "quantity": quantity,
+                "unit": unit,
+                "unit_price": unit_price,
+                "hsn_sac": hsn_sac,
+                "gst_percentage": gst_percentage
+            }
+        )
+        return success, response
+
+    def test_update_spare_part_not_found(self, invalid_part_id):
+        """Test updating non-existent spare part (should return 404)"""
+        return self.run_test(
+            f"Update Non-existent Spare Part {invalid_part_id}",
+            "PUT",
+            f"spare-parts/{invalid_part_id}",
+            404,
+            data={
+                "name": "Test Part",
+                "part_number": "TP001",
+                "brand": "Test Brand",
+                "quantity": 10,
+                "unit_price": 100.0
+            }
+        )
+
+    def test_update_spare_part_without_auth(self, part_id):
+        """Test updating spare part without authentication (should return 401/403)"""
+        original_token = self.token
+        self.token = None  # Remove token temporarily
+        
+        success, response = self.run_test(
+            f"Update Spare Part Without Auth {part_id}",
+            "PUT",
+            f"spare-parts/{part_id}",
+            403,
+            data={
+                "name": "Test Part",
+                "part_number": "TP001",
+                "brand": "Test Brand",
+                "quantity": 10,
+                "unit_price": 100.0
+            }
+        )
+        
+        self.token = original_token  # Restore token
+        return success, response
+
     def test_create_spare_part_bill(self, customer_id, items):
         """Test spare part bill creation (legacy format)"""
         success, response = self.run_test(
