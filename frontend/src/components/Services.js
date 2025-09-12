@@ -1166,8 +1166,39 @@ const JobCards = () => {
   };
 
   const handleEditJobCard = (jobCard) => {
-    toast.info('Edit functionality will be implemented in the next update');
-    // TODO: Implement edit functionality
+    setEditingJobCard(jobCard);
+    setEditFormData({
+      customer_id: customers.find(c => c.name === jobCard.customer_name)?.id || '',
+      vehicle_number: jobCard.vehicle_reg_no,
+      service_type: jobCard.service_type,
+      description: jobCard.complaint,
+      amount: jobCard.amount
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingJobCard) return;
+    
+    try {
+      setLoading(true);
+      await axios.put(`${API}/services/${editingJobCard.id}`, editFormData);
+      toast.success('Job card updated successfully!');
+      setShowEditModal(false);
+      setEditingJobCard(null);
+      setEditFormData({});
+      fetchAllData(); // Refresh the data
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update job card');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setShowEditModal(false);
+    setEditingJobCard(null);
+    setEditFormData({});
   };
 
   const handleAddNewJob = () => {
