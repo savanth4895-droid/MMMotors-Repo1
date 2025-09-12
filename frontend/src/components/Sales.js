@@ -295,7 +295,8 @@ const CreateInvoice = () => {
         },
         date: invoiceData.date,
         amount: parseFloat(invoiceData.amount),
-        payment_method: invoiceData.payment_method
+        payment_method: invoiceData.payment_method,
+        hypothecation: invoiceData.hypothecation
       };
 
       setGeneratedInvoice(invoice);
