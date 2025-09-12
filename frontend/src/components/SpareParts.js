@@ -423,6 +423,9 @@ const Inventory = () => {
   const [filteredParts, setFilteredParts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingPart, setEditingPart] = useState(null);
+  const [editFormData, setEditFormData] = useState({});
 
   useEffect(() => {
     fetchParts();
