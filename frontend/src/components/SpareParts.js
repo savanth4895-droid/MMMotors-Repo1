@@ -31,6 +31,7 @@ const SpareParts = () => {
     { name: 'Inventory', path: '/spare-parts/inventory', icon: Package },
     { name: 'Create Bill', path: '/spare-parts/create-bill', icon: ShoppingCart },
     { name: 'Bills', path: '/spare-parts/bills', icon: FileText },
+    { name: 'Reports', path: '/spare-parts/reports', icon: FileText },
     { name: 'Low Stock', path: '/spare-parts/low-stock', icon: TrendingDown }
   ];
 
