@@ -1757,10 +1757,14 @@ const CustomersManagement = () => {
                     <Label htmlFor="chassis_no">Chassis No</Label>
                     <Input
                       id="chassis_no"
-                      placeholder="Enter chassis number"
+                      placeholder="Enter chassis number (17 characters)"
                       value={customerData.chassis_no}
-                      onChange={(e) => handleInputChange('chassis_no', e.target.value)}
+                      onChange={(e) => handleInputChange('chassis_no', e.target.value.toUpperCase())}
+                      className={touched.chassis_no && validationErrors.chassis_no ? 'border-red-500' : ''}
                     />
+                    {touched.chassis_no && validationErrors.chassis_no && (
+                      <p className="text-red-500 text-sm mt-1">{validationErrors.chassis_no}</p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="engine_no">Engine No</Label>
