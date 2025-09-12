@@ -1,16 +1,20 @@
 <analysis>
-The AI engineer successfully built a two-wheeler business management system (FastAPI, React, MongoDB). Initial tasks focused on completing the  module, including robust edit functionality, and changing the  status to  with a  field. Subsequently, significant work was done on the  module, implementing comprehensive GST-compliant billing, inventory pages with detailed tax fields, and adding a  field. A critical bug preventing bill generation was identified and resolved, stemming from a hardcoded frontend . Further UI/UX enhancements included a collapsible sidebar toggle, renaming Moto Manager to M M Motors, and replacing all generic car icons with specific motorcycle icons. The current task involves removing a mandatory rule from a user-specified section.
+The trajectory details the work of an AI engineer on a two-wheeler business management system. Initially, the engineer successfully resolved critical API fetch errors in the Sales and Insurance modules, primarily caused by incorrect backend URL configuration and CORS issues. This made the application fully functional, including login and data display. Subsequently, the user requested and the AI engineer implemented a comprehensive automated daily data backup system. This system includes backend API endpoints, frontend management UI, automated compression, retention policies, and detailed logging. Further refinements involved adding Excel download functionality for backups, initially facing issues with nested data structures which were promptly resolved. The final tasks in the trajectory focused on enhancing time management for the backup system, first standardizing time display to 24-hour UTC, and then adjusting all relevant time displays and configurations to India Standard Time (UTC+5:30), ensuring localized and consistent time representation across the application.
 </analysis>
 
 <product_requirements>
-The application is a full-stack system for managing an Indian two-wheeler business, covering sales, insurance, services, and spare parts. It features a login, a dashboard with four main modules: Sales, Services, Vehicles Stock, and Spare Parts.
+The application is a full-stack system named M M Motors for managing an Indian two-wheeler business. It covers sales, insurance, services, and spare parts, featuring a login and a dashboard with four main modules.
 
-**Key Module Requirements & Current State:**
-*   **Sales:** Includes Create Invoice, View Invoices (search, filter, sort), Add Customer (form, import/export), View Customer Details, Sales Report (graphs), and Insurance Renewal. This module is largely complete in terms of its core functionality, with the invoice headers updated to M M Motors.
-*   **Services:** New Service registration, View Registration, Job cards (search, add new), Create Bills (GST-compliant), View Bills, and Service Due. The core forms and tables are in place.
-*   **Vehicles Stock:** Initially required brand-specific clickable tiles (TVS, BAJAJ, HERO, HONDA, etc.) leading to detailed views (Date, Chassis No, Engine No, Model, Color, Key no., Inbound/Outbound Location, Status, Page Number). This module is now **fully complete** with robust CRUD functionality, including an Actions column for editing, and the Reserved status being changed to Returned with an associated  field. All generic vehicle icons have been replaced with motorcycle icons.
-*   **Spare Parts:** Required Create Bills, View Bills, Inventory, Reports, and Low Stock. This module is also **largely complete**, featuring GST-compliant billing with detailed tax fields, customer/vehicle information input fields (rather than a dropdown), a  field for inventory, and a functional Generate Bill workflow. All car icons in this module were also updated.
-*   **Overall:** Multi-user system, basic implementation of all modules, vehicle tracking, clean, minimal, mobile-responsive design. UI/UX was enhanced with a collapsible sidebar and the application name changed to M M Motors.
+**Key Module Requirements & Current State (as of trajectory start):**
+*   **Sales:** Includes Create Invoice, View Invoices, Add Customer, View Customer Details, Sales Report, and Insurance Renewal. Invoice headers are M M Motors.
+*   **Services:** New Service registration, View Registration, Job cards, Create Bills (GST-compliant), View Bills, and Service Due. Core forms and tables exist.
+*   **Vehicles Stock:** Fully complete with CRUD, Returned status instead of Reserved, and . All vehicle icons are motorcycle-specific.
+*   **Spare Parts:** Largely complete with GST-compliant billing, inventory,  field, and Generate Bill workflow. Car icons updated to motorcycles.
+*   **Overall:** Multi-user, basic implementation of all modules, vehicle tracking, clean, minimal, mobile-responsive design, collapsible sidebar, and name M M Motors.
+**Latest Product Additions (during this trajectory):**
+*   **Automated Backup System:** Integrated into the application, offering daily data backups with compression, retention, and email notifications.
+*   **Excel Backup:** Ability to download backups in Excel format with multiple sheets and summary.
+*   **Timezone Localization:** Backup system displays and configures times in India Standard Time (IST, UTC+5:30).
 </product_requirements>
 
 <key_technical_concepts>
@@ -22,7 +26,7 @@ The application is a full-stack system for managing an Indian two-wheeler busine
 - **JWT:** JSON Web Tokens for authentication.
 - **Bcrypt:** Password hashing.
 - **UUIDs:** Unique identifiers (instead of MongoDB ObjectIDs).
-- **Recharts:** For data visualizations in reports.
+- **Pandas & openpyxl:** Python libraries for Excel file generation.
 </key_technical_concepts>
 
 <code_architecture>
@@ -35,58 +39,46 @@ The application follows a standard full-stack MERN-like architecture with a Reac
 *   :
     *   **Importance:** Core FastAPI application, defines models, authentication, and API endpoints.
     *   **Changes:**
-        *   Added  and  for vehicle update and retrieval.
-        *   Updated  enum from  to .
-        *   Added  to the  model.
-        *   Enhanced  and  models with GST fields (, , ).
-        *   Updated  and  models to include detailed  with GST fields and  (name, mobile, vehicle name/number).
-        *   Updated  endpoints to handle new customer and bill item structures.
-        *   Fixed a syntax error related to brands array.
+        *   Enhanced CORS configuration.
+        *   Added ,  Pydantic models for database interaction.
+        *   Implemented  class with methods for creating JSON/CSV and Excel backups (handling nested data), compressing backups, and managing retention.
+        *   Added API endpoints: , , , , , .
+        *   Updated  logic to support  format and handle IST timezone in summaries.
+*   :
+    *   **Importance:** Lists Python dependencies.
+    *   **Changes:** Added  and  for Excel functionality.
+*   :
+    *   **Importance:** Stores environment variables for the frontend.
+    *   **Changes:**  was changed from a hardcoded preview URL to  to resolve API connectivity.
 *   :
     *   **Importance:** Manages application routing and global state.
-    *   **Changes:** No direct changes to this file were explicitly shown in the trajectory related to feature implementation, but it orchestrates the components.
+    *   **Changes:**
+        *   Added Axios interceptors for authentication token management and debugging.
+        *   Integrated the  route for the new  component.
 *   :
     *   **Importance:** Handles user authentication.
-    *   **Changes:** Clarified that it uses a  field for login, not .
+    *   **Changes:** Simplified login function and enhanced error handling.
 *   :
-    *   **Importance:** Main application entry point after login, displays module tiles.
-    *   **Changes:** Updated welcome message from Welcome to Moto Manager Dashboard to Welcome to M M Motors Dashboard. Replaced  icon in Vehicle Stock module card with .
-*   :
-    *   **Importance:** Defines the main application layout, including sidebar navigation and branding.
+    *   **Importance:** Main application entry point after login.
     *   **Changes:**
-        *   Implemented collapsible desktop sidebar functionality with toggle buttons (ChevronLeft/ChevronRight icons).
-        *   Updated branding from Moto Manager to M M Motors.
-        *   Replaced generic  icon in the logo and  icon in the Vehicle Stock navigation item with a custom SVG .
+        *   Added a Backup Status card to display the last backup time, status, and storage usage.
+        *   Updated time display to use 24-hour IST format (UTC+5:30).
+*   :
+    *   **Importance:** Defines the main application layout and sidebar navigation.
+    *   **Changes:**
+        *   Imported  icon from .
+        *   Added a new navigation item for Backup Management with the  path and  icon.
 *   :
     *   **Importance:** Handles sales-related features, including invoice creation and viewing.
-    *   **Changes:** Updated all invoice headers and footers from Moto Manager to M M Motors. Replaced  icons related to sales with .
-*   :
-    *   **Importance:** Manages vehicle inventory, including brand-wise views and adding/editing vehicles.
+    *   **Changes:** Fixed data fetching for Sales Overview and Insurance Management, resolving Failed to fetch errors by implementing  and ensuring proper authentication token handling.
+*    (NEW FILE):
+    *   **Importance:** Dedicated component for managing backups.
     *   **Changes:**
-        *   Fixed initial  error, replacing references with .
-        *   Replaced  placeholder with .
-        *   Added  component definition for updating vehicle details.
-        *   Integrated edit functionality (state management, handlers) into  and  components.
-        *   Added Actions column with  buttons to both  and  tables.
-        *   Updated status options from Reserved to Returned in dropdowns and status displays.
-        *   Added  state and conditional input field in , visible when status is Returned.
-        *   Added Return Date column to  and  tables.
-        *   Updated export functionality to include .
-        *   Replaced all  icon instances with  in stats cards and brand tiles.
-*   :
-    *   **Importance:** Manages spare parts billing and inventory.
-    *   **Changes:**
-        *   Refactored  component for GST-compliant billing with new  state, detailed GST fields (HSN/SAC, Qty, Unit, Rate, Disc%, GST%, CGST, SGST, Total Tax, Amount), and automatic calculations.
-        *   Replaced customer selection dropdown with individual , , ,  input fields.
-        *   Changed workflow to Generate GST Bill from manually adding items to a bill.
-        *   Updated  component to display new GST fields (, , , ).
-        *   Updated  component with input fields for , , , and .
-        *   Updated  component to display the new customer and vehicle information.
-        *   Fixed a critical bug in 's  function by adding loading states, proper error handling, and fixing API URL configuration in .
-        *   Replaced  icons related to spare parts with .
-*   :
-    *   **Importance:** Stores environment variables for the frontend, including the backend URL.
-    *   **Changes:** Crucially,  was changed from a hardcoded preview URL () to  to resolve API connectivity issues.
+        *   Created new component for UI with tabs: Overview, History, Settings.
+        *   Implemented functionality to create manual backups (JSON/CSV or Excel), view backup history, download backups, and configure backup settings (enable/disable, time, retention, compression).
+        *   Added format selection dropdown for backup creation.
+        *   Implemented Use current time button to synchronize backup time with system IST.
+        *   Ensured consistent 24-hour IST time display for all backup-related entries.
 </code_architecture>
 
 <pending_tasks>
@@ -95,13 +87,13 @@ The application follows a standard full-stack MERN-like architecture with a Reac
 - Verify the export download functionality for the Add Customer Details page (Chat 121 in original trajectory).
 - Implement the Edit functionality across various modules (e.g., View Invoices, View Customer Details, Insurance Renewal, View Registration, Job Cards), as currently they are placeholders.
 - Complete the View Bills and Service Due pages for the Services module.
-- Complete View Bills, Inventory, Reports, and Low stock pages for the Spare Parts module. (Note: Inventory, Create Bill, and Add Part have been completed for Spare Parts, but View Bills, Reports, Low stock are still pending as main navigation items).
+- Complete View Bills, Reports, and Low stock pages for the Spare Parts module. (Note: Inventory, Create Bill, and Add Part have been completed for Spare Parts, but View Bills, Reports, Low stock are still pending as main navigation items).
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the user has identified a specific section within the application (from an uploaded image) and requested to remove mandatory rule from this section. This indicates the previous AI engineer was about to begin work on modifying form validation or input requirements for a particular field or section that currently enforces a mandatory rule. The current state is that the prompt has just been received, and the AI engineer has acknowledged it and is preparing to analyze the uploaded image to understand the context of the requested change. The focus is on identifying the specific mandatory rule and the associated code.
+Immediately before this summary request, the AI engineer successfully adjusted the system's timezone for all backup-related displays and configurations to UTC+5:30, which corresponds to India Standard Time (IST). This involved updating frontend formatting functions in  and  to use the  timezone and display IST suffix. The Use current time button was also updated to reflect IST. On the backend,  was modified to include IST time in backup summaries and ensure the scheduled backup time () is set in IST. Comprehensive testing confirmed that all dashboard elements, recent backup lists, settings, and generated Excel backup summaries now consistently display times in the 24-hour IST format with the correct +5:30 offset, enhancing localization and user-friendliness. The last action was the final summary of this completed timezone adjustment.
 </current_work>
 
 <optional_next_step>
-Analyze the uploaded image to identify the specific section and field where the user wants to remove the mandatory rule.
+Verify the IST timezone changes and backup scheduling behavior on the live application.
 </optional_next_step>
