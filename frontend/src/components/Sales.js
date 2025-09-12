@@ -1686,14 +1686,18 @@ const CustomersManagement = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="mobile">Mobile Number</Label>
+                    <Label htmlFor="mobile">Mobile Number *</Label>
                     <Input
                       id="mobile"
                       placeholder="Enter mobile number"
                       value={customerData.mobile}
                       onChange={(e) => handleInputChange('mobile', e.target.value)}
                       required
+                      className={touched.mobile && validationErrors.mobile ? 'border-red-500' : ''}
                     />
+                    {touched.mobile && validationErrors.mobile && (
+                      <p className="text-red-500 text-sm mt-1">{validationErrors.mobile}</p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="address">Address</Label>
