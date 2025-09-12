@@ -588,6 +588,166 @@ const Inventory = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit Spare Part Modal */}
+      {showEditModal && editingPart && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Edit Spare Part</h2>
+                <Button variant="outline" onClick={handleCancelEdit}>
+                  Cancel
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="name">Part Name</Label>
+                  <Input
+                    id="name"
+                    placeholder="Enter part name"
+                    value={editFormData.name || ''}
+                    onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="part_number">Part Number</Label>
+                  <Input
+                    id="part_number"
+                    placeholder="Enter part number"
+                    value={editFormData.part_number || ''}
+                    onChange={(e) => setEditFormData({...editFormData, part_number: e.target.value})}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="brand">Brand</Label>
+                  <Input
+                    id="brand"
+                    placeholder="Enter brand"
+                    value={editFormData.brand || ''}
+                    onChange={(e) => setEditFormData({...editFormData, brand: e.target.value})}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="quantity">Quantity</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    placeholder="Enter quantity"
+                    value={editFormData.quantity || ''}
+                    onChange={(e) => setEditFormData({...editFormData, quantity: parseInt(e.target.value)})}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="unit">Unit</Label>
+                  <Select value={editFormData.unit} onValueChange={(value) => setEditFormData({...editFormData, unit: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select unit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Nos">Nos</SelectItem>
+                      <SelectItem value="Kg">Kg</SelectItem>
+                      <SelectItem value="Ltr">Ltr</SelectItem>
+                      <SelectItem value="Mtr">Mtr</SelectItem>
+                      <SelectItem value="Set">Set</SelectItem>
+                      <SelectItem value="Pair">Pair</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="unit_price">Unit Price (₹)</Label>
+                  <Input
+                    id="unit_price"
+                    type="number"
+                    step="0.01"
+                    placeholder="Enter unit price"
+                    value={editFormData.unit_price || ''}
+                    onChange={(e) => setEditFormData({...editFormData, unit_price: parseFloat(e.target.value)})}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="hsn_sac">HSN/SAC Code</Label>
+                  <Input
+                    id="hsn_sac"
+                    placeholder="Enter HSN/SAC code"
+                    value={editFormData.hsn_sac || ''}
+                    onChange={(e) => setEditFormData({...editFormData, hsn_sac: e.target.value})}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="gst_percentage">GST Percentage</Label>
+                  <Select value={editFormData.gst_percentage?.toString()} onValueChange={(value) => setEditFormData({...editFormData, gst_percentage: parseFloat(value)})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select GST%" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">0%</SelectItem>
+                      <SelectItem value="5">5%</SelectItem>
+                      <SelectItem value="12">12%</SelectItem>
+                      <SelectItem value="18">18%</SelectItem>
+                      <SelectItem value="28">28%</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="compatible_models">Compatible Models</Label>
+                  <Input
+                    id="compatible_models"
+                    placeholder="Enter compatible models (e.g., Apache RTR 160, Activa 5G)"
+                    value={editFormData.compatible_models || ''}
+                    onChange={(e) => setEditFormData({...editFormData, compatible_models: e.target.value})}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="low_stock_threshold">Low Stock Threshold</Label>
+                  <Input
+                    id="low_stock_threshold"
+                    type="number"
+                    placeholder="Enter threshold"
+                    value={editFormData.low_stock_threshold || ''}
+                    onChange={(e) => setEditFormData({...editFormData, low_stock_threshold: parseInt(e.target.value)})}
+                    required
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label htmlFor="supplier">Supplier (Optional)</Label>
+                  <Input
+                    id="supplier"
+                    placeholder="Enter supplier name"
+                    value={editFormData.supplier || ''}
+                    onChange={(e) => setEditFormData({...editFormData, supplier: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-2">
+                <Button variant="outline" onClick={handleCancelEdit}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveEdit} disabled={loading}>
+                  {loading ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
