@@ -1662,14 +1662,18 @@ const CustomersManagement = () => {
                 <h3 className="text-lg font-semibold text-blue-600 border-b pb-2">Customer Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="name">Name</Label>
+                    <Label htmlFor="name">Name *</Label>
                     <Input
                       id="name"
                       placeholder="Enter customer name"
                       value={customerData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
                       required
+                      className={touched.name && validationErrors.name ? 'border-red-500' : ''}
                     />
+                    {touched.name && validationErrors.name && (
+                      <p className="text-red-500 text-sm mt-1">{validationErrors.name}</p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="care_of">C/O (Care Of)</Label>
