@@ -457,6 +457,31 @@ async def get_sales(current_user: User = Depends(get_current_user)):
     sales = await db.sales.find().to_list(1000)
     return [Sale(**sale) for sale in sales]
 
+@api_router.get("/sales/{sale_id}", response_model=Sale)
+async def get_sale(sale_id: str, current_user: User = Depends(get_current_user)):
+    sale = await db.sales.find_one({"id": sale_id})
+    if not sale:
+        raise HTTPException(status_code=404, detail="Sale not found")
+    return Sale(**sale)
+
+@api_router.put("/sales/{sale_id}", response_model=Sale)
+async def update_sale(sale_id: str, sale_data: SaleCreate, current_user: User = Depends(get_current_user)):
+    # Check if sale exists
+    existing_sale = await db.sales.find_one({"id": sale_id})
+    if not existing_sale:
+        raise HTTPException(status_code=404, detail="Sale not found")
+    
+    # Update sale data
+    update_data = sale_data.dict()
+    update_data["id"] = sale_id  # Keep the original ID
+    update_data["invoice_number"] = existing_sale["invoice_number"]  # Keep original invoice number
+    update_data["created_by"] = existing_sale["created_by"]  # Keep original creator
+    update_data["created_at"] = existing_sale["created_at"]  # Keep original creation date
+    
+    updated_sale = Sale(**update_data)
+    await db.sales.replace_one({"id": sale_id}, updated_sale.dict())
+    return updated_sale
+
 # Service endpoints
 @api_router.post("/services", response_model=Service)
 async def create_service(service_data: ServiceCreate, current_user: User = Depends(get_current_user)):
