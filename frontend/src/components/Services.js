@@ -1714,7 +1714,14 @@ const ServicesBilling = () => {
 
   useEffect(() => {
     fetchCustomers();
-  }, []);
+    if (activeTab === 'view') {
+      fetchServiceBills();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    filterBills();
+  }, [serviceBills, searchTerm]);
 
   const fetchCustomers = async () => {
     try {
@@ -1723,6 +1730,35 @@ const ServicesBilling = () => {
     } catch (error) {
       toast.error('Failed to fetch customers');
     }
+  };
+
+  const fetchServiceBills = async () => {
+    try {
+      setLoading(true);
+      // For now, we'll use service registrations as service bills
+      // In a real application, you'd have a separate service_bills collection
+      const response = await axios.get(`${API}/services`);
+      setServiceBills(response.data);
+    } catch (error) {
+      toast.error('Failed to fetch service bills');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filterBills = () => {
+    let filtered = serviceBills;
+
+    if (searchTerm) {
+      filtered = filtered.filter(bill => 
+        bill.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        bill.vehicle_reg_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        bill.job_card_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        bill.service_type?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    setFilteredBills(filtered);
   };
 
   const calculateItemAmounts = (item) => {
