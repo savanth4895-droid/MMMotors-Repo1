@@ -506,6 +506,33 @@ async def get_services(status: Optional[ServiceStatus] = None, current_user: Use
     services = await db.services.find(filter_dict).to_list(1000)
     return [Service(**service) for service in services]
 
+@api_router.get("/services/{service_id}", response_model=Service)
+async def get_service(service_id: str, current_user: User = Depends(get_current_user)):
+    service = await db.services.find_one({"id": service_id})
+    if not service:
+        raise HTTPException(status_code=404, detail="Service not found")
+    return Service(**service)
+
+@api_router.put("/services/{service_id}", response_model=Service)
+async def update_service(service_id: str, service_data: ServiceCreate, current_user: User = Depends(get_current_user)):
+    # Check if service exists
+    existing_service = await db.services.find_one({"id": service_id})
+    if not existing_service:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    # Update service data
+    update_data = service_data.dict()
+    update_data["id"] = service_id  # Keep the original ID
+    update_data["job_card_number"] = existing_service["job_card_number"]  # Keep original job card number
+    update_data["created_by"] = existing_service["created_by"]  # Keep original creator
+    update_data["created_at"] = existing_service["created_at"]  # Keep original creation date
+    update_data["status"] = existing_service.get("status", ServiceStatus.PENDING)  # Keep current status
+    update_data["completion_date"] = existing_service.get("completion_date")  # Keep completion date if exists
+    
+    updated_service = Service(**update_data)
+    await db.services.replace_one({"id": service_id}, updated_service.dict())
+    return updated_service
+
 @api_router.put("/services/{service_id}/status")
 async def update_service_status(service_id: str, status_data: dict, current_user: User = Depends(get_current_user)):
     status = status_data.get("status")
