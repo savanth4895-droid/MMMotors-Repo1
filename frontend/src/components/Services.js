@@ -1024,6 +1024,9 @@ const JobCards = () => {
   const [selectedJobCard, setSelectedJobCard] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingJobCard, setEditingJobCard] = useState(null);
+  const [editFormData, setEditFormData] = useState({});
 
   useEffect(() => {
     fetchAllData();
