@@ -1473,6 +1473,8 @@ const CustomersManagement = () => {
       relation: '',
       age: ''
     });
+    setValidationErrors({});
+    setTouched({});
   };
 
   const handleSave = async (e) => {
