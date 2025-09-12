@@ -1772,17 +1772,25 @@ const CustomersManagement = () => {
                       id="engine_no"
                       placeholder="Enter engine number"
                       value={customerData.engine_no}
-                      onChange={(e) => handleInputChange('engine_no', e.target.value)}
+                      onChange={(e) => handleInputChange('engine_no', e.target.value.toUpperCase())}
+                      className={touched.engine_no && validationErrors.engine_no ? 'border-red-500' : ''}
                     />
+                    {touched.engine_no && validationErrors.engine_no && (
+                      <p className="text-red-500 text-sm mt-1">{validationErrors.engine_no}</p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="vehicle_no">Vehicle No</Label>
                     <Input
                       id="vehicle_no"
-                      placeholder="Enter vehicle registration number"
+                      placeholder="Enter vehicle registration number (e.g., KA05AB1234)"
                       value={customerData.vehicle_no}
-                      onChange={(e) => handleInputChange('vehicle_no', e.target.value)}
+                      onChange={(e) => handleInputChange('vehicle_no', e.target.value.toUpperCase())}
+                      className={touched.vehicle_no && validationErrors.vehicle_no ? 'border-red-500' : ''}
                     />
+                    {touched.vehicle_no && validationErrors.vehicle_no && (
+                      <p className="text-red-500 text-sm mt-1">{validationErrors.vehicle_no}</p>
+                    )}
                   </div>
                 </div>
               </div>
