@@ -575,6 +575,40 @@ async def get_spare_parts(low_stock: bool = False, current_user: User = Depends(
         processed_parts.append(SparePart(**part))
     return processed_parts
 
+@api_router.get("/spare-parts/{part_id}", response_model=SparePart)
+async def get_spare_part(part_id: str, current_user: User = Depends(get_current_user)):
+    part = await db.spare_parts.find_one({"id": part_id})
+    if not part:
+        raise HTTPException(status_code=404, detail="Spare part not found")
+    
+    # Handle legacy spare parts that don't have GST fields
+    if 'hsn_sac' not in part:
+        part['hsn_sac'] = None
+    if 'gst_percentage' not in part:
+        part['gst_percentage'] = 18.0
+    if 'unit' not in part:
+        part['unit'] = 'Nos'
+    if 'compatible_models' not in part:
+        part['compatible_models'] = None
+    
+    return SparePart(**part)
+
+@api_router.put("/spare-parts/{part_id}", response_model=SparePart)
+async def update_spare_part(part_id: str, spare_part_data: SparePartCreate, current_user: User = Depends(get_current_user)):
+    # Check if spare part exists
+    existing_part = await db.spare_parts.find_one({"id": part_id})
+    if not existing_part:
+        raise HTTPException(status_code=404, detail="Spare part not found")
+    
+    # Update spare part data
+    update_data = spare_part_data.dict()
+    update_data["id"] = part_id  # Keep the original ID
+    update_data["created_at"] = existing_part["created_at"]  # Keep original creation date
+    
+    updated_part = SparePart(**update_data)
+    await db.spare_parts.replace_one({"id": part_id}, updated_part.dict())
+    return updated_part
+
 @api_router.post("/spare-parts/bills", response_model=SparePartBill)
 async def create_spare_part_bill(bill_data: SparePartBillCreate, current_user: User = Depends(get_current_user)):
     # Generate bill number
