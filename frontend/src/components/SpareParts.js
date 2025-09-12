@@ -66,6 +66,7 @@ const SpareParts = () => {
         <Route path="/inventory" element={<Inventory />} />
         <Route path="/create-bill" element={<CreateBill />} />
         <Route path="/bills" element={<Bills />} />
+        <Route path="/reports" element={<SparePartsReports />} />
         <Route path="/low-stock" element={<LowStock />} />
       </Routes>
     </div>
