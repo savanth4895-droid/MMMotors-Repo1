@@ -2337,7 +2337,7 @@ const ServiceDue = () => {
 
   useEffect(() => {
     filterServices();
-  }, [dueServices, searchTerm]);
+  }, [dueServices, searchTerm, activeFilter]);
 
   const fetchDueServices = async () => {
     try {
