@@ -791,6 +791,7 @@ def main():
 
     # Test service operations
     print("\n🔧 Testing Service Operations...")
+    service_id = None
     if customer_id:
         success, service_data = tester.test_create_service(
             customer_id, 
@@ -805,6 +806,24 @@ def main():
             tester.test_update_service_status(service_id, "in_progress")
     
     tester.test_get_services()
+    
+    # Test service update operations (NEW)
+    if service_id:
+        print("\n✏️ Testing Service Update Operations...")
+        tester.test_get_service_by_id(service_id)
+        
+        tester.test_update_service(
+            service_id,
+            customer_id,
+            "TN01AB5678",  # Updated vehicle number
+            "Premium Service",  # Updated service type
+            "Complete service with premium parts and detailed inspection",  # Updated description
+            2500.0  # Updated amount
+        )
+        
+        # Test error handling for service updates
+        tester.test_update_service_not_found("invalid-service-id-12345")
+        tester.test_update_service_without_auth(service_id)
 
     # Test spare parts operations
     print("\n🔩 Testing Spare Parts Operations...")
