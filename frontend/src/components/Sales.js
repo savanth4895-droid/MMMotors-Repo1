@@ -1291,6 +1291,8 @@ const CustomersManagement = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredCustomers, setFilteredCustomers] = useState([]);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [touched, setTouched] = useState({});
   const [customerData, setCustomerData] = useState({
     date: new Date().toISOString().split('T')[0],
     name: '',
