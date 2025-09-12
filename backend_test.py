@@ -753,9 +753,41 @@ def main():
 
     # Test sales operations
     print("\n💰 Testing Sales Operations...")
+    sale_id = None
     if customer_id and vehicle_id:
-        tester.test_create_sale(customer_id, vehicle_id, 85000.0, "Cash")
+        success, sale_data = tester.test_create_sale(customer_id, vehicle_id, 85000.0, "Cash")
+        sale_id = sale_data.get('id') if success else None
     tester.test_get_sales()
+    
+    # Test sales update operations (NEW)
+    if sale_id:
+        print("\n✏️ Testing Sales Update Operations...")
+        tester.test_get_sale_by_id(sale_id)
+        
+        # Create another vehicle for update test
+        success, vehicle_data2 = tester.test_create_vehicle(
+            "BAJAJ", 
+            "Pulsar 150", 
+            "CHASSIS456", 
+            "ENGINE456", 
+            "Blue", 
+            "KEY456", 
+            "Warehouse B"
+        )
+        vehicle_id2 = vehicle_data2.get('id') if success else None
+        
+        if vehicle_id2:
+            tester.test_update_sale(
+                sale_id,
+                customer_id,
+                vehicle_id2,  # Update to different vehicle
+                90000.0,      # Updated amount
+                "Bank Transfer"  # Updated payment method
+            )
+        
+        # Test error handling for sales updates
+        tester.test_update_sale_not_found("invalid-sale-id-12345")
+        tester.test_update_sale_without_auth(sale_id)
 
     # Test service operations
     print("\n🔧 Testing Service Operations...")
