@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 class SalesAPITester:
-    def __init__(self, base_url="https://bikebiz-admin.preview.emergentagent.com/api"):
+    def __init__(self, base_url="https://bike-business.preview.emergentagent.com/api"):
         self.base_url = base_url
         self.token = None
         self.session = requests.Session()
