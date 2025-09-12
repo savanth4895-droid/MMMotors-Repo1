@@ -2329,6 +2329,7 @@ const ServiceDue = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredServices, setFilteredServices] = useState([]);
+  const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'overdue', 'due_soon'
 
   useEffect(() => {
     fetchDueServices();
