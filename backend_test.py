@@ -314,6 +314,65 @@ class TwoWheelerAPITester:
         """Test getting all services"""
         return self.run_test("Get Services", "GET", "services", 200)
 
+    def test_get_service_by_id(self, service_id):
+        """Test getting service by ID"""
+        return self.run_test(f"Get Service {service_id}", "GET", f"services/{service_id}", 200)
+
+    def test_update_service(self, service_id, customer_id, vehicle_number, service_type, description, amount):
+        """Test updating service information"""
+        success, response = self.run_test(
+            f"Update Service {service_id}",
+            "PUT",
+            f"services/{service_id}",
+            200,
+            data={
+                "customer_id": customer_id,
+                "vehicle_number": vehicle_number,
+                "service_type": service_type,
+                "description": description,
+                "amount": amount
+            }
+        )
+        return success, response
+
+    def test_update_service_not_found(self, invalid_service_id):
+        """Test updating non-existent service (should return 404)"""
+        return self.run_test(
+            f"Update Non-existent Service {invalid_service_id}",
+            "PUT",
+            f"services/{invalid_service_id}",
+            404,
+            data={
+                "customer_id": "test-customer-id",
+                "vehicle_number": "TN01AB1234",
+                "service_type": "General Service",
+                "description": "Test service",
+                "amount": 1500.0
+            }
+        )
+
+    def test_update_service_without_auth(self, service_id):
+        """Test updating service without authentication (should return 401/403)"""
+        original_token = self.token
+        self.token = None  # Remove token temporarily
+        
+        success, response = self.run_test(
+            f"Update Service Without Auth {service_id}",
+            "PUT",
+            f"services/{service_id}",
+            403,
+            data={
+                "customer_id": "test-customer-id",
+                "vehicle_number": "TN01AB1234",
+                "service_type": "General Service",
+                "description": "Test service",
+                "amount": 1500.0
+            }
+        )
+        
+        self.token = original_token  # Restore token
+        return success, response
+
     def test_update_service_status(self, service_id, status):
         """Test updating service status"""
         return self.run_test(
