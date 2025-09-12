@@ -2455,6 +2455,15 @@ const ServiceDue = () => {
   const filterServices = () => {
     let filtered = dueServices;
 
+    // Apply status filter first
+    if (activeFilter === 'overdue') {
+      filtered = filtered.filter(service => service.is_overdue);
+    } else if (activeFilter === 'due_soon') {
+      filtered = filtered.filter(service => service.is_due_soon && !service.is_overdue);
+    }
+    // 'all' shows everything, no additional filtering needed
+
+    // Then apply search filter
     if (searchTerm) {
       filtered = filtered.filter(service => 
         service.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -2464,6 +2473,14 @@ const ServiceDue = () => {
     }
 
     setFilteredServices(filtered);
+  };
+
+  const handleFilterClick = (filterType) => {
+    setActiveFilter(filterType);
+    // Clear search when changing filters for better UX
+    if (filterType !== 'all') {
+      setSearchTerm('');
+    }
   };
 
   const handleSendReminder = (service) => {
