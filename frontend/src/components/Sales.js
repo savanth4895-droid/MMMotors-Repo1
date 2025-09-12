@@ -2333,8 +2333,38 @@ const ViewCustomerDetails = () => {
   };
 
   const handleEditCustomer = (customer) => {
-    toast.info('Edit functionality will be implemented in the next update');
-    // TODO: Implement edit functionality
+    setEditingCustomer(customer);
+    setEditFormData({
+      name: customer.name,
+      phone: customer.phone,
+      email: customer.email || '',
+      address: customer.address
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingCustomer) return;
+    
+    try {
+      setLoading(true);
+      await axios.put(`${API}/customers/${editingCustomer.id}`, editFormData);
+      toast.success('Customer updated successfully!');
+      setShowEditModal(false);
+      setEditingCustomer(null);
+      setEditFormData({});
+      fetchAllData(); // Refresh the data
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update customer');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setShowEditModal(false);
+    setEditingCustomer(null);
+    setEditFormData({});
   };
 
   const exportToCSV = () => {
