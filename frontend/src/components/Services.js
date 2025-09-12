@@ -2341,33 +2341,101 @@ const ServiceDue = () => {
   const fetchDueServices = async () => {
     try {
       setLoading(true);
-      // In a real application, you would have a separate endpoint for service due tracking
-      // For now, we'll simulate this with completed services that should have follow-up services
-      const completedServices = await axios.get(`${API}/services?status=completed`);
       
-      // Calculate due dates based on service completion dates
-      const servicesWithDueDates = completedServices.data.map(service => {
-        const completionDate = new Date(service.completion_date || service.created_at);
-        const dueDate = new Date(completionDate);
+      // Fetch all necessary data
+      const [servicesResponse, salesResponse, customersResponse] = await Promise.all([
+        axios.get(`${API}/services`),
+        axios.get(`${API}/sales`),  // To get purchase dates
+        axios.get(`${API}/customers`)
+      ]);
+      
+      const services = servicesResponse.data;
+      const sales = salesResponse.data;
+      const customers = customersResponse.data;
+      const today = new Date();
+      
+      // Create a map of vehicles with their purchase dates and latest service dates
+      const vehicleServiceMap = {};
+      
+      // First, populate with purchase dates from sales
+      sales.forEach(sale => {
+        if (sale.vehicle_id) {
+          vehicleServiceMap[sale.vehicle_id] = {
+            purchase_date: new Date(sale.created_at),
+            latest_service_date: null,
+            customer_name: customers.find(c => c.id === sale.customer_id)?.name || 'Unknown',
+            vehicle_details: sale.vehicle_id
+          };
+        }
+      });
+      
+      // Then, update with latest service dates
+      services.forEach(service => {
+        const customer = customers.find(c => c.id === service.customer_id);
+        const customerName = customer?.name || service.customer_name || 'Unknown';
+        const serviceDate = new Date(service.completion_date || service.created_at);
         
-        // Different service types have different intervals
-        const intervalDays = getServiceInterval(service.service_type);
-        dueDate.setDate(completionDate.getDate() + intervalDays);
+        // Create a unique key for each customer-vehicle combination
+        const vehicleKey = `${service.customer_id}-${service.vehicle_reg_no}`;
         
-        const today = new Date();
+        if (!vehicleServiceMap[vehicleKey]) {
+          vehicleServiceMap[vehicleKey] = {
+            purchase_date: null,
+            latest_service_date: serviceDate,
+            customer_name: customerName,
+            vehicle_details: service.vehicle_reg_no
+          };
+        } else {
+          // Update with the latest service date
+          if (!vehicleServiceMap[vehicleKey].latest_service_date || 
+              serviceDate > vehicleServiceMap[vehicleKey].latest_service_date) {
+            vehicleServiceMap[vehicleKey].latest_service_date = serviceDate;
+          }
+          vehicleServiceMap[vehicleKey].customer_name = customerName;
+        }
+      });
+      
+      // Calculate due dates based on business rules
+      const vehiclesWithDueDates = Object.keys(vehicleServiceMap).map(vehicleKey => {
+        const vehicleData = vehicleServiceMap[vehicleKey];
+        let baseDate, dueDate, serviceType;
+        
+        if (vehicleData.latest_service_date) {
+          // Rule: 90 days from the date of last service
+          baseDate = vehicleData.latest_service_date;
+          dueDate = new Date(baseDate);
+          dueDate.setDate(baseDate.getDate() + 90);
+          serviceType = 'Regular Service (90 days from last service)';
+        } else if (vehicleData.purchase_date) {
+          // Rule: 30 days from the date of purchase
+          baseDate = vehicleData.purchase_date;
+          dueDate = new Date(baseDate);
+          dueDate.setDate(baseDate.getDate() + 30);
+          serviceType = 'First Service (30 days from purchase)';
+        } else {
+          // Skip vehicles without purchase or service dates
+          return null;
+        }
+        
         const daysDifference = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
         
         return {
-          ...service,
+          id: vehicleKey,
+          customer_name: vehicleData.customer_name,
+          vehicle_reg_no: vehicleData.vehicle_details,
+          last_service_date: vehicleData.latest_service_date,
+          purchase_date: vehicleData.purchase_date,
+          base_date: baseDate,
           due_date: dueDate,
           days_until_due: daysDifference,
           is_overdue: daysDifference < 0,
-          is_due_soon: daysDifference >= 0 && daysDifference <= 7
+          is_due_soon: daysDifference >= 0 && daysDifference <= 7,
+          service_type: serviceType
         };
-      });
-
-      // Sort by due date (overdue first, then due soon)
-      servicesWithDueDates.sort((a, b) => {
+      }).filter(vehicle => vehicle !== null);
+      
+      // Sort by priority: overdue first, then due soon, then by due date
+      vehiclesWithDueDates.sort((a, b) => {
         if (a.is_overdue && !b.is_overdue) return -1;
         if (!a.is_overdue && b.is_overdue) return 1;
         if (a.is_due_soon && !b.is_due_soon) return -1;
@@ -2375,7 +2443,7 @@ const ServiceDue = () => {
         return a.due_date - b.due_date;
       });
 
-      setDueServices(servicesWithDueDates);
+      setDueServices(vehiclesWithDueDates);
     } catch (error) {
       toast.error('Failed to fetch service due information');
     } finally {
