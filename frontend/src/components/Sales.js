@@ -1353,6 +1353,89 @@ const CustomersManagement = () => {
     setFilteredCustomers(filtered);
   };
 
+  const validateField = (field, value) => {
+    let error = '';
+    
+    switch (field) {
+      case 'name':
+        if (!value.trim()) {
+          error = 'Customer name is required';
+        } else if (value.trim().length < 2) {
+          error = 'Name must be at least 2 characters';
+        } else if (!/^[a-zA-Z\s]+$/.test(value.trim())) {
+          error = 'Name should only contain letters and spaces';
+        }
+        break;
+      
+      case 'mobile':
+        if (!value.trim()) {
+          error = 'Mobile number is required';
+        } else if (!/^[6-9]\d{9}$/.test(value.trim())) {
+          error = 'Enter valid 10-digit mobile number';
+        }
+        break;
+      
+      case 'address':
+        if (!value.trim()) {
+          error = 'Address is required';
+        } else if (value.trim().length < 10) {
+          error = 'Address must be at least 10 characters';
+        }
+        break;
+      
+      case 'chassis_no':
+        if (value.trim() && !/^[A-Z0-9]{17}$/.test(value.trim())) {
+          error = 'Chassis number must be 17 characters (letters and numbers)';
+        }
+        break;
+      
+      case 'engine_no':
+        if (value.trim() && value.trim().length < 5) {
+          error = 'Engine number must be at least 5 characters';
+        } else if (value.trim() && !/^[A-Z0-9]+$/.test(value.trim())) {
+          error = 'Engine number should only contain letters and numbers';
+        }
+        break;
+      
+      case 'vehicle_no':
+        if (value.trim() && !/^[A-Z]{2}[0-9]{2}[A-Z]{1,2}[0-9]{4}$/.test(value.trim().replace(/\s/g, ''))) {
+          error = 'Enter valid vehicle number (e.g., KA05AB1234)';
+        }
+        break;
+      
+      case 'age':
+        if (value && (isNaN(value) || value < 18 || value > 100)) {
+          error = 'Age must be between 18 and 100';
+        }
+        break;
+      
+      default:
+        break;
+    }
+    
+    return error;
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    const requiredFields = ['name', 'mobile', 'address'];
+    
+    requiredFields.forEach(field => {
+      const error = validateField(field, customerData[field]);
+      if (error) errors[field] = error;
+    });
+
+    // Validate optional fields if they have values
+    Object.keys(customerData).forEach(field => {
+      if (!requiredFields.includes(field) && customerData[field]) {
+        const error = validateField(field, customerData[field]);
+        if (error) errors[field] = error;
+      }
+    });
+
+    return errors;
+  };
+
   const handleInputChange = (field, value) => {
     setCustomerData(prev => ({
       ...prev,
