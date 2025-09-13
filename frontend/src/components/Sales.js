@@ -357,7 +357,7 @@ const CreateInvoice = () => {
       age: '',
       amount: '',
       payment_method: 'cash',
-      hypothecation: 'cash'
+      hypothecation: ''
     });
     setShowPreview(false);
     setGeneratedInvoice(null);
