@@ -415,6 +415,8 @@ const CreateInvoice = () => {
               body { font-family: Arial, sans-serif; margin: 0; padding: 10px; line-height: 1.3; }
               .invoice-container { max-width: 21cm; margin: 0 auto; }
               .header { text-align: center; margin-bottom: 12px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+              .header-flex { display: flex; justify-content: center; align-items: center; margin-bottom: 8px; }
+              .logo { height: 32px; width: 32px; margin-right: 10px; background-color: #000; border-radius: 3px; padding: 2px; }
               .header h1 { margin: 0; font-size: 18px; color: #2563eb; font-weight: bold; }
               .header p { margin: 3px 0; font-size: 11px; }
               .section { margin-bottom: 12px; border: 2px solid #ccc; padding: 10px; border-radius: 6px; page-break-inside: avoid; }
