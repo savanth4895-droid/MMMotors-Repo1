@@ -1500,9 +1500,9 @@ const ViewInvoices = () => {
                 <div className="text-center border-b-2 border-gray-300 pb-4">
                   <div className="flex justify-center items-center mb-2">
                     <img 
-                      src="https://customer-assets.emergentagent.com/job_bike-business/artifacts/lfmn1jpp_logo.png" 
+                      src="https://customer-assets.emergentagent.com/job_bike-business/artifacts/ubnra48b_image.png" 
                       alt="M M Motors Logo" 
-                      className="h-12 w-12 mr-3 bg-black rounded p-1"
+                      className="h-12 w-12 mr-3"
                       onError={(e) => {e.target.style.display = 'none'}}
                     />
                     <div>
