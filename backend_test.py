@@ -1067,6 +1067,37 @@ class TwoWheelerAPITester:
         
         return all_tests_passed, test_results
 
+def test_bill_view_functionality_only():
+    """
+    Focused testing for Bill View Functionality Backend Verification
+    As requested in the review request
+    """
+    print("🚀 BILL VIEW FUNCTIONALITY BACKEND VERIFICATION")
+    print("=" * 60)
+    print("Testing backend APIs to support bill view functionality")
+    
+    tester = TwoWheelerAPITester()
+    
+    # Test basic connectivity first
+    print("\n📡 Testing Basic Connectivity...")
+    success, _ = tester.test_root_endpoint()
+    if not success:
+        print("❌ Cannot connect to API. Stopping tests.")
+        return 1
+    
+    # Run the comprehensive bill view functionality test
+    success, results = tester.test_bill_view_functionality_backend()
+    
+    # Print final results
+    print("\n" + "=" * 60)
+    print(f"📊 Final Test Results:")
+    print(f"   Tests Run: {tester.tests_run}")
+    print(f"   Tests Passed: {tester.tests_passed}")
+    print(f"   Tests Failed: {tester.tests_run - tester.tests_passed}")
+    print(f"   Success Rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
+    
+    return 0 if success else 1
+
 def main():
     print("🚀 Starting Two Wheeler Business Management System API Tests")
     print("=" * 60)
