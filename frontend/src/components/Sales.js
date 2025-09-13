@@ -504,8 +504,8 @@ const CreateInvoice = () => {
             <Button onClick={handlePrint} variant="outline">
               Print
             </Button>
-            <Button onClick={handleDownload}>
-              Download
+            <Button onClick={handleDownloadPDF}>
+              Download PDF
             </Button>
             <Button onClick={resetForm}>
               New Invoice
