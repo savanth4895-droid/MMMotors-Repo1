@@ -1042,136 +1042,63 @@ const ViewInvoices = () => {
     setEditFormData({});
   };
 
-  const handlePrintInvoice = (invoice) => {
-    const customer = customers.find(c => c.id === invoice.customer_id);
-    const vehicle = vehicles.find(v => v.id === invoice.vehicle_id);
-    
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Invoice ${invoice.invoice_number}</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; line-height: 1.4; }
-            .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #333; padding-bottom: 15px; }
-            .header h1 { margin: 0; font-size: 24px; color: #2563eb; font-weight: bold; }
-            .header p { margin: 5px 0; font-size: 14px; }
-            .grid { display: flex; justify-content: space-between; margin-top: 15px; }
-            .section { margin-bottom: 20px; border: 2px solid #ccc; padding: 15px; border-radius: 8px; page-break-inside: avoid; }
-            .section h3 { margin: 0 0 15px 0; font-size: 16px; color: #2563eb; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
-            .field { margin-bottom: 8px; font-size: 13px; }
-            .label { font-weight: bold; display: inline-block; min-width: 120px; }
-            .payment-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-            .amount-words { margin-top: 10px; font-style: italic; padding: 10px; background-color: #f8f8f8; border-radius: 4px; border-top: 1px solid #ccc; }
-            .total { font-size: 18px; font-weight: bold; text-align: right; }
-            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            th, td { padding: 8px; text-align: left; border: 1px solid #333; font-size: 12px; }
-            th { background-color: #f0f0f0; font-weight: bold; }
-            .service-header { text-align: center; font-weight: bold; margin-bottom: 15px; font-size: 16px; }
-            .customer-msg { margin-bottom: 15px; padding: 10px; background-color: #f8f8f8; border-radius: 4px; }
-            .customer-msg p { margin: 0; font-size: 12px; }
-            .service-footer { text-align: center; padding: 8px; background-color: #f0f0f0; border: 2px solid #333; border-top: none; font-weight: bold; }
-            .footer { text-align: center; margin-top: 30px; border-top: 1px solid #ccc; padding-top: 15px; }
-            @media print { 
-              body { margin: 0; padding: 15px; } 
-              .section { page-break-inside: avoid; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>M M MOTORS</h1>
-            <p>Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130</p>
-            <p>Two Wheeler Sales Invoice</p>
-            <div class="grid">
-              <div><strong>Invoice No:</strong> ${invoice.invoice_number}</div>
-              <div><strong>Date:</strong> ${new Date(invoice.sale_date).toLocaleDateString()}</div>
-            </div>
-          </div>
-          
-          <div class="section">
-            <h3>Customer Details</h3>
-            <div class="field"><span class="label">Name:</span> ${customer?.name || 'N/A'}</div>
-            <div class="field"><span class="label">Phone:</span> ${customer?.phone || 'N/A'}</div>
-            <div class="field"><span class="label">Address:</span> ${customer?.address || 'N/A'}</div>
-          </div>
-          
-          <div class="section">
-            <h3>Vehicle Details</h3>
-            <div class="field"><span class="label">Brand & Model:</span> ${vehicle?.brand || 'N/A'} ${vehicle?.model || ''}</div>
-            <div class="field"><span class="label">Color:</span> ${vehicle?.color || 'N/A'}</div>
-            <div class="field"><span class="label">Chassis No:</span> ${vehicle?.chassis_no || 'N/A'}</div>
-            <div class="field"><span class="label">Engine No:</span> ${vehicle?.engine_no || 'N/A'}</div>
-          </div>
-          
-          <div class="section">
-            <h3>Payment Details</h3>
-            <div class="payment-grid">
-              <div class="field"><span class="label">Payment Method:</span> ${invoice.payment_method?.toUpperCase() || 'CASH'}</div>
-              <div class="field"><span class="label">Hypothecation:</span> ${invoice.hypothecation || 'CASH'}</div>
-              <div class="field total"><span class="label">Total Amount:</span> ₹${invoice.amount?.toLocaleString() || '0'}</div>
-            </div>
-            <div class="amount-words">
-              <strong>Amount in Words:</strong> ${numberToWords(invoice.amount || 0)} Rupees Only
-            </div>
-          </div>
-          
-          <div class="section">
-            <h3 class="service-header">SERVICE DETAILS</h3>
-            
-            <div class="customer-msg">
-              <p style="font-weight: bold;">DEAR CUSTOMER,</p>
-              <p style="margin-top: 8px;">
-                WE THANK YOU FOR BUYING A WORLD CLASS VEHICLE. YOUR VEHICLE IS TO BE SERVICED AS PER THE 
-                SCHEDULE GIVEN BELOW FOR YOU TO ENJOY PLEASANT RIDING AT ALL TIMES.
-              </p>
-            </div>
+  const handlePrintInvoice = (invoice = null) => {
+    const invoiceData = invoice || generatedInvoice;
+    if (!invoiceData) return;
 
-            <table style="width: 100%; border-collapse: collapse; border: 2px solid #333;">
-              <thead>
-                <tr style="background-color: #f0f0f0;">
-                  <th style="padding: 8px; text-align: left; border: 1px solid #333; font-weight: bold;">DATE</th>
-                  <th style="padding: 8px; text-align: left; border: 1px solid #333; font-weight: bold;">SERVICE</th>
-                  <th style="padding: 8px; text-align: left; border: 1px solid #333; font-weight: bold;">SCHEDULE</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style="padding: 8px; border: 1px solid #333;">01-01-1900 12:00:00</td>
-                  <td style="padding: 8px; border: 1px solid #333; font-weight: bold;">FIRST</td>
-                  <td style="padding: 8px; border: 1px solid #333;">500 to 700 kms or 15 to 30 days</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px; border: 1px solid #333;">01-01-1900 12:00:00</td>
-                  <td style="padding: 8px; border: 1px solid #333; font-weight: bold;">SECOND</td>
-                  <td style="padding: 8px; border: 1px solid #333;">3000 to 3500 kms or 105 to 120 days</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px; border: 1px solid #333;">01-01-1900 12:00:00</td>
-                  <td style="padding: 8px; border: 1px solid #333; font-weight: bold;">THIRD</td>
-                  <td style="padding: 8px; border: 1px solid #333;">6000 to 6500 kms or 225 to 240 days</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px; border: 1px solid #333;">01-01-1900 12:00:00</td>
-                  <td style="padding: 8px; border: 1px solid #333; font-weight: bold;">FOURTH</td>
-                  <td style="padding: 8px; border: 1px solid #333;">9000 to 9500 kms or 350 to 365 days</td>
-                </tr>
-              </tbody>
-            </table>
-            
-            <div class="service-footer">
-              (WHICHEVER IS EARLIER)
+    const customer = customers.find(c => c.id === invoiceData.customer_id);
+    const vehicle = vehicles.find(v => v.id === invoiceData.vehicle_id);
+    
+    // Get the invoice preview content
+    const invoiceElement = document.getElementById('invoice-preview');
+    if (invoiceElement) {
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Invoice ${invoiceData.invoice_number}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 0; padding: 15px; line-height: 1.4; }
+              .invoice-container { max-width: 800px; margin: 0 auto; }
+              .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #333; padding-bottom: 15px; }
+              .header h1 { margin: 0; font-size: 24px; color: #2563eb; font-weight: bold; }
+              .header p { margin: 5px 0; font-size: 14px; }
+              .section { margin-bottom: 20px; border: 2px solid #ccc; padding: 15px; border-radius: 8px; page-break-inside: avoid; }
+              .section h3 { margin: 0 0 15px 0; font-size: 16px; color: #2563eb; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+              .field { margin-bottom: 8px; font-size: 13px; }
+              .label { font-weight: bold; display: inline-block; min-width: 120px; }
+              .payment-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+              .amount-words { margin-top: 10px; font-style: italic; padding: 10px; background-color: #f8f8f8; border-radius: 4px; border-top: 1px solid #ccc; }
+              .total { font-size: 18px; font-weight: bold; text-align: right; }
+              table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+              th, td { padding: 8px; text-align: left; border: 1px solid #333; font-size: 12px; }
+              th { background-color: #f0f0f0; font-weight: bold; }
+              .service-header { text-align: center; font-weight: bold; margin-bottom: 15px; font-size: 16px; }
+              .customer-msg { margin-bottom: 15px; padding: 10px; background-color: #f8f8f8; border-radius: 4px; }
+              .customer-msg p { margin: 0; font-size: 12px; }
+              .service-footer { text-align: center; padding: 8px; background-color: #f0f0f0; border: 2px solid #333; border-top: none; font-weight: bold; }
+              .footer { text-align: center; margin-top: 30px; border-top: 1px solid #ccc; padding-top: 15px; }
+              .grid { display: flex; justify-content: space-between; margin-top: 15px; }
+              @media print { 
+                body { margin: 0; padding: 15px; } 
+                .section { page-break-inside: avoid; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="invoice-container">
+              ${invoiceElement.innerHTML}
             </div>
-          </div>
-          
-          <div style="text-align: center; margin-top: 40px; border-top: 1px solid #ccc; padding-top: 20px;">
-            <p>Thank you for choosing M M Motors!</p>
-          </div>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.print();
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 250);
+    }
   };
 
   if (loading) {
