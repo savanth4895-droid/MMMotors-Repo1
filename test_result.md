@@ -463,6 +463,8 @@ test_plan:
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
+  recently_completed:
+    - "Vehicle Stock Status Update Bug - FIXED: Added new PUT /api/vehicles/{vehicle_id}/status endpoint with comprehensive testing (100% success rate)"
   completed_testing:
     - "GST-Compliant Spare Parts Module - All components tested and verified"
     - "Updated Spare Parts Billing System with Customer Fields - Comprehensive testing completed"
