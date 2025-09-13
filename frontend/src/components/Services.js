@@ -2209,6 +2209,100 @@ const CreateBillContent = ({
 };
 
 const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading }) => {
+  const [selectedBill, setSelectedBill] = useState(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+
+  const handleViewBill = (bill) => {
+    setSelectedBill(bill);
+    setShowViewModal(true);
+  };
+
+  const handlePrintBill = (bill) => {
+    // Create a new window with the service bill details for printing
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Service Bill - ${bill.job_card_number || 'N/A'}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .company-name { font-size: 24px; font-weight: bold; }
+            .bill-details { margin-bottom: 20px; }
+            .customer-details { margin-bottom: 20px; }
+            .service-details { margin-bottom: 20px; }
+            .amount-section { margin-top: 20px; font-size: 18px; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="company-name">M M MOTORS</div>
+            <div>Service Department</div>
+            <div>Bengaluru main road, behind Ruchi Bakery</div>
+            <div>Malur, Karnataka 563130</div>
+          </div>
+          
+          <div class="bill-details">
+            <h3>Service Bill</h3>
+            <p><strong>Job Card Number:</strong> ${bill.job_card_number || 'N/A'}</p>
+            <p><strong>Date:</strong> ${bill.created_at ? new Date(bill.created_at).toLocaleDateString('en-IN') : 'N/A'}</p>
+            <p><strong>Status:</strong> ${bill.status?.replace('_', ' ').toUpperCase() || 'PENDING'}</p>
+          </div>
+          
+          <div class="customer-details">
+            <h4>Customer Details:</h4>
+            <p><strong>Name:</strong> ${bill.customer_name || 'N/A'}</p>
+            <p><strong>Vehicle Reg No:</strong> ${bill.vehicle_reg_no || 'N/A'}</p>
+          </div>
+          
+          <div class="service-details">
+            <h4>Service Details:</h4>
+            <p><strong>Service Type:</strong> ${bill.service_type?.replace('_', ' ').toUpperCase() || 'N/A'}</p>
+            <p><strong>Description:</strong> ${bill.description || 'No description provided'}</p>
+          </div>
+          
+          <div class="amount-section">
+            <p><strong>Service Amount: ₹${bill.amount?.toLocaleString() || '0'}</strong></p>
+          </div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  const handleDownloadBill = (bill) => {
+    // Generate CSV content for the service bill
+    const csvContent = [
+      ['Service Bill'],
+      ['Job Card Number: ' + (bill.job_card_number || 'N/A')],
+      ['Date: ' + (bill.created_at ? new Date(bill.created_at).toLocaleDateString('en-IN') : 'N/A')],
+      ['Status: ' + (bill.status?.replace('_', ' ').toUpperCase() || 'PENDING')],
+      [''],
+      ['Customer Details:'],
+      ['Name: ' + (bill.customer_name || 'N/A')],
+      ['Vehicle Reg No: ' + (bill.vehicle_reg_no || 'N/A')],
+      [''],
+      ['Service Details:'],
+      ['Service Type: ' + (bill.service_type?.replace('_', ' ').toUpperCase() || 'N/A')],
+      ['Description: ' + (bill.description || 'No description provided')],
+      [''],
+      ['Service Amount: ₹' + (bill.amount?.toLocaleString() || '0')]
+    ].map(row => typeof row === 'string' ? row : row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Service_Bill_${bill.job_card_number || 'N_A'}_${bill.customer_name || 'Customer'}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    toast.success('Service bill downloaded successfully!');
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
