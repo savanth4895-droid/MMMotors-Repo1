@@ -1161,8 +1161,8 @@ const ViewInvoices = () => {
         <div style="max-width: 21cm; margin: 0 auto; font-family: Arial, sans-serif; line-height: 1.3;">
           <div style="text-align: center; margin-bottom: 12px; border-bottom: 2px solid #333; padding-bottom: 10px;">
             <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 8px;">
-              <img src="https://customer-assets.emergentagent.com/job_bike-business/artifacts/lfmn1jpp_logo.png" 
-                   style="height: 32px; width: 32px; margin-right: 10px; background-color: #000; border-radius: 3px; padding: 2px;" />
+              <img src="https://customer-assets.emergentagent.com/job_bike-business/artifacts/ubnra48b_image.png" 
+                   style="height: 32px; width: 32px; margin-right: 10px;" />
               <div>
                 <h1 style="margin: 0; font-size: 18px; color: #2563eb; font-weight: bold;">M M MOTORS</h1>
                 <p style="margin: 3px 0; font-size: 11px;">Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130</p>
