@@ -1141,6 +1141,106 @@ const ViewInvoices = () => {
     setEditFormData({});
   };
 
+  const handleDownloadInvoicePDF = async (invoice) => {
+    if (!invoice) return;
+
+    try {
+      // Import html2pdf dynamically
+      const { default: html2pdf } = await import('html2pdf.js');
+
+      // Generate filename with customer name and mobile number
+      const customerName = invoice.customer?.name || 'Customer';
+      const customerMobile = invoice.customer?.phone || 'Unknown';
+      const sanitizedName = customerName.replace(/[^a-zA-Z0-9]/g, '_');
+      const sanitizedMobile = customerMobile.replace(/[^0-9]/g, '');
+      const filename = `Invoice_${sanitizedName}_${sanitizedMobile}_${invoice.invoice_number}.pdf`;
+
+      // Create a temporary div with invoice content for PDF generation
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = `
+        <div style="max-width: 21cm; margin: 0 auto; font-family: Arial, sans-serif; line-height: 1.3;">
+          <div style="text-align: center; margin-bottom: 12px; border-bottom: 2px solid #333; padding-bottom: 10px;">
+            <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 8px;">
+              <img src="https://customer-assets.emergentagent.com/job_bike-business/artifacts/lfmn1jpp_logo.png" 
+                   style="height: 32px; width: 32px; margin-right: 10px; background-color: #000; border-radius: 3px; padding: 2px;" />
+              <div>
+                <h1 style="margin: 0; font-size: 18px; color: #2563eb; font-weight: bold;">M M MOTORS</h1>
+                <p style="margin: 3px 0; font-size: 11px;">Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130</p>
+              </div>
+            </div>
+            <p style="margin: 3px 0; font-size: 11px;">Two Wheeler Sales Invoice</p>
+            <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+              <div><strong>Invoice No:</strong> ${invoice.invoice_number}</div>
+              <div><strong>Date:</strong> ${new Date(invoice.sale_date).toLocaleDateString('en-IN')}</div>
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 12px; border: 2px solid #ccc; padding: 10px; border-radius: 6px;">
+            <h3 style="margin: 0 0 8px 0; font-size: 12px; color: #2563eb; border-bottom: 1px solid #ccc; padding-bottom: 3px;">Customer Details</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Name:</strong> ${invoice.customer?.name || 'N/A'}</div>
+              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Mobile:</strong> ${invoice.customer?.phone || 'N/A'}</div>
+              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Address:</strong> ${invoice.customer?.address || 'N/A'}</div>
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 12px; border: 2px solid #ccc; padding: 10px; border-radius: 6px;">
+            <h3 style="margin: 0 0 8px 0; font-size: 12px; color: #2563eb; border-bottom: 1px solid #ccc; padding-bottom: 3px;">Vehicle Details</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Brand:</strong> ${invoice.vehicle?.brand || 'N/A'}</div>
+              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Model:</strong> ${invoice.vehicle?.model || 'N/A'}</div>
+              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Color:</strong> ${invoice.vehicle?.color || 'N/A'}</div>
+              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Chassis No:</strong> ${invoice.vehicle?.chassis_no || 'N/A'}</div>
+              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Engine No:</strong> ${invoice.vehicle?.engine_no || 'N/A'}</div>
+              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Vehicle No:</strong> ${invoice.vehicle?.vehicle_no || 'N/A'}</div>
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 12px; border: 2px solid #ccc; padding: 10px; border-radius: 6px;">
+            <h3 style="margin: 0 0 8px 0; font-size: 12px; color: #2563eb; border-bottom: 1px solid #ccc; padding-bottom: 3px;">Payment Details</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Payment Method:</strong> ${invoice.payment_method?.toUpperCase() || 'CASH'}</div>
+              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Hypothecation:</strong> ${invoice.hypothecation || 'CASH'}</div>
+              <div style="font-size: 14px; font-weight: bold; text-align: right;"><strong>Amount:</strong> ₹${invoice.amount?.toLocaleString() || '0'}</div>
+            </div>
+            <div style="margin-top: 6px; font-style: italic; padding: 6px; background-color: #f8f8f8; border-radius: 3px; border-top: 1px solid #ccc; font-size: 10px;">
+              <strong>Amount in Words:</strong> ${numberToWords(invoice.amount || 0)} Rupees Only
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Configure options for PDF generation
+      const opt = {
+        margin: [0.3, 0.3, 0.3, 0.3],
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.95 },
+        html2canvas: { 
+          scale: 1.5,
+          useCORS: true,
+          letterRendering: true,
+          width: 794,  // A4 width in pixels at 96 DPI
+          height: 1123 // A4 height in pixels at 96 DPI
+        },
+        jsPDF: { 
+          unit: 'mm', 
+          format: 'a4', 
+          orientation: 'portrait',
+          compress: true
+        }
+      };
+
+      // Generate and download PDF
+      html2pdf().set(opt).from(tempDiv).save();
+      
+      // Clean up
+      tempDiv.remove();
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    }
+  };
+
   const handlePrintInvoice = (invoice) => {
     if (!invoice) return;
 
