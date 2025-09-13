@@ -1391,83 +1391,84 @@ const Bills = () => {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Spare Parts Bills</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b bg-gray-50">
-                <th className="text-left p-3 font-semibold">Bill Number</th>
-                <th className="text-left p-3 font-semibold">Date</th>
-                <th className="text-left p-3 font-semibold">Customer Name</th>
-                <th className="text-left p-3 font-semibold">Mobile</th>
-                <th className="text-left p-3 font-semibold">Vehicle</th>
-                <th className="text-left p-3 font-semibold">Items</th>
-                <th className="text-left p-3 font-semibold">Total Amount</th>
-                <th className="text-left p-3 font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {bills.map((bill) => (
-                <tr key={bill.id} className="border-b hover:bg-gray-50">
-                  <td className="p-3 font-mono">{bill.bill_number}</td>
-                  <td className="p-3">{new Date(bill.bill_date).toLocaleDateString('en-IN')}</td>
-                  <td className="p-3 font-medium">
-                    {bill.customer_data?.name || 'N/A'}
-                  </td>
-                  <td className="p-3">
-                    {bill.customer_data?.mobile || 'N/A'}
-                  </td>
-                  <td className="p-3">
-                    {bill.customer_data?.vehicle_name && bill.customer_data?.vehicle_number
-                      ? `${bill.customer_data.vehicle_name} (${bill.customer_data.vehicle_number})`
-                      : bill.customer_data?.vehicle_name || bill.customer_data?.vehicle_number || 'N/A'
-                    }
-                  </td>
-                  <td className="p-3 text-center">
-                    <Badge variant="outline">
-                      {bill.items.length} items
-                    </Badge>
-                  </td>
-                  <td className="p-3 font-semibold text-green-600">₹{bill.total_amount.toFixed(2)}</td>
-                  <td className="p-3">
-                    <div className="flex items-center gap-2">
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => handleViewBill(bill)}
-                      >
-                        <Eye className="w-4 h-4 mr-1" />
-                        View
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => handlePrintBill(bill)}
-                      >
-                        <Printer className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => handleDownloadBill(bill)}
-                      >
-                        <Download className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </td>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Spare Parts Bills</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b bg-gray-50">
+                  <th className="text-left p-3 font-semibold">Bill Number</th>
+                  <th className="text-left p-3 font-semibold">Date</th>
+                  <th className="text-left p-3 font-semibold">Customer Name</th>
+                  <th className="text-left p-3 font-semibold">Mobile</th>
+                  <th className="text-left p-3 font-semibold">Vehicle</th>
+                  <th className="text-left p-3 font-semibold">Items</th>
+                  <th className="text-left p-3 font-semibold">Total Amount</th>
+                  <th className="text-left p-3 font-semibold">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </CardContent>
-    </Card>
+              </thead>
+              <tbody>
+                {bills.map((bill) => (
+                  <tr key={bill.id} className="border-b hover:bg-gray-50">
+                    <td className="p-3 font-mono">{bill.bill_number}</td>
+                    <td className="p-3">{new Date(bill.bill_date).toLocaleDateString('en-IN')}</td>
+                    <td className="p-3 font-medium">
+                      {bill.customer_data?.name || 'N/A'}
+                    </td>
+                    <td className="p-3">
+                      {bill.customer_data?.mobile || 'N/A'}
+                    </td>
+                    <td className="p-3">
+                      {bill.customer_data?.vehicle_name && bill.customer_data?.vehicle_number
+                        ? `${bill.customer_data.vehicle_name} (${bill.customer_data.vehicle_number})`
+                        : bill.customer_data?.vehicle_name || bill.customer_data?.vehicle_number || 'N/A'
+                      }
+                    </td>
+                    <td className="p-3 text-center">
+                      <Badge variant="outline">
+                        {bill.items.length} items
+                      </Badge>
+                    </td>
+                    <td className="p-3 font-semibold text-green-600">₹{bill.total_amount.toFixed(2)}</td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleViewBill(bill)}
+                        >
+                          <Eye className="w-4 h-4 mr-1" />
+                          View
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handlePrintBill(bill)}
+                        >
+                          <Printer className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleDownloadBill(bill)}
+                        >
+                          <Download className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
 
-    {/* View Bill Modal */}
+      {/* View Bill Modal */}
     {showViewModal && selectedBill && (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
