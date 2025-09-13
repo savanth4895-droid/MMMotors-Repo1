@@ -922,6 +922,44 @@ def main():
     vehicle_id = vehicle_data.get('id') if success else None
     
     tester.test_get_vehicles()
+    
+    # COMPREHENSIVE VEHICLE STATUS UPDATE TESTING (as requested in review)
+    print("\n🔄 VEHICLE STATUS UPDATE API TESTING")
+    print("=" * 60)
+    print("Testing vehicle status update functionality as requested:")
+    print("1. GET /api/vehicles endpoint with status fields")
+    print("2. PUT /api/vehicles/{vehicle_id} endpoint with status updates") 
+    print("3. Status persistence in database")
+    print("4. Different status values: 'in_stock', 'sold', 'returned'")
+    print("5. Authentication with admin/admin123 credentials")
+    
+    # Test comprehensive vehicle status updates
+    tester.test_vehicle_status_update_comprehensive()
+    
+    # Test edge cases
+    tester.test_vehicle_status_edge_cases()
+    
+    # Test individual vehicle status if we have a vehicle
+    if vehicle_id:
+        print(f"\n🔍 Testing Individual Vehicle Status Updates...")
+        
+        # Test getting vehicle by ID
+        tester.test_get_vehicle_by_id(vehicle_id)
+        
+        # Test status update from in_stock to sold
+        print(f"\n📝 Testing status change: in_stock → sold")
+        tester.test_update_vehicle_status(vehicle_id, 'sold')
+        tester.test_vehicle_status_persistence(vehicle_id, 'sold')
+        
+        # Test status update from sold to returned
+        print(f"\n📝 Testing status change: sold → returned")
+        tester.test_update_vehicle_status(vehicle_id, 'returned')
+        tester.test_vehicle_status_persistence(vehicle_id, 'returned')
+        
+        # Test status update back to in_stock
+        print(f"\n📝 Testing status change: returned → in_stock")
+        tester.test_update_vehicle_status(vehicle_id, 'in_stock')
+        tester.test_vehicle_status_persistence(vehicle_id, 'in_stock')
 
     # Test sales operations
     print("\n💰 Testing Sales Operations...")
