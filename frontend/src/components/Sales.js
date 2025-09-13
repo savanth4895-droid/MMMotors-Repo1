@@ -1250,7 +1250,7 @@ const ViewInvoices = () => {
 
               <div className="space-y-6">
                 {/* Invoice Header */}
-                <div className="text-center border-b pb-4">
+                <div className="text-center border-b-2 border-gray-300 pb-4">
                   <h1 className="text-3xl font-bold text-blue-600">M M MOTORS</h1>
                   <p className="text-lg text-gray-600">Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130</p>
                   <p className="text-lg text-gray-600">Two Wheeler Sales Invoice</p>
@@ -1265,8 +1265,8 @@ const ViewInvoices = () => {
                 </div>
 
                 {/* Customer Details */}
-                <div className="border rounded-lg p-4">
-                  <h3 className="text-lg font-semibold mb-3 text-blue-600">Customer Details</h3>
+                <div className="border-2 border-gray-300 rounded-lg p-4 mb-4">
+                  <h3 className="text-lg font-semibold mb-3 text-blue-600 border-b border-gray-200 pb-2">Customer Details</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><strong>Name:</strong> {selectedInvoice.customer?.name || 'N/A'}</div>
                     <div><strong>Phone:</strong> {selectedInvoice.customer?.phone || 'N/A'}</div>
@@ -1275,8 +1275,8 @@ const ViewInvoices = () => {
                 </div>
 
                 {/* Vehicle Details */}
-                <div className="border rounded-lg p-4">
-                  <h3 className="text-lg font-semibold mb-3 text-blue-600">Vehicle Details</h3>
+                <div className="border-2 border-gray-300 rounded-lg p-4 mb-4">
+                  <h3 className="text-lg font-semibold mb-3 text-blue-600 border-b border-gray-200 pb-2">Vehicle Details</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><strong>Brand:</strong> {selectedInvoice.vehicle?.brand || 'N/A'}</div>
                     <div><strong>Model:</strong> {selectedInvoice.vehicle?.model || 'N/A'}</div>
