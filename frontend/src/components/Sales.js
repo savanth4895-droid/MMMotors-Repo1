@@ -1406,7 +1406,7 @@ const ViewInvoices = () => {
                 {/* Payment Details */}
                 <div className="border-2 border-gray-300 rounded-lg p-4 mb-4">
                   <h3 className="text-lg font-semibold mb-3 text-blue-600 border-b border-gray-200 pb-2">Payment Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <div><strong>Payment Method:</strong> {selectedInvoice.payment_method?.toUpperCase() || 'CASH'}</div>
                     <div><strong>Hypothecation:</strong> {selectedInvoice.hypothecation || 'CASH'}</div>
                     <div className="text-right">
@@ -1414,6 +1414,9 @@ const ViewInvoices = () => {
                         Total: ₹{selectedInvoice.amount?.toLocaleString() || '0'}
                       </span>
                     </div>
+                  </div>
+                  <div className="border-t pt-3">
+                    <div><strong>Amount in Words:</strong> <span className="italic">{numberToWords(selectedInvoice.amount || 0)} Rupees Only</span></div>
                   </div>
                 </div>
 
