@@ -1466,6 +1466,145 @@ const Bills = () => {
         </div>
       </CardContent>
     </Card>
+
+    {/* View Bill Modal */}
+    {showViewModal && selectedBill && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Bill Details - {selectedBill.bill_number}</h2>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowViewModal(false)}
+              >
+                Close
+              </Button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Bill Header */}
+              <div className="text-center border-b pb-4">
+                <h3 className="text-xl font-bold">M M MOTORS</h3>
+                <p className="text-gray-600">Bengaluru main road, behind Ruchi Bakery</p>
+                <p className="text-gray-600">Malur, Karnataka 563130</p>
+              </div>
+
+              {/* Bill Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-blue-600">Bill Information</h4>
+                  <p><strong>Bill Number:</strong> {selectedBill.bill_number}</p>
+                  <p><strong>Date:</strong> {new Date(selectedBill.bill_date).toLocaleDateString('en-IN')}</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-blue-600">Customer Details</h4>
+                  <p><strong>Name:</strong> {selectedBill.customer_data?.name || 'N/A'}</p>
+                  <p><strong>Mobile:</strong> {selectedBill.customer_data?.mobile || 'N/A'}</p>
+                  {selectedBill.customer_data?.vehicle_name && (
+                    <p><strong>Vehicle:</strong> {selectedBill.customer_data.vehicle_name} {selectedBill.customer_data.vehicle_number ? `(${selectedBill.customer_data.vehicle_number})` : ''}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Items Table */}
+              <div>
+                <h4 className="font-semibold text-blue-600 mb-3">Bill Items</h4>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="border p-2 text-left">Sl. No.</th>
+                        <th className="border p-2 text-left">Description</th>
+                        <th className="border p-2 text-left">HSN/SAC</th>
+                        <th className="border p-2 text-left">Qty</th>
+                        <th className="border p-2 text-left">Unit</th>
+                        <th className="border p-2 text-left">Rate</th>
+                        <th className="border p-2 text-left">Disc%</th>
+                        <th className="border p-2 text-left">GST%</th>
+                        <th className="border p-2 text-left">CGST</th>
+                        <th className="border p-2 text-left">SGST</th>
+                        <th className="border p-2 text-left">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedBill.items.map((item, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="border p-2 text-center">{index + 1}</td>
+                          <td className="border p-2">{item.description}</td>
+                          <td className="border p-2">{item.hsn_sac}</td>
+                          <td className="border p-2 text-right">{item.quantity}</td>
+                          <td className="border p-2">{item.unit}</td>
+                          <td className="border p-2 text-right">₹{item.rate.toFixed(2)}</td>
+                          <td className="border p-2 text-right">{item.discount_percent}%</td>
+                          <td className="border p-2 text-right">{item.gst_percent}%</td>
+                          <td className="border p-2 text-right">₹{item.cgstAmount.toFixed(2)}</td>
+                          <td className="border p-2 text-right">₹{item.sgstAmount.toFixed(2)}</td>
+                          <td className="border p-2 text-right font-semibold">₹{item.finalAmount.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Totals */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Subtotal:</span>
+                    <div className="font-semibold">₹{selectedBill.subtotal.toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Total Discount:</span>
+                    <div className="font-semibold">₹{selectedBill.total_discount.toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Total CGST:</span>
+                    <div className="font-semibold">₹{selectedBill.total_cgst.toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Total SGST:</span>
+                    <div className="font-semibold">₹{selectedBill.total_sgst.toFixed(2)}</div>
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-gray-300">
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-semibold">Total Tax:</span>
+                    <span className="text-lg font-bold">₹{selectedBill.total_tax.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xl font-bold text-green-600">
+                    <span>Final Amount:</span>
+                    <span>₹{selectedBill.total_amount.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => handlePrintBill(selectedBill)}
+              >
+                <Printer className="w-4 h-4 mr-2" />
+                Print
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => handleDownloadBill(selectedBill)}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download
+              </Button>
+              <Button onClick={() => setShowViewModal(false)}>
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
   );
 };
 
