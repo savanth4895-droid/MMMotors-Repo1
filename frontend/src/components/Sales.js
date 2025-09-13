@@ -1052,13 +1052,30 @@ const ViewInvoices = () => {
         <head>
           <title>Invoice ${invoice.invoice_number}</title>
           <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            .header { text-align: center; margin-bottom: 20px; }
-            .section { margin: 15px 0; }
-            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-            .field { margin-bottom: 8px; }
-            .label { font-weight: bold; }
+            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; line-height: 1.4; }
+            .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #333; padding-bottom: 15px; }
+            .header h1 { margin: 0; font-size: 24px; color: #2563eb; font-weight: bold; }
+            .header p { margin: 5px 0; font-size: 14px; }
+            .grid { display: flex; justify-content: space-between; margin-top: 15px; }
+            .section { margin-bottom: 20px; border: 2px solid #ccc; padding: 15px; border-radius: 8px; page-break-inside: avoid; }
+            .section h3 { margin: 0 0 15px 0; font-size: 16px; color: #2563eb; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+            .field { margin-bottom: 8px; font-size: 13px; }
+            .label { font-weight: bold; display: inline-block; min-width: 120px; }
+            .payment-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+            .amount-words { margin-top: 10px; font-style: italic; padding: 10px; background-color: #f8f8f8; border-radius: 4px; border-top: 1px solid #ccc; }
             .total { font-size: 18px; font-weight: bold; text-align: right; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { padding: 8px; text-align: left; border: 1px solid #333; font-size: 12px; }
+            th { background-color: #f0f0f0; font-weight: bold; }
+            .service-header { text-align: center; font-weight: bold; margin-bottom: 15px; font-size: 16px; }
+            .customer-msg { margin-bottom: 15px; padding: 10px; background-color: #f8f8f8; border-radius: 4px; }
+            .customer-msg p { margin: 0; font-size: 12px; }
+            .service-footer { text-align: center; padding: 8px; background-color: #f0f0f0; border: 2px solid #333; border-top: none; font-weight: bold; }
+            .footer { text-align: center; margin-top: 30px; border-top: 1px solid #ccc; padding-top: 15px; }
+            @media print { 
+              body { margin: 0; padding: 15px; } 
+              .section { page-break-inside: avoid; }
+            }
           </style>
         </head>
         <body>
