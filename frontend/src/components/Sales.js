@@ -219,7 +219,7 @@ const CreateInvoice = () => {
     age: '',
     amount: '',
     payment_method: 'cash',
-    hypothecation: 'cash'
+    hypothecation: ''
   });
   const [loading, setLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
