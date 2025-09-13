@@ -499,18 +499,21 @@ const CreateInvoice = () => {
 
       // Configure options for PDF generation
       const opt = {
-        margin: 0.5,
+        margin: [0.3, 0.3, 0.3, 0.3],
         filename: `Invoice_${invoiceData.invoice_number}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
+        image: { type: 'jpeg', quality: 0.95 },
         html2canvas: { 
-          scale: 2,
+          scale: 1.5,
           useCORS: true,
-          letterRendering: true 
+          letterRendering: true,
+          width: 794,  // A4 width in pixels at 96 DPI
+          height: 1123 // A4 height in pixels at 96 DPI
         },
         jsPDF: { 
-          unit: 'in', 
+          unit: 'mm', 
           format: 'a4', 
-          orientation: 'portrait' 
+          orientation: 'portrait',
+          compress: true
         }
       };
 
