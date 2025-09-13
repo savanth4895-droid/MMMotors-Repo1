@@ -2388,13 +2388,25 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading }) 
                       </td>
                       <td className="p-3">
                         <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleViewBill(bill)}
+                          >
                             <Eye className="w-4 h-4" />
                           </Button>
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handlePrintBill(bill)}
+                          >
                             <Printer className="w-4 h-4" />
                           </Button>
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleDownloadBill(bill)}
+                          >
                             <Download className="w-4 h-4" />
                           </Button>
                         </div>
