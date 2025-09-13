@@ -2426,6 +2426,99 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading }) 
           <span>Total Revenue: ₹{serviceBills.reduce((sum, bill) => sum + (bill.amount || 0), 0).toLocaleString()}</span>
         </div>
       )}
+
+      {/* View Service Bill Modal */}
+      {showViewModal && selectedBill && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Service Bill Details</h2>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowViewModal(false)}
+                >
+                  Close
+                </Button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Header */}
+                <div className="text-center border-b pb-4">
+                  <h3 className="text-xl font-bold">M M MOTORS</h3>
+                  <p className="text-gray-600">Service Department</p>
+                  <p className="text-gray-600">Bengaluru main road, behind Ruchi Bakery</p>
+                  <p className="text-gray-600">Malur, Karnataka 563130</p>
+                </div>
+
+                {/* Service Bill Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-blue-600">Service Bill Information</h4>
+                    <p><strong>Job Card Number:</strong> {selectedBill.job_card_number || 'N/A'}</p>
+                    <p><strong>Date:</strong> {selectedBill.created_at ? new Date(selectedBill.created_at).toLocaleDateString('en-IN') : 'N/A'}</p>
+                    <p><strong>Status:</strong> 
+                      <span className={`ml-2 px-2 py-1 rounded text-xs ${
+                        selectedBill.status === 'completed' ? 'bg-green-100 text-green-800' :
+                        selectedBill.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {selectedBill.status?.replace('_', ' ').toUpperCase() || 'PENDING'}
+                      </span>
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-blue-600">Customer Details</h4>
+                    <p><strong>Name:</strong> {selectedBill.customer_name || 'N/A'}</p>
+                    <p><strong>Vehicle Reg No:</strong> {selectedBill.vehicle_reg_no || 'N/A'}</p>
+                  </div>
+                </div>
+
+                {/* Service Details */}
+                <div className="border rounded-lg p-4">
+                  <h4 className="font-semibold text-blue-600 mb-3">Service Details</h4>
+                  <div className="space-y-2">
+                    <p><strong>Service Type:</strong> {selectedBill.service_type?.replace('_', ' ').toUpperCase() || 'N/A'}</p>
+                    <p><strong>Description:</strong></p>
+                    <div className="bg-gray-50 p-3 rounded text-gray-700">
+                      {selectedBill.description || 'No description provided'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Amount */}
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <div className="flex justify-between items-center text-xl font-bold text-green-600">
+                    <span>Service Amount:</span>
+                    <span>₹{selectedBill.amount?.toLocaleString() || '0'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => handlePrintBill(selectedBill)}
+                >
+                  <Printer className="w-4 h-4 mr-2" />
+                  Print
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleDownloadBill(selectedBill)}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </Button>
+                <Button onClick={() => setShowViewModal(false)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
