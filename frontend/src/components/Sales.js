@@ -22,6 +22,97 @@ import {
   PieChart,
   Download
 } from 'lucide-react';
+// Utility function to convert number to words
+const numberToWords = (num) => {
+  if (num === 0) return 'Zero';
+  
+  const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+  const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+  
+  const convertHundreds = (n) => {
+    let result = '';
+    if (n >= 100) {
+      result += ones[Math.floor(n / 100)] + ' Hundred ';
+      n %= 100;
+    }
+    if (n >= 20) {
+      result += tens[Math.floor(n / 10)] + ' ';
+      n %= 10;
+    } else if (n >= 10) {
+      result += teens[n - 10] + ' ';
+      n = 0;
+    }
+    if (n > 0) {
+      result += ones[n] + ' ';
+    }
+    return result.trim();
+  };
+  
+  if (num < 100) {
+    return convertHundreds(num);
+  } else if (num < 1000) {
+    return convertHundreds(num);
+  } else if (num < 100000) {
+    const thousands = Math.floor(num / 1000);
+    const remainder = num % 1000;
+    let result = convertHundreds(thousands) + ' Thousand';
+    if (remainder > 0) {
+      result += ' ' + convertHundreds(remainder);
+    }
+    return result;
+  } else if (num < 10000000) {
+    const lakhs = Math.floor(num / 100000);
+    const remainder = num % 100000;
+    let result = convertHundreds(lakhs) + ' Lakh';
+    if (remainder > 0) {
+      if (remainder >= 1000) {
+        const thousands = Math.floor(remainder / 1000);
+        const hundreds = remainder % 1000;
+        result += ' ' + convertHundreds(thousands) + ' Thousand';
+        if (hundreds > 0) {
+          result += ' ' + convertHundreds(hundreds);
+        }
+      } else {
+        result += ' ' + convertHundreds(remainder);
+      }
+    }
+    return result;
+  } else {
+    const crores = Math.floor(num / 10000000);
+    const remainder = num % 10000000;
+    let result = convertHundreds(crores) + ' Crore';
+    if (remainder > 0) {
+      if (remainder >= 100000) {
+        const lakhs = Math.floor(remainder / 100000);
+        const rest = remainder % 100000;
+        result += ' ' + convertHundreds(lakhs) + ' Lakh';
+        if (rest > 0) {
+          if (rest >= 1000) {
+            const thousands = Math.floor(rest / 1000);
+            const hundreds = rest % 1000;
+            result += ' ' + convertHundreds(thousands) + ' Thousand';
+            if (hundreds > 0) {
+              result += ' ' + convertHundreds(hundreds);
+            }
+          } else {
+            result += ' ' + convertHundreds(rest);
+          }
+        }
+      } else if (remainder >= 1000) {
+        const thousands = Math.floor(remainder / 1000);
+        const hundreds = remainder % 1000;
+        result += ' ' + convertHundreds(thousands) + ' Thousand';
+        if (hundreds > 0) {
+          result += ' ' + convertHundreds(hundreds);
+        }
+      } else {
+        result += ' ' + convertHundreds(remainder);
+      }
+    }
+    return result;
+  }
+};
 
 // Custom Motorcycle Icon Component
 const MotorcycleIcon = ({ className = "w-5 h-5" }) => (
