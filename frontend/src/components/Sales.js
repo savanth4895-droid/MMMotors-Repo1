@@ -575,8 +575,18 @@ const CreateInvoice = () => {
             <div className="invoice-container max-w-[21cm] mx-auto">
               {/* Header */}
               <div className="header text-center mb-4 border-b-2 border-gray-300 pb-3">
-                <h1 className="text-xl font-bold text-blue-600">M M MOTORS</h1>
-                <p className="text-sm text-gray-600">Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130</p>
+                <div className="flex justify-center items-center mb-2">
+                  <img 
+                    src="https://customer-assets.emergentagent.com/job_bike-business/artifacts/lfmn1jpp_logo.png" 
+                    alt="M M Motors Logo" 
+                    className="h-12 w-12 mr-3 bg-black rounded p-1"
+                    onError={(e) => {e.target.style.display = 'none'}}
+                  />
+                  <div>
+                    <h1 className="text-xl font-bold text-blue-600">M M MOTORS</h1>
+                    <p className="text-sm text-gray-600">Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130</p>
+                  </div>
+                </div>
                 <p className="text-sm text-gray-600">Two Wheeler Sales Invoice</p>
                 <div className="mt-2 grid grid-cols-2 gap-4">
                   <div className="text-left">
