@@ -15,7 +15,9 @@ import {
   FileText,
   Search,
   AlertTriangle,
-  Eye
+  Eye,
+  Printer,
+  Download
 } from 'lucide-react';
 import { toast } from 'sonner';
 
