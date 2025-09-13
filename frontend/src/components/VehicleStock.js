@@ -271,12 +271,28 @@ const EditVehicleModal = ({ vehicle, isOpen, onClose, onUpdate }) => {
     setLoading(true);
 
     try {
-      const response = await axios.put(`${API}/vehicles/${vehicle.id}`, editData);
-      toast.success('Vehicle updated successfully!');
+      // Prepare the status update payload
+      const statusData = {
+        status: editData.status
+      };
+
+      // Add return date if status is 'returned' and date is provided
+      if (editData.status === 'returned' && editData.date_returned) {
+        statusData.return_date = editData.date_returned;
+      }
+
+      // Add outbound location if provided
+      if (editData.outbound_location) {
+        statusData.outbound_location = editData.outbound_location;
+      }
+
+      // Use the correct status update endpoint
+      const response = await axios.put(`${API}/vehicles/${vehicle.id}/status`, statusData);
+      toast.success('Vehicle status updated successfully!');
       onUpdate(response.data);
       onClose();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to update vehicle');
+      toast.error(error.response?.data?.detail || 'Failed to update vehicle status');
     } finally {
       setLoading(false);
     }
