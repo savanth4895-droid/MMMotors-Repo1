@@ -581,7 +581,7 @@ const CreateInvoice = () => {
                 <div className="mb-4 p-3 bg-gray-50 rounded">
                   <p className="font-semibold text-gray-800">DEAR CUSTOMER,</p>
                   <p className="mt-2 text-sm text-gray-700">
-                    WE THANK YOU FOR BUYING A WORLD CLASS HONDA VEHICLE. YOUR VEHICLE IS TO BE SERVICED AS PER THE 
+                    WE THANK YOU FOR BUYING A WORLD CLASS VEHICLE. YOUR VEHICLE IS TO BE SERVICED AS PER THE 
                     SCHEDULE GIVEN BELOW FOR YOU TO ENJOY PLEASANT RIDING AT ALL TIMES.
                   </p>
                 </div>
@@ -614,22 +614,22 @@ const CreateInvoice = () => {
                       <tr className="border-b border-gray-300">
                         <td className="p-2 border-r border-gray-400">01-01-1900 12:00:00</td>
                         <td className="p-2 border-r border-gray-400 font-semibold">FIRST</td>
-                        <td className="p-2">750 to 1000 kms or 15 to 30 days</td>
+                        <td className="p-2">500 to 700 kms or 15 to 30 days</td>
                       </tr>
                       <tr className="border-b border-gray-300">
                         <td className="p-2 border-r border-gray-400">01-01-1900 12:00:00</td>
                         <td className="p-2 border-r border-gray-400 font-semibold">SECOND</td>
-                        <td className="p-2">3500 to 4000 kms or 105 to 120 days</td>
+                        <td className="p-2">3000 to 3500 kms or 105 to 120 days</td>
                       </tr>
                       <tr className="border-b border-gray-300">
                         <td className="p-2 border-r border-gray-400">01-01-1900 12:00:00</td>
                         <td className="p-2 border-r border-gray-400 font-semibold">THIRD</td>
-                        <td className="p-2">7500 to 8000 kms or 225 to 240 days</td>
+                        <td className="p-2">6000 to 6500 kms or 225 to 240 days</td>
                       </tr>
                       <tr>
                         <td className="p-2 border-r border-gray-400">01-01-1900 12:00:00</td>
                         <td className="p-2 border-r border-gray-400 font-semibold">FOURTH</td>
-                        <td className="p-2">11500 to 12000 kms or 350 to 365 days</td>
+                        <td className="p-2">9000 to 9500 kms or 350 to 365 days</td>
                       </tr>
                     </tbody>
                   </table>
