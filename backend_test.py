@@ -209,6 +209,178 @@ class TwoWheelerAPITester:
         """Test getting all vehicles"""
         return self.run_test("Get Vehicles", "GET", "vehicles", 200)
 
+    def test_get_vehicle_by_id(self, vehicle_id):
+        """Test getting vehicle by ID"""
+        return self.run_test(f"Get Vehicle {vehicle_id}", "GET", f"vehicles/{vehicle_id}", 200)
+
+    def test_update_vehicle_status(self, vehicle_id, status, return_date=None):
+        """Test updating vehicle status with optional return date"""
+        # Get current vehicle data first
+        success, current_vehicle = self.test_get_vehicle_by_id(vehicle_id)
+        if not success:
+            return False, {}
+        
+        # Prepare update data with new status
+        update_data = {
+            "brand": current_vehicle.get("brand"),
+            "model": current_vehicle.get("model"),
+            "chassis_no": current_vehicle.get("chassis_no"),
+            "engine_no": current_vehicle.get("engine_no"),
+            "color": current_vehicle.get("color"),
+            "key_no": current_vehicle.get("key_no"),
+            "inbound_location": current_vehicle.get("inbound_location"),
+            "page_number": current_vehicle.get("page_number")
+        }
+        
+        # Note: The backend PUT endpoint expects VehicleCreate data structure
+        # Status is handled internally by the Vehicle model
+        success, response = self.run_test(
+            f"Update Vehicle Status to {status}",
+            "PUT",
+            f"vehicles/{vehicle_id}",
+            200,
+            data=update_data
+        )
+        
+        if success:
+            print(f"   Previous Status: {current_vehicle.get('status', 'N/A')}")
+            print(f"   New Status: {response.get('status', 'N/A')}")
+            if return_date and status == 'returned':
+                print(f"   Return Date: {response.get('date_returned', 'N/A')}")
+        
+        return success, response
+
+    def test_vehicle_status_persistence(self, vehicle_id, expected_status):
+        """Test that vehicle status changes are persisted in database"""
+        success, vehicle_data = self.test_get_vehicle_by_id(vehicle_id)
+        if success:
+            actual_status = vehicle_data.get('status')
+            if actual_status == expected_status:
+                print(f"✅ Status persistence verified: {actual_status}")
+                return True, vehicle_data
+            else:
+                print(f"❌ Status persistence failed: Expected {expected_status}, got {actual_status}")
+                return False, vehicle_data
+        return False, {}
+
+    def test_vehicle_status_update_comprehensive(self):
+        """Comprehensive test of vehicle status update functionality"""
+        print("\n🔄 COMPREHENSIVE VEHICLE STATUS UPDATE TESTING")
+        print("=" * 50)
+        
+        # Create test vehicles for status testing
+        test_vehicles = []
+        statuses_to_test = ['in_stock', 'sold', 'returned']
+        
+        for i, status in enumerate(statuses_to_test):
+            success, vehicle_data = self.test_create_vehicle(
+                "TVS", 
+                f"Test Model {i+1}", 
+                f"TEST_CHASSIS_{i+1}", 
+                f"TEST_ENGINE_{i+1}", 
+                "Black", 
+                f"TEST_KEY_{i+1}", 
+                "Test Location"
+            )
+            if success:
+                test_vehicles.append((vehicle_data.get('id'), status))
+                print(f"   Created test vehicle {i+1}: {vehicle_data.get('id')}")
+        
+        if not test_vehicles:
+            print("❌ Failed to create test vehicles")
+            return False, {}
+        
+        # Test status updates for each vehicle
+        all_tests_passed = True
+        results = []
+        
+        for vehicle_id, target_status in test_vehicles:
+            print(f"\n📝 Testing status update to '{target_status}' for vehicle {vehicle_id}")
+            
+            # Get initial status
+            success, initial_data = self.test_get_vehicle_by_id(vehicle_id)
+            if not success:
+                all_tests_passed = False
+                continue
+                
+            initial_status = initial_data.get('status', 'unknown')
+            print(f"   Initial Status: {initial_status}")
+            
+            # Update status (Note: Backend doesn't have direct status update, using full vehicle update)
+            success, updated_data = self.test_update_vehicle_status(vehicle_id, target_status)
+            if not success:
+                all_tests_passed = False
+                continue
+            
+            # Verify persistence
+            success, verified_data = self.test_vehicle_status_persistence(vehicle_id, target_status)
+            if not success:
+                all_tests_passed = False
+            
+            results.append({
+                'vehicle_id': vehicle_id,
+                'initial_status': initial_status,
+                'target_status': target_status,
+                'final_status': verified_data.get('status') if success else 'unknown',
+                'success': success
+            })
+        
+        # Print comprehensive results
+        print(f"\n📊 VEHICLE STATUS UPDATE TEST RESULTS")
+        print("=" * 50)
+        for result in results:
+            status_icon = "✅" if result['success'] else "❌"
+            print(f"{status_icon} Vehicle {result['vehicle_id'][:8]}...")
+            print(f"   {result['initial_status']} → {result['target_status']} → {result['final_status']}")
+        
+        return all_tests_passed, results
+
+    def test_vehicle_status_edge_cases(self):
+        """Test edge cases for vehicle status updates"""
+        print("\n⚠️ TESTING VEHICLE STATUS EDGE CASES")
+        print("=" * 40)
+        
+        # Test with invalid vehicle ID
+        success, response = self.run_test(
+            "Update Non-existent Vehicle Status",
+            "PUT",
+            "vehicles/invalid-vehicle-id-12345",
+            404,
+            data={
+                "brand": "TVS",
+                "model": "Test Model",
+                "chassis_no": "TEST123",
+                "engine_no": "ENG123",
+                "color": "Red",
+                "key_no": "KEY123",
+                "inbound_location": "Test Location"
+            }
+        )
+        
+        # Test without authentication
+        original_token = self.token
+        self.token = None
+        
+        success2, response2 = self.run_test(
+            "Update Vehicle Status Without Auth",
+            "PUT",
+            "vehicles/test-vehicle-id",
+            403,
+            data={
+                "brand": "TVS",
+                "model": "Test Model",
+                "chassis_no": "TEST123",
+                "engine_no": "ENG123",
+                "color": "Red",
+                "key_no": "KEY123",
+                "inbound_location": "Test Location"
+            }
+        )
+        
+        self.token = original_token
+        
+        return success and success2, {}
+
     def test_get_vehicle_brands(self):
         """Test getting vehicle brands"""
         return self.run_test("Get Vehicle Brands", "GET", "vehicles/brands", 200)
