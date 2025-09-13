@@ -1246,6 +1246,146 @@ const Bills = () => {
     }
   };
 
+  const handleViewBill = (bill) => {
+    setSelectedBill(bill);
+    setShowViewModal(true);
+  };
+
+  const handlePrintBill = (bill) => {
+    // Create a new window with the bill details for printing
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Spare Parts Bill - ${bill.bill_number}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .company-name { font-size: 24px; font-weight: bold; }
+            .bill-details { margin-bottom: 20px; }
+            .customer-details { margin-bottom: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            .totals { margin-top: 20px; }
+            .total-row { font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="company-name">M M MOTORS</div>
+            <div>Bengaluru main road, behind Ruchi Bakery</div>
+            <div>Malur, Karnataka 563130</div>
+          </div>
+          
+          <div class="bill-details">
+            <h3>Spare Parts Bill</h3>
+            <p><strong>Bill Number:</strong> ${bill.bill_number}</p>
+            <p><strong>Date:</strong> ${new Date(bill.bill_date).toLocaleDateString('en-IN')}</p>
+          </div>
+          
+          <div class="customer-details">
+            <h4>Customer Details:</h4>
+            <p><strong>Name:</strong> ${bill.customer_data?.name || 'N/A'}</p>
+            <p><strong>Mobile:</strong> ${bill.customer_data?.mobile || 'N/A'}</p>
+            ${bill.customer_data?.vehicle_name ? `<p><strong>Vehicle:</strong> ${bill.customer_data.vehicle_name} ${bill.customer_data.vehicle_number ? `(${bill.customer_data.vehicle_number})` : ''}</p>` : ''}
+          </div>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>Sl. No.</th>
+                <th>Description</th>
+                <th>HSN/SAC</th>
+                <th>Qty</th>
+                <th>Unit</th>
+                <th>Rate</th>
+                <th>Disc%</th>
+                <th>GST%</th>
+                <th>CGST</th>
+                <th>SGST</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${bill.items.map((item, index) => `
+                <tr>
+                  <td>${index + 1}</td>
+                  <td>${item.description}</td>
+                  <td>${item.hsn_sac}</td>
+                  <td>${item.quantity}</td>
+                  <td>${item.unit}</td>
+                  <td>₹${item.rate.toFixed(2)}</td>
+                  <td>${item.discount_percent}%</td>
+                  <td>${item.gst_percent}%</td>
+                  <td>₹${item.cgstAmount.toFixed(2)}</td>
+                  <td>₹${item.sgstAmount.toFixed(2)}</td>
+                  <td>₹${item.finalAmount.toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          
+          <div class="totals">
+            <p><strong>Subtotal:</strong> ₹${bill.subtotal.toFixed(2)}</p>
+            <p><strong>Total Discount:</strong> ₹${bill.total_discount.toFixed(2)}</p>
+            <p><strong>Total CGST:</strong> ₹${bill.total_cgst.toFixed(2)}</p>
+            <p><strong>Total SGST:</strong> ₹${bill.total_sgst.toFixed(2)}</p>
+            <p><strong>Total Tax:</strong> ₹${bill.total_tax.toFixed(2)}</p>
+            <p class="total-row"><strong>Final Amount:</strong> ₹${bill.total_amount.toFixed(2)}</p>
+          </div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  const handleDownloadBill = (bill) => {
+    // Generate CSV content for the bill
+    const csvContent = [
+      ['Spare Parts Bill - ' + bill.bill_number],
+      ['Date: ' + new Date(bill.bill_date).toLocaleDateString('en-IN')],
+      ['Customer: ' + (bill.customer_data?.name || 'N/A')],
+      ['Mobile: ' + (bill.customer_data?.mobile || 'N/A')],
+      bill.customer_data?.vehicle_name ? ['Vehicle: ' + bill.customer_data.vehicle_name + ' ' + (bill.customer_data.vehicle_number || '')] : [],
+      [''],
+      ['Sl. No.', 'Description', 'HSN/SAC', 'Qty', 'Unit', 'Rate', 'Disc%', 'GST%', 'CGST', 'SGST', 'Amount'],
+      ...bill.items.map((item, index) => [
+        index + 1,
+        item.description,
+        item.hsn_sac,
+        item.quantity,
+        item.unit,
+        '₹' + item.rate.toFixed(2),
+        item.discount_percent + '%',
+        item.gst_percent + '%',
+        '₹' + item.cgstAmount.toFixed(2),
+        '₹' + item.sgstAmount.toFixed(2),
+        '₹' + item.finalAmount.toFixed(2)
+      ]),
+      [''],
+      ['Subtotal', '', '', '', '', '', '', '', '', '', '₹' + bill.subtotal.toFixed(2)],
+      ['Total Discount', '', '', '', '', '', '', '', '', '', '₹' + bill.total_discount.toFixed(2)],
+      ['Total CGST', '', '', '', '', '', '', '', '', '', '₹' + bill.total_cgst.toFixed(2)],
+      ['Total SGST', '', '', '', '', '', '', '', '', '', '₹' + bill.total_sgst.toFixed(2)],
+      ['Total Tax', '', '', '', '', '', '', '', '', '', '₹' + bill.total_tax.toFixed(2)],
+      ['Final Amount', '', '', '', '', '', '', '', '', '', '₹' + bill.total_amount.toFixed(2)]
+    ].filter(row => row.length > 0).map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${bill.bill_number}_${bill.customer_data?.name || 'Customer'}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    toast.success('Bill downloaded successfully!');
+  };
+
   if (loading) {
     return <div className="flex justify-center p-8"><div className="spinner"></div></div>;
   }
