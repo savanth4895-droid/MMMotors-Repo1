@@ -1621,6 +1621,14 @@ const ViewInvoices = () => {
                   <FileText className="w-4 h-4" />
                   Print Invoice
                 </Button>
+                <Button
+                  onClick={() => handleDownloadInvoicePDF(selectedInvoice)}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download PDF
+                </Button>
                 <Button onClick={() => setShowInvoiceModal(false)}>
                   Close
                 </Button>
