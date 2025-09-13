@@ -497,10 +497,17 @@ const CreateInvoice = () => {
       // Import html2pdf dynamically
       const { default: html2pdf } = await import('html2pdf.js');
 
+      // Generate filename with customer name and mobile number
+      const customerName = invoiceData.customer?.name || 'Customer';
+      const customerMobile = invoiceData.customer?.mobile || 'Unknown';
+      const sanitizedName = customerName.replace(/[^a-zA-Z0-9]/g, '_');
+      const sanitizedMobile = customerMobile.replace(/[^0-9]/g, '');
+      const filename = `Invoice_${sanitizedName}_${sanitizedMobile}_${invoiceData.invoice_number}.pdf`;
+
       // Configure options for PDF generation
       const opt = {
         margin: [0.3, 0.3, 0.3, 0.3],
-        filename: `Invoice_${invoiceData.invoice_number}.pdf`,
+        filename: filename,
         image: { type: 'jpeg', quality: 0.95 },
         html2canvas: { 
           scale: 1.5,
