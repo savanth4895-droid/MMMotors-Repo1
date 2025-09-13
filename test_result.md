@@ -477,6 +477,7 @@ test_plan:
     - "Excel Format Backup Functionality - Comprehensive testing completed successfully with all Excel backup features working"
     - "Backend Invoice/Sales Creation with Hypothecation Field - Comprehensive testing completed successfully with 100% success rate"
     - "Updated Invoice System with Amount in Words and Service Details - Comprehensive testing completed successfully with all new changes verified"
+    - "Updated Invoice System with Logo and PDF Filename Functionality - Comprehensive testing completed successfully with all logo integration and customer-based PDF filename features verified"
 
 agent_communication:
     - agent: "testing"
