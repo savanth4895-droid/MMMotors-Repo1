@@ -388,7 +388,7 @@ const CreateInvoice = () => {
           <CardContent className="p-8">
             <div className="invoice-container">
               {/* Header */}
-              <div className="header text-center mb-6">
+              <div className="header text-center mb-6 border-b-2 border-gray-300 pb-4">
                 <h1 className="text-3xl font-bold text-blue-600">M M MOTORS</h1>
                 <p className="text-lg text-gray-600">Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130</p>
                 <p className="text-lg text-gray-600">Two Wheeler Sales Invoice</p>
@@ -403,85 +403,150 @@ const CreateInvoice = () => {
               </div>
 
               {/* Customer Details */}
-              <div className="section border rounded-lg p-4 mb-4">
-                <h3 className="text-lg font-semibold mb-3 text-blue-600">Customer Details</h3>
+              <div className="section border-2 border-gray-300 rounded-lg p-4 mb-4">
+                <h3 className="text-lg font-semibold mb-3 text-blue-600 border-b border-gray-200 pb-2">Customer Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="field">
-                    <span className="label">Name:</span> {generatedInvoice.customer.name}
+                    <span className="label font-semibold">Name:</span> {generatedInvoice.customer.name}
                   </div>
                   <div className="field">
-                    <span className="label">C/O:</span> {generatedInvoice.customer.care_of}
+                    <span className="label font-semibold">C/O:</span> {generatedInvoice.customer.care_of}
                   </div>
                   <div className="field">
-                    <span className="label">Mobile:</span> {generatedInvoice.customer.mobile}
+                    <span className="label font-semibold">Mobile:</span> {generatedInvoice.customer.mobile}
                   </div>
                   <div className="field">
-                    <span className="label">Address:</span> {generatedInvoice.customer.address}
+                    <span className="label font-semibold">Address:</span> {generatedInvoice.customer.address}
                   </div>
                 </div>
               </div>
 
               {/* Vehicle Details */}
-              <div className="section border rounded-lg p-4 mb-4">
-                <h3 className="text-lg font-semibold mb-3 text-blue-600">Vehicle Details</h3>
+              <div className="section border-2 border-gray-300 rounded-lg p-4 mb-4">
+                <h3 className="text-lg font-semibold mb-3 text-blue-600 border-b border-gray-200 pb-2">Vehicle Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="field">
-                    <span className="label">Brand:</span> {generatedInvoice.vehicle.brand}
+                    <span className="label font-semibold">Brand:</span> {generatedInvoice.vehicle.brand}
                   </div>
                   <div className="field">
-                    <span className="label">Model:</span> {generatedInvoice.vehicle.model}
+                    <span className="label font-semibold">Model:</span> {generatedInvoice.vehicle.model}
                   </div>
                   <div className="field">
-                    <span className="label">Color:</span> {generatedInvoice.vehicle.color}
+                    <span className="label font-semibold">Color:</span> {generatedInvoice.vehicle.color}
                   </div>
                   <div className="field">
-                    <span className="label">Chassis No:</span> {generatedInvoice.vehicle.chassis_no}
+                    <span className="label font-semibold">Chassis No:</span> {generatedInvoice.vehicle.chassis_no}
                   </div>
                   <div className="field">
-                    <span className="label">Engine No:</span> {generatedInvoice.vehicle.engine_no}
+                    <span className="label font-semibold">Engine No:</span> {generatedInvoice.vehicle.engine_no}
                   </div>
                   <div className="field">
-                    <span className="label">Vehicle No:</span> {generatedInvoice.vehicle.vehicle_no}
+                    <span className="label font-semibold">Vehicle No:</span> {generatedInvoice.vehicle.vehicle_no}
                   </div>
                 </div>
               </div>
 
               {/* Insurance Details */}
-              <div className="section border rounded-lg p-4 mb-4">
-                <h3 className="text-lg font-semibold mb-3 text-blue-600">Insurance Nominee Details</h3>
+              <div className="section border-2 border-gray-300 rounded-lg p-4 mb-4">
+                <h3 className="text-lg font-semibold mb-3 text-blue-600 border-b border-gray-200 pb-2">Insurance Nominee Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="field">
-                    <span className="label">Nominee Name:</span> {generatedInvoice.insurance.nominee}
+                    <span className="label font-semibold">Nominee Name:</span> {generatedInvoice.insurance.nominee}
                   </div>
                   <div className="field">
-                    <span className="label">Relation:</span> {generatedInvoice.insurance.relation}
+                    <span className="label font-semibold">Relation:</span> {generatedInvoice.insurance.relation}
                   </div>
                   <div className="field">
-                    <span className="label">Age:</span> {generatedInvoice.insurance.age}
+                    <span className="label font-semibold">Age:</span> {generatedInvoice.insurance.age}
                   </div>
                 </div>
               </div>
 
               {/* Payment Details */}
-              <div className="section border rounded-lg p-4 mb-6">
-                <h3 className="text-lg font-semibold mb-3 text-blue-600">Payment Details</h3>
+              <div className="section border-2 border-gray-300 rounded-lg p-4 mb-6">
+                <h3 className="text-lg font-semibold mb-3 text-blue-600 border-b border-gray-200 pb-2">Payment Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="field">
-                    <span className="label">Payment Method:</span> {generatedInvoice.payment_method.toUpperCase()}
+                    <span className="label font-semibold">Payment Method:</span> {generatedInvoice.payment_method.toUpperCase()}
                   </div>
                   <div className="field">
-                    <span className="label">Hypothecation:</span> {generatedInvoice.hypothecation.toUpperCase()}
+                    <span className="label font-semibold">Hypothecation:</span> {generatedInvoice.hypothecation || 'CASH'}
                   </div>
                   <div className="field total text-right">
-                    <span className="label">Amount:</span> ₹{generatedInvoice.amount.toLocaleString()}
+                    <span className="label font-semibold">Amount:</span> <span className="text-2xl font-bold">₹{generatedInvoice.amount.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Service Details */}
+              <div className="section border-2 border-gray-300 rounded-lg p-4 mb-6">
+                <h3 className="text-lg font-semibold mb-3 text-blue-600 border-b border-gray-200 pb-2 text-center">SERVICE DETAILS</h3>
+                
+                <div className="mb-4 p-3 bg-gray-50 rounded">
+                  <p className="font-semibold text-gray-800">DEAR CUSTOMER,</p>
+                  <p className="mt-2 text-sm text-gray-700">
+                    WE THANK YOU FOR BUYING A WORLD CLASS HONDA VEHICLE. YOUR VEHICLE IS TO BE SERVICED AS PER THE 
+                    SCHEDULE GIVEN BELOW FOR YOU TO ENJOY PLEASANT RIDING AT ALL TIMES.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 text-sm">
+                  <div>
+                    <p className="font-semibold">SERVICE TIMINGS:</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold">HOLIDAY:</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold">LUNCH TIMINGS:</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold">Serv.Helpline:</p>
+                  </div>
+                </div>
+
+                <div className="border-2 border-gray-400 rounded">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b-2 border-gray-400 bg-gray-100">
+                        <th className="p-2 text-left font-bold border-r border-gray-400">DATE</th>
+                        <th className="p-2 text-left font-bold border-r border-gray-400">SERVICE</th>
+                        <th className="p-2 text-left font-bold">SCHEDULE</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b border-gray-300">
+                        <td className="p-2 border-r border-gray-400">01-01-1900 12:00:00</td>
+                        <td className="p-2 border-r border-gray-400 font-semibold">FIRST</td>
+                        <td className="p-2">750 to 1000 kms or 15 to 30 days</td>
+                      </tr>
+                      <tr className="border-b border-gray-300">
+                        <td className="p-2 border-r border-gray-400">01-01-1900 12:00:00</td>
+                        <td className="p-2 border-r border-gray-400 font-semibold">SECOND</td>
+                        <td className="p-2">3500 to 4000 kms or 105 to 120 days</td>
+                      </tr>
+                      <tr className="border-b border-gray-300">
+                        <td className="p-2 border-r border-gray-400">01-01-1900 12:00:00</td>
+                        <td className="p-2 border-r border-gray-400 font-semibold">THIRD</td>
+                        <td className="p-2">7500 to 8000 kms or 225 to 240 days</td>
+                      </tr>
+                      <tr>
+                        <td className="p-2 border-r border-gray-400">01-01-1900 12:00:00</td>
+                        <td className="p-2 border-r border-gray-400 font-semibold">FOURTH</td>
+                        <td className="p-2">11500 to 12000 kms or 350 to 365 days</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  
+                  <div className="text-center p-2 border-t-2 border-gray-400 bg-gray-100">
+                    <p className="font-bold">(WHICHEVER IS EARLIER)</p>
                   </div>
                 </div>
               </div>
 
               {/* Footer */}
-              <div className="text-center mt-8 pt-4 border-t">
+              <div className="text-center mt-8 pt-4 border-t-2 border-gray-300">
                 <p className="text-sm text-gray-600">Thank you for choosing M M Motors!</p>
-                <p className="text-xs text-gray-500 mt-1">Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130</p>
                 <p className="text-xs text-gray-500 mt-2">This is a computer-generated invoice.</p>
               </div>
             </div>
