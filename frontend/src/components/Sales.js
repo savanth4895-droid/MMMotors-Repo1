@@ -1105,10 +1105,14 @@ const ViewInvoices = () => {
           </div>
           
           <div class="section">
-            <div class="total">
-              <div><span class="label">Payment Method:</span> ${invoice.payment_method?.toUpperCase() || 'CASH'}</div>
-              <div><span class="label">Hypothecation:</span> ${invoice.hypothecation || 'CASH'}</div>
-              <div><span class="label">Total Amount:</span> ₹${invoice.amount?.toLocaleString() || '0'}</div>
+            <h3>Payment Details</h3>
+            <div class="payment-grid">
+              <div class="field"><span class="label">Payment Method:</span> ${invoice.payment_method?.toUpperCase() || 'CASH'}</div>
+              <div class="field"><span class="label">Hypothecation:</span> ${invoice.hypothecation || 'CASH'}</div>
+              <div class="field total"><span class="label">Total Amount:</span> ₹${invoice.amount?.toLocaleString() || '0'}</div>
+            </div>
+            <div class="amount-words">
+              <strong>Amount in Words:</strong> ${numberToWords(invoice.amount || 0)} Rupees Only
             </div>
           </div>
           
