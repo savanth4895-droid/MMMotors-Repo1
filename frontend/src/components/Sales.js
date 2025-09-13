@@ -1287,15 +1287,66 @@ const ViewInvoices = () => {
                 </div>
 
                 {/* Payment Details */}
-                <div className="border rounded-lg p-4">
-                  <h3 className="text-lg font-semibold mb-3 text-blue-600">Payment Details</h3>
+                <div className="border-2 border-gray-300 rounded-lg p-4 mb-4">
+                  <h3 className="text-lg font-semibold mb-3 text-blue-600 border-b border-gray-200 pb-2">Payment Details</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div><strong>Payment Method:</strong> {selectedInvoice.payment_method?.toUpperCase() || 'CASH'}</div>
-                    <div><strong>Hypothecation:</strong> {selectedInvoice.hypothecation?.toUpperCase() || 'CASH'}</div>
+                    <div><strong>Hypothecation:</strong> {selectedInvoice.hypothecation || 'CASH'}</div>
                     <div className="text-right">
                       <span className="text-2xl font-bold text-green-600">
                         Total: ₹{selectedInvoice.amount?.toLocaleString() || '0'}
                       </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Service Details */}
+                <div className="border-2 border-gray-300 rounded-lg p-4 mb-4">
+                  <h3 className="text-lg font-semibold mb-3 text-blue-600 border-b border-gray-200 pb-2 text-center">SERVICE DETAILS</h3>
+                  
+                  <div className="mb-4 p-3 bg-gray-50 rounded">
+                    <p className="font-semibold text-gray-800">DEAR CUSTOMER,</p>
+                    <p className="mt-2 text-sm text-gray-700">
+                      WE THANK YOU FOR BUYING A WORLD CLASS HONDA VEHICLE. YOUR VEHICLE IS TO BE SERVICED AS PER THE 
+                      SCHEDULE GIVEN BELOW FOR YOU TO ENJOY PLEASANT RIDING AT ALL TIMES.
+                    </p>
+                  </div>
+
+                  <div className="border-2 border-gray-400 rounded">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b-2 border-gray-400 bg-gray-100">
+                          <th className="p-2 text-left font-bold border-r border-gray-400">DATE</th>
+                          <th className="p-2 text-left font-bold border-r border-gray-400">SERVICE</th>
+                          <th className="p-2 text-left font-bold">SCHEDULE</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="border-b border-gray-300">
+                          <td className="p-2 border-r border-gray-400">01-01-1900 12:00:00</td>
+                          <td className="p-2 border-r border-gray-400 font-semibold">FIRST</td>
+                          <td className="p-2">750 to 1000 kms or 15 to 30 days</td>
+                        </tr>
+                        <tr className="border-b border-gray-300">
+                          <td className="p-2 border-r border-gray-400">01-01-1900 12:00:00</td>
+                          <td className="p-2 border-r border-gray-400 font-semibold">SECOND</td>
+                          <td className="p-2">3500 to 4000 kms or 105 to 120 days</td>
+                        </tr>
+                        <tr className="border-b border-gray-300">
+                          <td className="p-2 border-r border-gray-400">01-01-1900 12:00:00</td>
+                          <td className="p-2 border-r border-gray-400 font-semibold">THIRD</td>
+                          <td className="p-2">7500 to 8000 kms or 225 to 240 days</td>
+                        </tr>
+                        <tr>
+                          <td className="p-2 border-r border-gray-400">01-01-1900 12:00:00</td>
+                          <td className="p-2 border-r border-gray-400 font-semibold">FOURTH</td>
+                          <td className="p-2">11500 to 12000 kms or 350 to 365 days</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    
+                    <div className="text-center p-2 border-t-2 border-gray-400 bg-gray-100">
+                      <p className="font-bold">(WHICHEVER IS EARLIER)</p>
                     </div>
                   </div>
                 </div>
