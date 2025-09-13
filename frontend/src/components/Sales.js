@@ -1042,12 +1042,11 @@ const ViewInvoices = () => {
     setEditFormData({});
   };
 
-  const handlePrintInvoice = (invoice = null) => {
-    const invoiceData = invoice || generatedInvoice;
-    if (!invoiceData) return;
+  const handlePrintInvoice = (invoice) => {
+    if (!invoice) return;
 
-    const customer = customers.find(c => c.id === invoiceData.customer_id);
-    const vehicle = vehicles.find(v => v.id === invoiceData.vehicle_id);
+    const customer = customers.find(c => c.id === invoice.customer_id);
+    const vehicle = vehicles.find(v => v.id === invoice.vehicle_id);
     
     // Get the invoice preview content
     const invoiceElement = document.getElementById('invoice-preview');
