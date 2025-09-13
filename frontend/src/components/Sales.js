@@ -1055,7 +1055,7 @@ const ViewInvoices = () => {
       printWindow.document.write(`
         <html>
           <head>
-            <title>Invoice ${invoiceData.invoice_number}</title>
+            <title>Invoice ${invoice.invoice_number}</title>
             <style>
               body { font-family: Arial, sans-serif; margin: 0; padding: 15px; line-height: 1.4; }
               .invoice-container { max-width: 800px; margin: 0 auto; }
