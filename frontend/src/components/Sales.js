@@ -1488,18 +1488,8 @@ const ViewInvoices = () => {
               <div className="space-y-6">
                 {/* Invoice Header */}
                 <div className="text-center border-b-2 border-gray-300 pb-4">
-                  <div className="flex justify-center items-center mb-2">
-                    <img 
-                      src="https://customer-assets.emergentagent.com/job_bike-business/artifacts/ubnra48b_image.png" 
-                      alt="M M Motors Logo" 
-                      className="h-12 w-12 mr-3"
-                      onError={(e) => {e.target.style.display = 'none'}}
-                    />
-                    <div>
-                      <h1 className="text-3xl font-bold text-blue-600">M M MOTORS</h1>
-                      <p className="text-lg text-gray-600">Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130</p>
-                    </div>
-                  </div>
+                  <h1 className="text-3xl font-bold text-blue-600">M M MOTORS</h1>
+                  <p className="text-lg text-gray-600">Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130</p>
                   <p className="text-lg text-gray-600">Two Wheeler Sales Invoice</p>
                   <div className="mt-4 grid grid-cols-2 gap-4">
                     <div className="text-left">
