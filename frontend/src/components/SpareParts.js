@@ -1292,10 +1292,30 @@ const Bills = () => {
                   </td>
                   <td className="p-3 font-semibold text-green-600">₹{bill.total_amount.toFixed(2)}</td>
                   <td className="p-3">
-                    <Button size="sm" variant="outline">
-                      <Eye className="w-4 h-4 mr-1" />
-                      View
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleViewBill(bill)}
+                      >
+                        <Eye className="w-4 h-4 mr-1" />
+                        View
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handlePrintBill(bill)}
+                      >
+                        <Printer className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleDownloadBill(bill)}
+                      >
+                        <Download className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
