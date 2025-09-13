@@ -430,6 +430,44 @@ const CreateInvoice = () => {
     printWindow.print();
   };
 
+  // Function to download invoice as PDF
+  const handleDownloadPDF = async (invoice = null) => {
+    const invoiceData = invoice || generatedInvoice;
+    if (!invoiceData) return;
+
+    try {
+      // Get the invoice preview element
+      const invoiceElement = document.getElementById('invoice-preview');
+      if (!invoiceElement) return;
+
+      // Import html2pdf dynamically
+      const { default: html2pdf } = await import('html2pdf.js');
+
+      // Configure options for PDF generation
+      const opt = {
+        margin: 0.5,
+        filename: `Invoice_${invoiceData.invoice_number}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2,
+          useCORS: true,
+          letterRendering: true 
+        },
+        jsPDF: { 
+          unit: 'in', 
+          format: 'a4', 
+          orientation: 'portrait' 
+        }
+      };
+
+      // Generate and download PDF
+      html2pdf().set(opt).from(invoiceElement).save();
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    }
+  };
+
   const resetForm = () => {
     setInvoiceData({
       date: new Date().toISOString().split('T')[0],
