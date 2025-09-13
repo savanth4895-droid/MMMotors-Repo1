@@ -2209,8 +2209,8 @@ const CreateBillContent = ({
 };
 
 const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading }) => {
-  const [selectedBill, setSelectedBill] = useState(null);
-  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedBill, setSelectedBill] = React.useState(null);
+  const [showViewModal, setShowViewModal] = React.useState(false);
 
   const handleViewBill = (bill) => {
     setSelectedBill(bill);
