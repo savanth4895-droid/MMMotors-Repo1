@@ -708,21 +708,12 @@ const CreateInvoice = () => {
               </div>
               <div>
                 <Label htmlFor="hypothecation">Hypothecation</Label>
-                <Select value={invoiceData.hypothecation} onValueChange={(value) => handleInputChange('hypothecation', value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="bajaj_finserv">Bajaj Finserv</SelectItem>
-                    <SelectItem value="hdfc_bank">HDFC Bank</SelectItem>
-                    <SelectItem value="icici_bank">ICICI Bank</SelectItem>
-                    <SelectItem value="sbi">State Bank of India</SelectItem>
-                    <SelectItem value="axis_bank">Axis Bank</SelectItem>
-                    <SelectItem value="kotak_bank">Kotak Bank</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input
+                  id="hypothecation"
+                  placeholder="Enter hypothecation details"
+                  value={invoiceData.hypothecation}
+                  onChange={(e) => handleInputChange('hypothecation', e.target.value)}
+                />
               </div>
             </div>
           </div>
