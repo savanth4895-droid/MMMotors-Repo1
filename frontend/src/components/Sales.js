@@ -1414,17 +1414,17 @@ const ViewInvoices = () => {
                         <tr className="border-b border-gray-300">
                           <td className="p-2 border-r border-gray-400">01-01-1900 12:00:00</td>
                           <td className="p-2 border-r border-gray-400 font-semibold">SECOND</td>
-                          <td className="p-2">3000 to 3500 kms or 105 to 120 days</td>
+                          <td className="p-2">3000 to 3500 kms or 30 to 90 days</td>
                         </tr>
                         <tr className="border-b border-gray-300">
                           <td className="p-2 border-r border-gray-400">01-01-1900 12:00:00</td>
                           <td className="p-2 border-r border-gray-400 font-semibold">THIRD</td>
-                          <td className="p-2">6000 to 6500 kms or 225 to 240 days</td>
+                          <td className="p-2">6000 to 6500 kms or 90 to 180 days</td>
                         </tr>
                         <tr>
                           <td className="p-2 border-r border-gray-400">01-01-1900 12:00:00</td>
                           <td className="p-2 border-r border-gray-400 font-semibold">FOURTH</td>
-                          <td className="p-2">9000 to 9500 kms or 350 to 365 days</td>
+                          <td className="p-2">9000 to 9500 kms or 180 to 270 days</td>
                         </tr>
                       </tbody>
                     </table>
