@@ -1226,6 +1226,8 @@ const CreateBill = () => {
 const Bills = () => {
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedBill, setSelectedBill] = useState(null);
+  const [showViewModal, setShowViewModal] = useState(false);
 
   useEffect(() => {
     fetchBills();
