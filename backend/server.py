@@ -426,6 +426,62 @@ async def get_vehicle(vehicle_id: str, current_user: User = Depends(get_current_
         raise HTTPException(status_code=404, detail="Vehicle not found")
     return Vehicle(**vehicle)
 
+@api_router.put("/vehicles/{vehicle_id}/status")
+async def update_vehicle_status(vehicle_id: str, status_data: dict, current_user: User = Depends(get_current_user)):
+    """Update vehicle status with optional return date"""
+    # Check if vehicle exists
+    existing_vehicle = await db.vehicles.find_one({"id": vehicle_id})
+    if not existing_vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Validate status
+    new_status = status_data.get("status")
+    if not new_status:
+        raise HTTPException(status_code=400, detail="Status is required")
+    
+    # Validate status value
+    valid_statuses = ["in_stock", "sold", "returned"]
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+    
+    # Prepare update data
+    update_data = {"status": new_status}
+    
+    # Handle status-specific updates
+    if new_status == "sold":
+        update_data["date_sold"] = datetime.now(timezone.utc)
+        # Clear return date if previously returned
+        update_data["date_returned"] = None
+    elif new_status == "returned":
+        # Set return date
+        return_date = status_data.get("return_date")
+        if return_date:
+            try:
+                # Parse the return date if provided
+                update_data["date_returned"] = datetime.fromisoformat(return_date.replace('Z', '+00:00'))
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid return_date format. Use ISO format (YYYY-MM-DDTHH:MM:SSZ)")
+        else:
+            update_data["date_returned"] = datetime.now(timezone.utc)
+        
+        # Set outbound location if provided
+        outbound_location = status_data.get("outbound_location")
+        if outbound_location:
+            update_data["outbound_location"] = outbound_location
+    elif new_status == "in_stock":
+        # Clear sold/returned dates when back in stock
+        update_data["date_sold"] = None
+        update_data["date_returned"] = None
+        update_data["customer_id"] = None
+        update_data["outbound_location"] = None
+    
+    # Update the vehicle
+    await db.vehicles.update_one({"id": vehicle_id}, {"$set": update_data})
+    
+    # Return updated vehicle
+    updated_vehicle = await db.vehicles.find_one({"id": vehicle_id})
+    return Vehicle(**updated_vehicle)
+
 # Sales endpoints
 @api_router.post("/sales", response_model=Sale)
 async def create_sale(sale_data: SaleCreate, current_user: User = Depends(get_current_user)):
