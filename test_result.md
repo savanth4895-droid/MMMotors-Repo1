@@ -518,6 +518,18 @@ agent_communication:
       - agent: "testing"
       - comment: "✅ COMPREHENSIVE IST TIMEZONE CONFIGURATION TESTING COMPLETED SUCCESSFULLY: Conducted thorough end-to-end testing of the updated timezone configuration from UTC to IST (UTC+5:30) across the backup system as requested in review. DASHBOARD IST DISPLAY TESTING: ✅ Successfully navigated to dashboard and found 'Data Backup Status' section, ✅ Dashboard backup time displays correctly as 'Last backup: 11 Sept 2025, 19:10 IST' with proper IST timezone indicator, ✅ Time conversion verified: UTC 13:40 correctly displays as IST 19:10 (UTC + 5:30 hours). BACKUP OVERVIEW TAB IST TESTING: ✅ Successfully navigated to /backup page Overview tab, ✅ Found 'Recent Backups' section with 5 backup entries, ✅ Recent backup entries show correct IST time format: '11 Sept 2025, 19:10 IST', '11 Sept 2025, 19:06 IST', '11 Sept 2025, 18:56 IST', ✅ All entries display IST timezone suffix instead of UTC, ✅ Time format shows expected IST conversion (around 19:10 from UTC 13:40). BACKUP SETTINGS IST TESTING: ✅ Successfully navigated to Settings tab in backup management, ✅ Backup time field shows IST time: 19:09 (expected around 19:10), ✅ 'Use current time' button shows IST time: 'Use current time (19:13)', ✅ Clicking 'Use current time' button successfully updates backup time field to current IST time (19:13), ✅ Helper text and configuration properly handle IST timezone. BACKUP HISTORY IST TESTING: ✅ Successfully navigated to History tab, ✅ Found 15 backup entries in history, ✅ All history entries show IST time format in 24-hour format: '11/09/2025, 19:10:32', ✅ No AM/PM indicators found (proper 24-hour format maintained), ✅ Time conversion consistent across all history entries. TIME CONVERSION VERIFICATION: ✅ Current UTC time: 13:43, Expected IST time: 19:13 (UTC + 5:30), ✅ All displayed times match expected IST conversion, ✅ IST timezone indicator 'IST' properly displayed across all sections, ✅ Time format remains 24-hour but with IST timezone as specified. ALL EXPECTED RESULTS ACHIEVED: ✅ Dashboard shows backup time with IST timezone (19:10 IST instead of 13:40 UTC), ✅ Recent Backups section shows IST time format with 'IST' suffix, ✅ Backup settings show IST time configuration (19:09), ✅ 'Use current time' button works with IST time (19:13), ✅ Backup history shows consistent IST time format, ✅ All times display approximately 19:10 IST from 13:40 UTC as expected, ✅ Timezone indicators show 'IST' instead of 'UTC' throughout, ✅ Time format maintains 24-hour format with proper IST timezone. CONCLUSION: The IST timezone configuration in backup system is fully operational and meets all specified requirements from the comprehensive testing request. Successfully updated timezone from UTC to IST (UTC+5:30) for India Standard Time, with all time displays now showing IST timezone with proper +5:30 offset."
 
+  - task: "Compact Invoice Preview for A4 Compatibility"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/Sales.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+      - agent: "main"
+      - comment: "Updated invoice preview with compact layout for A4 compatibility. Invoice container set to max-width: 21cm, reduced font sizes (text-xs, text-sm), smaller spacing (mb-3, p-3), compact sections with proper borders. Print functionality updated with A4-specific CSS and PDF download using html2pdf.js with A4 format configuration. Ready for comprehensive testing of compact layout, A4 sizing, print functionality, and PDF download."
+
   - task: "Comprehensive Edit Functionality Testing Across All Modules"
     implemented: true
     working: true
