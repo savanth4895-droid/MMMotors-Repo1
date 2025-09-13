@@ -1117,12 +1117,12 @@ const ViewInvoices = () => {
           </div>
           
           <div class="section">
-            <h3 style="text-align: center; font-weight: bold; margin-bottom: 15px;">SERVICE DETAILS</h3>
+            <h3 class="service-header">SERVICE DETAILS</h3>
             
-            <div style="margin-bottom: 15px; padding: 10px; background-color: #f8f8f8;">
+            <div class="customer-msg">
               <p style="font-weight: bold;">DEAR CUSTOMER,</p>
-              <p style="margin-top: 8px; font-size: 12px;">
-                WE THANK YOU FOR BUYING A WORLD CLASS HONDA VEHICLE. YOUR VEHICLE IS TO BE SERVICED AS PER THE 
+              <p style="margin-top: 8px;">
+                WE THANK YOU FOR BUYING A WORLD CLASS VEHICLE. YOUR VEHICLE IS TO BE SERVICED AS PER THE 
                 SCHEDULE GIVEN BELOW FOR YOU TO ENJOY PLEASANT RIDING AT ALL TIMES.
               </p>
             </div>
@@ -1139,27 +1139,27 @@ const ViewInvoices = () => {
                 <tr>
                   <td style="padding: 8px; border: 1px solid #333;">01-01-1900 12:00:00</td>
                   <td style="padding: 8px; border: 1px solid #333; font-weight: bold;">FIRST</td>
-                  <td style="padding: 8px; border: 1px solid #333;">750 to 1000 kms or 15 to 30 days</td>
+                  <td style="padding: 8px; border: 1px solid #333;">500 to 700 kms or 15 to 30 days</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px; border: 1px solid #333;">01-01-1900 12:00:00</td>
                   <td style="padding: 8px; border: 1px solid #333; font-weight: bold;">SECOND</td>
-                  <td style="padding: 8px; border: 1px solid #333;">3500 to 4000 kms or 105 to 120 days</td>
+                  <td style="padding: 8px; border: 1px solid #333;">3000 to 3500 kms or 105 to 120 days</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px; border: 1px solid #333;">01-01-1900 12:00:00</td>
                   <td style="padding: 8px; border: 1px solid #333; font-weight: bold;">THIRD</td>
-                  <td style="padding: 8px; border: 1px solid #333;">7500 to 8000 kms or 225 to 240 days</td>
+                  <td style="padding: 8px; border: 1px solid #333;">6000 to 6500 kms or 225 to 240 days</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px; border: 1px solid #333;">01-01-1900 12:00:00</td>
                   <td style="padding: 8px; border: 1px solid #333; font-weight: bold;">FOURTH</td>
-                  <td style="padding: 8px; border: 1px solid #333;">11500 to 12000 kms or 350 to 365 days</td>
+                  <td style="padding: 8px; border: 1px solid #333;">9000 to 9500 kms or 350 to 365 days</td>
                 </tr>
               </tbody>
             </table>
             
-            <div style="text-align: center; padding: 8px; background-color: #f0f0f0; border: 2px solid #333; border-top: none; font-weight: bold;">
+            <div class="service-footer">
               (WHICHEVER IS EARLIER)
             </div>
           </div>
