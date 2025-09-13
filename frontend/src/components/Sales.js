@@ -556,7 +556,7 @@ const CreateInvoice = () => {
               {/* Payment Details */}
               <div className="section border-2 border-gray-300 rounded-lg p-4 mb-6">
                 <h3 className="text-lg font-semibold mb-3 text-blue-600 border-b border-gray-200 pb-2">Payment Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div className="field">
                     <span className="label font-semibold">Payment Method:</span> {generatedInvoice.payment_method.toUpperCase()}
                   </div>
@@ -565,6 +565,11 @@ const CreateInvoice = () => {
                   </div>
                   <div className="field total text-right">
                     <span className="label font-semibold">Amount:</span> <span className="text-2xl font-bold">₹{generatedInvoice.amount.toLocaleString()}</span>
+                  </div>
+                </div>
+                <div className="border-t pt-3">
+                  <div className="field">
+                    <span className="label font-semibold">Amount in Words:</span> <span className="italic">{numberToWords(generatedInvoice.amount)} Rupees Only</span>
                   </div>
                 </div>
               </div>
