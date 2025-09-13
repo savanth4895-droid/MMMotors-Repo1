@@ -516,7 +516,7 @@ test_plan:
 
 agent_communication:
     - agent: "main"
-    - message: "INVESTIGATING STATUS UPDATE BUG: User reported that status column is not updating after changing status in vehicle stock page. Need to test backend API endpoint and debug frontend update mechanism. Will check PUT /api/vehicles/{id} endpoint and EditVehicleModal update logic."
+    - message: "TESTING SPARE PARTS CREATE BILL PAGE: User requested comprehensive testing of the create bill page in spare parts module. Will test all functionality including customer form, GST item entry, bill calculations, and bill generation process."
     - agent: "testing"
     - message: "✅ VEHICLE STATUS UPDATE BUG FIX VERIFICATION COMPLETED: Conducted comprehensive end-to-end testing of the vehicle status update workflow. CRITICAL SUCCESS: The reported bug 'Status column is not changing after changing the status in vehicle stock page' has been COMPLETELY FIXED! Testing confirmed: 1) Authentication working with admin/admin123, 2) Edit modal opens with current vehicle data, 3) Status dropdown functional with all options (In Stock, Sold, Returned), 4) Status changes reflect immediately in table after clicking 'Update Vehicle', 5) Success toast messages appear, 6) Return Date functionality works for 'Returned' status, 7) Changes persist across navigation, 8) Both Stock View and brand-specific views work identically. The new PUT /api/vehicles/{vehicle_id}/status endpoint is working perfectly and the frontend EditVehicleModal is correctly using this endpoint. The bug fix is verified as successful and ready for production use."ogic."
     - agent: "testing"
