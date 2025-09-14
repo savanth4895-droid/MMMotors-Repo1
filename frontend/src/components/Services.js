@@ -2197,8 +2197,8 @@ const ServicesBilling = () => {
             .items-table { 
               width: 100%; 
               border-collapse: collapse; 
-              margin: 30px 0;
-              font-size: 14px;
+              margin: 20px 0;
+              font-size: 12px;
               box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             }
             .items-table th { 
