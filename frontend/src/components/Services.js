@@ -2819,51 +2819,246 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading }) 
   };
 
   const handlePrintBill = (bill) => {
-    // Create a new window with the service bill details for printing
+    // Create professional service bill for printing
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     printWindow.document.write(`
+      <!DOCTYPE html>
       <html>
         <head>
           <title>Service Bill - ${bill.job_card_number || 'N/A'}</title>
           <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            .header { text-align: center; margin-bottom: 30px; }
-            .company-name { font-size: 24px; font-weight: bold; }
-            .bill-details { margin-bottom: 20px; }
-            .customer-details { margin-bottom: 20px; }
-            .service-details { margin-bottom: 20px; }
-            .amount-section { margin-top: 20px; font-size: 18px; font-weight: bold; }
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+              font-family: 'Arial', sans-serif; 
+              line-height: 1.4; 
+              color: #333;
+              background: white;
+            }
+            .bill-container { 
+              max-width: 210mm; 
+              margin: 0 auto; 
+              padding: 20mm;
+              background: white;
+            }
+            
+            /* Header Styles */
+            .bill-header { 
+              text-align: center; 
+              border-bottom: 3px solid #2563eb;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .company-name { 
+              font-size: 32px; 
+              font-weight: bold; 
+              color: #1e40af;
+              margin-bottom: 5px;
+            }
+            .company-tagline { 
+              font-size: 16px; 
+              color: #6b7280;
+              margin-bottom: 10px;
+            }
+            .company-address { 
+              font-size: 14px; 
+              color: #4b5563;
+              line-height: 1.5;
+            }
+            
+            /* Bill Title */
+            .bill-title { 
+              text-align: center;
+              background: linear-gradient(135deg, #2563eb, #1d4ed8);
+              color: white;
+              padding: 15px;
+              font-size: 24px;
+              font-weight: bold;
+              margin: 30px 0;
+              border-radius: 8px;
+            }
+            
+            /* Bill Info */
+            .bill-info { 
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 30px;
+              margin-bottom: 30px;
+              padding: 20px;
+              background: #f8fafc;
+              border-radius: 8px;
+              border: 1px solid #e2e8f0;
+            }
+            .info-section h4 { 
+              color: #1e40af;
+              font-size: 16px;
+              font-weight: bold;
+              margin-bottom: 10px;
+              border-bottom: 2px solid #3b82f6;
+              padding-bottom: 5px;
+            }
+            .info-row { 
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 8px;
+              padding: 5px 0;
+            }
+            .info-label { 
+              font-weight: 600;
+              color: #374151;
+            }
+            .info-value { 
+              color: #111827;
+            }
+            
+            /* Service Details Table */
+            .service-table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              margin: 30px 0;
+              box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            }
+            .service-table th { 
+              background: linear-gradient(135deg, #1e40af, #3b82f6);
+              color: white;
+              font-weight: bold;
+              padding: 15px;
+              text-align: left;
+              border: 1px solid #1e40af;
+            }
+            .service-table td { 
+              padding: 15px;
+              border: 1px solid #d1d5db;
+              background: #f8fafc;
+            }
+            
+            /* Amount Section */
+            .amount-section { 
+              margin-top: 30px;
+              padding: 25px;
+              background: linear-gradient(135deg, #059669, #10b981);
+              color: white;
+              border-radius: 12px;
+              text-align: center;
+            }
+            .amount-label { 
+              font-size: 18px;
+              margin-bottom: 10px;
+            }
+            .amount-value { 
+              font-size: 36px;
+              font-weight: bold;
+            }
+            
+            /* Status Badge */
+            .status-badge { 
+              display: inline-block;
+              padding: 8px 16px;
+              border-radius: 20px;
+              font-weight: bold;
+              font-size: 14px;
+              text-transform: uppercase;
+            }
+            .status-completed { background: #dcfce7; color: #166534; }
+            .status-pending { background: #fef3c7; color: #92400e; }
+            .status-in-progress { background: #dbeafe; color: #1e40af; }
+            
+            /* Footer */
+            .bill-footer { 
+              margin-top: 40px;
+              text-align: center;
+              color: #6b7280;
+              font-size: 14px;
+              border-top: 2px solid #e5e7eb;
+              padding-top: 20px;
+            }
+            
+            @media print {
+              body { -webkit-print-color-adjust: exact; }
+              .bill-container { padding: 10mm; }
+            }
           </style>
         </head>
         <body>
-          <div class="header">
-            <div class="company-name">M M MOTORS</div>
-            <div>Service Department</div>
-            <div>Bengaluru main road, behind Ruchi Bakery</div>
-            <div>Malur, Karnataka 563130</div>
-          </div>
-          
-          <div class="bill-details">
-            <h3>Service Bill</h3>
-            <p><strong>Job Card Number:</strong> ${bill.job_card_number || 'N/A'}</p>
-            <p><strong>Date:</strong> ${bill.created_at ? new Date(bill.created_at).toLocaleDateString('en-IN') : 'N/A'}</p>
-            <p><strong>Status:</strong> ${bill.status?.replace('_', ' ').toUpperCase() || 'PENDING'}</p>
-          </div>
-          
-          <div class="customer-details">
-            <h4>Customer Details:</h4>
-            <p><strong>Name:</strong> ${bill.customer_name || 'N/A'}</p>
-            <p><strong>Vehicle Reg No:</strong> ${bill.vehicle_reg_no || 'N/A'}</p>
-          </div>
-          
-          <div class="service-details">
-            <h4>Service Details:</h4>
-            <p><strong>Service Type:</strong> ${bill.service_type?.replace('_', ' ').toUpperCase() || 'N/A'}</p>
-            <p><strong>Description:</strong> ${bill.description || 'No description provided'}</p>
-          </div>
-          
-          <div class="amount-section">
-            <p><strong>Service Amount: ₹${bill.amount?.toLocaleString() || '0'}</strong></p>
+          <div class="bill-container">
+            <!-- Header -->
+            <div class="bill-header">
+              <div class="company-name">M M MOTORS</div>
+              <div class="company-tagline">Two Wheeler Service Excellence</div>
+              <div class="company-address">
+                Bengaluru main road, behind Ruchi Bakery<br>
+                Malur, Karnataka 563130<br>
+                Phone: +91 80 2345 6789 | Email: service@mmmotors.com
+              </div>
+            </div>
+            
+            <!-- Bill Title -->
+            <div class="bill-title">
+              SERVICE COMPLETION CERTIFICATE
+            </div>
+            
+            <!-- Bill Information -->
+            <div class="bill-info">
+              <div class="info-section">
+                <h4>Service Details</h4>
+                <div class="info-row">
+                  <span class="info-label">Job Card Number:</span>
+                  <span class="info-value">${bill.job_card_number || 'N/A'}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Service Date:</span>
+                  <span class="info-value">${bill.created_at ? new Date(bill.created_at).toLocaleDateString('en-IN') : 'N/A'}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Status:</span>
+                  <span class="info-value">
+                    <span class="status-badge status-${bill.status || 'pending'}">
+                      ${bill.status?.replace('_', ' ').toUpperCase() || 'PENDING'}
+                    </span>
+                  </span>
+                </div>
+              </div>
+              
+              <div class="info-section">
+                <h4>Customer Details</h4>
+                <div class="info-row">
+                  <span class="info-label">Name:</span>
+                  <span class="info-value">${bill.customer_name || 'N/A'}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Vehicle Reg No:</span>
+                  <span class="info-value">${bill.vehicle_reg_no || bill.vehicle_number || 'N/A'}</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Service Work Details -->
+            <table class="service-table">
+              <thead>
+                <tr>
+                  <th style="width: 25%;">Service Type</th>
+                  <th style="width: 75%;">Work Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>${bill.service_type?.replace('_', ' ').toUpperCase() || 'GENERAL SERVICE'}</strong></td>
+                  <td>${bill.description || 'No description provided'}</td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <!-- Amount Section -->
+            <div class="amount-section">
+              <div class="amount-label">Total Service Amount</div>
+              <div class="amount-value">₹${bill.amount?.toLocaleString() || '0'}</div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="bill-footer">
+              <p><strong>Thank you for choosing M M Motors!</strong></p>
+              <p>Service completed successfully. Vehicle is ready for pickup.</p>
+              <p>For any queries, please contact us at service@mmmotors.com or +91 80 2345 6789</p>
+            </div>
           </div>
         </body>
       </html>
