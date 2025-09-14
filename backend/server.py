@@ -261,6 +261,31 @@ class BackupStats(BaseModel):
     total_storage_used_mb: float
     oldest_backup_date: Optional[datetime]
 
+# Import Models
+class ImportJob(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    file_name: str
+    data_type: str  # customers, vehicles, spare_parts, services
+    status: str  # processing, completed, failed
+    total_records: int = 0
+    processed_records: int = 0
+    successful_records: int = 0
+    failed_records: int = 0
+    errors: List[Dict[str, Any]] = []
+    start_time: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    end_time: Optional[datetime] = None
+    created_by: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class ImportResult(BaseModel):
+    job_id: str
+    status: str
+    message: str
+    total_records: int = 0
+    successful_records: int = 0
+    failed_records: int = 0
+    errors: List[Dict[str, Any]] = []
+
 # Utility functions
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
