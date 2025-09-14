@@ -630,6 +630,37 @@ async def update_service_status(service_id: str, status_data: dict, current_user
     await db.services.update_one({"id": service_id}, {"$set": update_data})
     return {"message": "Service status updated successfully"}
 
+@api_router.get("/services/job-card/{job_card_number}")
+async def get_service_by_job_card(job_card_number: str, current_user: User = Depends(get_current_user)):
+    """Get service details by job card number for billing"""
+    service = await db.services.find_one({"job_card_number": job_card_number.upper()})
+    if not service:
+        raise HTTPException(status_code=404, detail="Service not found with this job card number")
+    
+    # Get customer details
+    customer = await db.customers.find_one({"id": service["customer_id"]})
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found for this service")
+    
+    # Prepare service details for billing
+    service_details = {
+        "service_id": service["id"],
+        "job_card_number": service["job_card_number"],
+        "customer_id": service["customer_id"],
+        "customer_name": customer["name"],
+        "customer_phone": customer["phone"],
+        "customer_address": customer["address"],
+        "vehicle_number": service["vehicle_number"],
+        "service_type": service["service_type"],
+        "description": service["description"],
+        "service_date": service["service_date"],
+        "amount": service["amount"],
+        "status": service["status"],
+        "created_at": service["created_at"]
+    }
+    
+    return service_details
+
 # Spare Parts endpoints
 @api_router.post("/spare-parts", response_model=SparePart)
 async def create_spare_part(spare_part_data: SparePartCreate, current_user: User = Depends(get_current_user)):
