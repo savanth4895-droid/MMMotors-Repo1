@@ -625,15 +625,15 @@ const CreateInvoice = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Customer Details */}
                 <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200 overflow-hidden">
-                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3">
-                    <h3 className="text-white font-bold flex items-center">
-                      <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-3 py-2">
+                    <h3 className="text-white font-bold flex items-center text-sm">
+                      <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                       </svg>
                       CUSTOMER DETAILS
                     </h3>
                   </div>
-                  <div className="p-4 space-y-3">
+                  <div className="p-3 space-y-2">
                     <div className="flex items-center border-b border-slate-200 pb-2">
                       <span className="text-slate-600 font-medium w-20">Name:</span>
                       <span className="text-slate-900 font-semibold">{generatedInvoice.customer.name}</span>
