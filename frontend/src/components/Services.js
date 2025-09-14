@@ -2483,10 +2483,13 @@ const ServicesBilling = () => {
           updateBillItem={updateBillItem}
           addBillItem={addBillItem}
           removeBillItem={removeBillItem}
+          addPredefinedItem={addPredefinedItem}
+          addServicePackage={addServicePackage}
           handleSaveBill={handleSaveBill}
           handlePrintBill={handlePrintBill}
           units={units}
           gstRates={gstRates}
+          serviceItems={serviceItems}
           jobCardNumber={jobCardNumber}
           setJobCardNumber={setJobCardNumber}
           serviceDetails={serviceDetails}
