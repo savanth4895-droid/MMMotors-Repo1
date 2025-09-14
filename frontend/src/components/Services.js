@@ -3122,7 +3122,7 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading }) 
               <div class="company-address">
                 Bengaluru main road, behind Ruchi Bakery<br>
                 Malur, Karnataka 563130<br>
-                Phone: +91 80 2345 6789 | Email: service@mmmotors.com
+                Phone: 7026263123 | Email: mmmotors3123@gmail.com
               </div>
             </div>
             
