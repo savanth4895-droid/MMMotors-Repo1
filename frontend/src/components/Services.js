@@ -2126,24 +2126,24 @@ const ServicesBilling = () => {
             .bill-header { 
               text-align: center; 
               border-bottom: 3px solid #2563eb;
-              padding-bottom: 20px;
-              margin-bottom: 30px;
+              padding-bottom: 15px;
+              margin-bottom: 20px;
             }
             .company-name { 
-              font-size: 32px; 
+              font-size: 28px; 
               font-weight: bold; 
               color: #1e40af;
-              margin-bottom: 5px;
+              margin-bottom: 4px;
             }
             .company-tagline { 
-              font-size: 16px; 
+              font-size: 14px; 
               color: #6b7280;
-              margin-bottom: 10px;
+              margin-bottom: 8px;
             }
             .company-address { 
-              font-size: 14px; 
+              font-size: 12px; 
               color: #4b5563;
-              line-height: 1.5;
+              line-height: 1.4;
             }
             
             /* Bill Title */
