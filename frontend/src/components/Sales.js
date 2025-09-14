@@ -700,27 +700,27 @@ const CreateInvoice = () => {
 
               {/* Insurance Details */}
               <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 overflow-hidden">
-                <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-4 py-3">
-                  <h3 className="text-white font-bold flex items-center">
-                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-3 py-2">
+                  <h3 className="text-white font-bold flex items-center text-sm">
+                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10V11.5H16.2V16H7.8V11.5H9.2V10C9.2,8.6 10.6,7 12,7M12,8.2C11.2,8.2 10.5,8.9 10.5,9.7V11.5H13.5V9.7C13.5,8.9 12.8,8.2 12,8.2Z"/>
                     </svg>
                     INSURANCE NOMINEE DETAILS
                   </h3>
                 </div>
-                <div className="p-4">
-                  <div className="grid grid-cols-3 gap-4">
+                <div className="p-3">
+                  <div className="grid grid-cols-3 gap-3">
                     <div className="text-center">
-                      <span className="text-purple-700 font-medium text-sm block">Nominee Name</span>
-                      <div className="text-slate-900 font-semibold mt-1">{generatedInvoice.insurance.nominee}</div>
+                      <span className="text-purple-700 font-medium text-xs block">Nominee Name</span>
+                      <div className="text-slate-900 font-semibold mt-1 text-sm">{generatedInvoice.insurance.nominee}</div>
                     </div>
                     <div className="text-center">
-                      <span className="text-purple-700 font-medium text-sm block">Relation</span>
-                      <div className="text-slate-900 font-semibold mt-1 capitalize">{generatedInvoice.insurance.relation}</div>
+                      <span className="text-purple-700 font-medium text-xs block">Relation</span>
+                      <div className="text-slate-900 font-semibold mt-1 capitalize text-sm">{generatedInvoice.insurance.relation}</div>
                     </div>
                     <div className="text-center">
-                      <span className="text-purple-700 font-medium text-sm block">Age</span>
-                      <div className="text-slate-900 font-semibold mt-1">{generatedInvoice.insurance.age} years</div>
+                      <span className="text-purple-700 font-medium text-xs block">Age</span>
+                      <div className="text-slate-900 font-semibold mt-1 text-sm">{generatedInvoice.insurance.age} years</div>
                     </div>
                   </div>
                 </div>
