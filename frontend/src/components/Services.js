@@ -26,7 +26,8 @@ import {
   Printer,
   Trash2,
   FileSearch,
-  X
+  X,
+  Car
 } from 'lucide-react';
 import { toast } from 'sonner';
 
