@@ -3018,54 +3018,58 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading }) 
             .bill-info { 
               display: grid;
               grid-template-columns: 1fr 1fr;
-              gap: 30px;
-              margin-bottom: 30px;
-              padding: 20px;
+              gap: 20px;
+              margin-bottom: 20px;
+              padding: 15px;
               background: #f8fafc;
               border-radius: 8px;
               border: 1px solid #e2e8f0;
             }
             .info-section h4 { 
               color: #1e40af;
-              font-size: 16px;
+              font-size: 14px;
               font-weight: bold;
-              margin-bottom: 10px;
+              margin-bottom: 8px;
               border-bottom: 2px solid #3b82f6;
-              padding-bottom: 5px;
+              padding-bottom: 4px;
             }
             .info-row { 
               display: flex;
               justify-content: space-between;
-              margin-bottom: 8px;
-              padding: 5px 0;
+              margin-bottom: 6px;
+              padding: 3px 0;
             }
             .info-label { 
               font-weight: 600;
               color: #374151;
+              font-size: 12px;
             }
             .info-value { 
               color: #111827;
+              font-size: 12px;
             }
             
             /* Service Details Table */
             .service-table { 
               width: 100%; 
               border-collapse: collapse; 
-              margin: 30px 0;
+              margin: 20px 0;
               box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             }
             .service-table th { 
               background: linear-gradient(135deg, #1e40af, #3b82f6);
               color: white;
               font-weight: bold;
-              padding: 15px;
+              padding: 12px;
               text-align: left;
               border: 1px solid #1e40af;
+              font-size: 12px;
             }
             .service-table td { 
-              padding: 15px;
+              padding: 12px;
               border: 1px solid #d1d5db;
               background: #f8fafc;
+              font-size: 12px;
             }
             
             /* Amount Section */
