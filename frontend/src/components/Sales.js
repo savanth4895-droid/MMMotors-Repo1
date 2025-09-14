@@ -606,12 +606,12 @@ const CreateInvoice = () => {
                       <h2 className="text-base font-bold text-white mb-2">SALES INVOICE</h2>
                       <div className="space-y-1 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-blue-100">Invoice No:</span>
-                          <span className="font-bold text-white">{generatedInvoice.invoice_number}</span>
+                          <span className="text-blue-100 text-xs">Invoice No:</span>
+                          <span className="font-bold text-white text-xs">{generatedInvoice.invoice_number}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-blue-100">Date:</span>
-                          <span className="font-bold text-white">{new Date(generatedInvoice.date).toLocaleDateString('en-IN')}</span>
+                          <span className="text-blue-100 text-xs">Date:</span>
+                          <span className="font-bold text-white text-xs">{new Date(generatedInvoice.date).toLocaleDateString('en-IN')}</span>
                         </div>
                       </div>
                     </div>
