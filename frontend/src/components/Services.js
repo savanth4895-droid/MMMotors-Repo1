@@ -2083,6 +2083,61 @@ const CreateBillContent = ({
           <CardTitle>Service Bill Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Job Card Lookup */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+              <FileSearch className="w-5 h-5" />
+              Job Card Lookup
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="relative">
+                <Label htmlFor="job_card">Job Card Number</Label>
+                <Input
+                  id="job_card"
+                  value={jobCardNumber}
+                  onChange={handleJobCardSearch}
+                  onBlur={handleJobCardBlur}
+                  placeholder="Enter job card number (e.g., JOB-000001)"
+                  className="mt-1"
+                />
+                {fetchingService && (
+                  <div className="absolute right-3 top-8">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  </div>
+                )}
+              </div>
+              {serviceDetails && (
+                <div className="space-y-2">
+                  <Label>Service Information</Label>
+                  <div className="bg-white rounded border p-3 text-sm">
+                    <p><strong>Customer:</strong> {serviceDetails.customer_name}</p>
+                    <p><strong>Vehicle:</strong> {serviceDetails.vehicle_number}</p>
+                    <p><strong>Service:</strong> {serviceDetails.service_type.replace('_', ' ')}</p>
+                    <p><strong>Amount:</strong> ₹{serviceDetails.amount}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {serviceDetails && (
+              <div className="mt-3 flex justify-between items-center">
+                <div className="flex items-center gap-2 text-green-700">
+                  <CheckCircle className="w-4 h-4" />
+                  <span className="text-sm font-medium">Service details loaded successfully</span>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={clearServiceDetails}
+                  className="text-red-600 border-red-300 hover:bg-red-50"
+                >
+                  <X className="w-4 h-4 mr-1" />
+                  Clear
+                </Button>
+              </div>
+            )}
+          </div>
+
           {/* Bill Header */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
