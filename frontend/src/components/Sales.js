@@ -584,9 +584,9 @@ const CreateInvoice = () => {
               <div className="header bg-gradient-to-r from-blue-800 to-blue-600 text-white p-4 rounded-t-lg">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h1 className="text-3xl font-bold tracking-wide">M M MOTORS</h1>
-                    <p className="text-blue-100 text-sm mt-1 font-medium">Premium Two Wheeler Sales & Service</p>
-                    <div className="mt-3 text-blue-100 text-sm space-y-1">
+                    <h1 className="text-2xl font-bold tracking-wide">M M MOTORS</h1>
+                    <p className="text-blue-100 text-xs mt-1 font-medium">Premium Two Wheeler Sales & Service</p>
+                    <div className="mt-2 text-blue-100 text-xs space-y-1">
                       <p className="flex items-center">
                         <span className="w-2 h-2 bg-blue-300 rounded-full mr-2"></span>
                         Bengaluru main road, behind Ruchi Bakery
