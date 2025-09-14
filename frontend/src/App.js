@@ -10,6 +10,7 @@ import Services from './components/Services';
 import VehicleStock from './components/VehicleStock';
 import SpareParts from './components/SpareParts';
 import BackupManagement from './components/BackupManagement';
+import DataImport from './components/DataImport';
 import Layout from './components/Layout';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
