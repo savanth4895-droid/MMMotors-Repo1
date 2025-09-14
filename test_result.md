@@ -231,6 +231,9 @@ frontend:
       - working: "needs_testing"
       - agent: "main"
       - comment: "Applied same changes as Sales invoice to Service Bills: 1) Updated contact details from service@mmmotors.com and +91 80 2345 6789 to mmmotors3123@gmail.com and 7026263123 in both GST SERVICE BILL and SERVICE COMPLETION CERTIFICATE sections. 2) Optimized for A4 printing by reducing container padding from 20mm to 15mm, bill header padding/margins, font sizes (company name 32px→28px, tagline 16px→14px, address 14px→12px), bill title (24px→20px, margin 30px→20px), bill info section spacing and font sizes, table margins and font sizes, and print padding from 10mm to 8mm. Changes applied to both ServicesBilling print function and ViewBillsContent print function."
+      - working: "testing_in_progress"
+      - agent: "testing"
+      - comment: "TESTING IN PROGRESS: Starting comprehensive testing of Service Bills functionality to verify contact details update and A4 optimization changes. Will test: 1) Login with admin/admin123 and navigate to Services > Service Bills, 2) View Bills tab functionality and existing service bills, 3) Print functionality of service bills to verify updated contact details (mmmotors3123@gmail.com and 7026263123), 4) A4 optimization with reduced spacing and font sizes, 5) GST Service Bill creation and print preview functionality. Testing both ViewBillsContent print function and ServicesBilling print function."
 
   - task: "Sales Invoice A4 Optimization Completion"
     implemented: false
