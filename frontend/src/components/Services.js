@@ -2870,12 +2870,41 @@ const CreateBillContent = ({
             </table>
           </div>
 
-          {/* Add Item Button */}
-          <div className="no-print">
-            <Button onClick={addBillItem} variant="outline" className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              Add Item
-            </Button>
+          {/* Quick Add Service Items */}
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 mb-4 no-print">
+            <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
+              <Package className="w-5 h-5" />
+              Quick Add Service Items
+            </h4>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-3">
+              {serviceItems.slice(0, 12).map((item, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  size="sm"
+                  className="justify-start text-xs p-2 h-auto min-h-[40px] hover:bg-green-100 border-green-200"
+                  onClick={() => addPredefinedItem(item)}
+                >
+                  <div className="text-left">
+                    <div className="font-medium">{item.name}</div>
+                    <div className="text-green-600">₹{item.rate}</div>
+                  </div>
+                </Button>
+              ))}
+            </div>
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-green-700">Click any item to add it to the bill</p>
+              <div className="flex gap-2">
+                <Button onClick={addBillItem} variant="outline" size="sm" className="flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  Add Custom Item
+                </Button>
+                <Button onClick={addServicePackage} variant="outline" size="sm" className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100">
+                  <Wrench className="w-4 h-4" />
+                  Add Service Package
+                </Button>
+              </div>
+            </div>
           </div>
 
           {/* Bill Summary */}
