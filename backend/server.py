@@ -776,6 +776,353 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
         "low_stock_parts": low_stock_parts
     }
 
+# Import/Export endpoints
+@api_router.post("/import/upload", response_model=ImportResult)
+async def upload_import_file(
+    data_type: str,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Upload and process import file"""
+    
+    # Validate data type
+    valid_types = ["customers", "vehicles", "spare_parts", "services"]
+    if data_type not in valid_types:
+        raise HTTPException(status_code=400, detail=f"Invalid data type. Must be one of: {valid_types}")
+    
+    # Validate file format
+    if not file.filename or not (file.filename.endswith('.csv') or file.filename.endswith('.xlsx')):
+        raise HTTPException(status_code=400, detail="Only CSV and Excel files are supported")
+    
+    # Create import job
+    import_job = ImportJob(
+        file_name=file.filename,
+        data_type=data_type,
+        status="processing",
+        created_by=current_user.id
+    )
+    
+    try:
+        # Read file content
+        file_content = await file.read()
+        
+        # Parse file based on type
+        if file.filename.endswith('.csv'):
+            data = await parse_csv_file(file_content)
+        else:
+            data = await parse_excel_file(file_content)
+        
+        import_job.total_records = len(data)
+        
+        # Process import based on data type
+        if data_type == "customers":
+            result = await import_customers_data(data, import_job, current_user.id)
+        elif data_type == "vehicles":
+            result = await import_vehicles_data(data, import_job, current_user.id)
+        elif data_type == "spare_parts":
+            result = await import_spare_parts_data(data, import_job, current_user.id)
+        elif data_type == "services":
+            result = await import_services_data(data, import_job, current_user.id)
+        
+        import_job.status = "completed"
+        import_job.end_time = datetime.now(timezone.utc)
+        
+    except Exception as e:
+        import_job.status = "failed"
+        import_job.end_time = datetime.now(timezone.utc)
+        import_job.errors.append({"error": str(e), "row": 0})
+        result = ImportResult(
+            job_id=import_job.id,
+            status="failed",
+            message=str(e)
+        )
+    
+    # Save import job to database
+    await db.import_jobs.insert_one(import_job.dict())
+    
+    return result
+
+@api_router.get("/import/jobs", response_model=List[ImportJob])
+async def get_import_jobs(
+    skip: int = 0,
+    limit: int = 50,
+    current_user: User = Depends(get_current_user)
+):
+    """Get import job history"""
+    jobs = await db.import_jobs.find().skip(skip).limit(limit).sort("created_at", -1).to_list(length=None)
+    return [ImportJob(**job) for job in jobs]
+
+@api_router.get("/import/template/{data_type}")
+async def download_import_template(
+    data_type: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Download CSV template for import"""
+    from fastapi.responses import Response
+    
+    templates = {
+        "customers": "name,phone,email,address\nJohn Doe,9876543210,john@example.com,\"123 Main St, Bangalore\"\nJane Smith,9876543211,jane@example.com,\"456 Oak Ave, Mysore\"",
+        "vehicles": "brand,model,chassis_no,engine_no,color,key_no,inbound_location,page_number\nTVS,Apache RTR 160,ABC123456789,ENG987654321,Red,KEY001,Warehouse A,Page 1\nBAJAJ,Pulsar 150,DEF123456789,ENG987654322,Blue,KEY002,Warehouse B,Page 2",
+        "spare_parts": "name,part_number,brand,quantity,unit,unit_price,hsn_sac,gst_percentage,supplier\nBrake Pad,BP001,TVS,50,Nos,250.00,87084090,18.0,ABC Supplies\nEngine Oil,EO001,CASTROL,25,Ltr,450.00,27101981,28.0,XYZ Motors",
+        "services": "customer_name,customer_phone,vehicle_number,service_type,description,amount\nJohn Doe,9876543210,KA01AB1234,periodic_service,General servicing,1500.00\nJane Smith,9876543211,KA02CD5678,repair,Brake repair,800.00"
+    }
+    
+    if data_type not in templates:
+        raise HTTPException(status_code=404, detail="Template not found")
+    
+    return Response(
+        content=templates[data_type],
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={data_type}_template.csv"}
+    )
+
+# Helper functions for file parsing and data import
+async def parse_csv_file(file_content: bytes) -> List[Dict]:
+    """Parse CSV file content"""
+    content = file_content.decode('utf-8')
+    csv_reader = csv.DictReader(io.StringIO(content))
+    return list(csv_reader)
+
+async def parse_excel_file(file_content: bytes) -> List[Dict]:
+    """Parse Excel file content"""
+    df = pd.read_excel(io.BytesIO(file_content))
+    return df.to_dict('records')
+
+async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id: str) -> ImportResult:
+    """Import customers data"""
+    successful = 0
+    failed = 0
+    errors = []
+    
+    for idx, row in enumerate(data):
+        try:
+            # Validate required fields
+            if not row.get('name') or not row.get('phone'):
+                raise ValueError("Name and phone are required")
+            
+            customer_data = CustomerCreate(
+                name=row['name'].strip(),
+                phone=row['phone'].strip(),
+                email=row.get('email', '').strip() or None,
+                address=row.get('address', '').strip()
+            )
+            
+            customer = Customer(**customer_data.dict())
+            await db.customers.insert_one(customer.dict())
+            successful += 1
+            
+        except Exception as e:
+            failed += 1
+            errors.append({
+                "row": idx + 2,  # +2 because CSV has header and is 1-indexed
+                "data": row,
+                "error": str(e)
+            })
+    
+    import_job.successful_records = successful
+    import_job.failed_records = failed
+    import_job.processed_records = successful + failed
+    import_job.errors = errors
+    
+    return ImportResult(
+        job_id=import_job.id,
+        status="completed",
+        message=f"Import completed: {successful} successful, {failed} failed",
+        total_records=len(data),
+        successful_records=successful,
+        failed_records=failed,
+        errors=errors
+    )
+
+async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id: str) -> ImportResult:
+    """Import vehicles data"""
+    successful = 0
+    failed = 0
+    errors = []
+    
+    valid_brands = ["TVS", "BAJAJ", "HERO", "HONDA", "TRIUMPH", "KTM", "SUZUKI", "APRILIA"]
+    
+    for idx, row in enumerate(data):
+        try:
+            # Validate required fields
+            required_fields = ['brand', 'model', 'chassis_no', 'engine_no', 'color', 'key_no', 'inbound_location']
+            for field in required_fields:
+                if not row.get(field):
+                    raise ValueError(f"{field} is required")
+            
+            # Validate brand
+            brand = row['brand'].upper().strip()
+            if brand not in valid_brands:
+                raise ValueError(f"Invalid brand. Must be one of: {valid_brands}")
+            
+            vehicle_data = VehicleCreate(
+                brand=brand,
+                model=row['model'].strip(),
+                chassis_no=row['chassis_no'].strip(),
+                engine_no=row['engine_no'].strip(),
+                color=row['color'].strip(),
+                key_no=row['key_no'].strip(),
+                inbound_location=row['inbound_location'].strip(),
+                page_number=row.get('page_number', '').strip() or None
+            )
+            
+            vehicle = Vehicle(**vehicle_data.dict())
+            await db.vehicles.insert_one(vehicle.dict())
+            successful += 1
+            
+        except Exception as e:
+            failed += 1
+            errors.append({
+                "row": idx + 2,
+                "data": row,
+                "error": str(e)
+            })
+    
+    import_job.successful_records = successful
+    import_job.failed_records = failed
+    import_job.processed_records = successful + failed
+    import_job.errors = errors
+    
+    return ImportResult(
+        job_id=import_job.id,
+        status="completed",
+        message=f"Import completed: {successful} successful, {failed} failed",
+        total_records=len(data),
+        successful_records=successful,
+        failed_records=failed,
+        errors=errors
+    )
+
+async def import_spare_parts_data(data: List[Dict], import_job: ImportJob, user_id: str) -> ImportResult:
+    """Import spare parts data"""
+    successful = 0
+    failed = 0
+    errors = []
+    
+    for idx, row in enumerate(data):
+        try:
+            # Validate required fields
+            required_fields = ['name', 'part_number', 'brand', 'quantity', 'unit_price']
+            for field in required_fields:
+                if not row.get(field):
+                    raise ValueError(f"{field} is required")
+            
+            spare_part_data = SparePartCreate(
+                name=row['name'].strip(),
+                part_number=row['part_number'].strip(),
+                brand=row['brand'].strip(),
+                quantity=int(row['quantity']),
+                unit=row.get('unit', 'Nos').strip(),
+                unit_price=float(row['unit_price']),
+                hsn_sac=row.get('hsn_sac', '').strip() or None,
+                gst_percentage=float(row.get('gst_percentage', 18.0)),
+                compatible_models=row.get('compatible_models', '').strip() or None,
+                low_stock_threshold=int(row.get('low_stock_threshold', 5)),
+                supplier=row.get('supplier', '').strip() or None
+            )
+            
+            spare_part = SparePart(**spare_part_data.dict())
+            await db.spare_parts.insert_one(spare_part.dict())
+            successful += 1
+            
+        except Exception as e:
+            failed += 1
+            errors.append({
+                "row": idx + 2,
+                "data": row,
+                "error": str(e)
+            })
+    
+    import_job.successful_records = successful
+    import_job.failed_records = failed
+    import_job.processed_records = successful + failed
+    import_job.errors = errors
+    
+    return ImportResult(
+        job_id=import_job.id,
+        status="completed",
+        message=f"Import completed: {successful} successful, {failed} failed",
+        total_records=len(data),
+        successful_records=successful,
+        failed_records=failed,
+        errors=errors
+    )
+
+async def import_services_data(data: List[Dict], import_job: ImportJob, user_id: str) -> ImportResult:
+    """Import services data"""
+    successful = 0
+    failed = 0
+    errors = []
+    
+    for idx, row in enumerate(data):
+        try:
+            # Validate required fields
+            required_fields = ['customer_name', 'customer_phone', 'vehicle_number', 'service_type', 'amount']
+            for field in required_fields:
+                if not row.get(field):
+                    raise ValueError(f"{field} is required")
+            
+            # Find or create customer
+            customer_name = row['customer_name'].strip()
+            customer_phone = row['customer_phone'].strip()
+            
+            existing_customer = await db.customers.find_one({"phone": customer_phone})
+            if existing_customer:
+                customer_id = existing_customer['id']
+            else:
+                # Create new customer
+                customer_data = CustomerCreate(
+                    name=customer_name,
+                    phone=customer_phone,
+                    address="Imported via service data"
+                )
+                customer = Customer(**customer_data.dict())
+                await db.customers.insert_one(customer.dict())
+                customer_id = customer.id
+            
+            service_data = ServiceCreate(
+                customer_id=customer_id,
+                vehicle_number=row['vehicle_number'].strip(),
+                service_type=row['service_type'].strip(),
+                description=row.get('description', '').strip(),
+                amount=float(row['amount'])
+            )
+            
+            # Generate job card number
+            count = await db.services.count_documents({})
+            job_card_number = f"JOB-{count + 1:06d}"
+            
+            service_dict = service_data.dict()
+            service_dict['job_card_number'] = job_card_number
+            service_dict['created_by'] = user_id
+            service = Service(**service_dict)
+            
+            await db.services.insert_one(service.dict())
+            successful += 1
+            
+        except Exception as e:
+            failed += 1
+            errors.append({
+                "row": idx + 2,
+                "data": row,
+                "error": str(e)
+            })
+    
+    import_job.successful_records = successful
+    import_job.failed_records = failed
+    import_job.processed_records = successful + failed
+    import_job.errors = errors
+    
+    return ImportResult(
+        job_id=import_job.id,
+        status="completed",
+        message=f"Import completed: {successful} successful, {failed} failed",
+        total_records=len(data),
+        successful_records=successful,
+        failed_records=failed,
+        errors=errors
+    )
+
 # Include the router in the main app
 # Backup Service Class
 class BackupService:
