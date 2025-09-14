@@ -597,7 +597,7 @@ const CreateInvoice = () => {
                       </p>
                       <p className="flex items-center">
                         <span className="w-2 h-2 bg-blue-300 rounded-full mr-2"></span>
-                        Phone: +91 80 2345 6789 | Email: sales@mmmotors.com
+                        Phone: 7026263123 | Email: mmmotors3123@gmail.com
                       </p>
                     </div>
                   </div>
