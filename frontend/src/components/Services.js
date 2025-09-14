@@ -1895,6 +1895,66 @@ const ServicesBilling = () => {
     }]);
   };
 
+  const addPredefinedItem = (item) => {
+    const newItem = {
+      sl_no: billItems.length + 1,
+      description: item.name,
+      hsn_sac: item.hsn_sac,
+      qty: 1,
+      unit: item.unit,
+      rate: item.rate,
+      labor: 0,
+      disc_percent: 0,
+      gst_percent: item.gst_percent,
+      cgst_amount: 0,
+      sgst_amount: 0,
+      total_tax: 0,
+      amount: 0
+    };
+    
+    // Calculate amounts for the new item
+    const calculatedAmounts = calculateItemAmounts(newItem);
+    const finalItem = { ...newItem, ...calculatedAmounts };
+    
+    setBillItems([...billItems, finalItem]);
+    toast.success(`Added ${item.name} to bill`);
+  };
+
+  const addServicePackage = () => {
+    const servicePackageItems = [
+      { name: 'General Service Labor', hsn_sac: '99820', unit: 'Hrs', rate: 300, gst_percent: 18 },
+      { name: 'Engine Oil (20W-40)', hsn_sac: '27101981', unit: 'Ltrs', rate: 450, gst_percent: 28 },
+      { name: 'Oil Filter', hsn_sac: '84219990', unit: 'Nos', rate: 180, gst_percent: 28 },
+      { name: 'Air Filter Cleaning', hsn_sac: '99820', unit: 'Nos', rate: 50, gst_percent: 18 },
+      { name: 'Chain Lubrication', hsn_sac: '99820', unit: 'Nos', rate: 100, gst_percent: 18 }
+    ];
+
+    const newItems = servicePackageItems.map((item, index) => {
+      const newItem = {
+        sl_no: billItems.length + index + 1,
+        description: item.name,
+        hsn_sac: item.hsn_sac,
+        qty: 1,
+        unit: item.unit,
+        rate: item.rate,
+        labor: 0,
+        disc_percent: 0,
+        gst_percent: item.gst_percent,
+        cgst_amount: 0,
+        sgst_amount: 0,
+        total_tax: 0,
+        amount: 0
+      };
+      
+      // Calculate amounts for the new item
+      const calculatedAmounts = calculateItemAmounts(newItem);
+      return { ...newItem, ...calculatedAmounts };
+    });
+    
+    setBillItems([...billItems, ...newItems]);
+    toast.success('Added complete service package to bill');
+  };
+
   const calculateItemAmounts = (item) => {
     const baseAmount = (item.qty * item.rate) + item.labor;
     const discountAmount = (baseAmount * item.disc_percent) / 100;
