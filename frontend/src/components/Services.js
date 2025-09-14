@@ -1690,6 +1690,9 @@ const ServicesBilling = () => {
   const [serviceBills, setServiceBills] = useState([]);
   const [filteredBills, setFilteredBills] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [jobCardNumber, setJobCardNumber] = useState('');
+  const [serviceDetails, setServiceDetails] = useState(null);
+  const [fetchingService, setFetchingService] = useState(false);
   const [billItems, setBillItems] = useState([{
     sl_no: 1,
     description: '',
