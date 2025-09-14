@@ -1765,6 +1765,90 @@ const ServicesBilling = () => {
     setFilteredBills(filtered);
   };
 
+  const fetchServiceByJobCard = async (jobCard) => {
+    if (!jobCard.trim()) {
+      setServiceDetails(null);
+      return;
+    }
+
+    setFetchingService(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/services/job-card/${jobCard}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const service = response.data;
+      setServiceDetails(service);
+      
+      // Auto-populate customer selection
+      setSelectedCustomer(service.customer_id);
+      
+      // Auto-populate first bill item with service details
+      const serviceItem = {
+        sl_no: 1,
+        description: `${service.service_type.replace('_', ' ').toUpperCase()} - ${service.description}`,
+        hsn_sac: service.service_type === 'repair' ? '99800' : '99820', // Service HSN codes
+        qty: 1,
+        unit: 'Nos',
+        rate: service.amount,
+        labor: 0,
+        disc_percent: 0,
+        gst_percent: 18,
+        cgst_amount: 0,
+        sgst_amount: 0,
+        total_tax: 0,
+        amount: 0
+      };
+      
+      // Calculate amounts for the auto-populated item
+      const calculatedAmounts = calculateItemAmounts(serviceItem);
+      const updatedItem = { ...serviceItem, ...calculatedAmounts };
+      
+      setBillItems([updatedItem]);
+      
+      toast.success(`Service details loaded for Job Card: ${jobCard}`);
+      
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Service not found with this job card number');
+      setServiceDetails(null);
+    } finally {
+      setFetchingService(false);
+    }
+  };
+
+  const handleJobCardSearch = (e) => {
+    const jobCard = e.target.value.toUpperCase();
+    setJobCardNumber(jobCard);
+  };
+
+  const handleJobCardBlur = () => {
+    if (jobCardNumber) {
+      fetchServiceByJobCard(jobCardNumber);
+    }
+  };
+
+  const clearServiceDetails = () => {
+    setJobCardNumber('');
+    setServiceDetails(null);
+    setSelectedCustomer('');
+    setBillItems([{
+      sl_no: 1,
+      description: '',
+      hsn_sac: '',
+      qty: 1,
+      unit: 'Nos',
+      rate: 0,
+      labor: 0,
+      disc_percent: 0,
+      gst_percent: 18,
+      cgst_amount: 0,
+      sgst_amount: 0,
+      total_tax: 0,
+      amount: 0
+    }]);
+  };
+
   const calculateItemAmounts = (item) => {
     const baseAmount = (item.qty * item.rate) + item.labor;
     const discountAmount = (baseAmount * item.disc_percent) / 100;
