@@ -577,11 +577,11 @@ const CreateInvoice = () => {
           </div>
         </div>
 
-        <Card id="invoice-preview" className="print-full-width shadow-2xl">
+        <Card id="invoice-preview" className="print-full-width shadow-2xl max-w-[21cm] mx-auto">
           <CardContent className="p-0">
-            <div className="invoice-container max-w-[21cm] mx-auto bg-white">
+            <div className="invoice-container bg-white text-sm">
               {/* Professional Header */}
-              <div className="header bg-gradient-to-r from-blue-800 to-blue-600 text-white p-6 rounded-t-lg">
+              <div className="header bg-gradient-to-r from-blue-800 to-blue-600 text-white p-4 rounded-t-lg">
                 <div className="flex justify-between items-start">
                   <div>
                     <h1 className="text-3xl font-bold tracking-wide">M M MOTORS</h1>
