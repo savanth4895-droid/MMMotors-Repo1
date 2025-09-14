@@ -222,11 +222,11 @@ backend:
 frontend:
   - task: "Service Bills Contact Details Update and A4 Optimization"
     implemented: true
-    working: "needs_testing"
+    working: true
     file: "/app/frontend/src/components/Services.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "needs_testing"
       - agent: "main"
