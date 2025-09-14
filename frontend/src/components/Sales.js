@@ -613,10 +613,6 @@ const CreateInvoice = () => {
                           <span className="text-blue-100">Date:</span>
                           <span className="font-bold text-white">{new Date(generatedInvoice.date).toLocaleDateString('en-IN')}</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-blue-100">GST No:</span>
-                          <span className="font-bold text-white">29XXXXX1234X1ZY</span>
-                        </div>
                       </div>
                     </div>
                   </div>
