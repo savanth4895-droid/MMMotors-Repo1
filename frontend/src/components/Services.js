@@ -2063,7 +2063,9 @@ const CreateBillContent = ({
   customers, billItems, setBillItems, selectedCustomer, setSelectedCustomer,
   billNumber, setBillNumber, billDate, setBillDate, loading,
   calculateItemAmounts, calculateTotals, updateBillItem, addBillItem, removeBillItem,
-  handleSaveBill, handlePrintBill, units, gstRates
+  handleSaveBill, handlePrintBill, units, gstRates,
+  jobCardNumber, setJobCardNumber, serviceDetails, fetchingService,
+  handleJobCardSearch, handleJobCardBlur, clearServiceDetails
 }) => {
   const totals = calculateTotals();
 
