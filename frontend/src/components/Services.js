@@ -2094,56 +2094,158 @@ const CreateBillContent = ({
           <CardTitle>Service Bill Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Job Card Lookup */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
-              <FileSearch className="w-5 h-5" />
-              Job Card Lookup
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="relative">
-                <Label htmlFor="job_card">Job Card Number</Label>
-                <Input
-                  id="job_card"
-                  value={jobCardNumber}
-                  onChange={handleJobCardSearch}
-                  onBlur={handleJobCardBlur}
-                  placeholder="Enter job card number (e.g., JOB-000001)"
-                  className="mt-1"
-                />
-                {fetchingService && (
-                  <div className="absolute right-3 top-8">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                  </div>
-                )}
+          {/* Job Card Lookup - Professional Design */}
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200/60 rounded-xl p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-600 rounded-lg shadow-sm">
+                  <FileSearch className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-blue-900 text-lg">Job Card Lookup</h4>
+                  <p className="text-blue-600/80 text-sm">Auto-populate service details from existing job cards</p>
+                </div>
               </div>
               {serviceDetails && (
-                <div className="space-y-2">
-                  <Label>Service Information</Label>
-                  <div className="bg-white rounded border p-3 text-sm">
-                    <p><strong>Customer:</strong> {serviceDetails.customer_name}</p>
-                    <p><strong>Vehicle:</strong> {serviceDetails.vehicle_number}</p>
-                    <p><strong>Service:</strong> {serviceDetails.service_type.replace('_', ' ')}</p>
-                    <p><strong>Amount:</strong> ₹{serviceDetails.amount}</p>
-                  </div>
+                <div className="flex items-center gap-2 bg-green-100 px-3 py-1.5 rounded-full">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-green-800 text-xs font-medium">ACTIVE</span>
                 </div>
               )}
             </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Search Input Section */}
+              <div className="lg:col-span-1">
+                <div className="relative">
+                  <Label htmlFor="job_card" className="text-slate-700 font-semibold mb-2 block">
+                    Job Card Number
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="job_card"
+                      value={jobCardNumber}
+                      onChange={handleJobCardSearch}
+                      onBlur={handleJobCardBlur}
+                      placeholder="JOB-000001"
+                      className="pl-4 pr-10 py-3 border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-lg text-slate-800 font-medium"
+                    />
+                    {fetchingService ? (
+                      <div className="absolute right-3 top-3">
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-200 border-t-blue-600"></div>
+                      </div>
+                    ) : (
+                      <div className="absolute right-3 top-3">
+                        <FileSearch className="w-5 h-5 text-slate-400" />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">Enter job card to auto-fill service details</p>
+                </div>
+              </div>
+
+              {/* Service Details Section */}
+              <div className="lg:col-span-2">
+                {serviceDetails ? (
+                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-3">
+                      <h5 className="font-bold text-white flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4" />
+                        Service Details Retrieved
+                      </h5>
+                    </div>
+                    <div className="p-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                          <div className="flex items-start gap-3">
+                            <div className="p-1.5 bg-blue-100 rounded-lg">
+                              <User className="w-4 h-4 text-blue-600" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Customer</p>
+                              <p className="font-semibold text-slate-800">{serviceDetails.customer_name}</p>
+                              <p className="text-xs text-slate-500">{serviceDetails.customer_phone}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-3">
+                            <div className="p-1.5 bg-purple-100 rounded-lg">
+                              <Car className="w-4 h-4 text-purple-600" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Vehicle</p>
+                              <p className="font-semibold text-slate-800">{serviceDetails.vehicle_number}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="flex items-start gap-3">
+                            <div className="p-1.5 bg-orange-100 rounded-lg">
+                              <Wrench className="w-4 h-4 text-orange-600" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Service Type</p>
+                              <p className="font-semibold text-slate-800 capitalize">
+                                {serviceDetails.service_type.replace('_', ' ')}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-3">
+                            <div className="p-1.5 bg-green-100 rounded-lg">
+                              <IndianRupee className="w-4 h-4 text-green-600" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Amount</p>
+                              <p className="font-bold text-green-600 text-lg">₹{serviceDetails.amount.toLocaleString()}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {serviceDetails.description && (
+                        <div className="mt-4 pt-4 border-t border-slate-100">
+                          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Description</p>
+                          <p className="text-sm text-slate-700 bg-slate-50 rounded-lg p-3">
+                            {serviceDetails.description}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-white/50 rounded-xl border-2 border-dashed border-slate-300 p-8 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="p-3 bg-slate-100 rounded-full">
+                        <FileSearch className="w-8 h-8 text-slate-400" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-600">No service selected</p>
+                        <p className="text-sm text-slate-500">Enter a job card number to view service details</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
             
             {serviceDetails && (
-              <div className="mt-3 flex justify-between items-center">
-                <div className="flex items-center gap-2 text-green-700">
-                  <CheckCircle className="w-4 h-4" />
-                  <span className="text-sm font-medium">Service details loaded successfully</span>
+              <div className="mt-6 flex justify-between items-center pt-4 border-t border-blue-200/50">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 bg-green-100 px-3 py-2 rounded-lg">
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <span className="text-sm font-semibold text-green-800">Service loaded successfully</span>
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    Job Card: <span className="font-mono font-medium">{serviceDetails.job_card_number}</span>
+                  </div>
                 </div>
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={clearServiceDetails}
-                  className="text-red-600 border-red-300 hover:bg-red-50"
+                  className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors"
                 >
-                  <X className="w-4 h-4 mr-1" />
-                  Clear
+                  <X className="w-4 h-4 mr-2" />
+                  Clear Selection
                 </Button>
               </div>
             )}
