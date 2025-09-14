@@ -27,7 +27,9 @@ import {
   Trash2,
   FileSearch,
   X,
-  Car
+  Car,
+  User,
+  IndianRupee
 } from 'lucide-react';
 import { toast } from 'sonner';
 
