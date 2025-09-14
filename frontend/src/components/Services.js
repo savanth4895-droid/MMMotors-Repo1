@@ -1721,6 +1721,46 @@ const ServicesBilling = () => {
   const units = ['Nos', 'Kgs', 'Ltrs', 'Hrs', 'Days', 'Pcs'];
   const gstRates = [0, 5, 12, 18, 28];
 
+  // Predefined service items commonly used in two-wheeler servicing
+  const serviceItems = [
+    // Engine Oil & Filters
+    { name: 'Engine Oil (20W-40)', hsn_sac: '27101981', unit: 'Ltrs', rate: 450, gst_percent: 28 },
+    { name: 'Engine Oil (10W-30)', hsn_sac: '27101981', unit: 'Ltrs', rate: 520, gst_percent: 28 },
+    { name: 'Oil Filter', hsn_sac: '84219990', unit: 'Nos', rate: 180, gst_percent: 28 },
+    { name: 'Air Filter', hsn_sac: '84213910', unit: 'Nos', rate: 250, gst_percent: 28 },
+    
+    // Spark Plugs & Electrical
+    { name: 'Spark Plug (Standard)', hsn_sac: '85111000', unit: 'Nos', rate: 120, gst_percent: 18 },
+    { name: 'Spark Plug (Iridium)', hsn_sac: '85111000', unit: 'Nos', rate: 280, gst_percent: 18 },
+    { name: 'Battery (12V)', hsn_sac: '85070020', unit: 'Nos', rate: 1850, gst_percent: 18 },
+    
+    // Brake System
+    { name: 'Brake Pad (Front)', hsn_sac: '87084010', unit: 'Set', rate: 320, gst_percent: 28 },
+    { name: 'Brake Pad (Rear)', hsn_sac: '87084010', unit: 'Set', rate: 280, gst_percent: 28 },
+    { name: 'Brake Oil (DOT 3)', hsn_sac: '38200000', unit: 'Ltrs', rate: 180, gst_percent: 28 },
+    
+    // Chain & Drive
+    { name: 'Chain & Sprocket Kit', hsn_sac: '87149100', unit: 'Set', rate: 650, gst_percent: 28 },
+    { name: 'Chain Lubricant', hsn_sac: '34031900', unit: 'Nos', rate: 95, gst_percent: 18 },
+    
+    // Tyres & Tubes
+    { name: 'Front Tyre', hsn_sac: '40111000', unit: 'Nos', rate: 1200, gst_percent: 28 },
+    { name: 'Rear Tyre', hsn_sac: '40111000', unit: 'Nos', rate: 1450, gst_percent: 28 },
+    { name: 'Tube (Front)', hsn_sac: '40139000', unit: 'Nos', rate: 180, gst_percent: 28 },
+    { name: 'Tube (Rear)', hsn_sac: '40139000', unit: 'Nos', rate: 220, gst_percent: 28 },
+    
+    // Service Labor
+    { name: 'General Service Labor', hsn_sac: '99820', unit: 'Hrs', rate: 200, gst_percent: 18 },
+    { name: 'Engine Tuning', hsn_sac: '99810', unit: 'Hrs', rate: 300, gst_percent: 18 },
+    { name: 'Brake Service', hsn_sac: '99820', unit: 'Hrs', rate: 150, gst_percent: 18 },
+    { name: 'Chain & Sprocket Service', hsn_sac: '99820', unit: 'Hrs', rate: 250, gst_percent: 18 },
+    
+    // Cleaning & Maintenance
+    { name: 'Bike Wash & Polish', hsn_sac: '99820', unit: 'Nos', rate: 100, gst_percent: 18 },
+    { name: 'Engine Cleaning', hsn_sac: '99820', unit: 'Nos', rate: 150, gst_percent: 18 },
+    { name: 'Carburetor Cleaning', hsn_sac: '99810', unit: 'Nos', rate: 200, gst_percent: 18 }
+  ];
+
   useEffect(() => {
     fetchCustomers();
     if (activeTab === 'view') {
