@@ -74,6 +74,11 @@ const Layout = ({ children }) => {
       name: 'Backup',
       path: '/backup',
       icon: Database
+    },
+    {
+      name: 'Data Import',
+      path: '/data-import',
+      icon: Upload
     }
   ];
 
