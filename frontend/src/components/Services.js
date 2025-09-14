@@ -1994,7 +1994,350 @@ const ServicesBilling = () => {
   };
 
   const handlePrintBill = () => {
-    window.print();
+    // Create professional itemized bill for printing
+    const selectedCustomerData = customers.find(c => c.id === selectedCustomer);
+    const totals = calculateTotals();
+    
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Service Bill - ${billNumber}</title>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+              font-family: 'Arial', sans-serif; 
+              line-height: 1.4; 
+              color: #333;
+              background: white;
+            }
+            .bill-container { 
+              max-width: 210mm; 
+              margin: 0 auto; 
+              padding: 20mm;
+              background: white;
+            }
+            
+            /* Header Styles */
+            .bill-header { 
+              text-align: center; 
+              border-bottom: 3px solid #2563eb;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .company-name { 
+              font-size: 32px; 
+              font-weight: bold; 
+              color: #1e40af;
+              margin-bottom: 5px;
+            }
+            .company-tagline { 
+              font-size: 16px; 
+              color: #6b7280;
+              margin-bottom: 10px;
+            }
+            .company-address { 
+              font-size: 14px; 
+              color: #4b5563;
+              line-height: 1.5;
+            }
+            
+            /* Bill Title */
+            .bill-title { 
+              text-align: center;
+              background: linear-gradient(135deg, #2563eb, #1d4ed8);
+              color: white;
+              padding: 15px;
+              font-size: 24px;
+              font-weight: bold;
+              margin: 30px 0;
+              border-radius: 8px;
+            }
+            
+            /* Bill Info Grid */
+            .bill-info { 
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 30px;
+              margin-bottom: 30px;
+              padding: 20px;
+              background: #f8fafc;
+              border-radius: 8px;
+              border: 1px solid #e2e8f0;
+            }
+            .info-section h4 { 
+              color: #1e40af;
+              font-size: 16px;
+              font-weight: bold;
+              margin-bottom: 10px;
+              border-bottom: 2px solid #3b82f6;
+              padding-bottom: 5px;
+            }
+            .info-row { 
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 8px;
+              padding: 5px 0;
+            }
+            .info-label { 
+              font-weight: 600;
+              color: #374151;
+            }
+            .info-value { 
+              color: #111827;
+            }
+            
+            /* Items Table */
+            .items-table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              margin: 30px 0;
+              font-size: 14px;
+              box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            }
+            .items-table th { 
+              background: linear-gradient(135deg, #1e40af, #3b82f6);
+              color: white;
+              font-weight: bold;
+              padding: 15px 8px;
+              text-align: center;
+              font-size: 12px;
+              border: 1px solid #1e40af;
+            }
+            .items-table td { 
+              padding: 12px 8px;
+              border: 1px solid #d1d5db;
+              text-align: center;
+            }
+            .items-table tbody tr:nth-child(even) { 
+              background: #f8fafc;
+            }
+            .items-table tbody tr:hover { 
+              background: #e0f2fe;
+            }
+            .description-cell { 
+              text-align: left !important;
+              font-weight: 500;
+            }
+            .amount-cell { 
+              font-weight: bold;
+              color: #059669;
+            }
+            
+            /* Totals Section */
+            .totals-section { 
+              margin-top: 30px;
+              display: grid;
+              grid-template-columns: 1fr 400px;
+              gap: 30px;
+            }
+            .totals-table { 
+              width: 100%;
+              border-collapse: collapse;
+            }
+            .totals-table tr { 
+              border-bottom: 1px solid #e5e7eb;
+            }
+            .totals-table td { 
+              padding: 12px 15px;
+              font-size: 16px;
+            }
+            .totals-table .label { 
+              font-weight: 600;
+              color: #374151;
+            }
+            .totals-table .value { 
+              text-align: right;
+              font-weight: bold;
+              color: #111827;
+            }
+            .grand-total { 
+              background: linear-gradient(135deg, #059669, #10b981) !important;
+              color: white !important;
+              font-size: 20px !important;
+              font-weight: bold !important;
+            }
+            
+            /* Terms Section */
+            .terms-section { 
+              margin-top: 30px;
+              padding: 20px;
+              background: #fef3c7;
+              border: 1px solid #f59e0b;
+              border-radius: 8px;
+            }
+            .terms-section h4 { 
+              color: #92400e;
+              margin-bottom: 10px;
+              font-size: 16px;
+            }
+            .terms-section p { 
+              color: #78350f;
+              font-size: 14px;
+              margin-bottom: 5px;
+            }
+            
+            /* Footer */
+            .bill-footer { 
+              margin-top: 40px;
+              text-align: center;
+              color: #6b7280;
+              font-size: 14px;
+              border-top: 2px solid #e5e7eb;
+              padding-top: 20px;
+            }
+            
+            @media print {
+              body { -webkit-print-color-adjust: exact; }
+              .bill-container { padding: 10mm; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="bill-container">
+            <!-- Header -->
+            <div class="bill-header">
+              <div class="company-name">M M MOTORS</div>
+              <div class="company-tagline">Two Wheeler Service Excellence</div>
+              <div class="company-address">
+                Bengaluru main road, behind Ruchi Bakery<br>
+                Malur, Karnataka 563130<br>
+                Phone: +91 80 2345 6789 | Email: service@mmmotors.com
+              </div>
+            </div>
+            
+            <!-- Bill Title -->
+            <div class="bill-title">
+              GST SERVICE BILL
+            </div>
+            
+            <!-- Bill Information -->
+            <div class="bill-info">
+              <div class="info-section">
+                <h4>Bill Details</h4>
+                <div class="info-row">
+                  <span class="info-label">Bill Number:</span>
+                  <span class="info-value">${billNumber}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Bill Date:</span>
+                  <span class="info-value">${new Date(billDate).toLocaleDateString('en-IN')}</span>
+                </div>
+                ${serviceDetails ? `
+                <div class="info-row">
+                  <span class="info-label">Job Card:</span>
+                  <span class="info-value">${serviceDetails.job_card_number}</span>
+                </div>
+                ` : ''}
+              </div>
+              
+              <div class="info-section">
+                <h4>Customer Details</h4>
+                <div class="info-row">
+                  <span class="info-label">Name:</span>
+                  <span class="info-value">${selectedCustomerData?.name || serviceDetails?.customer_name || 'N/A'}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Phone:</span>
+                  <span class="info-value">${selectedCustomerData?.phone || serviceDetails?.customer_phone || 'N/A'}</span>
+                </div>
+                ${serviceDetails?.vehicle_number ? `
+                <div class="info-row">
+                  <span class="info-label">Vehicle:</span>
+                  <span class="info-value">${serviceDetails.vehicle_number}</span>
+                </div>
+                ` : ''}
+              </div>
+            </div>
+            
+            <!-- Items Table -->
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th style="width: 5%;">S.No</th>
+                  <th style="width: 25%;">Description of Services</th>
+                  <th style="width: 10%;">HSN/SAC</th>
+                  <th style="width: 8%;">Qty</th>
+                  <th style="width: 8%;">Unit</th>
+                  <th style="width: 10%;">Rate</th>
+                  <th style="width: 10%;">Labor</th>
+                  <th style="width: 8%;">Disc%</th>
+                  <th style="width: 8%;">GST%</th>
+                  <th style="width: 10%;">CGST</th>
+                  <th style="width: 10%;">SGST</th>
+                  <th style="width: 12%;">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${billItems.map((item, index) => `
+                  <tr>
+                    <td>${index + 1}</td>
+                    <td class="description-cell">${item.description || 'Service Item'}</td>
+                    <td>${item.hsn_sac || '998'}</td>
+                    <td>${item.qty}</td>
+                    <td>${item.unit}</td>
+                    <td>₹${item.rate.toFixed(2)}</td>
+                    <td>₹${item.labor.toFixed(2)}</td>
+                    <td>${item.disc_percent}%</td>
+                    <td>${item.gst_percent}%</td>
+                    <td>₹${item.cgst_amount.toFixed(2)}</td>
+                    <td>₹${item.sgst_amount.toFixed(2)}</td>
+                    <td class="amount-cell">₹${item.amount.toFixed(2)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            
+            <!-- Totals Section -->
+            <div class="totals-section">
+              <div class="terms-section">
+                <h4>Terms & Conditions:</h4>
+                <p>• Service warranty: 30 days or 1000 km whichever is earlier</p>
+                <p>• Parts warranty as per manufacturer terms</p>
+                <p>• Bill must be presented for warranty claims</p>
+                <p>• Payment due immediately upon service completion</p>
+              </div>
+              
+              <table class="totals-table">
+                <tr>
+                  <td class="label">Subtotal:</td>
+                  <td class="value">₹${totals.subtotal.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td class="label">Total Discount:</td>
+                  <td class="value">₹${totals.totalDiscount.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td class="label">Total CGST:</td>
+                  <td class="value">₹${totals.totalCGST.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td class="label">Total SGST:</td>
+                  <td class="value">₹${totals.totalSGST.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td class="label">Total Tax:</td>
+                  <td class="value">₹${totals.totalTax.toFixed(2)}</td>
+                </tr>
+                <tr class="grand-total">
+                  <td class="label">GRAND TOTAL:</td>
+                  <td class="value">₹${totals.grandTotal.toFixed(2)}</td>
+                </tr>
+              </table>
+            </div>
+            
+            <!-- Footer -->
+            <div class="bill-footer">
+              <p><strong>Thank you for choosing M M Motors!</strong></p>
+              <p>For any queries, please contact us at service@mmmotors.com or +91 80 2345 6789</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
   };
 
   const totals = calculateTotals();
