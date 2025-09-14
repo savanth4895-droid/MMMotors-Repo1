@@ -95,7 +95,7 @@ const Login = () => {
             <Bike className="w-8 h-8 text-white" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold text-white">Moto Management</CardTitle>
+            <CardTitle className="text-2xl font-bold text-white">M M Motors Management</CardTitle>
             <CardDescription className="text-blue-100">
               Two Wheeler Business System
             </CardDescription>
