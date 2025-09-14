@@ -138,6 +138,10 @@ function App() {
               path="/backup"
               element={user ? <Layout><BackupManagement /></Layout> : <Navigate to="/login" />}
             />
+            <Route
+              path="/data-import"
+              element={user ? <Layout><DataImport /></Layout> : <Navigate to="/login" />}
+            />
           </Routes>
         </BrowserRouter>
         <Toaster position="top-right" />
