@@ -2158,37 +2158,39 @@ const ServicesBilling = () => {
               border-radius: 8px;
             }
             
-            /* Bill Info Grid */
+            /* Bill Info */
             .bill-info { 
               display: grid;
               grid-template-columns: 1fr 1fr;
-              gap: 30px;
-              margin-bottom: 30px;
-              padding: 20px;
+              gap: 20px;
+              margin-bottom: 20px;
+              padding: 15px;
               background: #f8fafc;
               border-radius: 8px;
               border: 1px solid #e2e8f0;
             }
             .info-section h4 { 
               color: #1e40af;
-              font-size: 16px;
+              font-size: 14px;
               font-weight: bold;
-              margin-bottom: 10px;
+              margin-bottom: 8px;
               border-bottom: 2px solid #3b82f6;
-              padding-bottom: 5px;
+              padding-bottom: 4px;
             }
             .info-row { 
               display: flex;
               justify-content: space-between;
-              margin-bottom: 8px;
-              padding: 5px 0;
+              margin-bottom: 6px;
+              padding: 3px 0;
             }
             .info-label { 
               font-weight: 600;
               color: #374151;
+              font-size: 12px;
             }
             .info-value { 
               color: #111827;
+              font-size: 12px;
             }
             
             /* Items Table */
