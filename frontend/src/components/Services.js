@@ -3005,10 +3005,10 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading }) 
               text-align: center;
               background: linear-gradient(135deg, #2563eb, #1d4ed8);
               color: white;
-              padding: 15px;
-              font-size: 24px;
+              padding: 12px;
+              font-size: 20px;
               font-weight: bold;
-              margin: 30px 0;
+              margin: 20px 0;
               border-radius: 8px;
             }
             
