@@ -526,9 +526,8 @@ backend:
 
 test_plan:
   current_focus:
-    - "Comprehensive Data Import Interface Testing"
-  stuck_tasks:
-    - "Comprehensive Data Import Interface Testing"
+    - "Service Bills Contact Details Update and A4 Optimization"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
   recently_completed:
