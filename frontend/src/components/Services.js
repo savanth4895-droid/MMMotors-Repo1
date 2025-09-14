@@ -2514,8 +2514,8 @@ const CreateBillContent = ({
   customers, billItems, setBillItems, selectedCustomer, setSelectedCustomer,
   billNumber, setBillNumber, billDate, setBillDate, loading,
   calculateItemAmounts, calculateTotals, updateBillItem, addBillItem, removeBillItem,
-  handleSaveBill, handlePrintBill, units, gstRates,
-  jobCardNumber, setJobCardNumber, serviceDetails, fetchingService,
+  addPredefinedItem, addServicePackage, handleSaveBill, handlePrintBill, units, gstRates,
+  serviceItems, jobCardNumber, setJobCardNumber, serviceDetails, fetchingService,
   handleJobCardSearch, handleJobCardBlur, clearServiceDetails
 }) => {
   const totals = calculateTotals();
