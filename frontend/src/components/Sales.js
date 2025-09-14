@@ -622,7 +622,7 @@ const CreateInvoice = () => {
               <div className="p-4 space-y-4">
 
               {/* Customer & Vehicle Details Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Customer Details */}
                 <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200 overflow-hidden">
                   <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3">
