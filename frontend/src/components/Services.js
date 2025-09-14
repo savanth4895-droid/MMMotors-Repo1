@@ -2039,6 +2039,13 @@ const ServicesBilling = () => {
           handlePrintBill={handlePrintBill}
           units={units}
           gstRates={gstRates}
+          jobCardNumber={jobCardNumber}
+          setJobCardNumber={setJobCardNumber}
+          serviceDetails={serviceDetails}
+          fetchingService={fetchingService}
+          handleJobCardSearch={handleJobCardSearch}
+          handleJobCardBlur={handleJobCardBlur}
+          clearServiceDetails={clearServiceDetails}
         />
       ) : (
         <ViewBillsContent 
