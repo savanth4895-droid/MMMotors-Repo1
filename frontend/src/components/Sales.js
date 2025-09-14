@@ -701,38 +701,71 @@ const CreateInvoice = () => {
               </div>
 
               {/* Insurance Details */}
-              <div className="section border-2 border-gray-300 rounded-lg p-3 mb-3">
-                <h3 className="text-sm font-semibold mb-2 text-blue-600 border-b border-gray-200 pb-1">Insurance Nominee Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                  <div className="field text-xs">
-                    <span className="label font-semibold">Nominee Name:</span> {generatedInvoice.insurance.nominee}
-                  </div>
-                  <div className="field text-xs">
-                    <span className="label font-semibold">Relation:</span> {generatedInvoice.insurance.relation}
-                  </div>
-                  <div className="field text-xs">
-                    <span className="label font-semibold">Age:</span> {generatedInvoice.insurance.age}
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 overflow-hidden">
+                <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-4 py-3">
+                  <h3 className="text-white font-bold flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10V11.5H16.2V16H7.8V11.5H9.2V10C9.2,8.6 10.6,7 12,7M12,8.2C11.2,8.2 10.5,8.9 10.5,9.7V11.5H13.5V9.7C13.5,8.9 12.8,8.2 12,8.2Z"/>
+                    </svg>
+                    INSURANCE NOMINEE DETAILS
+                  </h3>
+                </div>
+                <div className="p-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <span className="text-purple-700 font-medium text-sm block">Nominee Name</span>
+                      <div className="text-slate-900 font-semibold mt-1">{generatedInvoice.insurance.nominee}</div>
+                    </div>
+                    <div className="text-center">
+                      <span className="text-purple-700 font-medium text-sm block">Relation</span>
+                      <div className="text-slate-900 font-semibold mt-1 capitalize">{generatedInvoice.insurance.relation}</div>
+                    </div>
+                    <div className="text-center">
+                      <span className="text-purple-700 font-medium text-sm block">Age</span>
+                      <div className="text-slate-900 font-semibold mt-1">{generatedInvoice.insurance.age} years</div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Payment Details */}
-              <div className="section border-2 border-gray-300 rounded-lg p-3 mb-4">
-                <h3 className="text-sm font-semibold mb-2 text-blue-600 border-b border-gray-200 pb-1">Payment Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
-                  <div className="field text-xs">
-                    <span className="label font-semibold">Payment Method:</span> {generatedInvoice.payment_method.toUpperCase()}
-                  </div>
-                  <div className="field text-xs">
-                    <span className="label font-semibold">Hypothecation:</span> {generatedInvoice.hypothecation || 'CASH'}
-                  </div>
-                  <div className="field total text-right text-xs">
-                    <span className="label font-semibold">Amount:</span> <span className="text-lg font-bold">₹{generatedInvoice.amount.toLocaleString()}</span>
-                  </div>
+              {/* Payment Summary */}
+              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 overflow-hidden">
+                <div className="bg-gradient-to-r from-green-600 to-green-700 px-4 py-3">
+                  <h3 className="text-white font-bold flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M7,15H9C9,16.08 10.37,17 12,17C13.63,17 15,16.08 15,15C15,13.9 13.96,13.5 11.76,12.97C9.64,12.44 7,11.78 7,9C7,7.21 8.47,5.69 10.5,5.18V3H13.5V5.18C15.53,5.69 17,7.21 17,9H15C15,7.92 13.63,7 12,7C10.37,7 9,7.92 9,9C9,10.1 10.04,10.5 12.24,11.03C14.36,11.56 17,12.22 17,15C17,16.79 15.53,18.31 13.5,18.82V21H10.5V18.82C8.47,18.31 7,16.79 7,15Z"/>
+                    </svg>
+                    PAYMENT SUMMARY
+                  </h3>
                 </div>
-                <div className="border-t pt-2">
-                  <div className="field text-xs">
-                    <span className="label font-semibold">Amount in Words:</span> <span className="italic">{numberToWords(generatedInvoice.amount)} Rupees Only</span>
+                <div className="p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center py-2 border-b border-green-200">
+                        <span className="text-green-700 font-medium">Payment Method:</span>
+                        <span className="text-slate-900 font-bold uppercase bg-green-200 px-3 py-1 rounded-full text-sm">
+                          {generatedInvoice.payment_method}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-green-700 font-medium">Hypothecation:</span>
+                        <span className="text-slate-900 font-semibold">{generatedInvoice.hypothecation || 'CASH'}</span>
+                      </div>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 border border-green-300 shadow-sm">
+                      <div className="text-center">
+                        <span className="text-green-700 font-medium text-sm block mb-2">TOTAL AMOUNT</span>
+                        <div className="text-3xl font-bold text-green-600">
+                          ₹{generatedInvoice.amount.toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-4 border border-yellow-200">
+                    <span className="text-orange-800 font-semibold text-sm">Amount in Words:</span>
+                    <div className="text-slate-900 font-medium mt-1 italic">
+                      {numberToWords(generatedInvoice.amount)} Rupees Only
+                    </div>
                   </div>
                 </div>
               </div>
