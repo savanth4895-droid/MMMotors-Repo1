@@ -3115,7 +3115,7 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading }) 
             
             @media print {
               body { -webkit-print-color-adjust: exact; }
-              .bill-container { padding: 10mm; }
+              .bill-container { padding: 8mm; }
             }
           </style>
         </head>
