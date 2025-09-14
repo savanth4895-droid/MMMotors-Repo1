@@ -24,7 +24,9 @@ import {
   Calculator,
   Download,
   Printer,
-  Trash2
+  Trash2,
+  FileSearch,
+  X
 } from 'lucide-react';
 import { toast } from 'sonner';
 
