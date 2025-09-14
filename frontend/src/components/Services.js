@@ -2118,7 +2118,7 @@ const ServicesBilling = () => {
             .bill-container { 
               max-width: 210mm; 
               margin: 0 auto; 
-              padding: 20mm;
+              padding: 15mm;
               background: white;
             }
             
