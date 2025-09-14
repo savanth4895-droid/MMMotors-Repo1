@@ -2016,31 +2016,6 @@ const ServicesBilling = () => {
     }
   };
 
-  const addPredefinedItem = (item) => {
-    const newItem = {
-      sl_no: billItems.length + 1,
-      description: item.name,
-      hsn_sac: item.hsn_sac,
-      qty: 1,
-      unit: item.unit,
-      rate: item.rate,
-      labor: 0,
-      disc_percent: 0,
-      gst_percent: item.gst_percent,
-      cgst_amount: 0,
-      sgst_amount: 0,
-      total_tax: 0,
-      amount: 0
-    };
-    
-    // Calculate amounts for the new item
-    const calculatedAmounts = calculateItemAmounts(newItem);
-    const finalItem = { ...newItem, ...calculatedAmounts };
-    
-    setBillItems([...billItems, finalItem]);
-    toast.success(`Added ${item.name} to bill`);
-  };
-
   const addServicePackage = () => {
     const servicePackageItems = [
       { name: 'General Service', hsn_sac: '99831', unit: 'Nos', rate: 300, gst_percent: 18 },
