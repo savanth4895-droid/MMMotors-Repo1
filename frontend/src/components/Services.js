@@ -29,7 +29,8 @@ import {
   X,
   Car,
   User,
-  IndianRupee
+  IndianRupee,
+  Package
 } from 'lucide-react';
 import { toast } from 'sonner';
 
