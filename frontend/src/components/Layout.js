@@ -17,7 +17,8 @@ import {
   ChevronRight,
   Zap,
   Fuel,
-  Database
+  Database,
+  Upload
 } from 'lucide-react';
 
 // Custom Motorcycle Icon Component
