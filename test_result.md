@@ -530,7 +530,7 @@ test_plan:
 
 agent_communication:
     - agent: "main"
-    - message: "IMPLEMENTING BILL VIEW FUNCTIONALITY: User requested two features: 1) Show created bills properly in spare parts view bills page, 2) Add functionality to action column buttons in service bills. Will implement view, print, and download functionality for both spare parts and service bills."
+    - message: "LOGIN SCREEN BRANDING UPDATE: User requested to change the name in login screen from 'moto management' to 'M M Motors Management'. Updated the CardTitle in Login.js component to display the correct business name consistently with other parts of the application."
     - agent: "testing"
     - message: "✅ VEHICLE STATUS UPDATE BUG FIX VERIFICATION COMPLETED: Conducted comprehensive end-to-end testing of the vehicle status update workflow. CRITICAL SUCCESS: The reported bug 'Status column is not changing after changing the status in vehicle stock page' has been COMPLETELY FIXED! Testing confirmed: 1) Authentication working with admin/admin123, 2) Edit modal opens with current vehicle data, 3) Status dropdown functional with all options (In Stock, Sold, Returned), 4) Status changes reflect immediately in table after clicking 'Update Vehicle', 5) Success toast messages appear, 6) Return Date functionality works for 'Returned' status, 7) Changes persist across navigation, 8) Both Stock View and brand-specific views work identically. The new PUT /api/vehicles/{vehicle_id}/status endpoint is working perfectly and the frontend EditVehicleModal is correctly using this endpoint. The bug fix is verified as successful and ready for production use."
     - agent: "testing"
