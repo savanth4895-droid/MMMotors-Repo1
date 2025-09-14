@@ -2433,7 +2433,7 @@ const ServicesBilling = () => {
             <!-- Footer -->
             <div class="bill-footer">
               <p><strong>Thank you for choosing M M Motors!</strong></p>
-              <p>For any queries, please contact us at service@mmmotors.com or +91 80 2345 6789</p>
+              <p>For any queries, please contact us at mmmotors3123@gmail.com or 7026263123</p>
             </div>
           </div>
         </body>
