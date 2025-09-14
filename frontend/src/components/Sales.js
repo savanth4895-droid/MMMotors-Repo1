@@ -625,46 +625,77 @@ const CreateInvoice = () => {
 
               <div className="p-6 space-y-6">
 
-              {/* Customer Details */}
-              <div className="section border-2 border-gray-300 rounded-lg p-3 mb-3">
-                <h3 className="text-sm font-semibold mb-2 text-blue-600 border-b border-gray-200 pb-1">Customer Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  <div className="field text-xs">
-                    <span className="label font-semibold">Name:</span> {generatedInvoice.customer.name}
+              {/* Customer & Vehicle Details Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Customer Details */}
+                <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200 overflow-hidden">
+                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3">
+                    <h3 className="text-white font-bold flex items-center">
+                      <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                      </svg>
+                      CUSTOMER DETAILS
+                    </h3>
                   </div>
-                  <div className="field text-xs">
-                    <span className="label font-semibold">C/O:</span> {generatedInvoice.customer.care_of}
-                  </div>
-                  <div className="field text-xs">
-                    <span className="label font-semibold">Mobile:</span> {generatedInvoice.customer.mobile}
-                  </div>
-                  <div className="field text-xs">
-                    <span className="label font-semibold">Address:</span> {generatedInvoice.customer.address}
+                  <div className="p-4 space-y-3">
+                    <div className="flex items-center border-b border-slate-200 pb-2">
+                      <span className="text-slate-600 font-medium w-20">Name:</span>
+                      <span className="text-slate-900 font-semibold">{generatedInvoice.customer.name}</span>
+                    </div>
+                    <div className="flex items-center border-b border-slate-200 pb-2">
+                      <span className="text-slate-600 font-medium w-20">C/O:</span>
+                      <span className="text-slate-900">{generatedInvoice.customer.care_of}</span>
+                    </div>
+                    <div className="flex items-center border-b border-slate-200 pb-2">
+                      <span className="text-slate-600 font-medium w-20">Mobile:</span>
+                      <span className="text-slate-900 font-mono font-semibold">{generatedInvoice.customer.mobile}</span>
+                    </div>
+                    <div className="flex items-start">
+                      <span className="text-slate-600 font-medium w-20">Address:</span>
+                      <span className="text-slate-900 leading-relaxed">{generatedInvoice.customer.address}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Vehicle Details */}
-              <div className="section border-2 border-gray-300 rounded-lg p-3 mb-3">
-                <h3 className="text-sm font-semibold mb-2 text-blue-600 border-b border-gray-200 pb-1">Vehicle Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  <div className="field text-xs">
-                    <span className="label font-semibold">Brand:</span> {generatedInvoice.vehicle.brand}
+                {/* Vehicle Details */}
+                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl border border-emerald-200 overflow-hidden">
+                  <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 px-4 py-3">
+                    <h3 className="text-white font-bold flex items-center">
+                      <MotorcycleIcon className="w-5 h-5 mr-2" />
+                      VEHICLE DETAILS
+                    </h3>
                   </div>
-                  <div className="field text-xs">
-                    <span className="label font-semibold">Model:</span> {generatedInvoice.vehicle.model}
-                  </div>
-                  <div className="field text-xs">
-                    <span className="label font-semibold">Color:</span> {generatedInvoice.vehicle.color}
-                  </div>
-                  <div className="field text-xs">
-                    <span className="label font-semibold">Chassis No:</span> {generatedInvoice.vehicle.chassis_no}
-                  </div>
-                  <div className="field text-xs">
-                    <span className="label font-semibold">Engine No:</span> {generatedInvoice.vehicle.engine_no}
-                  </div>
-                  <div className="field text-xs">
-                    <span className="label font-semibold">Vehicle No:</span> {generatedInvoice.vehicle.vehicle_no}
+                  <div className="p-4 space-y-3">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="border-b border-emerald-200 pb-2">
+                        <span className="text-emerald-700 font-medium text-sm">Brand</span>
+                        <div className="text-slate-900 font-bold text-lg">{generatedInvoice.vehicle.brand}</div>
+                      </div>
+                      <div className="border-b border-emerald-200 pb-2">
+                        <span className="text-emerald-700 font-medium text-sm">Model</span>
+                        <div className="text-slate-900 font-semibold">{generatedInvoice.vehicle.model}</div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="border-b border-emerald-200 pb-2">
+                        <span className="text-emerald-700 font-medium text-sm">Color</span>
+                        <div className="text-slate-900">{generatedInvoice.vehicle.color}</div>
+                      </div>
+                      <div className="border-b border-emerald-200 pb-2">
+                        <span className="text-emerald-700 font-medium text-sm">Vehicle No</span>
+                        <div className="text-slate-900 font-mono font-bold">{generatedInvoice.vehicle.vehicle_no}</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-emerald-700 font-medium">Chassis No:</span>
+                        <span className="text-slate-900 font-mono">{generatedInvoice.vehicle.chassis_no}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-emerald-700 font-medium">Engine No:</span>
+                        <span className="text-slate-900 font-mono">{generatedInvoice.vehicle.engine_no}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
