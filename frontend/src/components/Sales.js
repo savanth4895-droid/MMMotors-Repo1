@@ -634,21 +634,21 @@ const CreateInvoice = () => {
                     </h3>
                   </div>
                   <div className="p-3 space-y-2">
-                    <div className="flex items-center border-b border-slate-200 pb-2">
-                      <span className="text-slate-600 font-medium w-20">Name:</span>
-                      <span className="text-slate-900 font-semibold">{generatedInvoice.customer.name}</span>
+                    <div className="flex items-center border-b border-slate-200 pb-1">
+                      <span className="text-slate-600 font-medium w-16 text-xs">Name:</span>
+                      <span className="text-slate-900 font-semibold text-xs">{generatedInvoice.customer.name}</span>
                     </div>
-                    <div className="flex items-center border-b border-slate-200 pb-2">
-                      <span className="text-slate-600 font-medium w-20">C/O:</span>
-                      <span className="text-slate-900">{generatedInvoice.customer.care_of}</span>
+                    <div className="flex items-center border-b border-slate-200 pb-1">
+                      <span className="text-slate-600 font-medium w-16 text-xs">C/O:</span>
+                      <span className="text-slate-900 text-xs">{generatedInvoice.customer.care_of}</span>
                     </div>
-                    <div className="flex items-center border-b border-slate-200 pb-2">
-                      <span className="text-slate-600 font-medium w-20">Mobile:</span>
-                      <span className="text-slate-900 font-mono font-semibold">{generatedInvoice.customer.mobile}</span>
+                    <div className="flex items-center border-b border-slate-200 pb-1">
+                      <span className="text-slate-600 font-medium w-16 text-xs">Mobile:</span>
+                      <span className="text-slate-900 font-mono font-semibold text-xs">{generatedInvoice.customer.mobile}</span>
                     </div>
                     <div className="flex items-start">
-                      <span className="text-slate-600 font-medium w-20">Address:</span>
-                      <span className="text-slate-900 leading-relaxed">{generatedInvoice.customer.address}</span>
+                      <span className="text-slate-600 font-medium w-16 text-xs">Address:</span>
+                      <span className="text-slate-900 leading-relaxed text-xs">{generatedInvoice.customer.address}</span>
                     </div>
                   </div>
                 </div>
