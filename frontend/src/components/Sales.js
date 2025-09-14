@@ -602,8 +602,8 @@ const CreateInvoice = () => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4 border border-white border-opacity-30">
-                      <h2 className="text-lg font-bold text-white mb-2">SALES INVOICE</h2>
+                    <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-3 border border-white border-opacity-30">
+                      <h2 className="text-base font-bold text-white mb-2">SALES INVOICE</h2>
                       <div className="space-y-1 text-sm">
                         <div className="flex justify-between">
                           <span className="text-blue-100">Invoice No:</span>
