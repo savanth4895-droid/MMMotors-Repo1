@@ -1,63 +1,99 @@
 <analysis>
-The AI engineer's work primarily revolved around enhancing the invoice generation system for the M M Motors application. Initially, the task involved a comprehensive redesign to match a provided PDF, but this was later simplified to maintaining the existing layout while integrating specific business details (M M MOTORS address), adding a hypothecation text input field, and incorporating a detailed service schedule (initially km-based, then day-based) without Honda branding. Key additions included an Amount in words field, improved print layout for A4, and PDF download functionality using , with dynamic filenames. Finally, a logo was integrated into the invoice, and subsequently removed as per user's request. Throughout the process, the AI engineer diligently used testing agents to validate each implemented feature and confirmed successful completion of each sub-task.
+The AI engineer's recent work focused on several critical enhancements and bug fixes for the M M Motors application. Initially, a bug preventing vehicle status updates in the Vehicle Stock page was identified and resolved by fixing a backend endpoint and updating the frontend. Subsequently, functionality was added to view and interact with created bills in both Spare Parts and Services modules, including action buttons. The login screen's branding was updated. A custom data import interface was developed, though an authentication issue persists. The job card lookup for service billing was implemented and professionally styled. Service bill formats were enhanced for itemization, and a duplicate function error related to adding service items was fixed. Finally, the AI began a major rework of the sales invoice design for professionalism, A4 fit, contact details, and GSTIN removal, which is currently ongoing.
 </analysis>
 
 <product_requirements>
-The M M Motors application is a two-wheeler business management system covering sales, insurance, services, and spare parts, with core modules like Sales (Invoices, Customer Management, Reports), Services (Registrations, Job Cards, Billing, Service Due), Vehicle Stock, and Spare Parts. It supports multi-user access, a mobile-responsive UI, and uses UUIDs. The current focus involved a series of enhancements to the invoice system:
-- **Business Details**: Display M M MOTORS, Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130 at the invoice header.
-- **Hypothecation**: Add a new text input field for hypothecation in the invoice form.
-- **Layout & Structure**: Maintain the existing invoice layout but add grids to separate sections.
-- **Service Details**: Incorporate a service details section at the bottom, specifying schedules (initially 500-700, 3000-3500, etc. Kms; later changed to 15-30, 30-90, etc. days), and remove Honda branding.
-- **Financial Details**: Include an Amount in words field that auto-generates based on the total amount.
-- **Output & Print**: Ensure the invoice preview fits an A4 sheet, the print functionality only prints the preview section, and a download button generates a PDF.
-- **Branding**: Integrate a provided logo into the invoice header, and later remove it upon request.
-- **File Naming**: The downloaded PDF should be named using the customer's name and mobile number.
+The M M Motors application is a comprehensive two-wheeler business management system. Recent development has centered on:
+-   **Vehicle Stock Status Update**: Resolve a bug where status changes on the vehicle stock page were not reflecting in the UI.
+-   **Bill Viewing & Actions**: Implement functionality to view created bills in the Spare Parts section and add interactive action buttons (View, Download) for both Spare Parts and Service bills.
+-   **Branding Consistency**: Update the login screen title from Moto Management to M M Motors Management.
+-   **Data Import Interface**: Develop a custom web-based interface for bulk data import, supporting customer, vehicle, spare parts, and service data.
+-   **Service Billing Enhancement (Job Card Lookup)**: Enable extraction and auto-population of service details in billing based on a job card ID. This interface also required professional styling.
+-   **Service Billing Enhancement (Itemized Format)**: Refine the service bill format for professionalism, clarity, and itemization, allowing for the addition of predefined service items.
+-   **Sales Invoice Redesign**: Enhance the sales invoice for a professional look, ensure it fits an A4 sheet, remove the GSTIN, and include specific contact details (email: mmmotors3123@gmail.com, phone: 7026263123). Apply these changes consistently across all sales sections.
 </product_requirements>
 
 <key_technical_concepts>
--   **FastAPI**: Python framework for backend APIs.
--   **React**: JavaScript library for frontend UI.
+-   **FastAPI**: Python framework for backend APIs and data models.
+-   **React**: JavaScript library for frontend UI development.
 -   **MongoDB**: NoSQL database for data storage.
--   **Shadcn UI & Tailwind CSS**: Frontend components and styling.
--   **Pydantic**: Data validation in the backend.
--   **html2pdf.js**: JavaScript library for client-side PDF generation from HTML.
--   **Custom Utility Functions**: For converting numbers to words.
+-   **Tailwind CSS**: Utility-first CSS framework for styling.
+-   **Pydantic**: Data validation and serialization in FastAPI.
+-   **html2pdf.js**: Client-side PDF generation from HTML.
+-   ****: Backend dependency for handling form data.
+-   **Lucide React**: Icon library for UI.
 </key_technical_concepts>
 
 <code_architecture>
-The application utilizes a MERN-like stack with React for the frontend, FastAPI for the backend, and MongoDB for the database.
+The application uses a MERN-like stack with React for the frontend, FastAPI for the backend, and MongoDB for the database.
 
 **Directory Structure:**
 
 
 **Key Files and Changes:**
 -   :
-    -   **Importance:** Defines the FastAPI backend application and data models. The  Pydantic model implicitly handles the new  field within its existing  structure, avoiding explicit schema changes.
-    -   **Changes:** No direct code changes were observed in the trajectory for adding  to the  model; the backend testing agent confirmed existing structure could accommodate it.
--   :
-    -   **Importance:** This is the central file for the Sales module, encompassing invoice creation, viewing, and related functionalities. All invoice-related UI and logic changes were concentrated here.
+    -   **Importance:** Defines FastAPI routes and database interaction.
     -   **Changes:**
-        -   **Business Details**: Updated invoice headers with M M MOTORS and its address.
-        -   **Hypothecation**: Converted the hypothecation input to a text field from a dropdown, and integrated it into the invoice form and preview.
-        -   **Layout**: Introduced CSS grids for better section separation and added specific styling for A4 print compatibility.
-        -   **Service Details**: Added a new section for service schedules, updated the schedule values (from km to days, e.g., 15-30, 30-90 days), and removed Honda branding.
-        -   **Amount in Words**: Implemented a  utility function and integrated its output into the invoice's payment section.
-        -   **Print Functionality**: Modified  to only print the invoice preview, apply A4-friendly styling, and incorporate all new details.
-        -   **PDF Download**: Added  and  functions using  to generate and download PDFs with dynamic filenames (customer name and mobile number).
-        -   **Logo Integration/Removal**: Added an image element for the logo to the invoice header (both create and view modals) and its respective print/PDF templates, and later removed all instances as requested.
+        -   Backend endpoint for vehicle status updates was implicitly fixed or created during testing.
+        -   New API endpoints were added for , , , and  to support custom data import.
+        -   An API endpoint for  was added to fetch service details by job card ID.
 -   :
-    -   **Importance:** Manages frontend dependencies.
-    -   **Changes:** Added  as a new dependency to enable PDF generation.
+    -   **Importance:** Manages the vehicle inventory and its UI.
+    -   **Changes:** The  was updated to correctly reflect status changes in the UI by using the appropriate backend endpoint for status updates.
+-   :
+    -   **Importance:** Handles spare parts management and billing.
+    -   **Changes:**
+        -   The  component (around line 1292) was updated to display created bills and make action buttons functional (e.g., View, Download).
+        -   Handler functions and a view modal were added for spare parts bills.
+-   :
+    -   **Importance:** Central for service management, job cards, and billing.
+    -   **Changes:**
+        -    component had action buttons enhanced with functionality.
+        -    import was added for .
+        -   Job card lookup functionality was integrated into the  component, including a search field, auto-population of details, and associated handler functions ().
+        -   , , , and  icons were imported from .
+        -   Styling of the Job Card Lookup interface was enhanced for a more professional look.
+        -   Print functions (for both  and ) were modified to generate professional, itemized bill formats.
+        -   A service items selector () was added for pre-defined service items.
+        -   A duplicate  function declaration was removed to fix a compilation error.
+-   :
+    -   **Importance:** User authentication interface.
+    -   **Changes:** The application title Moto Management was updated to M M Motors Management on line 98.
+-   :
+    -   **Importance:** Main application navigation.
+    -   **Changes:** Modified to include a new navigation item for the  path, linking to the  component.
+-   :
+    -   **Importance:** New component for the custom data import interface.
+    -   **Changes:** Created to provide file upload, data validation, and import progress tracking.
+-   :
+    -   **Importance:** New UI component.
+    -   **Changes:** Created to display progress indicators.
+-   :
+    -   **Importance:** Central for Sales module, invoice creation and viewing.
+    -   **Changes:**
+        -   Invoice preview section was enhanced with professional design elements, improved styling, typography, visual hierarchy, customer/vehicle details, insurance/payment sections, and a professional footer.
+        -   GSTIN was removed from the sales invoice.
+        -   Email () and phone () were added to the invoice header.
+        -   Ongoing changes to optimize the invoice layout to fit an A4 sheet by reducing spacing and font sizes across various sections (vehicle details, insurance, etc.).
+-   :
+    -   **Importance:** Lists Python backend dependencies.
+    -   **Changes:** Added .
 </code_architecture>
 
 <pending_tasks>
-- No pending tasks are explicitly mentioned. The last task, remove recently added logo, was confirmed as completed by the testing agent.
+-   **Data Import Authentication Issue**: The custom data import interface was implemented, but an authentication redirect issue is preventing access. This needs to be resolved to make the import functionality usable.
+-   **Sales Invoice A4 Optimization**: The ongoing task of shrinking the sales invoice to fit an A4 sheet and applying these changes to all sales sections is not yet completed.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was tasked with removing the recently added logo from the invoice system. This involved reverting all previously implemented logo integrations. Specifically, the logo was removed from the invoice preview header, the  modal header, and from the PDF generation templates (both for creating new invoices and viewing existing ones). Additionally, any associated CSS styling specifically for the logo was also removed from the print functions to ensure a clean slate. The AI engineer successfully executed these changes, and the frontend testing agent verified that the logo was entirely absent from the invoice system, leaving only the business name and address as the header. This concluded the cycle of logo implementation and subsequent removal.
+Immediately before this summary request, the AI engineer was actively working on enhancing the professionalism and practicality of the sales invoice within the  file. The explicit user request was to Remove GSTin in sales and Add mmmotors3123@gmail.com and 7026263123 and shrink the invoice to fit a4 sheet and apply the same for all sales section.
+
+The engineer successfully performed the following modifications:
+-   Removed the GSTIN field from the invoice.
+-   Added the email  and phone number  to the invoice header.
+-   Initiated the process of optimizing the invoice layout for A4 size. This involved a series of incremental edits across different sections of the  component to reduce spacing, adjust font sizes, and restructure elements for a compact yet professional look. The specific sections targeted included the overall invoice preview, customer details, vehicle details, and insurance sections. This A4 optimization effort is still in progress, with multiple Edit was successful messages indicating continued adjustments to the layout. The work is focused on ensuring the entire invoice content scales appropriately for A4 printing without losing readability or visual appeal.
 </current_work>
 
 <optional_next_step>
-There are no explicit next steps requested by the user. The last task was successfully completed and verified.
+Continue optimizing the sales invoice layout in  to fully fit an A4 sheet and ensure all elements are responsive and readable.
 </optional_next_step>
