@@ -220,6 +220,30 @@ backend:
       - comment: "✅ COMPREHENSIVE EXCEL FORMAT BACKUP FUNCTIONALITY TESTING COMPLETED SUCCESSFULLY: Conducted thorough end-to-end testing of the enhanced backup system with Excel format support as requested in review. AUTHENTICATION & NAVIGATION: Successfully authenticated using admin/admin123 credentials, navigated to /backup page with 'Backup Management' title loading correctly. BACKUP FORMAT SELECTION TESTING: Format dropdown found in Quick Actions section with correct options - JSON + CSV (Standard) and Excel Workbook (.xlsx), dropdown working perfectly with proper value/text pairs. BUTTON TEXT CHANGE TESTING: Button text changes dynamically - 'Create JSON Backup' initially, changes to 'Create EXCEL Backup' when Excel format selected, switches back to 'Create JSON Backup' when JSON selected. EXCEL BACKUP CREATION TESTING: Excel backup creation working perfectly - POST /api/backup/create API request made with correct payload {'backup_type': 'manual', 'export_format': 'excel'}, API request included export_format: 'excel' parameter as expected. BACKUP HISTORY TESTING: Successfully navigated to Backup History tab, found 7 backup entries in history with proper status badges (green 'Completed'), download functionality available with 7 download buttons for completed backups. DOWNLOAD FUNCTIONALITY TESTING: Download API requests working correctly (/api/backup/download/{job_id}), download success notification 'Excel backup download started' appeared, format detection working properly. FIRST-TIME USER SECTION: 'No backups created yet' section not present (backups exist), indicating proper state management. RESPONSIVE DESIGN TESTING: Format dropdown accessible on mobile viewport (390x844), Create backup button accessible on mobile, responsive design working correctly. API INTEGRATION TESTING: POST /api/backup/create with export_format: 'excel' parameter working, backup job creation returns correct format information, download endpoint works for Excel backup files. ALL EXPECTED RESULTS ACHIEVED: ✅ Format selection dropdown works with correct options (JSON + CSV and Excel Workbook), ✅ Button text changes to 'Create EXCEL Backup' when Excel format selected, ✅ Excel backup creation succeeds with proper API integration, ✅ Download functionality provides properly formatted Excel files, ✅ Backup history shows format indicators and download buttons, ✅ Responsive design working on mobile viewport, ✅ All Excel backup functionality components operational. The enhanced backup system with Excel format support is fully functional and meets all specified requirements from the comprehensive testing request."
 
 frontend:
+  - task: "Service Bills Contact Details Update and A4 Optimization"
+    implemented: true
+    working: "needs_testing"
+    file: "/app/frontend/src/components/Services.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "needs_testing"
+      - agent: "main"
+      - comment: "Applied same changes as Sales invoice to Service Bills: 1) Updated contact details from service@mmmotors.com and +91 80 2345 6789 to mmmotors3123@gmail.com and 7026263123 in both GST SERVICE BILL and SERVICE COMPLETION CERTIFICATE sections. 2) Optimized for A4 printing by reducing container padding from 20mm to 15mm, bill header padding/margins, font sizes (company name 32px→28px, tagline 16px→14px, address 14px→12px), bill title (24px→20px, margin 30px→20px), bill info section spacing and font sizes, table margins and font sizes, and print padding from 10mm to 8mm. Changes applied to both ServicesBilling print function and ViewBillsContent print function."
+
+  - task: "Sales Invoice A4 Optimization Completion"
+    implemented: false
+    working: "partial"
+    file: "/app/frontend/src/components/Sales.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "partial"
+      - agent: "main"
+      - comment: "Contact details (mmmotors3123@gmail.com and 7026263123) and GSTIN removal completed. A4 optimization partially completed but may need further refinement for complete A4 fit."
+
   - task: "Updated Invoice System with Amount in Words and Service Details"
     implemented: true
     working: true
