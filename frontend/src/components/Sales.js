@@ -499,7 +499,7 @@ const CreateInvoice = () => {
 
       // Generate filename with customer name and mobile number
       const customerName = invoiceData.customer?.name || 'Customer';
-      const customerMobile = invoiceData.customer?.mobile || 'Unknown';
+      const customerMobile = invoiceData.customer?.mobile || 'Customer Mobile Number';
       const sanitizedName = customerName.replace(/[^a-zA-Z0-9]/g, '_');
       const sanitizedMobile = customerMobile.replace(/[^0-9]/g, '');
       const filename = `Invoice_${sanitizedName}_${sanitizedMobile}_${invoiceData.invoice_number}.pdf`;
