@@ -579,32 +579,32 @@ const CreateInvoice = () => {
 
         <Card id="invoice-preview" className="print-full-width shadow-2xl max-w-[21cm] mx-auto">
           <CardContent className="p-0">
-            <div className="invoice-container bg-white text-sm">
-              {/* Professional Header */}
-              <div className="header bg-gradient-to-r from-blue-800 to-blue-600 text-white p-4 rounded-t-lg">
+            <div className="invoice-container bg-white text-xs">
+              {/* Professional Header - Compact */}
+              <div className="header bg-gradient-to-r from-blue-800 to-blue-600 text-white p-3 rounded-t-lg">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h1 className="text-2xl font-bold tracking-wide">M M MOTORS</h1>
+                    <h1 className="text-xl font-bold tracking-wide">M M MOTORS</h1>
                     <p className="text-blue-100 text-xs mt-1 font-medium">Premium Two Wheeler Sales & Service</p>
-                    <div className="mt-2 text-blue-100 text-xs space-y-1">
+                    <div className="mt-1 text-blue-100 text-xs space-y-0.5">
                       <p className="flex items-center">
-                        <span className="w-2 h-2 bg-blue-300 rounded-full mr-2"></span>
+                        <span className="w-1.5 h-1.5 bg-blue-300 rounded-full mr-1.5"></span>
                         Bengaluru main road, behind Ruchi Bakery
                       </p>
                       <p className="flex items-center">
-                        <span className="w-2 h-2 bg-blue-300 rounded-full mr-2"></span>
+                        <span className="w-1.5 h-1.5 bg-blue-300 rounded-full mr-1.5"></span>
                         Malur, Karnataka 563130
                       </p>
                       <p className="flex items-center">
-                        <span className="w-2 h-2 bg-blue-300 rounded-full mr-2"></span>
+                        <span className="w-1.5 h-1.5 bg-blue-300 rounded-full mr-1.5"></span>
                         Phone: 7026263123 | Email: mmmotors3123@gmail.com
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-3 border border-white border-opacity-30">
-                      <h2 className="text-base font-bold text-white mb-2">SALES INVOICE</h2>
-                      <div className="space-y-1 text-sm">
+                    <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-2 border border-white border-opacity-30">
+                      <h2 className="text-sm font-bold text-white mb-1">SALES INVOICE</h2>
+                      <div className="space-y-0.5 text-xs">
                         <div className="flex justify-between">
                           <span className="text-blue-100 text-xs">Invoice No:</span>
                           <span className="font-bold text-white text-xs">{generatedInvoice.invoice_number}</span>
@@ -619,7 +619,7 @@ const CreateInvoice = () => {
                 </div>
               </div>
 
-              <div className="p-4 space-y-4">
+              <div className="p-3 space-y-3">
 
               {/* Customer & Vehicle Details Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
