@@ -698,81 +698,81 @@ const CreateInvoice = () => {
                 </div>
               </div>
 
-              {/* Insurance Details */}
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 overflow-hidden">
-                <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-3 py-2">
-                  <h3 className="text-white font-bold flex items-center text-sm">
-                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              {/* Insurance Details - Compact */}
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200 overflow-hidden">
+                <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-2 py-1">
+                  <h3 className="text-white font-bold flex items-center text-xs">
+                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10V11.5H16.2V16H7.8V11.5H9.2V10C9.2,8.6 10.6,7 12,7M12,8.2C11.2,8.2 10.5,8.9 10.5,9.7V11.5H13.5V9.7C13.5,8.9 12.8,8.2 12,8.2Z"/>
                     </svg>
                     INSURANCE NOMINEE DETAILS
                   </h3>
                 </div>
-                <div className="p-3">
-                  <div className="grid grid-cols-3 gap-3">
+                <div className="p-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <div className="text-center">
                       <span className="text-purple-700 font-medium text-xs block">Nominee Name</span>
-                      <div className="text-slate-900 font-semibold mt-1 text-sm">{generatedInvoice.insurance.nominee}</div>
+                      <div className="text-slate-900 font-semibold mt-0.5 text-xs">{generatedInvoice.insurance.nominee}</div>
                     </div>
                     <div className="text-center">
                       <span className="text-purple-700 font-medium text-xs block">Relation</span>
-                      <div className="text-slate-900 font-semibold mt-1 capitalize text-sm">{generatedInvoice.insurance.relation}</div>
+                      <div className="text-slate-900 font-semibold mt-0.5 capitalize text-xs">{generatedInvoice.insurance.relation}</div>
                     </div>
                     <div className="text-center">
                       <span className="text-purple-700 font-medium text-xs block">Age</span>
-                      <div className="text-slate-900 font-semibold mt-1 text-sm">{generatedInvoice.insurance.age} years</div>
+                      <div className="text-slate-900 font-semibold mt-0.5 text-xs">{generatedInvoice.insurance.age} years</div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Payment Summary */}
-              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 overflow-hidden">
-                <div className="bg-gradient-to-r from-green-600 to-green-700 px-4 py-3">
-                  <h3 className="text-white font-bold flex items-center">
-                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              {/* Payment Summary - Compact */}
+              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200 overflow-hidden">
+                <div className="bg-gradient-to-r from-green-600 to-green-700 px-2 py-1">
+                  <h3 className="text-white font-bold flex items-center text-xs">
+                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M7,15H9C9,16.08 10.37,17 12,17C13.63,17 15,16.08 15,15C15,13.9 13.96,13.5 11.76,12.97C9.64,12.44 7,11.78 7,9C7,7.21 8.47,5.69 10.5,5.18V3H13.5V5.18C15.53,5.69 17,7.21 17,9H15C15,7.92 13.63,7 12,7C10.37,7 9,7.92 9,9C9,10.1 10.04,10.5 12.24,11.03C14.36,11.56 17,12.22 17,15C17,16.79 15.53,18.31 13.5,18.82V21H10.5V18.82C8.47,18.31 7,16.79 7,15Z"/>
                     </svg>
                     PAYMENT SUMMARY
                   </h3>
                 </div>
-                <div className="p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center py-2 border-b border-green-200">
-                        <span className="text-green-700 font-medium">Payment Method:</span>
-                        <span className="text-slate-900 font-bold uppercase bg-green-200 px-3 py-1 rounded-full text-sm">
+                <div className="p-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center py-1 border-b border-green-200">
+                        <span className="text-green-700 font-medium text-xs">Payment Method:</span>
+                        <span className="text-slate-900 font-bold uppercase bg-green-200 px-2 py-0.5 rounded-full text-xs">
                           {generatedInvoice.payment_method}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center py-2">
-                        <span className="text-green-700 font-medium">Hypothecation:</span>
-                        <span className="text-slate-900 font-semibold">{generatedInvoice.hypothecation || 'CASH'}</span>
+                      <div className="flex justify-between items-center py-1">
+                        <span className="text-green-700 font-medium text-xs">Hypothecation:</span>
+                        <span className="text-slate-900 font-semibold text-xs">{generatedInvoice.hypothecation || 'CASH'}</span>
                       </div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 border border-green-300 shadow-sm">
+                    <div className="bg-white rounded-lg p-2 border border-green-300 shadow-sm">
                       <div className="text-center">
-                        <span className="text-green-700 font-medium text-sm block mb-2">TOTAL AMOUNT</span>
-                        <div className="text-3xl font-bold text-green-600">
+                        <span className="text-green-700 font-medium text-xs block mb-1">TOTAL AMOUNT</span>
+                        <div className="text-lg font-bold text-green-600">
                           ₹{generatedInvoice.amount.toLocaleString()}
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-4 border border-yellow-200">
-                    <span className="text-orange-800 font-semibold text-sm">Amount in Words:</span>
-                    <div className="text-slate-900 font-medium mt-1 italic">
+                  <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-2 border border-yellow-200">
+                    <span className="text-orange-800 font-semibold text-xs">Amount in Words:</span>
+                    <div className="text-slate-900 font-medium mt-0.5 italic text-xs">
                       {numberToWords(generatedInvoice.amount)} Rupees Only
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Service Schedule */}
-              <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl border border-indigo-200 overflow-hidden">
-                <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-4 py-3">
-                  <h3 className="text-white font-bold text-center flex items-center justify-center">
-                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              {/* Service Schedule - Compact */}
+              <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg border border-indigo-200 overflow-hidden">
+                <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-2 py-1">
+                  <h3 className="text-white font-bold text-center flex items-center justify-center text-xs">
+                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22C6.47,22 2,17.5 2,12A10,10 0 0,1 12,2M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z"/>
                     </svg>
                     SERVICE SCHEDULE
