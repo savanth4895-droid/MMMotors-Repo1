@@ -1839,112 +1839,207 @@ const ViewInvoices = () => {
                 </div>
               </div>
 
-              <div className="space-y-6">
-                {/* Invoice Header */}
-                <div className="text-center border-b-2 border-gray-300 pb-4">
-                  <h1 className="text-3xl font-bold text-blue-600">M M MOTORS</h1>
-                  <p className="text-lg text-gray-600">Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130</p>
-                  <p className="text-lg text-gray-600">Two Wheeler Sales Invoice</p>
-                  <div className="mt-4 grid grid-cols-2 gap-4">
-                    <div className="text-left">
-                      <p><strong>Invoice No:</strong> {selectedInvoice.invoice_number}</p>
+              {/* Optimized Invoice Preview */}
+              <Card id="invoice-modal-preview" className="print-full-width shadow-2xl max-w-[21cm] mx-auto">
+                <CardContent className="p-0">
+                  <div className="invoice-container bg-white text-xs">
+                    {/* Professional Header - Compact */}
+                    <div className="header bg-gradient-to-r from-blue-800 to-blue-600 text-white p-3 rounded-t-lg">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h1 className="text-xl font-bold tracking-wide">M M MOTORS</h1>
+                          <p className="text-blue-100 text-xs mt-1 font-medium">Premium Two Wheeler Sales & Service</p>
+                          <div className="mt-1 text-blue-100 text-xs space-y-0.5">
+                            <p className="flex items-center">
+                              <span className="w-1.5 h-1.5 bg-blue-300 rounded-full mr-1.5"></span>
+                              Bengaluru main road, behind Ruchi Bakery
+                            </p>
+                            <p className="flex items-center">
+                              <span className="w-1.5 h-1.5 bg-blue-300 rounded-full mr-1.5"></span>
+                              Malur, Karnataka 563130
+                            </p>
+                            <p className="flex items-center">
+                              <span className="w-1.5 h-1.5 bg-blue-300 rounded-full mr-1.5"></span>
+                              Phone: 7026263123 | Email: mmmotors3123@gmail.com
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-2 border border-white border-opacity-30">
+                            <h2 className="text-sm font-bold text-white mb-1">SALES INVOICE</h2>
+                            <div className="space-y-0.5 text-xs">
+                              <div className="flex justify-between">
+                                <span className="text-blue-100 text-xs">Invoice No:</span>
+                                <span className="font-bold text-white text-xs">{selectedInvoice.invoice_number}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-blue-100 text-xs">Date:</span>
+                                <span className="font-bold text-white text-xs">{new Date(selectedInvoice.sale_date).toLocaleDateString('en-IN')}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p><strong>Date:</strong> {new Date(selectedInvoice.sale_date).toLocaleDateString('en-IN')}</p>
+
+                    <div className="p-3 space-y-3">
+                      {/* Customer & Vehicle Details Grid - Compact */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                        {/* Customer Details */}
+                        <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg border border-slate-200 overflow-hidden">
+                          <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-2 py-1">
+                            <h3 className="text-white font-bold flex items-center text-xs">
+                              <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                              </svg>
+                              CUSTOMER DETAILS
+                            </h3>
+                          </div>
+                          <div className="p-2 space-y-1">
+                            <div className="flex items-center border-b border-slate-200 pb-0.5">
+                              <span className="text-slate-600 font-medium w-12 text-xs">Name:</span>
+                              <span className="text-slate-900 font-semibold text-xs">{selectedInvoice.customer?.name || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center border-b border-slate-200 pb-0.5">
+                              <span className="text-slate-600 font-medium w-12 text-xs">Phone:</span>
+                              <span className="text-slate-900 font-mono font-semibold text-xs">{selectedInvoice.customer?.phone || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-start">
+                              <span className="text-slate-600 font-medium w-12 text-xs">Address:</span>
+                              <span className="text-slate-900 leading-tight text-xs">{selectedInvoice.customer?.address || 'N/A'}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Vehicle Details */}
+                        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg border border-emerald-200 overflow-hidden">
+                          <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 px-2 py-1">
+                            <h3 className="text-white font-bold flex items-center text-xs">
+                              <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12,2L14,6H18L14,8L15,12L12,10L9,12L10,8L6,6H10L12,2Z"/>
+                              </svg>
+                              VEHICLE DETAILS
+                            </h3>
+                          </div>
+                          <div className="p-2 space-y-1">
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="border-b border-emerald-200 pb-0.5">
+                                <span className="text-emerald-700 font-medium text-xs">Brand</span>
+                                <div className="text-slate-900 font-bold text-xs">{selectedInvoice.vehicle?.brand || 'N/A'}</div>
+                              </div>
+                              <div className="border-b border-emerald-200 pb-0.5">
+                                <span className="text-emerald-700 font-medium text-xs">Model</span>
+                                <div className="text-slate-900 font-semibold text-xs">{selectedInvoice.vehicle?.model || 'N/A'}</div>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="border-b border-emerald-200 pb-0.5">
+                                <span className="text-emerald-700 font-medium text-xs">Color</span>
+                                <div className="text-slate-900 text-xs">{selectedInvoice.vehicle?.color || 'N/A'}</div>
+                              </div>
+                              <div className="border-b border-emerald-200 pb-0.5">
+                                <span className="text-emerald-700 font-medium text-xs">Vehicle No</span>
+                                <div className="text-slate-900 font-mono font-bold text-xs">{selectedInvoice.vehicle?.vehicle_no || 'N/A'}</div>
+                              </div>
+                            </div>
+                            <div className="space-y-0.5">
+                              <div className="flex justify-between text-xs">
+                                <span className="text-emerald-700 font-medium">Chassis No:</span>
+                                <span className="text-slate-900 font-mono text-xs">{selectedInvoice.vehicle?.chassis_no || 'N/A'}</span>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-emerald-700 font-medium">Engine No:</span>
+                                <span className="text-slate-900 font-mono text-xs">{selectedInvoice.vehicle?.engine_no || 'N/A'}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Payment Summary - Compact */}
+                      <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200 overflow-hidden">
+                        <div className="bg-gradient-to-r from-green-600 to-green-700 px-2 py-1">
+                          <h3 className="text-white font-bold flex items-center text-xs">
+                            <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M7,15H9C9,16.08 10.37,17 12,17C13.63,17 15,16.08 15,15C15,13.9 13.96,13.5 11.76,12.97C9.64,12.44 7,11.78 7,9C7,7.21 8.47,5.69 10.5,5.18V3H13.5V5.18C15.53,5.69 17,7.21 17,9H15C15,7.92 13.63,7 12,7C10.37,7 9,7.92 9,9C9,10.1 10.04,10.5 12.24,11.03C14.36,11.56 17,12.22 17,15C17,16.79 15.53,18.31 13.5,18.82V21H10.5V18.82C8.47,18.31 7,16.79 7,15Z"/>
+                            </svg>
+                            PAYMENT SUMMARY
+                          </h3>
+                        </div>
+                        <div className="p-2">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
+                            <div className="space-y-1">
+                              <div className="flex justify-between items-center py-1 border-b border-green-200">
+                                <span className="text-green-700 font-medium text-xs">Payment Method:</span>
+                                <span className="text-slate-900 font-bold uppercase bg-green-200 px-2 py-0.5 rounded-full text-xs">
+                                  {selectedInvoice.payment_method || 'CASH'}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="bg-white rounded-lg p-2 border border-green-300 shadow-sm">
+                              <div className="text-center">
+                                <span className="text-green-700 font-medium text-xs block mb-1">TOTAL AMOUNT</span>
+                                <div className="text-lg font-bold text-green-600">
+                                  ₹{selectedInvoice.amount?.toLocaleString() || '0'}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-2 border border-yellow-200">
+                            <span className="text-orange-800 font-semibold text-xs">Amount in Words:</span>
+                            <div className="text-slate-900 font-medium mt-0.5 italic text-xs">
+                              {numberToWords(selectedInvoice.amount || 0)} Rupees Only
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Professional Footer - Compact */}
+                      <div className="mt-3 bg-gradient-to-r from-slate-100 to-slate-200 rounded-lg p-3 border border-slate-300">
+                        <div className="text-center space-y-2">
+                          <div className="flex items-center justify-center space-x-6 text-slate-700">
+                            <div className="flex items-center">
+                              <svg className="w-3 h-3 mr-1 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M9,11H15L13,9H11V7H13V9H15V7A2,2 0 0,0 13,5H11A2,2 0 0,0 9,7V9H7L9,11M20,6H16V4A2,2 0 0,0 14,2H10A2,2 0 0,0 8,4V6H4A2,2 0 0,0 2,8V19A2,2 0 0,0 4,21H20A2,2 0 0,0 22,19V8A2,2 0 0,0 20,6Z"/>
+                              </svg>
+                              <span className="text-xs font-medium">Authorized Dealer</span>
+                            </div>
+                            <div className="flex items-center">
+                              <svg className="w-3 h-3 mr-1 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,7V13H12.5L16.2,16.7L17.3,15.6L14.2,12.5H13V7H11Z"/>
+                              </svg>
+                              <span className="text-xs font-medium">24/7 Service Support</span>
+                            </div>
+                            <div className="flex items-center">
+                              <svg className="w-3 h-3 mr-1 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
+                              </svg>
+                              <span className="text-xs font-medium">Quality Guaranteed</span>
+                            </div>
+                          </div>
+                          
+                          <div className="border-t border-slate-300 pt-2">
+                            <h4 className="text-sm font-bold text-slate-800 mb-1">Thank You for Choosing M M Motors!</h4>
+                            <p className="text-slate-600 text-xs mb-1">Your trust drives our excellence in two-wheeler sales and service.</p>
+                            <div className="flex justify-center items-center space-x-3 text-xs text-slate-500">
+                              <span>🌟 Premium Quality</span>
+                              <span>•</span>
+                              <span>⚡ Expert Service</span>
+                              <span>•</span>
+                              <span>🤝 Customer First</span>
+                            </div>
+                          </div>
+                          
+                          <div className="text-xs text-slate-500 border-t border-slate-300 pt-1">
+                            This is a computer-generated invoice and does not require a signature. 
+                            For queries, contact us at mmmotors3123@gmail.com or 7026263123
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                {/* Customer Details */}
-                <div className="border-2 border-gray-300 rounded-lg p-4 mb-4">
-                  <h3 className="text-lg font-semibold mb-3 text-blue-600 border-b border-gray-200 pb-2">Customer Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><strong>Name:</strong> {selectedInvoice.customer?.name || 'N/A'}</div>
-                    <div><strong>Phone:</strong> {selectedInvoice.customer?.phone || 'N/A'}</div>
-                    <div className="md:col-span-2"><strong>Address:</strong> {selectedInvoice.customer?.address || 'N/A'}</div>
-                  </div>
-                </div>
-
-                {/* Vehicle Details */}
-                <div className="border-2 border-gray-300 rounded-lg p-4 mb-4">
-                  <h3 className="text-lg font-semibold mb-3 text-blue-600 border-b border-gray-200 pb-2">Vehicle Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><strong>Brand:</strong> {selectedInvoice.vehicle?.brand || 'N/A'}</div>
-                    <div><strong>Model:</strong> {selectedInvoice.vehicle?.model || 'N/A'}</div>
-                    <div><strong>Color:</strong> {selectedInvoice.vehicle?.color || 'N/A'}</div>
-                    <div><strong>Chassis No:</strong> {selectedInvoice.vehicle?.chassis_no || 'N/A'}</div>
-                    <div><strong>Engine No:</strong> {selectedInvoice.vehicle?.engine_no || 'N/A'}</div>
-                  </div>
-                </div>
-
-                {/* Payment Details */}
-                <div className="border-2 border-gray-300 rounded-lg p-4 mb-4">
-                  <h3 className="text-lg font-semibold mb-3 text-blue-600 border-b border-gray-200 pb-2">Payment Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <div><strong>Payment Method:</strong> {selectedInvoice.payment_method?.toUpperCase() || 'CASH'}</div>
-                    <div><strong>Hypothecation:</strong> {selectedInvoice.hypothecation || 'CASH'}</div>
-                    <div className="text-right">
-                      <span className="text-2xl font-bold text-green-600">
-                        Total: ₹{selectedInvoice.amount?.toLocaleString() || '0'}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="border-t pt-3">
-                    <div><strong>Amount in Words:</strong> <span className="italic">{numberToWords(selectedInvoice.amount || 0)} Rupees Only</span></div>
-                  </div>
-                </div>
-
-                {/* Service Details */}
-                <div className="border-2 border-gray-300 rounded-lg p-4 mb-4">
-                  <h3 className="text-lg font-semibold mb-3 text-blue-600 border-b border-gray-200 pb-2 text-center">SERVICE DETAILS</h3>
-                  
-                  <div className="mb-4 p-3 bg-gray-50 rounded">
-                    <p className="font-semibold text-gray-800">DEAR CUSTOMER,</p>
-                    <p className="mt-2 text-sm text-gray-700">
-                      WE THANK YOU FOR BUYING A WORLD CLASS VEHICLE. YOUR VEHICLE IS TO BE SERVICED AS PER THE 
-                      SCHEDULE GIVEN BELOW FOR YOU TO ENJOY PLEASANT RIDING AT ALL TIMES.
-                    </p>
-                  </div>
-
-                  <div className="border-2 border-gray-400 rounded">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b-2 border-gray-400 bg-gray-100">
-                          <th className="p-2 text-left font-bold border-r border-gray-400">DATE</th>
-                          <th className="p-2 text-left font-bold border-r border-gray-400">SERVICE</th>
-                          <th className="p-2 text-left font-bold">SCHEDULE</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="border-b border-gray-300">
-                          <td className="p-2 border-r border-gray-400">01-01-1900 12:00:00</td>
-                          <td className="p-2 border-r border-gray-400 font-semibold">FIRST</td>
-                          <td className="p-2">500 to 700 kms or 15 to 30 days</td>
-                        </tr>
-                        <tr className="border-b border-gray-300">
-                          <td className="p-2 border-r border-gray-400">01-01-1900 12:00:00</td>
-                          <td className="p-2 border-r border-gray-400 font-semibold">SECOND</td>
-                          <td className="p-2">3000 to 3500 kms or 30 to 90 days</td>
-                        </tr>
-                        <tr className="border-b border-gray-300">
-                          <td className="p-2 border-r border-gray-400">01-01-1900 12:00:00</td>
-                          <td className="p-2 border-r border-gray-400 font-semibold">THIRD</td>
-                          <td className="p-2">6000 to 6500 kms or 90 to 180 days</td>
-                        </tr>
-                        <tr>
-                          <td className="p-2 border-r border-gray-400">01-01-1900 12:00:00</td>
-                          <td className="p-2 border-r border-gray-400 font-semibold">FOURTH</td>
-                          <td className="p-2">9000 to 9500 kms or 180 to 270 days</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    
-                    <div className="text-center p-2 border-t-2 border-gray-400 bg-gray-100">
-                      <p className="font-bold">(WHICHEVER IS EARLIER)</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
 
               <div className="mt-6 flex justify-end gap-2">
                 <Button 
