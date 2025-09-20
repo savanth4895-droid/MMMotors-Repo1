@@ -2040,28 +2040,6 @@ const ViewInvoices = () => {
                   </div>
                 </CardContent>
               </Card>
-
-              <div className="mt-6 flex justify-end gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => handlePrintInvoice(selectedInvoice)}
-                  className="flex items-center gap-2"
-                >
-                  <FileText className="w-4 h-4" />
-                  Print Invoice
-                </Button>
-                <Button
-                  onClick={() => handleDownloadInvoicePDF(selectedInvoice)}
-                  variant="outline"
-                  className="flex items-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Download PDF
-                </Button>
-                <Button onClick={() => setShowInvoiceModal(false)}>
-                  Close
-                </Button>
-              </div>
             </div>
           </div>
         </div>
