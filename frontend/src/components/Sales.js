@@ -849,14 +849,14 @@ const CreateInvoice = () => {
                       <svg className="w-3 h-3 mr-1 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
                       </svg>
-                      <span className="text-sm font-medium">Quality Guaranteed</span>
+                      <span className="text-xs font-medium">Quality Guaranteed</span>
                     </div>
                   </div>
                   
-                  <div className="border-t border-slate-300 pt-4">
-                    <h4 className="text-xl font-bold text-slate-800 mb-2">Thank You for Choosing M M Motors!</h4>
-                    <p className="text-slate-600 text-sm mb-2">Your trust drives our excellence in two-wheeler sales and service.</p>
-                    <div className="flex justify-center items-center space-x-4 text-xs text-slate-500">
+                  <div className="border-t border-slate-300 pt-2">
+                    <h4 className="text-sm font-bold text-slate-800 mb-1">Thank You for Choosing M M Motors!</h4>
+                    <p className="text-slate-600 text-xs mb-1">Your trust drives our excellence in two-wheeler sales and service.</p>
+                    <div className="flex justify-center items-center space-x-3 text-xs text-slate-500">
                       <span>🌟 Premium Quality</span>
                       <span>•</span>
                       <span>⚡ Expert Service</span>
@@ -865,9 +865,9 @@ const CreateInvoice = () => {
                     </div>
                   </div>
                   
-                  <div className="text-xs text-slate-500 border-t border-slate-300 pt-2">
+                  <div className="text-xs text-slate-500 border-t border-slate-300 pt-1">
                     This is a computer-generated invoice and does not require a signature. 
-                    For queries, contact us at sales@mmmotors.com or +91 80 2345 6789
+                    For queries, contact us at mmmotors3123@gmail.com or 7026263123
                   </div>
                 </div>
               </div>
