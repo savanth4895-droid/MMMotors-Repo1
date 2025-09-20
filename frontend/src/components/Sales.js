@@ -778,50 +778,50 @@ const CreateInvoice = () => {
                     SERVICE SCHEDULE
                   </h3>
                 </div>
-                <div className="p-4">
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 mb-4 border border-indigo-200">
-                    <p className="font-bold text-indigo-800 text-sm mb-2">DEAR VALUED CUSTOMER,</p>
-                    <p className="text-indigo-700 text-sm leading-relaxed">
+                <div className="p-2">
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-2 mb-2 border border-indigo-200">
+                    <p className="font-bold text-indigo-800 text-xs mb-1">DEAR VALUED CUSTOMER,</p>
+                    <p className="text-indigo-700 text-xs leading-tight">
                       We thank you for choosing our world-class vehicle. To ensure optimal performance and longevity, 
                       please follow the service schedule below for a pleasant riding experience at all times.
                     </p>
                   </div>
 
                   <div className="overflow-hidden rounded-lg border border-indigo-300 shadow-sm">
-                    <table className="w-full text-sm">
+                    <table className="w-full text-xs">
                       <thead>
                         <tr className="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white">
-                          <th className="p-3 text-left font-bold border-r border-indigo-500">SERVICE DATE</th>
-                          <th className="p-3 text-left font-bold border-r border-indigo-500">SERVICE TYPE</th>
-                          <th className="p-3 text-left font-bold">RECOMMENDED SCHEDULE</th>
+                          <th className="p-1.5 text-left font-bold border-r border-indigo-500">SERVICE DATE</th>
+                          <th className="p-1.5 text-left font-bold border-r border-indigo-500">SERVICE TYPE</th>
+                          <th className="p-1.5 text-left font-bold">RECOMMENDED SCHEDULE</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white">
                         <tr className="border-b border-indigo-200 hover:bg-indigo-50">
-                          <td className="p-3 border-r border-indigo-200 text-slate-600">____/____/____</td>
-                          <td className="p-3 border-r border-indigo-200 font-bold text-indigo-700">FIRST SERVICE</td>
-                          <td className="p-3 text-slate-800">500-700 kms or 15-30 days</td>
+                          <td className="p-1.5 border-r border-indigo-200 text-slate-600">____/____/____</td>
+                          <td className="p-1.5 border-r border-indigo-200 font-bold text-indigo-700">FIRST SERVICE</td>
+                          <td className="p-1.5 text-slate-800">500-700 kms or 15-30 days</td>
                         </tr>
                         <tr className="border-b border-indigo-200 hover:bg-indigo-50">
-                          <td className="p-3 border-r border-indigo-200 text-slate-600">____/____/____</td>
-                          <td className="p-3 border-r border-indigo-200 font-bold text-indigo-700">SECOND SERVICE</td>
-                          <td className="p-3 text-slate-800">3000-3500 kms or 30-90 days</td>
+                          <td className="p-1.5 border-r border-indigo-200 text-slate-600">____/____/____</td>
+                          <td className="p-1.5 border-r border-indigo-200 font-bold text-indigo-700">SECOND SERVICE</td>
+                          <td className="p-1.5 text-slate-800">3000-3500 kms or 30-90 days</td>
                         </tr>
                         <tr className="border-b border-indigo-200 hover:bg-indigo-50">
-                          <td className="p-3 border-r border-indigo-200 text-slate-600">____/____/____</td>
-                          <td className="p-3 border-r border-indigo-200 font-bold text-indigo-700">THIRD SERVICE</td>
-                          <td className="p-3 text-slate-800">6000-6500 kms or 90-180 days</td>
+                          <td className="p-1.5 border-r border-indigo-200 text-slate-600">____/____/____</td>
+                          <td className="p-1.5 border-r border-indigo-200 font-bold text-indigo-700">THIRD SERVICE</td>
+                          <td className="p-1.5 text-slate-800">6000-6500 kms or 90-180 days</td>
                         </tr>
                         <tr className="hover:bg-indigo-50">
-                          <td className="p-3 border-r border-indigo-200 text-slate-600">____/____/____</td>
-                          <td className="p-3 border-r border-indigo-200 font-bold text-indigo-700">FOURTH SERVICE</td>
-                          <td className="p-3 text-slate-800">9000-9500 kms or 180-270 days</td>
+                          <td className="p-1.5 border-r border-indigo-200 text-slate-600">____/____/____</td>
+                          <td className="p-1.5 border-r border-indigo-200 font-bold text-indigo-700">FOURTH SERVICE</td>
+                          <td className="p-1.5 text-slate-800">9000-9500 kms or 180-270 days</td>
                         </tr>
                       </tbody>
                     </table>
                     
-                    <div className="bg-gradient-to-r from-amber-100 to-yellow-100 border-t border-indigo-300 p-3 text-center">
-                      <p className="font-bold text-amber-800 text-sm">
+                    <div className="bg-gradient-to-r from-amber-100 to-yellow-100 border-t border-indigo-300 p-1.5 text-center">
+                      <p className="font-bold text-amber-800 text-xs">
                         ⚠️ IMPORTANT: Follow whichever milestone comes first (kilometers or days)
                       </p>
                     </div>
@@ -829,24 +829,24 @@ const CreateInvoice = () => {
                 </div>
               </div>
 
-              {/* Professional Footer */}
-              <div className="mt-6 bg-gradient-to-r from-slate-100 to-slate-200 rounded-xl p-6 border border-slate-300">
-                <div className="text-center space-y-4">
-                  <div className="flex items-center justify-center space-x-8 text-slate-700">
+              {/* Professional Footer - Compact */}
+              <div className="mt-3 bg-gradient-to-r from-slate-100 to-slate-200 rounded-lg p-3 border border-slate-300">
+                <div className="text-center space-y-2">
+                  <div className="flex items-center justify-center space-x-6 text-slate-700">
                     <div className="flex items-center">
-                      <svg className="w-4 h-4 mr-2 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 mr-1 text-green-600" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M9,11H15L13,9H11V7H13V9H15V7A2,2 0 0,0 13,5H11A2,2 0 0,0 9,7V9H7L9,11M20,6H16V4A2,2 0 0,0 14,2H10A2,2 0 0,0 8,4V6H4A2,2 0 0,0 2,8V19A2,2 0 0,0 4,21H20A2,2 0 0,0 22,19V8A2,2 0 0,0 20,6Z"/>
                       </svg>
-                      <span className="text-sm font-medium">Authorized Dealer</span>
+                      <span className="text-xs font-medium">Authorized Dealer</span>
                     </div>
                     <div className="flex items-center">
-                      <svg className="w-4 h-4 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 mr-1 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,7V13H12.5L16.2,16.7L17.3,15.6L14.2,12.5H13V7H11Z"/>
                       </svg>
-                      <span className="text-sm font-medium">24/7 Service Support</span>
+                      <span className="text-xs font-medium">24/7 Service Support</span>
                     </div>
                     <div className="flex items-center">
-                      <svg className="w-4 h-4 mr-2 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 mr-1 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
                       </svg>
                       <span className="text-sm font-medium">Quality Guaranteed</span>
