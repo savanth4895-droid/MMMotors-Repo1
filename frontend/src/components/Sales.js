@@ -621,77 +621,77 @@ const CreateInvoice = () => {
 
               <div className="p-3 space-y-3">
 
-              {/* Customer & Vehicle Details Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Customer & Vehicle Details Grid - Compact */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
                 {/* Customer Details */}
-                <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200 overflow-hidden">
-                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-3 py-2">
-                    <h3 className="text-white font-bold flex items-center text-sm">
-                      <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg border border-slate-200 overflow-hidden">
+                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-2 py-1">
+                    <h3 className="text-white font-bold flex items-center text-xs">
+                      <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                       </svg>
                       CUSTOMER DETAILS
                     </h3>
                   </div>
-                  <div className="p-3 space-y-2">
-                    <div className="flex items-center border-b border-slate-200 pb-1">
-                      <span className="text-slate-600 font-medium w-16 text-xs">Name:</span>
+                  <div className="p-2 space-y-1">
+                    <div className="flex items-center border-b border-slate-200 pb-0.5">
+                      <span className="text-slate-600 font-medium w-12 text-xs">Name:</span>
                       <span className="text-slate-900 font-semibold text-xs">{generatedInvoice.customer.name}</span>
                     </div>
-                    <div className="flex items-center border-b border-slate-200 pb-1">
-                      <span className="text-slate-600 font-medium w-16 text-xs">C/O:</span>
+                    <div className="flex items-center border-b border-slate-200 pb-0.5">
+                      <span className="text-slate-600 font-medium w-12 text-xs">C/O:</span>
                       <span className="text-slate-900 text-xs">{generatedInvoice.customer.care_of}</span>
                     </div>
-                    <div className="flex items-center border-b border-slate-200 pb-1">
-                      <span className="text-slate-600 font-medium w-16 text-xs">Mobile:</span>
+                    <div className="flex items-center border-b border-slate-200 pb-0.5">
+                      <span className="text-slate-600 font-medium w-12 text-xs">Mobile:</span>
                       <span className="text-slate-900 font-mono font-semibold text-xs">{generatedInvoice.customer.mobile}</span>
                     </div>
                     <div className="flex items-start">
-                      <span className="text-slate-600 font-medium w-16 text-xs">Address:</span>
-                      <span className="text-slate-900 leading-relaxed text-xs">{generatedInvoice.customer.address}</span>
+                      <span className="text-slate-600 font-medium w-12 text-xs">Address:</span>
+                      <span className="text-slate-900 leading-tight text-xs">{generatedInvoice.customer.address}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Vehicle Details */}
-                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl border border-emerald-200 overflow-hidden">
-                  <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 px-3 py-2">
-                    <h3 className="text-white font-bold flex items-center text-sm">
-                      <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg border border-emerald-200 overflow-hidden">
+                  <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 px-2 py-1">
+                    <h3 className="text-white font-bold flex items-center text-xs">
+                      <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12,2L14,6H18L14,8L15,12L12,10L9,12L10,8L6,6H10L12,2Z"/>
                       </svg>
                       VEHICLE DETAILS
                     </h3>
                   </div>
-                  <div className="p-3 space-y-2">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="border-b border-emerald-200 pb-1">
+                  <div className="p-2 space-y-1">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="border-b border-emerald-200 pb-0.5">
                         <span className="text-emerald-700 font-medium text-xs">Brand</span>
-                        <div className="text-slate-900 font-bold text-sm">{generatedInvoice.vehicle.brand}</div>
+                        <div className="text-slate-900 font-bold text-xs">{generatedInvoice.vehicle.brand}</div>
                       </div>
-                      <div className="border-b border-emerald-200 pb-1">
+                      <div className="border-b border-emerald-200 pb-0.5">
                         <span className="text-emerald-700 font-medium text-xs">Model</span>
-                        <div className="text-slate-900 font-semibold text-sm">{generatedInvoice.vehicle.model}</div>
+                        <div className="text-slate-900 font-semibold text-xs">{generatedInvoice.vehicle.model}</div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="border-b border-emerald-200 pb-1">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="border-b border-emerald-200 pb-0.5">
                         <span className="text-emerald-700 font-medium text-xs">Color</span>
-                        <div className="text-slate-900 text-sm">{generatedInvoice.vehicle.color}</div>
+                        <div className="text-slate-900 text-xs">{generatedInvoice.vehicle.color}</div>
                       </div>
-                      <div className="border-b border-emerald-200 pb-1">
+                      <div className="border-b border-emerald-200 pb-0.5">
                         <span className="text-emerald-700 font-medium text-xs">Vehicle No</span>
-                        <div className="text-slate-900 font-mono font-bold text-sm">{generatedInvoice.vehicle.vehicle_no}</div>
+                        <div className="text-slate-900 font-mono font-bold text-xs">{generatedInvoice.vehicle.vehicle_no}</div>
                       </div>
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-0.5">
                       <div className="flex justify-between text-xs">
                         <span className="text-emerald-700 font-medium">Chassis No:</span>
-                        <span className="text-slate-900 font-mono">{generatedInvoice.vehicle.chassis_no}</span>
+                        <span className="text-slate-900 font-mono text-xs">{generatedInvoice.vehicle.chassis_no}</span>
                       </div>
                       <div className="flex justify-between text-xs">
                         <span className="text-emerald-700 font-medium">Engine No:</span>
-                        <span className="text-slate-900 font-mono">{generatedInvoice.vehicle.engine_no}</span>
+                        <span className="text-slate-900 font-mono text-xs">{generatedInvoice.vehicle.engine_no}</span>
                       </div>
                     </div>
                   </div>
