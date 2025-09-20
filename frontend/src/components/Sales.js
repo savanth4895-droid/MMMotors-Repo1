@@ -498,8 +498,8 @@ const CreateInvoice = () => {
       const { default: html2pdf } = await import('html2pdf.js');
 
       // Generate filename with customer name and mobile number
-      const customerName = invoiceData.customer?.name || 'Customer';
-      const customerMobile = invoiceData.customer?.mobile || 'Customer Mobile Number';
+      const customerName = invoiceData.customer?.name || 'Name';
+      const customerMobile = invoiceData.customer?.mobile || 'Mobile';
       const sanitizedName = customerName.replace(/[^a-zA-Z0-9]/g, '_');
       const sanitizedMobile = customerMobile.replace(/[^0-9]/g, '');
       const filename = `Invoice_${sanitizedName}_${sanitizedMobile}_${invoiceData.invoice_number}.pdf`;
@@ -520,7 +520,7 @@ const CreateInvoice = () => {
           unit: 'mm', 
           format: 'a4', 
           orientation: 'portrait',
-          compress: true
+          compress: false
         }
       };
 
@@ -1277,7 +1277,7 @@ const ViewInvoices = () => {
       const { default: html2pdf } = await import('html2pdf.js');
 
       // Generate filename with customer name and mobile number
-      const customerName = invoice.customer?.name || 'Customer';
+      const customerName = invoice.customer?.name || 'name';
       const customerMobile = invoice.customer?.phone || 'mobile';
       const sanitizedName = customerName.replace(/[^a-zA-Z0-9]/g, '_');
       const sanitizedMobile = customerMobile.replace(/[^0-9]/g, '');
