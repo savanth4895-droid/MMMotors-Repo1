@@ -1607,12 +1607,21 @@ const ViewInvoices = () => {
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold">Invoice Details</h2>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowInvoiceModal(false)}
-                >
-                  Close
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handlePrintInvoiceModal(selectedInvoice)}
+                    className="flex items-center gap-2"
+                  >
+                    Print
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowInvoiceModal(false)}
+                  >
+                    Close
+                  </Button>
+                </div>
               </div>
 
               <div className="space-y-6">
