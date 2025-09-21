@@ -941,7 +941,7 @@ async def parse_excel_file(file_content: bytes) -> List[Dict]:
     return df.to_dict('records')
 
 async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id: str) -> ImportResult:
-    """Import customers data"""
+    """Import customers data with vehicle and insurance information"""
     successful = 0
     failed = 0
     errors = []
@@ -963,6 +963,7 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
             if not address:
                 address = "Address not provided"
             
+            # Create basic customer record
             customer_data = CustomerCreate(
                 name=name,
                 phone=phone_number,
@@ -971,7 +972,51 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
             )
             
             customer = Customer(**customer_data.dict())
-            await db.customers.insert_one(customer.dict())
+            
+            # Add vehicle and insurance information as extended data
+            vehicle_info = {}
+            insurance_info = {}
+            sales_info = {}
+            
+            # Map vehicle fields from form to CSV template
+            if row.get('vehicle_brand') or row.get('vehicle_model'):
+                vehicle_info = {
+                    'brand': row.get('vehicle_brand', '').strip(),
+                    'model': row.get('vehicle_model', '').strip(), 
+                    'color': row.get('vehicle_color', '').strip(),
+                    'vehicle_number': row.get('vehicle_no', '').strip(),
+                    'chassis_number': row.get('chassis_no', '').strip(),
+                    'engine_number': row.get('engine_no', '').strip()
+                }
+            
+            # Map insurance nominee fields
+            if row.get('insurance_nominee') or row.get('insurance_relation'):
+                insurance_info = {
+                    'nominee_name': row.get('insurance_nominee', '').strip(),
+                    'relation': row.get('insurance_relation', '').strip(),
+                    'age': row.get('insurance_age', '').strip()
+                }
+            
+            # Map sales information if available
+            if row.get('sale_amount') or row.get('payment_method'):
+                sales_info = {
+                    'amount': row.get('sale_amount', '').strip(),
+                    'payment_method': row.get('payment_method', '').strip(),
+                    'hypothecation': row.get('hypothecation', '').strip(),
+                    'sale_date': row.get('sale_date', '').strip(),
+                    'invoice_number': row.get('invoice_number', '').strip()
+                }
+            
+            # Add extended information to customer record
+            customer_dict = customer.dict()
+            if vehicle_info and any(vehicle_info.values()):
+                customer_dict['vehicle_info'] = vehicle_info
+            if insurance_info and any(insurance_info.values()):
+                customer_dict['insurance_info'] = insurance_info  
+            if sales_info and any(sales_info.values()):
+                customer_dict['sales_info'] = sales_info
+            
+            await db.customers.insert_one(customer_dict)
             successful += 1
             
         except Exception as e:
