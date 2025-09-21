@@ -203,7 +203,7 @@ def main():
     print("=" * 60)
     
     db, client = connect_to_database()
-    if not db:
+    if db is None:
         return
     
     try:
