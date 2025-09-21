@@ -1020,7 +1020,6 @@ const CreateInvoice = () => {
                   placeholder="Enter chassis number"
                   value={invoiceData.chassis_no}
                   onChange={(e) => handleInputChange('chassis_no', e.target.value)}
-                  required
                 />
               </div>
               <div>
