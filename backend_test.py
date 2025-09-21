@@ -3009,6 +3009,37 @@ def test_customer_update_functionality():
         
         return success_rate >= 95
 
+def test_comprehensive_backend():
+    """
+    COMPREHENSIVE M M MOTORS BACKEND TESTING
+    As requested in the comprehensive review request
+    """
+    print("🚀 COMPREHENSIVE M M MOTORS BACKEND TESTING")
+    print("=" * 80)
+    print("Testing all backend functionality as requested in comprehensive review")
+    
+    tester = TwoWheelerAPITester()
+    
+    # Test basic connectivity first
+    print("\n📡 Testing Basic Connectivity...")
+    success, _ = tester.test_root_endpoint()
+    if not success:
+        print("❌ Cannot connect to API. Stopping tests.")
+        return 1
+    
+    # Run the comprehensive test suite
+    success = tester.run_comprehensive_tests()
+    
+    # Print final results
+    print("\n" + "=" * 80)
+    print(f"📊 Final Test Results:")
+    print(f"   Tests Run: {tester.tests_run}")
+    print(f"   Tests Passed: {tester.tests_passed}")
+    print(f"   Tests Failed: {tester.tests_run - tester.tests_passed}")
+    print(f"   Success Rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
+    
+    return 0 if success else 1
+
 def main():
     print("🚀 Starting Two Wheeler Business Management System API Tests")
     print("=" * 60)
