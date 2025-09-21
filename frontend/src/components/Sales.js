@@ -1731,7 +1731,7 @@ const ViewInvoices = () => {
   const handlePrintInvoiceModal = (invoice) => {
     if (!invoice) return;
     
-    // Create a new window with the optimized invoice layout
+    // Create a new window with the optimized invoice layout matching sales invoice format
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     
     printWindow.document.write(`
@@ -1751,188 +1751,447 @@ const ViewInvoices = () => {
             .invoice-container { 
               max-width: 210mm; 
               margin: 0 auto; 
-              padding: 10mm;
+              padding: 8mm;
               background: white;
             }
             
-            /* Header Styles */
+            /* Professional Header - Matching Sales Invoice */
             .header { 
-              text-align: center; 
               background: linear-gradient(135deg, #2563eb, #1d4ed8);
               color: white;
               padding: 15px;
-              margin-bottom: 20px;
+              margin-bottom: 15px;
               border-radius: 8px;
+              display: flex;
+              justify-content: space-between;
+              align-items: start;
+            }
+            .header-left {
+              flex: 1;
             }
             .company-name { 
               font-size: 24px; 
               font-weight: bold; 
-              margin-bottom: 5px;
+              margin-bottom: 4px;
             }
             .company-tagline { 
-              font-size: 14px; 
+              font-size: 12px; 
               opacity: 0.9;
-              margin-bottom: 10px;
+              margin-bottom: 8px;
             }
             .company-address { 
-              font-size: 12px; 
+              font-size: 11px; 
               line-height: 1.4;
             }
-            
-            /* Invoice Info */
-            .invoice-info { 
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 20px;
-              margin-bottom: 20px;
-              padding: 15px;
-              background: #f8fafc;
-              border-radius: 8px;
-              border: 1px solid #e2e8f0;
+            .company-address p {
+              margin: 2px 0;
+              display: flex;
+              align-items: center;
             }
-            .info-section h4 { 
-              color: #1e40af;
+            .bullet {
+              width: 4px;
+              height: 4px;
+              background: rgba(255,255,255,0.7);
+              border-radius: 50%;
+              margin-right: 8px;
+            }
+            .header-right {
+              background: rgba(255,255,255,0.2);
+              padding: 12px;
+              border-radius: 8px;
+              border: 1px solid rgba(255,255,255,0.3);
+            }
+            .invoice-title {
               font-size: 14px;
               font-weight: bold;
               margin-bottom: 8px;
-              border-bottom: 2px solid #3b82f6;
-              padding-bottom: 4px;
             }
-            .info-row { 
+            .invoice-info {
+              font-size: 11px;
+            }
+            .invoice-info div {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 4px;
+            }
+            
+            /* Content Sections - Matching Sales Invoice */
+            .content-section {
+              margin-bottom: 12px;
+            }
+            .section-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 12px;
+              margin-bottom: 12px;
+            }
+            .detail-card {
+              border-radius: 8px;
+              border: 1px solid #e2e8f0;
+              overflow: hidden;
+            }
+            .detail-header {
+              padding: 8px 12px;
+              font-weight: bold;
+              font-size: 11px;
+              color: white;
+              display: flex;
+              align-items: center;
+            }
+            .detail-content {
+              padding: 10px 12px;
+              background: #f8fafc;
+              font-size: 11px;
+            }
+            .detail-row {
               display: flex;
               justify-content: space-between;
               margin-bottom: 6px;
-              padding: 3px 0;
+              padding-bottom: 3px;
+              border-bottom: 1px solid #e2e8f0;
             }
-            .info-label { 
+            .detail-row:last-child {
+              border-bottom: none;
+              margin-bottom: 0;
+            }
+            .detail-label {
               font-weight: 600;
               color: #374151;
-              font-size: 12px;
+              min-width: 60px;
             }
-            .info-value { 
+            .detail-value {
               color: #111827;
-              font-size: 12px;
+              text-align: right;
             }
             
-            /* Content Sections */
-            .section {
-              margin-bottom: 15px;
-              padding: 10px;
-              border: 1px solid #d1d5db;
-              border-radius: 6px;
-              background: #f9fafb;
-            }
-            .section-title {
-              font-weight: bold;
-              color: #1f2937;
-              margin-bottom: 8px;
-              font-size: 14px;
-              border-bottom: 1px solid #d1d5db;
-              padding-bottom: 4px;
-            }
+            /* Color themes for different sections */
+            .customer-card .detail-header { background: linear-gradient(135deg, #2563eb, #3b82f6); }
+            .vehicle-card .detail-header { background: linear-gradient(135deg, #059669, #10b981); }
+            .insurance-card .detail-header { background: linear-gradient(135deg, #7c3aed, #8b5cf6); }
             
-            .amount-section {
-              text-align: center;
+            /* Payment Summary - Matching Sales Invoice */
+            .payment-summary {
               background: linear-gradient(135deg, #059669, #10b981);
               color: white;
               padding: 15px;
               border-radius: 8px;
               margin: 15px 0;
+              text-align: center;
             }
-            .amount-value {
-              font-size: 24px;
+            .payment-header {
+              font-size: 12px;
               font-weight: bold;
+              margin-bottom: 4px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            .payment-method {
+              font-size: 10px;
+              background: rgba(255,255,255,0.2);
+              padding: 4px 8px;
+              border-radius: 12px;
+              margin-bottom: 8px;
+              display: inline-block;
+            }
+            .amount-large {
+              font-size: 28px;
+              font-weight: bold;
+              margin: 8px 0;
+            }
+            .amount-words {
+              font-size: 11px;
+              font-style: italic;
+              opacity: 0.9;
+              background: rgba(255,255,255,0.1);
+              padding: 8px;
+              border-radius: 4px;
+              margin-top: 8px;
             }
             
+            /* Service Schedule - Matching Sales Invoice */
+            .service-schedule {
+              border: 1px solid #e2e8f0;
+              border-radius: 8px;
+              overflow: hidden;
+              margin: 15px 0;
+            }
+            .service-header {
+              background: linear-gradient(135deg, #4f46e5, #6366f1);
+              color: white;
+              padding: 10px 12px;
+              font-weight: bold;
+              font-size: 12px;
+              text-align: center;
+            }
+            .service-message {
+              background: #f0f9ff;
+              padding: 12px;
+              border-bottom: 1px solid #bfdbfe;
+            }
+            .service-message p {
+              margin: 0;
+              font-size: 10px;
+              color: #1e40af;
+            }
+            .service-message .customer-greeting {
+              font-weight: bold;
+              margin-bottom: 4px;
+            }
+            .service-table {
+              width: 100%;
+              border-collapse: collapse;
+              font-size: 10px;
+            }
+            .service-table th {
+              background: linear-gradient(135deg, #4f46e5, #6366f1);
+              color: white;
+              padding: 8px;
+              text-align: left;
+              font-weight: bold;
+              border-right: 1px solid rgba(255,255,255,0.3);
+            }
+            .service-table td {
+              padding: 8px;
+              border-bottom: 1px solid #e2e8f0;
+              border-right: 1px solid #e2e8f0;
+            }
+            .service-table tr:nth-child(even) {
+              background: #f8fafc;
+            }
+            .service-type {
+              font-weight: bold;
+              color: #4f46e5;
+            }
+            .service-note {
+              background: linear-gradient(90deg, #fef3c7, #fde68a);
+              padding: 8px;
+              text-align: center;
+              font-weight: bold;
+              color: #92400e;
+              font-size: 10px;
+              border-top: 1px solid #f59e0b;
+            }
+            
+            /* Footer - Matching Sales Invoice */
             .footer {
+              background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+              border-radius: 8px;
+              padding: 15px;
               text-align: center;
               margin-top: 20px;
-              padding-top: 15px;
-              border-top: 1px solid #d1d5db;
+              border: 1px solid #cbd5e1;
+            }
+            .footer-badges {
+              display: flex;
+              justify-content: center;
+              gap: 20px;
+              margin-bottom: 12px;
+              font-size: 10px;
+              color: #475569;
+            }
+            .footer-title {
+              font-weight: bold;
+              font-size: 14px;
+              color: #1e293b;
+              margin-bottom: 6px;
+            }
+            .footer-subtitle {
               font-size: 11px;
-              color: #6b7280;
+              color: #64748b;
+              margin-bottom: 8px;
+            }
+            .footer-features {
+              font-size: 10px;
+              color: #64748b;
+              margin-bottom: 10px;
+            }
+            .footer-contact {
+              font-size: 10px;
+              color: #64748b;
+              border-top: 1px solid #cbd5e1;
+              padding-top: 10px;
             }
             
             @media print {
               body { -webkit-print-color-adjust: exact; }
-              .invoice-container { padding: 8mm; }
+              .invoice-container { padding: 6mm; }
               @page { size: A4; margin: 0.5cm; }
             }
           </style>
         </head>
         <body>
           <div class="invoice-container">
-            <!-- Header -->
+            <!-- Professional Header -->
             <div class="header">
-              <div class="company-name">M M MOTORS</div>
-              <div class="company-tagline">Premium Two Wheeler Sales & Service</div>
-              <div class="company-address">
-                Bengaluru main road, behind Ruchi Bakery<br>
-                Malur, Karnataka 563130<br>
-                Phone: 7026263123 | Email: mmmotors3123@gmail.com
+              <div class="header-left">
+                <div class="company-name">M M MOTORS</div>
+                <div class="company-tagline">Premium Two Wheeler Sales & Service</div>
+                <div class="company-address">
+                  <p><span class="bullet"></span>Bengaluru main road, behind Ruchi Bakery</p>
+                  <p><span class="bullet"></span>Malur, Karnataka 563130</p>
+                  <p><span class="bullet"></span>Phone: 7026263123 | Email: mmmotors3123@gmail.com</p>
+                </div>
+              </div>
+              <div class="header-right">
+                <div class="invoice-title">SALES INVOICE</div>
+                <div class="invoice-info">
+                  <div><span>Invoice No:</span><span>${invoice.invoice_number}</span></div>
+                  <div><span>Date:</span><span>${new Date(invoice.sale_date).toLocaleDateString('en-IN')}</span></div>
+                </div>
               </div>
             </div>
             
-            <!-- Invoice Info -->
-            <div class="invoice-info">
-              <div class="info-section">
-                <h4>Invoice Details</h4>
-                <div class="info-row">
-                  <span class="info-label">Invoice No:</span>
-                  <span class="info-value">${invoice.invoice_number}</span>
+            <!-- Customer & Vehicle Details Grid -->
+            <div class="section-grid">
+              <!-- Customer Details -->
+              <div class="detail-card customer-card">
+                <div class="detail-header">
+                  👤 CUSTOMER DETAILS
                 </div>
-                <div class="info-row">
-                  <span class="info-label">Date:</span>
-                  <span class="info-value">${new Date(invoice.sale_date).toLocaleDateString('en-IN')}</span>
+                <div class="detail-content">
+                  <div class="detail-row">
+                    <span class="detail-label">Name:</span>
+                    <span class="detail-value">${invoice.customer?.name || 'N/A'}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Phone:</span>
+                    <span class="detail-value">${invoice.customer?.phone || 'N/A'}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Address:</span>
+                    <span class="detail-value">${invoice.customer?.address || 'N/A'}</span>
+                  </div>
                 </div>
               </div>
               
-              <div class="info-section">
-                <h4>Payment Details</h4>
-                <div class="info-row">
-                  <span class="info-label">Method:</span>
-                  <span class="info-value">${invoice.payment_method}</span>
+              <!-- Vehicle Details -->
+              <div class="detail-card vehicle-card">
+                <div class="detail-header">
+                  🏍️ VEHICLE DETAILS
                 </div>
-                <div class="info-row">
-                  <span class="info-label">Status:</span>
-                  <span class="info-value">Completed</span>
+                <div class="detail-content">
+                  <div class="detail-row">
+                    <span class="detail-label">Brand:</span>
+                    <span class="detail-value">${invoice.vehicle?.brand || 'N/A'}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Model:</span>
+                    <span class="detail-value">${invoice.vehicle?.model || 'N/A'}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Color:</span>
+                    <span class="detail-value">${invoice.vehicle?.color || 'N/A'}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Vehicle No:</span>
+                    <span class="detail-value">${invoice.vehicle?.vehicle_no || 'N/A'}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Chassis No:</span>
+                    <span class="detail-value">${invoice.vehicle?.chassis_no || 'N/A'}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Engine No:</span>
+                    <span class="detail-value">${invoice.vehicle?.engine_no || 'N/A'}</span>
+                  </div>
                 </div>
               </div>
             </div>
             
-            <!-- Customer Details -->
-            <div class="section">
-              <div class="section-title">Customer Details</div>
-              <div><strong>Name:</strong> ${invoice.customer?.name || 'N/A'}</div>
-              <div><strong>Phone:</strong> ${invoice.customer?.phone || 'N/A'}</div>
-              <div><strong>Address:</strong> ${invoice.customer?.address || 'N/A'}</div>
+            <!-- Insurance Nominee Details -->
+            <div class="detail-card insurance-card">
+              <div class="detail-header">
+                🛡️ INSURANCE NOMINEE DETAILS
+              </div>
+              <div class="detail-content">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+                  <div style="text-align: center;">
+                    <div style="font-size: 10px; color: #7c3aed; font-weight: 600; margin-bottom: 4px;">Nominee Name</div>
+                    <div style="font-weight: bold;">${invoice.insurance_details?.nominee || 'N/A'}</div>
+                  </div>
+                  <div style="text-align: center;">
+                    <div style="font-size: 10px; color: #7c3aed; font-weight: 600; margin-bottom: 4px;">Relation</div>
+                    <div style="font-weight: bold; text-transform: capitalize;">${invoice.insurance_details?.relation || 'N/A'}</div>
+                  </div>
+                  <div style="text-align: center;">
+                    <div style="font-size: 10px; color: #7c3aed; font-weight: 600; margin-bottom: 4px;">Age</div>
+                    <div style="font-weight: bold;">${invoice.insurance_details?.age || 'N/A'} years</div>
+                  </div>
+                </div>
+              </div>
             </div>
             
-            <!-- Vehicle Details -->
-            <div class="section">
-              <div class="section-title">Vehicle Details</div>
-              <div><strong>Brand:</strong> ${invoice.vehicle?.brand || 'N/A'}</div>
-              <div><strong>Model:</strong> ${invoice.vehicle?.model || 'N/A'}</div>
-              <div><strong>Color:</strong> ${invoice.vehicle?.color || 'N/A'}</div>
-              <div><strong>Vehicle No:</strong> ${invoice.vehicle?.vehicle_no || 'N/A'}</div>
-              <div><strong>Chassis No:</strong> ${invoice.vehicle?.chassis_no || 'N/A'}</div>
-              <div><strong>Engine No:</strong> ${invoice.vehicle?.engine_no || 'N/A'}</div>
-            </div>
-            
-            <!-- Amount Section -->
-            <div class="amount-section">
-              <div style="font-size: 16px; margin-bottom: 5px;">Total Amount</div>
-              <div class="amount-value">₹${invoice.amount?.toLocaleString() || '0'}</div>
-              <div style="font-size: 12px; margin-top: 8px; font-style: italic;">
+            <!-- Payment Summary -->
+            <div class="payment-summary">
+              <div class="payment-header">💳 PAYMENT SUMMARY</div>
+              <div class="payment-method">Payment Method: ${invoice.payment_method || 'CASH'}</div>
+              <div style="font-size: 14px; margin-bottom: 4px;">TOTAL AMOUNT</div>
+              <div class="amount-large">₹${invoice.amount?.toLocaleString() || '0'}</div>
+              <div class="amount-words">
                 ${numberToWords(invoice.amount || 0)} Rupees Only
+              </div>
+            </div>
+            
+            <!-- Service Schedule -->
+            <div class="service-schedule">
+              <div class="service-header">
+                🔧 SERVICE SCHEDULE
+              </div>
+              <div class="service-message">
+                <p class="customer-greeting">DEAR VALUED CUSTOMER,</p>
+                <p>We thank you for choosing our world-class vehicle. To ensure optimal performance and longevity, please follow the service schedule below for a pleasant riding experience at all times.</p>
+              </div>
+              <table class="service-table">
+                <thead>
+                  <tr>
+                    <th style="width: 25%;">SERVICE DATE</th>
+                    <th style="width: 35%;">SERVICE TYPE</th>
+                    <th style="width: 40%;">RECOMMENDED SCHEDULE</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>____/____/____</td>
+                    <td class="service-type">FIRST SERVICE</td>
+                    <td>500-700 kms or 15-30 days</td>
+                  </tr>
+                  <tr>
+                    <td>____/____/____</td>
+                    <td class="service-type">SECOND SERVICE</td>
+                    <td>3000-3500 kms or 30-90 days</td>
+                  </tr>
+                  <tr>
+                    <td>____/____/____</td>
+                    <td class="service-type">THIRD SERVICE</td>
+                    <td>6000-6500 kms or 90-180 days</td>
+                  </tr>
+                  <tr>
+                    <td>____/____/____</td>
+                    <td class="service-type">FOURTH SERVICE</td>
+                    <td>9000-9500 kms or 180-270 days</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="service-note">
+                ⚠️ IMPORTANT: Follow whichever milestone comes first (kilometers or days)
               </div>
             </div>
             
             <!-- Footer -->
             <div class="footer">
-              <div style="font-weight: bold; margin-bottom: 8px;">Thank You for Choosing M M Motors!</div>
-              <div>This is a computer-generated invoice and does not require a signature.</div>
-              <div>For queries, contact us at mmmotors3123@gmail.com or 7026263123</div>
+              <div class="footer-badges">
+                <span>🏆 Authorized Dealer</span>
+                <span>🕒 24/7 Service Support</span>
+                <span>✅ Quality Guaranteed</span>
+              </div>
+              <div class="footer-title">Thank You for Choosing M M Motors!</div>
+              <div class="footer-subtitle">Your trust drives our excellence in two-wheeler sales and service.</div>
+              <div class="footer-features">🌟 Premium Quality • ⚡ Expert Service • 🤝 Customer First</div>
+              <div class="footer-contact">
+                This is a computer-generated invoice and does not require a signature.<br>
+                For queries, contact us at mmmotors3123@gmail.com or 7026263123
+              </div>
             </div>
           </div>
         </body>
