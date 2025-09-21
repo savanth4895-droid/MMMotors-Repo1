@@ -1388,6 +1388,8 @@ const ViewInvoices = () => {
               margin: 0 auto; 
               padding: 8mm;
               background: white;
+              transform: scale(0.9);
+              transform-origin: top center;
             }
             
             /* Professional Header - Matching Target */
