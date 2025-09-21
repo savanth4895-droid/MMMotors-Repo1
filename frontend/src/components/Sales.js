@@ -3619,33 +3619,61 @@ const CustomersManagement = () => {
     try {
       setLoading(true);
       
+      // Validate required fields
+      if (!editFormData.name || !editFormData.name.trim()) {
+        toast.error('Customer name is required');
+        return;
+      }
+      
+      if (!editFormData.mobile || !editFormData.mobile.trim()) {
+        toast.error('Mobile number is required');
+        return;
+      }
+      
+      if (!editFormData.address || !editFormData.address.trim()) {
+        toast.error('Address is required');
+        return;
+      }
+      
+      console.log('Saving customer edit:', {
+        editingCustomer,
+        editFormData,
+        API
+      });
+      
       // Update customer data
       const customerUpdateData = {
-        name: editFormData.name,
-        care_of: editFormData.care_of,
-        mobile: editFormData.mobile,
-        address: editFormData.address,
-        email: editFormData.email
+        name: editFormData.name.trim(),
+        care_of: editFormData.care_of?.trim() || '',
+        mobile: editFormData.mobile.trim(),
+        address: editFormData.address.trim(),
+        email: editFormData.email?.trim() || ''
       };
       
-      await axios.put(`${API}/customers/${editingCustomer.id}`, customerUpdateData);
+      console.log('Customer update data:', customerUpdateData);
+      
+      const customerResponse = await axios.put(`${API}/customers/${editingCustomer.id}`, customerUpdateData);
+      console.log('Customer update response:', customerResponse.data);
       
       // Update associated vehicle if exists
       const associatedVehicle = vehicles.find(v => v.customer_id === editingCustomer.id);
-      if (associatedVehicle) {
+      if (associatedVehicle && (editFormData.brand || editFormData.model || editFormData.color || editFormData.vehicle_no || editFormData.chassis_no || editFormData.engine_no)) {
         const vehicleUpdateData = {
-          brand: editFormData.brand,
-          model: editFormData.model,
-          color: editFormData.color,
-          chassis_no: editFormData.chassis_no,
-          engine_no: editFormData.engine_no,
-          vehicle_no: editFormData.vehicle_no,
-          insurance_nominee: editFormData.insurance_nominee,
-          relation: editFormData.relation,
-          age: editFormData.age
+          brand: editFormData.brand?.trim() || '',
+          model: editFormData.model?.trim() || '',
+          color: editFormData.color?.trim() || '',
+          chassis_no: editFormData.chassis_no?.trim() || '',
+          engine_no: editFormData.engine_no?.trim() || '',
+          vehicle_no: editFormData.vehicle_no?.trim() || '',
+          insurance_nominee: editFormData.insurance_nominee?.trim() || '',
+          relation: editFormData.relation?.trim() || '',
+          age: editFormData.age ? parseInt(editFormData.age) : null
         };
         
-        await axios.put(`${API}/vehicles/${associatedVehicle.id}`, vehicleUpdateData);
+        console.log('Vehicle update data:', vehicleUpdateData);
+        
+        const vehicleResponse = await axios.put(`${API}/vehicles/${associatedVehicle.id}`, vehicleUpdateData);
+        console.log('Vehicle update response:', vehicleResponse.data);
       }
       
       toast.success('Customer updated successfully!');
@@ -3655,6 +3683,8 @@ const CustomersManagement = () => {
       fetchCustomers(); // Refresh the list
       fetchVehicles(); // Refresh vehicles too
     } catch (error) {
+      console.error('Error saving customer edit:', error);
+      console.error('Error response:', error.response?.data);
       toast.error(getErrorMessage(error) || 'Failed to update customer');
     } finally {
       setLoading(false);
