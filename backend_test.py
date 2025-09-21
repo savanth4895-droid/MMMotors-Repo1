@@ -3050,5 +3050,17 @@ if __name__ == "__main__":
             print("=" * 60)
             success, results = test_customer_update_functionality()
             sys.exit(0 if success else 1)
+        elif sys.argv[1] == "csv_encoding":
+            print("🚀 CSV ENCODING FIX TESTING")
+            print("=" * 60)
+            tester = TwoWheelerAPITester()
+            success, results = tester.test_csv_encoding_fix()
+            print("\n" + "=" * 60)
+            print(f"📊 Final Test Results:")
+            print(f"   Tests Run: {tester.tests_run}")
+            print(f"   Tests Passed: {tester.tests_passed}")
+            print(f"   Tests Failed: {tester.tests_run - tester.tests_passed}")
+            print(f"   Success Rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
+            sys.exit(0 if success else 1)
     
     sys.exit(main())
