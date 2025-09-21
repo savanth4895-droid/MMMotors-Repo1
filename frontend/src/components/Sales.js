@@ -3187,7 +3187,6 @@ const ViewInvoices = () => {
                         value={editFormData.amount || ''}
                         onChange={(e) => setEditFormData({...editFormData, amount: parseFloat(e.target.value)})}
                         placeholder="Enter amount"
-                        required
                       />
                     </div>
                     <div>
