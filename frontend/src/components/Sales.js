@@ -3511,7 +3511,7 @@ const CustomersManagement = () => {
       fetchCustomers();
       fetchVehicles();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to save customer details');
+      toast.error(getErrorMessage(error) || 'Failed to save customer details');
     } finally {
       setLoading(false);
     }
