@@ -304,16 +304,66 @@ const DataImport = () => {
               <CardContent>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h4 className="font-medium mb-2">Required Fields:</h4>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {selectedDataTypeInfo.fields.map((field) => (
-                        <Badge key={field} variant="outline">
-                          {field.replace('_', ' ')}
-                        </Badge>
-                      ))}
-                    </div>
+                    <h4 className="font-medium mb-2">Template Fields:</h4>
+                    
+                    {selectedDataType === 'customers' ? (
+                      <div className="space-y-3 mb-4">
+                        <div>
+                          <h5 className="text-sm font-medium text-blue-600 mb-1">Customer Details:</h5>
+                          <div className="flex flex-wrap gap-1">
+                            {['name', 'care_of', 'mobile', 'phone', 'email', 'address'].map((field) => (
+                              <Badge key={field} variant="outline" className="text-xs">
+                                {field.replace('_', ' ')}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <h5 className="text-sm font-medium text-green-600 mb-1">Vehicle Details:</h5>
+                          <div className="flex flex-wrap gap-1">
+                            {['vehicle_brand', 'vehicle_model', 'vehicle_color', 'vehicle_no', 'chassis_no', 'engine_no'].map((field) => (
+                              <Badge key={field} variant="outline" className="text-xs">
+                                {field.replace('_', ' ')}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <h5 className="text-sm font-medium text-purple-600 mb-1">Insurance Details:</h5>
+                          <div className="flex flex-wrap gap-1">
+                            {['insurance_nominee', 'insurance_relation', 'insurance_age'].map((field) => (
+                              <Badge key={field} variant="outline" className="text-xs">
+                                {field.replace('_', ' ')}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <h5 className="text-sm font-medium text-red-600 mb-1">Sales Details:</h5>
+                          <div className="flex flex-wrap gap-1">
+                            {['sale_amount', 'payment_method', 'hypothecation', 'sale_date', 'invoice_number'].map((field) => (
+                              <Badge key={field} variant="outline" className="text-xs">
+                                {field.replace('_', ' ')}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {selectedDataTypeInfo.fields.map((field) => (
+                          <Badge key={field} variant="outline">
+                            {field.replace('_', ' ')}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                    
                     <p className="text-sm text-gray-600">
-                      Make sure your data includes all required fields. Optional fields can be left empty.
+                      Download the comprehensive CSV template with all invoice-related fields. Fields can be left empty if not available.
                     </p>
                   </div>
                   <Button 
