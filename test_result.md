@@ -49,12 +49,13 @@
 ##
 ## test_plan:
 ##   current_focus:
-##     - "Task name 1"
-##     - "Task name 2"
-##   stuck_tasks:
-##     - "Task name with persistent issues"
-##   test_all: false
-##   test_priority: "high_first"  # or "sequential" or "stuck_first"
+##     - "Data Import CSV Encoding Fix"
+##     - "Complete Application E2E Testing"
+##     - "All Backend API Endpoints"
+##     - "All Frontend Components"
+##   stuck_tasks: []
+##   test_all: true
+##   test_priority: "high_first"
 ##
 ## agent_communication:
 ##     -agent: "main"
