@@ -1365,63 +1365,294 @@ const ViewInvoices = () => {
 
   const handlePrintInvoice = (invoice) => {
     if (!invoice) return;
-
-    const customer = customers.find(c => c.id === invoice.customer_id);
-    const vehicle = vehicles.find(v => v.id === invoice.vehicle_id);
     
-    // Get the invoice preview content
-    const invoiceElement = document.getElementById('invoice-preview');
-    if (invoiceElement) {
-      const printWindow = window.open('', '_blank');
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Invoice ${invoice.invoice_number}</title>
-            <style>
-              body { font-family: Arial, sans-serif; margin: 0; padding: 10px; line-height: 1.3; }
-              .invoice-container { max-width: 21cm; margin: 0 auto; }
-              .header { text-align: center; margin-bottom: 12px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-              .header h1 { margin: 0; font-size: 18px; color: #2563eb; font-weight: bold; }
-              .header p { margin: 3px 0; font-size: 11px; }
-              .section { margin-bottom: 12px; border: 2px solid #ccc; padding: 10px; border-radius: 6px; page-break-inside: avoid; }
-              .section h3 { margin: 0 0 8px 0; font-size: 12px; color: #2563eb; border-bottom: 1px solid #ccc; padding-bottom: 3px; }
-              .field { margin-bottom: 4px; font-size: 10px; }
-              .label { font-weight: bold; display: inline-block; min-width: 80px; }
-              .payment-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 8px; }
-              .amount-words { margin-top: 6px; font-style: italic; padding: 6px; background-color: #f8f8f8; border-radius: 3px; border-top: 1px solid #ccc; font-size: 10px; }
-              .total { font-size: 14px; font-weight: bold; text-align: right; }
-              table { width: 100%; border-collapse: collapse; margin-top: 6px; }
-              th, td { padding: 4px; text-align: left; border: 1px solid #333; font-size: 9px; }
-              th { background-color: #f0f0f0; font-weight: bold; }
-              .service-header { text-align: center; font-weight: bold; margin-bottom: 8px; font-size: 12px; }
-              .customer-msg { margin-bottom: 8px; padding: 6px; background-color: #f8f8f8; border-radius: 3px; }
-              .customer-msg p { margin: 0; font-size: 9px; }
-              .service-footer { text-align: center; padding: 4px; background-color: #f0f0f0; border: 2px solid #333; border-top: none; font-weight: bold; font-size: 9px; }
-              .footer { text-align: center; margin-top: 15px; border-top: 1px solid #ccc; padding-top: 8px; }
-              .grid { display: flex; justify-content: space-between; margin-top: 8px; }
-              .no-print { display: none !important; }
-              @media print { 
-                body { margin: 0; padding: 8px; } 
-                .section { page-break-inside: avoid; }
-                .no-print { display: none !important; }
-                @page { size: A4; margin: 0.5cm; }
-              }
-            </style>
-          </head>
-          <body>
-            <div class="invoice-container">
-              ${invoiceElement.innerHTML}
+    // Create a new window with the optimized invoice layout
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Invoice ${invoice.invoice_number}</title>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+              font-family: 'Arial', sans-serif; 
+              line-height: 1.3; 
+              color: #333;
+              background: white;
+              font-size: 12px;
+            }
+            .invoice-container { 
+              max-width: 210mm; 
+              margin: 0 auto; 
+              padding: 10mm;
+              background: white;
+            }
+            
+            /* Header Styles */
+            .header { 
+              text-align: center; 
+              background: linear-gradient(135deg, #2563eb, #1d4ed8);
+              color: white;
+              padding: 15px;
+              margin-bottom: 20px;
+              border-radius: 8px;
+            }
+            .company-name { 
+              font-size: 24px; 
+              font-weight: bold; 
+              margin-bottom: 5px;
+            }
+            .company-tagline { 
+              font-size: 14px; 
+              opacity: 0.9;
+              margin-bottom: 10px;
+            }
+            .company-address { 
+              font-size: 12px; 
+              line-height: 1.4;
+            }
+            
+            /* Invoice Info */
+            .invoice-info { 
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 20px;
+              margin-bottom: 20px;
+              padding: 15px;
+              background: #f8fafc;
+              border-radius: 8px;
+              border: 1px solid #e2e8f0;
+            }
+            .info-section h4 { 
+              color: #1e40af;
+              font-size: 14px;
+              font-weight: bold;
+              margin-bottom: 8px;
+              border-bottom: 2px solid #3b82f6;
+              padding-bottom: 4px;
+            }
+            .info-row { 
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 6px;
+              padding: 3px 0;
+            }
+            .info-label { 
+              font-weight: 600;
+              color: #374151;
+              font-size: 12px;
+            }
+            .info-value { 
+              color: #111827;
+              font-size: 12px;
+            }
+            
+            /* Content Sections */
+            .section {
+              margin-bottom: 15px;
+              padding: 12px;
+              border: 1px solid #d1d5db;
+              border-radius: 8px;
+              background: #f9fafb;
+            }
+            .section-title {
+              font-weight: bold;
+              color: #1f2937;
+              margin-bottom: 10px;
+              font-size: 14px;
+              border-bottom: 1px solid #d1d5db;
+              padding-bottom: 6px;
+              display: flex;
+              align-items: center;
+            }
+            .section-content {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 10px;
+            }
+            .field {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 6px;
+              padding: 4px 0;
+            }
+            .field-label {
+              font-weight: 600;
+              color: #374151;
+            }
+            .field-value {
+              color: #111827;
+            }
+            
+            .amount-section {
+              text-align: center;
+              background: linear-gradient(135deg, #059669, #10b981);
+              color: white;
+              padding: 20px;
+              border-radius: 8px;
+              margin: 20px 0;
+            }
+            .amount-label {
+              font-size: 16px;
+              margin-bottom: 8px;
+            }
+            .amount-value {
+              font-size: 28px;
+              font-weight: bold;
+              margin-bottom: 10px;
+            }
+            .amount-words {
+              font-size: 14px;
+              font-style: italic;
+              opacity: 0.9;
+            }
+            
+            .footer {
+              text-align: center;
+              margin-top: 30px;
+              padding-top: 20px;
+              border-top: 2px solid #d1d5db;
+              font-size: 11px;
+              color: #6b7280;
+            }
+            .footer-title {
+              font-weight: bold;
+              font-size: 14px;
+              color: #1f2937;
+              margin-bottom: 8px;
+            }
+            
+            @media print {
+              body { -webkit-print-color-adjust: exact; }
+              .invoice-container { padding: 8mm; }
+              @page { size: A4; margin: 0.5cm; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="invoice-container">
+            <!-- Header -->
+            <div class="header">
+              <div class="company-name">M M MOTORS</div>
+              <div class="company-tagline">Premium Two Wheeler Sales & Service</div>
+              <div class="company-address">
+                Bengaluru main road, behind Ruchi Bakery<br>
+                Malur, Karnataka 563130<br>
+                Phone: 7026263123 | Email: mmmotors3123@gmail.com
+              </div>
             </div>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-      printWindow.focus();
-      setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-      }, 250);
-    }
+            
+            <!-- Invoice Info -->
+            <div class="invoice-info">
+              <div class="info-section">
+                <h4>Invoice Details</h4>
+                <div class="info-row">
+                  <span class="info-label">Invoice No:</span>
+                  <span class="info-value">${invoice.invoice_number}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Date:</span>
+                  <span class="info-value">${new Date(invoice.sale_date).toLocaleDateString('en-IN')}</span>
+                </div>
+              </div>
+              
+              <div class="info-section">
+                <h4>Payment Details</h4>
+                <div class="info-row">
+                  <span class="info-label">Method:</span>
+                  <span class="info-value">${invoice.payment_method || 'CASH'}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Status:</span>
+                  <span class="info-value">Completed</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Customer Details -->
+            <div class="section">
+              <div class="section-title">
+                👤 Customer Details
+              </div>
+              <div class="section-content">
+                <div class="field">
+                  <span class="field-label">Name:</span>
+                  <span class="field-value">${invoice.customer?.name || 'N/A'}</span>
+                </div>
+                <div class="field">
+                  <span class="field-label">Phone:</span>
+                  <span class="field-value">${invoice.customer?.phone || 'N/A'}</span>
+                </div>
+              </div>
+              <div class="field">
+                <span class="field-label">Address:</span>
+                <span class="field-value">${invoice.customer?.address || 'N/A'}</span>
+              </div>
+            </div>
+            
+            <!-- Vehicle Details -->
+            <div class="section">
+              <div class="section-title">
+                🏍️ Vehicle Details
+              </div>
+              <div class="section-content">
+                <div class="field">
+                  <span class="field-label">Brand:</span>
+                  <span class="field-value">${invoice.vehicle?.brand || 'N/A'}</span>
+                </div>
+                <div class="field">
+                  <span class="field-label">Model:</span>
+                  <span class="field-value">${invoice.vehicle?.model || 'N/A'}</span>
+                </div>
+                <div class="field">
+                  <span class="field-label">Color:</span>
+                  <span class="field-value">${invoice.vehicle?.color || 'N/A'}</span>
+                </div>
+                <div class="field">
+                  <span class="field-label">Vehicle No:</span>
+                  <span class="field-value">${invoice.vehicle?.vehicle_no || 'N/A'}</span>
+                </div>
+                <div class="field">
+                  <span class="field-label">Chassis No:</span>
+                  <span class="field-value">${invoice.vehicle?.chassis_no || 'N/A'}</span>
+                </div>
+                <div class="field">
+                  <span class="field-label">Engine No:</span>
+                  <span class="field-value">${invoice.vehicle?.engine_no || 'N/A'}</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Amount Section -->
+            <div class="amount-section">
+              <div class="amount-label">Total Amount</div>
+              <div class="amount-value">₹${invoice.amount?.toLocaleString() || '0'}</div>
+              <div class="amount-words">
+                ${numberToWords(invoice.amount || 0)} Rupees Only
+              </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="footer">
+              <div class="footer-title">Thank You for Choosing M M Motors!</div>
+              <div>Your trust drives our excellence in two-wheeler sales and service.</div>
+              <div style="margin-top: 10px;">
+                🌟 Premium Quality • ⚡ Expert Service • 🤝 Customer First
+              </div>
+              <div style="margin-top: 15px; border-top: 1px solid #d1d5db; padding-top: 10px;">
+                This is a computer-generated invoice and does not require a signature.<br>
+                For queries, contact us at mmmotors3123@gmail.com or 7026263123
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    printWindow.print();
   };
 
   const handlePrintInvoiceModal = (invoice) => {
