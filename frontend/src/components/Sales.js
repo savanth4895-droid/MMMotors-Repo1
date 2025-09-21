@@ -3546,6 +3546,92 @@ const CustomersManagement = () => {
     return vehicle ? `${vehicle.brand} ${vehicle.model}` : 'No vehicle';
   };
 
+  // View customer functionality
+  const handleViewCustomer = (customer) => {
+    setSelectedCustomer(customer);
+    setShowViewModal(true);
+  };
+
+  // Edit customer functionality
+  const handleEditCustomer = (customer) => {
+    const associatedVehicle = vehicles.find(v => v.customer_id === customer.id);
+    
+    setEditingCustomer(customer);
+    setEditFormData({
+      name: customer.name || '',
+      care_of: customer.care_of || '',
+      mobile: customer.mobile || customer.phone || '',
+      address: customer.address || '',
+      email: customer.email || '',
+      // Vehicle details if associated
+      brand: associatedVehicle?.brand || '',
+      model: associatedVehicle?.model || '',
+      color: associatedVehicle?.color || '',
+      chassis_no: associatedVehicle?.chassis_no || '',
+      engine_no: associatedVehicle?.engine_no || '',
+      vehicle_no: associatedVehicle?.vehicle_no || '',
+      // Insurance details
+      insurance_nominee: associatedVehicle?.insurance_nominee || '',
+      relation: associatedVehicle?.relation || '',
+      age: associatedVehicle?.age || ''
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingCustomer) return;
+    
+    try {
+      setLoading(true);
+      
+      // Update customer data
+      const customerUpdateData = {
+        name: editFormData.name,
+        care_of: editFormData.care_of,
+        mobile: editFormData.mobile,
+        address: editFormData.address,
+        email: editFormData.email
+      };
+      
+      await axios.put(`${API}/customers/${editingCustomer.id}`, customerUpdateData);
+      
+      // Update associated vehicle if exists
+      const associatedVehicle = vehicles.find(v => v.customer_id === editingCustomer.id);
+      if (associatedVehicle) {
+        const vehicleUpdateData = {
+          brand: editFormData.brand,
+          model: editFormData.model,
+          color: editFormData.color,
+          chassis_no: editFormData.chassis_no,
+          engine_no: editFormData.engine_no,
+          vehicle_no: editFormData.vehicle_no,
+          insurance_nominee: editFormData.insurance_nominee,
+          relation: editFormData.relation,
+          age: editFormData.age
+        };
+        
+        await axios.put(`${API}/vehicles/${associatedVehicle.id}`, vehicleUpdateData);
+      }
+      
+      toast.success('Customer updated successfully!');
+      setShowEditModal(false);
+      setEditingCustomer(null);
+      setEditFormData({});
+      fetchCustomers(); // Refresh the list
+      fetchVehicles(); // Refresh vehicles too
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update customer');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setShowEditModal(false);
+    setEditingCustomer(null);
+    setEditFormData({});
+  };
+
   return (
     <div className="space-y-6">
       {/* Header with Action Buttons */}
