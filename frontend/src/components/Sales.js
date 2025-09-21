@@ -3655,7 +3655,7 @@ const CustomersManagement = () => {
       fetchCustomers(); // Refresh the list
       fetchVehicles(); // Refresh vehicles too
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to update customer');
+      toast.error(getErrorMessage(error) || 'Failed to update customer');
     } finally {
       setLoading(false);
     }
