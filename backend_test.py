@@ -1943,7 +1943,7 @@ class TwoWheelerAPITester:
 
     def test_csv_import_upload(self, data_type, csv_content, filename="test_import.csv"):
         """Test CSV file upload for data import"""
-        url = f"{self.base_url}/import/upload"
+        url = f"{self.base_url}/import/upload?data_type={data_type}"
         headers = {}
         if self.token:
             headers['Authorization'] = f'Bearer {self.token}'
@@ -1959,15 +1959,12 @@ class TwoWheelerAPITester:
             files = {
                 'file': (filename, csv_content, 'text/csv')
             }
-            data = {
-                'data_type': data_type
-            }
             
             # Remove Content-Type header to let requests set it for multipart
             if 'Content-Type' in headers:
                 del headers['Content-Type']
             
-            response = requests.post(url, files=files, data=data, headers=headers)
+            response = requests.post(url, files=files, headers=headers)
             print(f"   Status Code: {response.status_code}")
             
             if response.status_code == 200:
