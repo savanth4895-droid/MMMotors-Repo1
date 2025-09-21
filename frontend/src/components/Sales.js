@@ -1519,25 +1519,25 @@ const ViewInvoices = () => {
               background: linear-gradient(135deg, #2563eb, #3b82f6); 
             }
             
-            /* Insurance Layout - 3 Columns */
+            /* Insurance Layout - Compact 3 Columns */
             .insurance-grid {
               display: grid;
               grid-template-columns: 1fr 1fr 1fr;
-              gap: 15px;
+              gap: 10px;
               text-align: center;
             }
             .insurance-item {
-              padding: 8px;
+              padding: 6px;
             }
             .insurance-label {
-              font-size: 11px;
+              font-size: 10px;
               color: #7c3aed;
               font-weight: 600;
-              margin-bottom: 4px;
+              margin-bottom: 3px;
             }
             .insurance-value {
               font-weight: bold;
-              font-size: 13px;
+              font-size: 12px;
             }
             
             /* Payment Summary - Compact */
