@@ -2900,7 +2900,6 @@ const ViewInvoices = () => {
                         type="text"
                         value={editFormData.invoice_number || ''}
                         onChange={(e) => setEditFormData({...editFormData, invoice_number: e.target.value})}
-                        required
                       />
                     </div>
                     <div>
