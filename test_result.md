@@ -102,9 +102,24 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Apply the same changes from sales invoice to service bills section: Remove GSTIN, update contact details to mmmotors3123@gmail.com and 7026263123, and optimize for A4 printing with reduced spacing and font sizes."
+user_problem_statement: "Fix UTF-8 encoding error during data import: 'utf-8 codec can't decode byte 0xa0 in position 6947: invalid start byte'. This error occurs when users try to upload CSV files that contain special characters or are saved in different encodings."
 
 backend:
+  - task: "Data Import CSV Encoding Fix"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+      - agent: "main"
+      - comment: "USER REPORTED BUG: UTF-8 encoding error during CSV import - 'utf-8 codec can't decode byte 0xa0 in position 6947: invalid start byte'. This occurs when CSV files contain special characters or are saved in non-UTF-8 encodings."
+      - working: true
+      - agent: "main"
+      - comment: "✅ FIXED: Updated parse_csv_file function in server.py to handle multiple encodings gracefully. Function now tries UTF-8, ISO-8859-1, Windows-1252, and CP1252 encodings in order. If all fail, it uses UTF-8 with error replacement. Added logging to track which encoding was successfully used. This should resolve CSV import issues with files containing special characters or saved in different encodings."
+
   - task: "Vehicle API endpoints"
     implemented: true
     working: true
