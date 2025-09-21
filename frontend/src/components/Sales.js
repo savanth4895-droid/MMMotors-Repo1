@@ -2864,74 +2864,348 @@ const ViewInvoices = () => {
                 </Button>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="amount">Amount (₹)</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    step="0.01"
-                    value={editFormData.amount || ''}
-                    onChange={(e) => setEditFormData({...editFormData, amount: parseFloat(e.target.value)})}
-                    required
-                  />
+              <div className="space-y-6">
+                {/* Invoice Details Section */}
+                <div className="border rounded-lg p-4 bg-blue-50">
+                  <h3 className="text-lg font-semibold text-blue-800 mb-4 flex items-center">
+                    📋 Invoice Details
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="invoice_number">Invoice Number</Label>
+                      <Input
+                        id="invoice_number"
+                        type="text"
+                        value={editFormData.invoice_number || ''}
+                        onChange={(e) => setEditFormData({...editFormData, invoice_number: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="sale_date">Sale Date</Label>
+                      <Input
+                        id="sale_date"
+                        type="date"
+                        value={editFormData.sale_date?.split('T')[0] || ''}
+                        onChange={(e) => setEditFormData({...editFormData, sale_date: e.target.value})}
+                        required
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="payment_method">Payment Method</Label>
-                  <Select 
-                    value={editFormData.payment_method} 
-                    onValueChange={(value) => setEditFormData({...editFormData, payment_method: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select payment method" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="cash">Cash</SelectItem>
-                      <SelectItem value="card">Card</SelectItem>
-                      <SelectItem value="upi">UPI</SelectItem>
-                      <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                      <SelectItem value="finance">Finance</SelectItem>
-                    </SelectContent>
-                  </Select>
+                {/* Customer Details Section */}
+                <div className="border rounded-lg p-4 bg-green-50">
+                  <h3 className="text-lg font-semibold text-green-800 mb-4 flex items-center">
+                    👤 Customer Details
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="customer">Select Customer</Label>
+                      <Select 
+                        value={editFormData.customer_id} 
+                        onValueChange={(value) => {
+                          const selectedCustomer = customers.find(c => c.id === value);
+                          setEditFormData({
+                            ...editFormData, 
+                            customer_id: value,
+                            customer_name: selectedCustomer?.name || '',
+                            customer_care_of: selectedCustomer?.care_of || '',
+                            customer_mobile: selectedCustomer?.mobile || selectedCustomer?.phone || '',
+                            customer_address: selectedCustomer?.address || ''
+                          });
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select customer" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {customers.map((customer) => (
+                            <SelectItem key={customer.id} value={customer.id}>
+                              {customer.name} - {customer.phone || customer.mobile}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="customer_name">Customer Name</Label>
+                        <Input
+                          id="customer_name"
+                          type="text"
+                          value={editFormData.customer_name || ''}
+                          onChange={(e) => setEditFormData({...editFormData, customer_name: e.target.value})}
+                          placeholder="Enter customer name"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="customer_care_of">Care Of (C/O)</Label>
+                        <Input
+                          id="customer_care_of"
+                          type="text"
+                          value={editFormData.customer_care_of || ''}
+                          onChange={(e) => setEditFormData({...editFormData, customer_care_of: e.target.value})}
+                          placeholder="S/O, D/O, W/O"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="customer_mobile">Mobile Number</Label>
+                        <Input
+                          id="customer_mobile"
+                          type="tel"
+                          value={editFormData.customer_mobile || ''}
+                          onChange={(e) => setEditFormData({...editFormData, customer_mobile: e.target.value})}
+                          placeholder="Enter mobile number"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="customer_address">Address</Label>
+                        <Input
+                          id="customer_address"
+                          type="text"
+                          value={editFormData.customer_address || ''}
+                          onChange={(e) => setEditFormData({...editFormData, customer_address: e.target.value})}
+                          placeholder="Enter address"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="customer">Customer</Label>
-                  <Select 
-                    value={editFormData.customer_id} 
-                    onValueChange={(value) => setEditFormData({...editFormData, customer_id: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select customer" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customers.map((customer) => (
-                        <SelectItem key={customer.id} value={customer.id}>
-                          {customer.name} - {customer.phone}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                {/* Vehicle Details Section */}
+                <div className="border rounded-lg p-4 bg-yellow-50">
+                  <h3 className="text-lg font-semibold text-yellow-800 mb-4 flex items-center">
+                    🏍️ Vehicle Details
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="vehicle">Select Vehicle</Label>
+                      <Select 
+                        value={editFormData.vehicle_id} 
+                        onValueChange={(value) => {
+                          const selectedVehicle = vehicles.find(v => v.id === value);
+                          setEditFormData({
+                            ...editFormData, 
+                            vehicle_id: value,
+                            vehicle_brand: selectedVehicle?.brand || '',
+                            vehicle_model: selectedVehicle?.model || '',
+                            vehicle_color: selectedVehicle?.color || '',
+                            vehicle_no: selectedVehicle?.vehicle_no || '',
+                            chassis_no: selectedVehicle?.chassis_no || '',
+                            engine_no: selectedVehicle?.engine_no || ''
+                          });
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select vehicle" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {vehicles.map((vehicle) => (
+                            <SelectItem key={vehicle.id} value={vehicle.id}>
+                              {vehicle.brand} {vehicle.model} - {vehicle.chassis_no}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <Label htmlFor="vehicle_brand">Brand</Label>
+                        <Input
+                          id="vehicle_brand"
+                          type="text"
+                          value={editFormData.vehicle_brand || ''}
+                          onChange={(e) => setEditFormData({...editFormData, vehicle_brand: e.target.value})}
+                          placeholder="Enter brand"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="vehicle_model">Model</Label>
+                        <Input
+                          id="vehicle_model"
+                          type="text"
+                          value={editFormData.vehicle_model || ''}
+                          onChange={(e) => setEditFormData({...editFormData, vehicle_model: e.target.value})}
+                          placeholder="Enter model"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="vehicle_color">Color</Label>
+                        <Input
+                          id="vehicle_color"
+                          type="text"
+                          value={editFormData.vehicle_color || ''}
+                          onChange={(e) => setEditFormData({...editFormData, vehicle_color: e.target.value})}
+                          placeholder="Enter color"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <Label htmlFor="vehicle_no">Vehicle Number</Label>
+                        <Input
+                          id="vehicle_no"
+                          type="text"
+                          value={editFormData.vehicle_no || ''}
+                          onChange={(e) => setEditFormData({...editFormData, vehicle_no: e.target.value})}
+                          placeholder="Enter vehicle number"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="chassis_no">Chassis Number</Label>
+                        <Input
+                          id="chassis_no"
+                          type="text"
+                          value={editFormData.chassis_no || ''}
+                          onChange={(e) => setEditFormData({...editFormData, chassis_no: e.target.value})}
+                          placeholder="Enter chassis number"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="engine_no">Engine Number</Label>
+                        <Input
+                          id="engine_no"
+                          type="text"
+                          value={editFormData.engine_no || ''}
+                          onChange={(e) => setEditFormData({...editFormData, engine_no: e.target.value})}
+                          placeholder="Enter engine number"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="vehicle">Vehicle</Label>
-                  <Select 
-                    value={editFormData.vehicle_id} 
-                    onValueChange={(value) => setEditFormData({...editFormData, vehicle_id: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select vehicle" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {vehicles.map((vehicle) => (
-                        <SelectItem key={vehicle.id} value={vehicle.id}>
-                          {vehicle.brand} {vehicle.model} - {vehicle.chassis_no}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                {/* Insurance Details Section */}
+                <div className="border rounded-lg p-4 bg-purple-50">
+                  <h3 className="text-lg font-semibold text-purple-800 mb-4 flex items-center">
+                    🛡️ Insurance Nominee Details
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="nominee_name">Nominee Name</Label>
+                      <Input
+                        id="nominee_name"
+                        type="text"
+                        value={editFormData.insurance_details?.nominee || ''}
+                        onChange={(e) => setEditFormData({
+                          ...editFormData, 
+                          insurance_details: {
+                            ...editFormData.insurance_details,
+                            nominee: e.target.value
+                          }
+                        })}
+                        placeholder="Enter nominee name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="nominee_relation">Relation</Label>
+                      <Select
+                        value={editFormData.insurance_details?.relation || ''}
+                        onValueChange={(value) => setEditFormData({
+                          ...editFormData,
+                          insurance_details: {
+                            ...editFormData.insurance_details,
+                            relation: value
+                          }
+                        })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select relation" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="father">Father</SelectItem>
+                          <SelectItem value="mother">Mother</SelectItem>
+                          <SelectItem value="spouse">Spouse</SelectItem>
+                          <SelectItem value="son">Son</SelectItem>
+                          <SelectItem value="daughter">Daughter</SelectItem>
+                          <SelectItem value="brother">Brother</SelectItem>
+                          <SelectItem value="sister">Sister</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="nominee_age">Age</Label>
+                      <Input
+                        id="nominee_age"
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={editFormData.insurance_details?.age || ''}
+                        onChange={(e) => setEditFormData({
+                          ...editFormData, 
+                          insurance_details: {
+                            ...editFormData.insurance_details,
+                            age: e.target.value
+                          }
+                        })}
+                        placeholder="Enter age"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment Details Section */}
+                <div className="border rounded-lg p-4 bg-red-50">
+                  <h3 className="text-lg font-semibold text-red-800 mb-4 flex items-center">
+                    💳 Payment Details
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="amount">Amount (₹)</Label>
+                      <Input
+                        id="amount"
+                        type="number"
+                        step="0.01"
+                        value={editFormData.amount || ''}
+                        onChange={(e) => setEditFormData({...editFormData, amount: parseFloat(e.target.value)})}
+                        placeholder="Enter amount"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="payment_method">Payment Method</Label>
+                      <Select 
+                        value={editFormData.payment_method || ''} 
+                        onValueChange={(value) => setEditFormData({...editFormData, payment_method: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select payment method" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="cash">Cash</SelectItem>
+                          <SelectItem value="card">Card</SelectItem>
+                          <SelectItem value="upi">UPI</SelectItem>
+                          <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                          <SelectItem value="finance">Finance</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="hypothecation">Hypothecation</Label>
+                      <Select
+                        value={editFormData.hypothecation || 'Cash'}
+                        onValueChange={(value) => setEditFormData({...editFormData, hypothecation: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select hypothecation" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Cash">Cash</SelectItem>
+                          <SelectItem value="Bank Finance">Bank Finance</SelectItem>
+                          <SelectItem value="NBFC">NBFC</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </div>
               </div>
 
