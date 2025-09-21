@@ -3617,20 +3617,6 @@ const CustomersManagement = () => {
     try {
       setLoading(true);
       
-      // Validate required fields
-      if (!editFormData.name || !editFormData.name.trim()) {
-        toast.error('Customer name is required');
-        return;
-      }
-      
-      if (!editFormData.mobile || !editFormData.mobile.trim()) {
-      }
-      
-      if (!editFormData.address || !editFormData.address.trim()) {
-        toast.error('Address is required');
-        return;
-      }
-      
       console.log('Saving customer edit:', {
         editingCustomer,
         editFormData,
@@ -3639,10 +3625,10 @@ const CustomersManagement = () => {
       
       // Update customer data
       const customerUpdateData = {
-        name: editFormData.name.trim(),
+        name: editFormData.name?.trim() || '',
         care_of: editFormData.care_of?.trim() || '',
-        mobile: editFormData.mobile.trim(),
-        address: editFormData.address.trim(),
+        mobile: editFormData.mobile?.trim() || '',
+        address: editFormData.address?.trim() || '',
         email: editFormData.email?.trim() || ''
       };
       
