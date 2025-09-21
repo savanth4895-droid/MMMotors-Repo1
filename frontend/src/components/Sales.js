@@ -3383,21 +3383,17 @@ const CustomersManagement = () => {
 
   const validateForm = () => {
     const errors = {};
-    const requiredFields = ['name', 'mobile', 'address'];
     
-    requiredFields.forEach(field => {
-      const error = validateField(field, customerData[field]);
-      if (error) errors[field] = error;
-    });
-
-    // Validate optional fields if they have values
+    // Only validate format if fields have values, no required fields
     Object.keys(customerData).forEach(field => {
-      if (!requiredFields.includes(field) && customerData[field]) {
+      if (customerData[field]) {
         const error = validateField(field, customerData[field]);
-        if (error) errors[field] = error;
+        if (error) {
+          errors[field] = error;
+        }
       }
     });
-
+    
     return errors;
   };
 
