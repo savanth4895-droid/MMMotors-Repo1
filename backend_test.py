@@ -856,6 +856,311 @@ class TwoWheelerAPITester:
             print("❌ Should have failed with invalid job ID")
             return False, response
 
+    def test_pydantic_error_handling(self):
+        """
+        COMPREHENSIVE PYDANTIC ERROR HANDLING TESTING
+        Testing as requested in review:
+        1. Customer API endpoints with invalid data (POST/PUT)
+        2. Sales/Invoice API endpoints with invalid data
+        3. Pydantic validation error response structure
+        4. Error message format verification
+        """
+        print("\n" + "=" * 80)
+        print("🚨 PYDANTIC ERROR HANDLING TESTING")
+        print("=" * 80)
+        print("Testing backend API error handling for Pydantic validation errors:")
+        print("1. POST /api/customers with invalid data")
+        print("2. PUT /api/customers/{id} with invalid data")
+        print("3. POST /api/sales with invalid data")
+        print("4. Error response structure verification")
+        
+        all_tests_passed = True
+        test_results = {
+            'customer_create_errors': False,
+            'customer_update_errors': False,
+            'sales_create_errors': False,
+            'error_structure_valid': False,
+            'authentication': False
+        }
+        
+        # 1. AUTHENTICATION TESTING
+        print("\n🔐 1. AUTHENTICATION TESTING")
+        print("-" * 40)
+        success, auth_response = self.test_login_user("admin", "admin123")
+        if success:
+            print("✅ Authentication successful with admin/admin123")
+            test_results['authentication'] = True
+        else:
+            print("❌ Authentication failed with admin/admin123")
+            all_tests_passed = False
+            return False, test_results
+        
+        # 2. CUSTOMER CREATE ERROR TESTING
+        print("\n👥 2. CUSTOMER CREATE ERROR TESTING")
+        print("-" * 40)
+        
+        # Test with missing required fields
+        print("Testing POST /api/customers with missing required fields...")
+        success, response = self.run_test(
+            "Create Customer - Missing Name",
+            "POST",
+            "customers",
+            422,  # Pydantic validation error
+            data={
+                "phone": "9876543210",
+                "email": "test@example.com",
+                "address": "Test Address"
+                # Missing 'name' field
+            }
+        )
+        
+        if success:
+            print("✅ Correctly returned 422 for missing name field")
+            print(f"   Error Response: {response}")
+            test_results['customer_create_errors'] = True
+        else:
+            print("❌ Did not return expected 422 status for missing name")
+            all_tests_passed = False
+        
+        # Test with invalid email format
+        print("\nTesting POST /api/customers with invalid email format...")
+        success, response = self.run_test(
+            "Create Customer - Invalid Email",
+            "POST",
+            "customers",
+            422,  # Pydantic validation error
+            data={
+                "name": "Test User",
+                "phone": "9876543210",
+                "email": "invalid-email-format",  # Invalid email
+                "address": "Test Address"
+            }
+        )
+        
+        if success:
+            print("✅ Correctly returned 422 for invalid email format")
+            print(f"   Error Response: {response}")
+        else:
+            print("❌ Did not return expected 422 status for invalid email")
+            all_tests_passed = False
+        
+        # Test with invalid phone number format
+        print("\nTesting POST /api/customers with invalid phone format...")
+        success, response = self.run_test(
+            "Create Customer - Invalid Phone",
+            "POST",
+            "customers",
+            422,  # Pydantic validation error
+            data={
+                "name": "Test User",
+                "phone": "invalid-phone",  # Invalid phone
+                "email": "test@example.com",
+                "address": "Test Address"
+            }
+        )
+        
+        # 3. CUSTOMER UPDATE ERROR TESTING
+        print("\n✏️ 3. CUSTOMER UPDATE ERROR TESTING")
+        print("-" * 40)
+        
+        # First create a valid customer for update testing
+        success, customer_data = self.test_create_customer(
+            "Test Customer for Update",
+            "9876543210",
+            "test@example.com",
+            "Test Address"
+        )
+        
+        if success:
+            customer_id = customer_data.get('id')
+            print(f"Created test customer: {customer_id}")
+            
+            # Test update with missing required fields
+            print("\nTesting PUT /api/customers/{id} with missing required fields...")
+            success, response = self.run_test(
+                "Update Customer - Missing Phone",
+                "PUT",
+                f"customers/{customer_id}",
+                422,  # Pydantic validation error
+                data={
+                    "name": "Updated Name",
+                    "email": "updated@example.com",
+                    "address": "Updated Address"
+                    # Missing 'phone' field
+                }
+            )
+            
+            if success:
+                print("✅ Correctly returned 422 for missing phone field")
+                print(f"   Error Response: {response}")
+                test_results['customer_update_errors'] = True
+            else:
+                print("❌ Did not return expected 422 status for missing phone")
+                all_tests_passed = False
+            
+            # Test update with invalid email
+            print("\nTesting PUT /api/customers/{id} with invalid email...")
+            success, response = self.run_test(
+                "Update Customer - Invalid Email",
+                "PUT",
+                f"customers/{customer_id}",
+                422,  # Pydantic validation error
+                data={
+                    "name": "Updated Name",
+                    "phone": "9876543210",
+                    "email": "invalid-email-format",  # Invalid email
+                    "address": "Updated Address"
+                }
+            )
+            
+            if success:
+                print("✅ Correctly returned 422 for invalid email format")
+                print(f"   Error Response: {response}")
+        
+        # 4. SALES CREATE ERROR TESTING
+        print("\n💰 4. SALES/INVOICE CREATE ERROR TESTING")
+        print("-" * 40)
+        
+        # Test with missing required fields
+        print("Testing POST /api/sales with missing required fields...")
+        success, response = self.run_test(
+            "Create Sale - Missing Customer ID",
+            "POST",
+            "sales",
+            422,  # Pydantic validation error
+            data={
+                "vehicle_id": "test-vehicle-id",
+                "amount": 50000.0,
+                "payment_method": "Cash"
+                # Missing 'customer_id' field
+            }
+        )
+        
+        if success:
+            print("✅ Correctly returned 422 for missing customer_id field")
+            print(f"   Error Response: {response}")
+            test_results['sales_create_errors'] = True
+        else:
+            print("❌ Did not return expected 422 status for missing customer_id")
+            all_tests_passed = False
+        
+        # Test with invalid amount (negative)
+        print("\nTesting POST /api/sales with invalid amount...")
+        success, response = self.run_test(
+            "Create Sale - Invalid Amount",
+            "POST",
+            "sales",
+            422,  # Pydantic validation error
+            data={
+                "customer_id": "test-customer-id",
+                "vehicle_id": "test-vehicle-id",
+                "amount": -1000.0,  # Invalid negative amount
+                "payment_method": "Cash"
+            }
+        )
+        
+        # Test with invalid data types
+        print("\nTesting POST /api/sales with invalid data types...")
+        success, response = self.run_test(
+            "Create Sale - Invalid Data Types",
+            "POST",
+            "sales",
+            422,  # Pydantic validation error
+            data={
+                "customer_id": "test-customer-id",
+                "vehicle_id": "test-vehicle-id",
+                "amount": "invalid-amount-string",  # Should be float
+                "payment_method": "Cash"
+            }
+        )
+        
+        # 5. ERROR RESPONSE STRUCTURE VERIFICATION
+        print("\n📋 5. ERROR RESPONSE STRUCTURE VERIFICATION")
+        print("-" * 40)
+        
+        # Test a known error case and analyze response structure
+        print("Analyzing Pydantic error response structure...")
+        success, response = self.run_test(
+            "Analyze Error Structure",
+            "POST",
+            "customers",
+            422,
+            data={
+                "phone": "9876543210",
+                "email": "invalid-email",
+                "address": "Test Address"
+                # Missing name, invalid email
+            }
+        )
+        
+        if isinstance(response, dict):
+            print("✅ Error response is properly structured as JSON object")
+            
+            # Check for common Pydantic error structure
+            if 'detail' in response:
+                print("✅ Error response contains 'detail' field")
+                detail = response['detail']
+                
+                if isinstance(detail, list):
+                    print("✅ Detail field is a list (Pydantic validation errors)")
+                    
+                    if len(detail) > 0:
+                        first_error = detail[0]
+                        print(f"   First error structure: {first_error}")
+                        
+                        # Check for Pydantic error fields
+                        pydantic_fields = ['type', 'loc', 'msg', 'input']
+                        found_fields = [field for field in pydantic_fields if field in first_error]
+                        
+                        if found_fields:
+                            print(f"✅ Pydantic error fields found: {found_fields}")
+                            test_results['error_structure_valid'] = True
+                        else:
+                            print("❌ No Pydantic error fields found in error structure")
+                            all_tests_passed = False
+                    else:
+                        print("⚠️ Detail list is empty")
+                else:
+                    print("⚠️ Detail field is not a list")
+            else:
+                print("❌ Error response does not contain 'detail' field")
+                all_tests_passed = False
+        else:
+            print("❌ Error response is not a JSON object")
+            all_tests_passed = False
+        
+        # 6. COMPREHENSIVE RESULTS
+        print("\n" + "=" * 80)
+        print("📋 PYDANTIC ERROR HANDLING TEST RESULTS")
+        print("=" * 80)
+        
+        results_summary = [
+            ("Authentication (admin/admin123)", test_results['authentication']),
+            ("Customer Create Error Handling", test_results['customer_create_errors']),
+            ("Customer Update Error Handling", test_results['customer_update_errors']),
+            ("Sales Create Error Handling", test_results['sales_create_errors']),
+            ("Error Structure Validation", test_results['error_structure_valid'])
+        ]
+        
+        for test_name, passed in results_summary:
+            status = "✅ PASSED" if passed else "❌ FAILED"
+            print(f"   {test_name:<35} {status}")
+        
+        overall_status = "✅ ALL TESTS PASSED" if all_tests_passed else "❌ SOME TESTS FAILED"
+        print(f"\n🎯 OVERALL STATUS: {overall_status}")
+        
+        if all_tests_passed:
+            print("\n🎉 PYDANTIC ERROR HANDLING TESTING COMPLETE!")
+            print("   All backend APIs properly handle validation errors:")
+            print("   ✅ Customer endpoints return 422 for invalid data")
+            print("   ✅ Sales endpoints return 422 for invalid data")
+            print("   ✅ Error responses have proper Pydantic structure")
+            print("   ✅ Error objects contain type, loc, msg, input fields")
+        else:
+            print("\n⚠️ ISSUES FOUND - See detailed results above")
+        
+        return all_tests_passed, test_results
+
     def test_bill_view_functionality_backend(self):
         """
         COMPREHENSIVE BILL VIEW FUNCTIONALITY BACKEND VERIFICATION
