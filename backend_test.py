@@ -1434,6 +1434,331 @@ def test_bill_view_functionality_only():
     
     return 0 if success else 1
 
+def test_customer_update_functionality():
+    """
+    FOCUSED CUSTOMER UPDATE FUNCTIONALITY TESTING
+    As requested in the review request to debug the save issue in customer management edit modal
+    
+    SPECIFIC TESTING FOCUS:
+    1. Customer Update API: Test PUT /api/customers/{id} endpoint with valid data
+    2. Vehicle Update API: Test PUT /api/vehicles/{id} endpoint with valid data  
+    3. Data Retrieval: Test GET /api/customers to verify customers exist for updating
+    4. Authentication: Verify proper authentication for admin user
+    """
+    print("🚀 CUSTOMER UPDATE FUNCTIONALITY TESTING")
+    print("=" * 80)
+    print("Testing customer update functionality to debug save issue in edit modal:")
+    print("1. Authentication with admin/admin123 credentials")
+    print("2. GET /api/customers to verify existing customers")
+    print("3. PUT /api/customers/{id} with valid update data")
+    print("4. PUT /api/vehicles/{id} with valid update data")
+    print("5. Response format and success code verification")
+    
+    tester = TwoWheelerAPITester()
+    all_tests_passed = True
+    test_results = {
+        'connectivity': False,
+        'authentication': False,
+        'get_customers': False,
+        'customer_update': False,
+        'vehicle_update': False,
+        'response_validation': False
+    }
+    
+    # 1. CONNECTIVITY TESTING
+    print("\n📡 1. CONNECTIVITY TESTING")
+    print("-" * 40)
+    success, _ = tester.test_root_endpoint()
+    if success:
+        print("✅ API connectivity successful")
+        test_results['connectivity'] = True
+    else:
+        print("❌ Cannot connect to API. Stopping tests.")
+        return False, test_results
+    
+    # 2. AUTHENTICATION TESTING
+    print("\n🔐 2. AUTHENTICATION TESTING")
+    print("-" * 40)
+    success, auth_response = tester.test_login_user("admin", "admin123")
+    if success:
+        print("✅ Authentication successful with admin/admin123")
+        print(f"   Token obtained: {tester.token[:20] if tester.token else 'None'}...")
+        test_results['authentication'] = True
+    else:
+        print("❌ Authentication failed with admin/admin123")
+        all_tests_passed = False
+        return False, test_results
+    
+    # 3. GET CUSTOMERS TESTING
+    print("\n👥 3. GET CUSTOMERS DATA RETRIEVAL TESTING")
+    print("-" * 40)
+    success, customers_response = tester.test_get_customers()
+    
+    if success:
+        print("✅ GET /api/customers endpoint working")
+        
+        if isinstance(customers_response, list):
+            print(f"✅ Customers data returned as array ({len(customers_response)} customers)")
+            test_results['get_customers'] = True
+            
+            if len(customers_response) > 0:
+                # Display sample customer data
+                first_customer = customers_response[0]
+                print(f"\n📋 SAMPLE CUSTOMER DATA:")
+                print(f"   Customer ID: {first_customer.get('id', 'N/A')}")
+                print(f"   Name: {first_customer.get('name', 'N/A')}")
+                print(f"   Phone: {first_customer.get('phone', 'N/A')}")
+                print(f"   Email: {first_customer.get('email', 'N/A')}")
+                print(f"   Address: {first_customer.get('address', 'N/A')}")
+                
+                # Use existing customer for update testing
+                customer_id = first_customer.get('id')
+                original_name = first_customer.get('name', 'Test Customer')
+                original_phone = first_customer.get('phone', '9876543210')
+                original_email = first_customer.get('email', 'test@example.com')
+                original_address = first_customer.get('address', 'Test Address')
+                
+            else:
+                print("⚠️ No existing customers found. Creating test customer...")
+                # Create a test customer for update testing
+                success, customer_data = tester.test_create_customer(
+                    "Test Customer for Update",
+                    "9876543210",
+                    "test@example.com",
+                    "123 Test Street, Test City"
+                )
+                
+                if success:
+                    customer_id = customer_data.get('id')
+                    original_name = customer_data.get('name')
+                    original_phone = customer_data.get('phone')
+                    original_email = customer_data.get('email')
+                    original_address = customer_data.get('address')
+                    print(f"✅ Test customer created: {customer_id}")
+                else:
+                    print("❌ Failed to create test customer")
+                    all_tests_passed = False
+                    return False, test_results
+        else:
+            print("❌ Customers data not returned as array")
+            all_tests_passed = False
+    else:
+        print("❌ GET /api/customers endpoint failed")
+        all_tests_passed = False
+        return False, test_results
+    
+    # 4. CUSTOMER UPDATE TESTING
+    print("\n✏️ 4. CUSTOMER UPDATE API TESTING")
+    print("-" * 40)
+    
+    if 'customer_id' in locals():
+        # Test customer update with all required fields
+        updated_name = f"{original_name} - Updated"
+        updated_phone = "9876543211"  # Different phone
+        updated_email = "updated@example.com"
+        updated_address = f"{original_address} - Updated"
+        
+        print(f"Testing PUT /api/customers/{customer_id} with valid data...")
+        print(f"   Original: {original_name}, {original_phone}")
+        print(f"   Updated:  {updated_name}, {updated_phone}")
+        
+        success, update_response = tester.test_update_customer(
+            customer_id,
+            updated_name,
+            updated_phone,
+            updated_email,
+            updated_address
+        )
+        
+        if success:
+            print("✅ Customer update API working correctly")
+            test_results['customer_update'] = True
+            
+            # Verify the update was applied
+            print("\n🔍 Verifying customer update persistence...")
+            success, verified_customer = tester.test_get_customer_by_id(customer_id)
+            
+            if success:
+                if (verified_customer.get('name') == updated_name and 
+                    verified_customer.get('phone') == updated_phone):
+                    print("✅ Customer update persisted correctly in database")
+                    print(f"   Verified Name: {verified_customer.get('name')}")
+                    print(f"   Verified Phone: {verified_customer.get('phone')}")
+                    test_results['response_validation'] = True
+                else:
+                    print("❌ Customer update not persisted correctly")
+                    print(f"   Expected: {updated_name}, {updated_phone}")
+                    print(f"   Got: {verified_customer.get('name')}, {verified_customer.get('phone')}")
+                    all_tests_passed = False
+            else:
+                print("❌ Failed to verify customer update")
+                all_tests_passed = False
+        else:
+            print("❌ Customer update API failed")
+            all_tests_passed = False
+    else:
+        print("❌ No customer ID available for update testing")
+        all_tests_passed = False
+    
+    # 5. VEHICLE UPDATE TESTING
+    print("\n🏍️ 5. VEHICLE UPDATE API TESTING")
+    print("-" * 40)
+    
+    # Get existing vehicles first
+    success, vehicles_response = tester.test_get_vehicles()
+    
+    if success and isinstance(vehicles_response, list) and len(vehicles_response) > 0:
+        # Use existing vehicle for update testing
+        first_vehicle = vehicles_response[0]
+        vehicle_id = first_vehicle.get('id')
+        
+        print(f"✅ Found existing vehicle for testing: {vehicle_id}")
+        print(f"   Original Model: {first_vehicle.get('model', 'N/A')}")
+        print(f"   Original Color: {first_vehicle.get('color', 'N/A')}")
+        
+        # Test vehicle update
+        updated_model = f"{first_vehicle.get('model', 'Test Model')} - Updated"
+        updated_color = "Updated Color"
+        
+        print(f"\nTesting PUT /api/vehicles/{vehicle_id} with valid data...")
+        
+        # Get current vehicle data for update
+        success, current_vehicle = tester.test_get_vehicle_by_id(vehicle_id)
+        if success:
+            # Update with modified data
+            success, vehicle_update_response = tester.run_test(
+                f"Update Vehicle {vehicle_id}",
+                "PUT",
+                f"vehicles/{vehicle_id}",
+                200,
+                data={
+                    "brand": current_vehicle.get("brand"),
+                    "model": updated_model,  # Updated field
+                    "chassis_no": current_vehicle.get("chassis_no"),
+                    "engine_no": current_vehicle.get("engine_no"),
+                    "color": updated_color,  # Updated field
+                    "key_no": current_vehicle.get("key_no"),
+                    "inbound_location": current_vehicle.get("inbound_location"),
+                    "page_number": current_vehicle.get("page_number")
+                }
+            )
+            
+            if success:
+                print("✅ Vehicle update API working correctly")
+                test_results['vehicle_update'] = True
+                
+                # Verify the update was applied
+                print("\n🔍 Verifying vehicle update persistence...")
+                success, verified_vehicle = tester.test_get_vehicle_by_id(vehicle_id)
+                
+                if success:
+                    if (verified_vehicle.get('model') == updated_model and 
+                        verified_vehicle.get('color') == updated_color):
+                        print("✅ Vehicle update persisted correctly in database")
+                        print(f"   Verified Model: {verified_vehicle.get('model')}")
+                        print(f"   Verified Color: {verified_vehicle.get('color')}")
+                    else:
+                        print("❌ Vehicle update not persisted correctly")
+                        print(f"   Expected: {updated_model}, {updated_color}")
+                        print(f"   Got: {verified_vehicle.get('model')}, {verified_vehicle.get('color')}")
+                        all_tests_passed = False
+                else:
+                    print("❌ Failed to verify vehicle update")
+                    all_tests_passed = False
+            else:
+                print("❌ Vehicle update API failed")
+                all_tests_passed = False
+        else:
+            print("❌ Failed to get current vehicle data")
+            all_tests_passed = False
+    else:
+        print("⚠️ No existing vehicles found. Creating test vehicle...")
+        # Create a test vehicle for update testing
+        success, vehicle_data = tester.test_create_vehicle(
+            "TVS",
+            "Test Model for Update",
+            "TEST_CHASSIS_UPDATE",
+            "TEST_ENGINE_UPDATE",
+            "Red",
+            "TEST_KEY_UPDATE",
+            "Test Location"
+        )
+        
+        if success:
+            vehicle_id = vehicle_data.get('id')
+            print(f"✅ Test vehicle created: {vehicle_id}")
+            
+            # Now test the update
+            updated_model = "Updated Test Model"
+            updated_color = "Blue"
+            
+            success, vehicle_update_response = tester.run_test(
+                f"Update Test Vehicle {vehicle_id}",
+                "PUT",
+                f"vehicles/{vehicle_id}",
+                200,
+                data={
+                    "brand": "TVS",
+                    "model": updated_model,
+                    "chassis_no": "TEST_CHASSIS_UPDATE",
+                    "engine_no": "TEST_ENGINE_UPDATE",
+                    "color": updated_color,
+                    "key_no": "TEST_KEY_UPDATE",
+                    "inbound_location": "Test Location"
+                }
+            )
+            
+            if success:
+                print("✅ Vehicle update API working correctly")
+                test_results['vehicle_update'] = True
+            else:
+                print("❌ Vehicle update API failed")
+                all_tests_passed = False
+        else:
+            print("❌ Failed to create test vehicle")
+            all_tests_passed = False
+    
+    # 6. COMPREHENSIVE RESULTS
+    print("\n" + "=" * 80)
+    print("📋 CUSTOMER UPDATE FUNCTIONALITY TEST RESULTS")
+    print("=" * 80)
+    
+    results_summary = [
+        ("API Connectivity", test_results['connectivity']),
+        ("Authentication (admin/admin123)", test_results['authentication']),
+        ("GET /api/customers", test_results['get_customers']),
+        ("PUT /api/customers/{id}", test_results['customer_update']),
+        ("PUT /api/vehicles/{id}", test_results['vehicle_update']),
+        ("Response Validation", test_results['response_validation'])
+    ]
+    
+    for test_name, passed in results_summary:
+        status = "✅ PASSED" if passed else "❌ FAILED"
+        print(f"   {test_name:<35} {status}")
+    
+    overall_status = "✅ ALL TESTS PASSED" if all_tests_passed else "❌ SOME TESTS FAILED"
+    print(f"\n🎯 OVERALL STATUS: {overall_status}")
+    
+    if all_tests_passed:
+        print("\n🎉 CUSTOMER UPDATE FUNCTIONALITY TESTING COMPLETE!")
+        print("   All backend APIs are working correctly:")
+        print("   ✅ Customer update API (PUT /api/customers/{id}) working")
+        print("   ✅ Vehicle update API (PUT /api/vehicles/{id}) working")
+        print("   ✅ Data retrieval (GET /api/customers) working")
+        print("   ✅ Authentication with admin/admin123 working")
+        print("   ✅ Response formats and success codes verified")
+        print("\n💡 CONCLUSION: Backend APIs are functioning correctly.")
+        print("   If frontend edit modal is failing, the issue is likely in:")
+        print("   - Frontend API call implementation")
+        print("   - Authentication token handling")
+        print("   - Request data formatting")
+        print("   - Error handling in frontend code")
+    else:
+        print("\n⚠️ ISSUES FOUND - See detailed results above")
+        print("   Backend API issues may be causing frontend edit modal failures")
+    
+    return all_tests_passed, test_results
+
 def main():
     print("🚀 Starting Two Wheeler Business Management System API Tests")
     print("=" * 60)
