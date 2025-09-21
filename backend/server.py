@@ -384,7 +384,10 @@ async def create_customer(customer_data: CustomerCreate, current_user: User = De
 @api_router.get("/customers")
 async def get_customers(current_user: User = Depends(get_current_user)):
     customers = await db.customers.find().to_list(1000)
-    # Return raw customer data to include extended fields like vehicle_info, insurance_info, sales_info
+    # Convert ObjectId to string for JSON serialization and return raw customer data
+    for customer in customers:
+        if '_id' in customer:
+            customer['_id'] = str(customer['_id'])
     return customers
 
 @api_router.get("/customers/{customer_id}")
