@@ -1372,6 +1372,37 @@ class TwoWheelerAPITester:
         
         return all_tests_passed, test_results
 
+def test_pydantic_error_handling_only():
+    """
+    Focused testing for Pydantic Error Handling
+    As requested in the review request for Sales.js error handling improvements
+    """
+    print("🚀 PYDANTIC ERROR HANDLING TESTING")
+    print("=" * 60)
+    print("Testing backend API error handling for Pydantic validation errors")
+    
+    tester = TwoWheelerAPITester()
+    
+    # Test basic connectivity first
+    print("\n📡 Testing Basic Connectivity...")
+    success, _ = tester.test_root_endpoint()
+    if not success:
+        print("❌ Cannot connect to API. Stopping tests.")
+        return 1
+    
+    # Run the comprehensive Pydantic error handling test
+    success, results = tester.test_pydantic_error_handling()
+    
+    # Print final results
+    print("\n" + "=" * 60)
+    print(f"📊 Final Test Results:")
+    print(f"   Tests Run: {tester.tests_run}")
+    print(f"   Tests Passed: {tester.tests_passed}")
+    print(f"   Tests Failed: {tester.tests_run - tester.tests_passed}")
+    print(f"   Success Rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
+    
+    return 0 if success else 1
+
 def test_bill_view_functionality_only():
     """
     Focused testing for Bill View Functionality Backend Verification
