@@ -1634,6 +1634,79 @@ const ViewInvoices = () => {
               </div>
             </div>
             
+            <!-- Insurance Nominee Details -->
+            <div class="section">
+              <div class="section-title">
+                🛡️ Insurance Nominee Details
+              </div>
+              <div class="section-content">
+                <div class="field">
+                  <span class="field-label">Nominee Name:</span>
+                  <span class="field-value">${invoice.insurance_details?.nominee || 'N/A'}</span>
+                </div>
+                <div class="field">
+                  <span class="field-label">Relation:</span>
+                  <span class="field-value">${invoice.insurance_details?.relation || 'N/A'}</span>
+                </div>
+                <div class="field">
+                  <span class="field-label">Age:</span>
+                  <span class="field-value">${invoice.insurance_details?.age || 'N/A'} years</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Service Schedule -->
+            <div class="section">
+              <div class="section-title">
+                🔧 Service Schedule
+              </div>
+              <div style="background: #f0f9ff; padding: 10px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #bfdbfe;">
+                <p style="font-weight: bold; color: #1e40af; font-size: 12px; margin-bottom: 6px;">DEAR VALUED CUSTOMER,</p>
+                <p style="color: #3730a3; font-size: 11px; line-height: 1.4;">
+                  We thank you for choosing our world-class vehicle. To ensure optimal performance and longevity, 
+                  please follow the service schedule below for a pleasant riding experience at all times.
+                </p>
+              </div>
+              
+              <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px;">
+                <thead>
+                  <tr style="background: linear-gradient(135deg, #4f46e5, #6366f1); color: white;">
+                    <th style="padding: 8px; text-align: left; border: 1px solid #4f46e5;">SERVICE DATE</th>
+                    <th style="padding: 8px; text-align: left; border: 1px solid #4f46e5;">SERVICE TYPE</th>
+                    <th style="padding: 8px; text-align: left; border: 1px solid #4f46e5;">RECOMMENDED SCHEDULE</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding: 6px; border: 1px solid #d1d5db;">____/____/____</td>
+                    <td style="padding: 6px; border: 1px solid #d1d5db; font-weight: bold; color: #4f46e5;">FIRST SERVICE</td>
+                    <td style="padding: 6px; border: 1px solid #d1d5db;">500-700 kms or 15-30 days</td>
+                  </tr>
+                  <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding: 6px; border: 1px solid #d1d5db;">____/____/____</td>
+                    <td style="padding: 6px; border: 1px solid #d1d5db; font-weight: bold; color: #4f46e5;">SECOND SERVICE</td>
+                    <td style="padding: 6px; border: 1px solid #d1d5db;">3000-3500 kms or 30-90 days</td>
+                  </tr>
+                  <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding: 6px; border: 1px solid #d1d5db;">____/____/____</td>
+                    <td style="padding: 6px; border: 1px solid #d1d5db; font-weight: bold; color: #4f46e5;">THIRD SERVICE</td>
+                    <td style="padding: 6px; border: 1px solid #d1d5db;">6000-6500 kms or 90-180 days</td>
+                  </tr>
+                  <tr style="background: #f8fafc;">
+                    <td style="padding: 6px; border: 1px solid #d1d5db;">____/____/____</td>
+                    <td style="padding: 6px; border: 1px solid #d1d5db; font-weight: bold; color: #4f46e5;">FOURTH SERVICE</td>
+                    <td style="padding: 6px; border: 1px solid #d1d5db;">9000-9500 kms or 180-270 days</td>
+                  </tr>
+                </tbody>
+              </table>
+              
+              <div style="background: linear-gradient(90deg, #fef3c7, #fde68a); border: 1px solid #f59e0b; padding: 8px; text-align: center; margin-top: 10px; border-radius: 4px;">
+                <p style="font-weight: bold; color: #92400e; font-size: 11px;">
+                  ⚠️ IMPORTANT: Follow whichever milestone comes first (kilometers or days)
+                </p>
+              </div>
+            </div>
+            
             <!-- Footer -->
             <div class="footer">
               <div class="footer-title">Thank You for Choosing M M Motors!</div>
