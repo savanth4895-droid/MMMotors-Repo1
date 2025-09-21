@@ -1217,7 +1217,7 @@ Kiran Patel,S/O Suresh Patel,9876543221,9876543221,,,"APRILIA,Tuono V4,Red,KA12W
         
         try:
             # Prepare multipart form data
-            url = f"{self.base_url}/import/upload"
+            url = f"{self.base_url}/import/upload?data_type={data_type}"
             headers = {}
             if self.token:
                 headers['Authorization'] = f'Bearer {self.token}'
@@ -1225,7 +1225,6 @@ Kiran Patel,S/O Suresh Patel,9876543221,9876543221,,,"APRILIA,Tuono V4,Red,KA12W
             # Read file content as bytes
             with open(temp_file_path, 'rb') as f:
                 files = {'file': (filename, f, 'text/csv')}
-                data = {'data_type': data_type}
                 
                 self.tests_run += 1
                 print(f"\n🔍 Testing CSV Import with {filename}...")
@@ -1235,7 +1234,7 @@ Kiran Patel,S/O Suresh Patel,9876543221,9876543221,,,"APRILIA,Tuono V4,Red,KA12W
                 
                 try:
                     import requests
-                    response = requests.post(url, headers=headers, files=files, data=data)
+                    response = requests.post(url, headers=headers, files=files)
                     print(f"   Status Code: {response.status_code}")
                     
                     if response.status_code == 200:
