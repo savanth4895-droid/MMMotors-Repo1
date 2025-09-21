@@ -1540,50 +1540,52 @@ const ViewInvoices = () => {
               font-size: 13px;
             }
             
-            /* Payment Summary - Enhanced */
+            /* Payment Summary - Compact */
             .payment-content {
               display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 20px;
+              grid-template-columns: 1fr auto;
+              gap: 15px;
               align-items: center;
             }
             .payment-details {
-              font-size: 12px;
+              font-size: 11px;
             }
             .payment-details .detail-row {
-              margin-bottom: 6px;
+              margin-bottom: 4px;
               border-bottom: 1px solid rgba(255,255,255,0.3);
-              padding-bottom: 4px;
+              padding-bottom: 2px;
             }
             .amount-display {
               text-align: center;
               background: rgba(255,255,255,0.15);
-              padding: 15px;
-              border-radius: 8px;
+              padding: 10px 15px;
+              border-radius: 6px;
               border: 1px solid rgba(255,255,255,0.2);
+              min-width: 200px;
             }
             .amount-label {
-              font-size: 14px;
-              margin-bottom: 8px;
+              font-size: 12px;
+              margin-bottom: 4px;
               font-weight: 600;
             }
             .amount-large {
-              font-size: 32px;
+              font-size: 24px;
               font-weight: bold;
-              margin-bottom: 10px;
+              margin-bottom: 6px;
             }
             .amount-words-section {
               background: linear-gradient(90deg, #fef3c7, #fde68a);
               color: #92400e;
-              padding: 12px;
-              border-radius: 6px;
-              margin-top: 15px;
+              padding: 8px;
+              border-radius: 4px;
+              margin-top: 10px;
               border: 1px solid #f59e0b;
+              font-size: 11px;
             }
             .amount-words {
               font-style: italic;
               font-weight: 600;
-              font-size: 13px;
+              font-size: 11px;
             }
             
             /* Service Schedule - Matching Target */
