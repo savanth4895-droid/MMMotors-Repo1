@@ -1011,7 +1011,6 @@ const CreateInvoice = () => {
                   placeholder="Enter color"
                   value={invoiceData.color}
                   onChange={(e) => handleInputChange('color', e.target.value)}
-                  required
                 />
               </div>
               <div>
