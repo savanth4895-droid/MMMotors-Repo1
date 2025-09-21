@@ -3766,6 +3766,7 @@ const CustomersManagement = () => {
                   <div>
                     <Label htmlFor="mobile">Mobile Number *</Label>
                     <Input
+                      type="tel"
                       id="mobile"
                       placeholder="Enter mobile number"
                       value={customerData.mobile}
