@@ -856,6 +856,527 @@ class TwoWheelerAPITester:
             print("❌ Should have failed with invalid job ID")
             return False, response
 
+    def test_comprehensive_data_inventory(self):
+        """
+        COMPREHENSIVE DATABASE DATA INVENTORY
+        Check what testing data currently exists in the database and provide 
+        a comprehensive list of all data that needs to be cleared.
+        
+        SPECIFIC DATA CHECKING:
+        1. Customer Data: Check GET /api/customers to see how many customers exist
+        2. Vehicle Data: Check GET /api/vehicles to see how many vehicles exist  
+        3. Sales/Invoice Data: Check GET /api/sales to see how many sales records exist
+        4. Service Data: Check service-related endpoints to see service records
+        5. Spare Parts Data: Check spare parts inventory
+        6. Spare Parts Bills: Check spare parts billing data
+        7. Backup Jobs: Check backup system data
+        8. Any other data collections
+        """
+        print("\n" + "=" * 80)
+        print("📊 COMPREHENSIVE DATABASE DATA INVENTORY")
+        print("=" * 80)
+        print("Checking what testing data currently exists in the database...")
+        print("Goal: Provide comprehensive list of all data that needs to be cleared")
+        
+        all_tests_passed = True
+        data_inventory = {
+            'customers': {'count': 0, 'data': [], 'success': False},
+            'vehicles': {'count': 0, 'data': [], 'success': False},
+            'sales': {'count': 0, 'data': [], 'success': False},
+            'services': {'count': 0, 'data': [], 'success': False},
+            'spare_parts': {'count': 0, 'data': [], 'success': False},
+            'spare_part_bills': {'count': 0, 'data': [], 'success': False},
+            'backup_jobs': {'count': 0, 'data': [], 'success': False},
+            'backup_config': {'count': 0, 'data': [], 'success': False},
+            'authentication': False
+        }
+        
+        # 1. AUTHENTICATION
+        print("\n🔐 1. AUTHENTICATION WITH ADMIN/ADMIN123")
+        print("-" * 50)
+        success, auth_response = self.test_login_user("admin", "admin123")
+        if success:
+            print("✅ Authentication successful with admin/admin123")
+            data_inventory['authentication'] = True
+        else:
+            print("❌ Authentication failed with admin/admin123")
+            all_tests_passed = False
+            return False, data_inventory
+        
+        # 2. CUSTOMER DATA INVENTORY
+        print("\n👥 2. CUSTOMER DATA INVENTORY")
+        print("-" * 50)
+        success, customers_response = self.test_get_customers()
+        
+        if success:
+            print("✅ GET /api/customers endpoint accessible")
+            data_inventory['customers']['success'] = True
+            
+            if isinstance(customers_response, list):
+                customer_count = len(customers_response)
+                data_inventory['customers']['count'] = customer_count
+                data_inventory['customers']['data'] = customers_response
+                
+                print(f"📋 CUSTOMER DATA SUMMARY:")
+                print(f"   Total Customers: {customer_count}")
+                
+                if customer_count > 0:
+                    print(f"   Sample Customer Records:")
+                    for i, customer in enumerate(customers_response[:5]):  # Show first 5
+                        print(f"     {i+1}. ID: {customer.get('id', 'N/A')[:8]}...")
+                        print(f"        Name: {customer.get('name', 'N/A')}")
+                        print(f"        Phone: {customer.get('phone', 'N/A')}")
+                        print(f"        Email: {customer.get('email', 'N/A')}")
+                        print(f"        Created: {customer.get('created_at', 'N/A')}")
+                    
+                    if customer_count > 5:
+                        print(f"     ... and {customer_count - 5} more customers")
+                else:
+                    print("   ✅ No customer data found - database is clean")
+            else:
+                print("❌ Unexpected response format for customers")
+                all_tests_passed = False
+        else:
+            print("❌ Failed to retrieve customer data")
+            all_tests_passed = False
+        
+        # 3. VEHICLE DATA INVENTORY
+        print("\n🏍️ 3. VEHICLE DATA INVENTORY")
+        print("-" * 50)
+        success, vehicles_response = self.test_get_vehicles()
+        
+        if success:
+            print("✅ GET /api/vehicles endpoint accessible")
+            data_inventory['vehicles']['success'] = True
+            
+            if isinstance(vehicles_response, list):
+                vehicle_count = len(vehicles_response)
+                data_inventory['vehicles']['count'] = vehicle_count
+                data_inventory['vehicles']['data'] = vehicles_response
+                
+                print(f"📋 VEHICLE DATA SUMMARY:")
+                print(f"   Total Vehicles: {vehicle_count}")
+                
+                if vehicle_count > 0:
+                    # Analyze vehicle status distribution
+                    status_counts = {}
+                    brand_counts = {}
+                    
+                    for vehicle in vehicles_response:
+                        status = vehicle.get('status', 'unknown')
+                        brand = vehicle.get('brand', 'unknown')
+                        status_counts[status] = status_counts.get(status, 0) + 1
+                        brand_counts[brand] = brand_counts.get(brand, 0) + 1
+                    
+                    print(f"   Vehicle Status Distribution:")
+                    for status, count in status_counts.items():
+                        print(f"     {status}: {count}")
+                    
+                    print(f"   Vehicle Brand Distribution:")
+                    for brand, count in brand_counts.items():
+                        print(f"     {brand}: {count}")
+                    
+                    print(f"   Sample Vehicle Records:")
+                    for i, vehicle in enumerate(vehicles_response[:3]):  # Show first 3
+                        print(f"     {i+1}. ID: {vehicle.get('id', 'N/A')[:8]}...")
+                        print(f"        Brand: {vehicle.get('brand', 'N/A')}")
+                        print(f"        Model: {vehicle.get('model', 'N/A')}")
+                        print(f"        Chassis: {vehicle.get('chassis_no', 'N/A')}")
+                        print(f"        Status: {vehicle.get('status', 'N/A')}")
+                        print(f"        Date Received: {vehicle.get('date_received', 'N/A')}")
+                    
+                    if vehicle_count > 3:
+                        print(f"     ... and {vehicle_count - 3} more vehicles")
+                else:
+                    print("   ✅ No vehicle data found - database is clean")
+            else:
+                print("❌ Unexpected response format for vehicles")
+                all_tests_passed = False
+        else:
+            print("❌ Failed to retrieve vehicle data")
+            all_tests_passed = False
+        
+        # 4. SALES/INVOICE DATA INVENTORY
+        print("\n💰 4. SALES/INVOICE DATA INVENTORY")
+        print("-" * 50)
+        success, sales_response = self.test_get_sales()
+        
+        if success:
+            print("✅ GET /api/sales endpoint accessible")
+            data_inventory['sales']['success'] = True
+            
+            if isinstance(sales_response, list):
+                sales_count = len(sales_response)
+                data_inventory['sales']['count'] = sales_count
+                data_inventory['sales']['data'] = sales_response
+                
+                print(f"📋 SALES/INVOICE DATA SUMMARY:")
+                print(f"   Total Sales Records: {sales_count}")
+                
+                if sales_count > 0:
+                    # Calculate total sales amount
+                    total_amount = sum(sale.get('amount', 0) for sale in sales_response)
+                    
+                    # Analyze payment methods
+                    payment_methods = {}
+                    for sale in sales_response:
+                        method = sale.get('payment_method', 'unknown')
+                        payment_methods[method] = payment_methods.get(method, 0) + 1
+                    
+                    print(f"   Total Sales Amount: ₹{total_amount:,.2f}")
+                    print(f"   Payment Method Distribution:")
+                    for method, count in payment_methods.items():
+                        print(f"     {method}: {count}")
+                    
+                    print(f"   Sample Sales Records:")
+                    for i, sale in enumerate(sales_response[:3]):  # Show first 3
+                        print(f"     {i+1}. Invoice: {sale.get('invoice_number', 'N/A')}")
+                        print(f"        Customer ID: {sale.get('customer_id', 'N/A')[:8]}...")
+                        print(f"        Vehicle ID: {sale.get('vehicle_id', 'N/A')[:8]}...")
+                        print(f"        Amount: ₹{sale.get('amount', 0):,.2f}")
+                        print(f"        Payment: {sale.get('payment_method', 'N/A')}")
+                        print(f"        Date: {sale.get('sale_date', 'N/A')}")
+                    
+                    if sales_count > 3:
+                        print(f"     ... and {sales_count - 3} more sales records")
+                else:
+                    print("   ✅ No sales data found - database is clean")
+            else:
+                print("❌ Unexpected response format for sales")
+                all_tests_passed = False
+        else:
+            print("❌ Failed to retrieve sales data")
+            all_tests_passed = False
+        
+        # 5. SERVICE DATA INVENTORY
+        print("\n🔧 5. SERVICE DATA INVENTORY")
+        print("-" * 50)
+        success, services_response = self.test_get_services()
+        
+        if success:
+            print("✅ GET /api/services endpoint accessible")
+            data_inventory['services']['success'] = True
+            
+            if isinstance(services_response, list):
+                service_count = len(services_response)
+                data_inventory['services']['count'] = service_count
+                data_inventory['services']['data'] = services_response
+                
+                print(f"📋 SERVICE DATA SUMMARY:")
+                print(f"   Total Service Records: {service_count}")
+                
+                if service_count > 0:
+                    # Analyze service status and types
+                    status_counts = {}
+                    service_types = {}
+                    total_service_amount = 0
+                    
+                    for service in services_response:
+                        status = service.get('status', 'unknown')
+                        service_type = service.get('service_type', 'unknown')
+                        amount = service.get('amount', 0)
+                        
+                        status_counts[status] = status_counts.get(status, 0) + 1
+                        service_types[service_type] = service_types.get(service_type, 0) + 1
+                        total_service_amount += amount
+                    
+                    print(f"   Total Service Amount: ₹{total_service_amount:,.2f}")
+                    print(f"   Service Status Distribution:")
+                    for status, count in status_counts.items():
+                        print(f"     {status}: {count}")
+                    
+                    print(f"   Service Type Distribution:")
+                    for stype, count in list(service_types.items())[:5]:  # Show top 5
+                        print(f"     {stype}: {count}")
+                    
+                    print(f"   Sample Service Records:")
+                    for i, service in enumerate(services_response[:3]):  # Show first 3
+                        print(f"     {i+1}. Job Card: {service.get('job_card_number', 'N/A')}")
+                        print(f"        Customer ID: {service.get('customer_id', 'N/A')[:8]}...")
+                        print(f"        Vehicle: {service.get('vehicle_number', 'N/A')}")
+                        print(f"        Type: {service.get('service_type', 'N/A')}")
+                        print(f"        Amount: ₹{service.get('amount', 0):,.2f}")
+                        print(f"        Status: {service.get('status', 'N/A')}")
+                    
+                    if service_count > 3:
+                        print(f"     ... and {service_count - 3} more service records")
+                else:
+                    print("   ✅ No service data found - database is clean")
+            else:
+                print("❌ Unexpected response format for services")
+                all_tests_passed = False
+        else:
+            print("❌ Failed to retrieve service data")
+            all_tests_passed = False
+        
+        # 6. SPARE PARTS INVENTORY
+        print("\n🔧 6. SPARE PARTS INVENTORY DATA")
+        print("-" * 50)
+        success, spare_parts_response = self.test_get_spare_parts()
+        
+        if success:
+            print("✅ GET /api/spare-parts endpoint accessible")
+            data_inventory['spare_parts']['success'] = True
+            
+            if isinstance(spare_parts_response, list):
+                parts_count = len(spare_parts_response)
+                data_inventory['spare_parts']['count'] = parts_count
+                data_inventory['spare_parts']['data'] = spare_parts_response
+                
+                print(f"📋 SPARE PARTS INVENTORY SUMMARY:")
+                print(f"   Total Spare Parts: {parts_count}")
+                
+                if parts_count > 0:
+                    # Analyze spare parts data
+                    brand_counts = {}
+                    total_inventory_value = 0
+                    low_stock_count = 0
+                    
+                    for part in spare_parts_response:
+                        brand = part.get('brand', 'unknown')
+                        quantity = part.get('quantity', 0)
+                        unit_price = part.get('unit_price', 0)
+                        low_stock_threshold = part.get('low_stock_threshold', 5)
+                        
+                        brand_counts[brand] = brand_counts.get(brand, 0) + 1
+                        total_inventory_value += quantity * unit_price
+                        
+                        if quantity <= low_stock_threshold:
+                            low_stock_count += 1
+                    
+                    print(f"   Total Inventory Value: ₹{total_inventory_value:,.2f}")
+                    print(f"   Low Stock Items: {low_stock_count}")
+                    print(f"   Brand Distribution:")
+                    for brand, count in list(brand_counts.items())[:5]:  # Show top 5
+                        print(f"     {brand}: {count}")
+                    
+                    print(f"   Sample Spare Parts:")
+                    for i, part in enumerate(spare_parts_response[:3]):  # Show first 3
+                        print(f"     {i+1}. Name: {part.get('name', 'N/A')}")
+                        print(f"        Part Number: {part.get('part_number', 'N/A')}")
+                        print(f"        Brand: {part.get('brand', 'N/A')}")
+                        print(f"        Quantity: {part.get('quantity', 0)}")
+                        print(f"        Unit Price: ₹{part.get('unit_price', 0)}")
+                        print(f"        HSN/SAC: {part.get('hsn_sac', 'N/A')}")
+                    
+                    if parts_count > 3:
+                        print(f"     ... and {parts_count - 3} more spare parts")
+                else:
+                    print("   ✅ No spare parts data found - database is clean")
+            else:
+                print("❌ Unexpected response format for spare parts")
+                all_tests_passed = False
+        else:
+            print("❌ Failed to retrieve spare parts data")
+            all_tests_passed = False
+        
+        # 7. SPARE PARTS BILLS DATA INVENTORY
+        print("\n🧾 7. SPARE PARTS BILLS DATA INVENTORY")
+        print("-" * 50)
+        success, bills_response = self.test_get_spare_part_bills()
+        
+        if success:
+            print("✅ GET /api/spare-parts/bills endpoint accessible")
+            data_inventory['spare_part_bills']['success'] = True
+            
+            if isinstance(bills_response, list):
+                bills_count = len(bills_response)
+                data_inventory['spare_part_bills']['count'] = bills_count
+                data_inventory['spare_part_bills']['data'] = bills_response
+                
+                print(f"📋 SPARE PARTS BILLS SUMMARY:")
+                print(f"   Total Bills: {bills_count}")
+                
+                if bills_count > 0:
+                    # Analyze bills data
+                    total_bill_amount = 0
+                    total_tax_amount = 0
+                    customer_data_format_count = 0
+                    legacy_format_count = 0
+                    
+                    for bill in bills_response:
+                        total_amount = bill.get('total_amount', 0)
+                        total_tax = bill.get('total_tax', 0)
+                        
+                        total_bill_amount += total_amount
+                        total_tax_amount += total_tax
+                        
+                        if bill.get('customer_data'):
+                            customer_data_format_count += 1
+                        elif bill.get('customer_id'):
+                            legacy_format_count += 1
+                    
+                    print(f"   Total Bills Amount: ₹{total_bill_amount:,.2f}")
+                    print(f"   Total Tax Amount: ₹{total_tax_amount:,.2f}")
+                    print(f"   Customer Data Format: {customer_data_format_count}")
+                    print(f"   Legacy Format: {legacy_format_count}")
+                    
+                    print(f"   Sample Bills:")
+                    for i, bill in enumerate(bills_response[:3]):  # Show first 3
+                        print(f"     {i+1}. Bill Number: {bill.get('bill_number', 'N/A')}")
+                        print(f"        Date: {bill.get('bill_date', 'N/A')}")
+                        print(f"        Items: {len(bill.get('items', []))}")
+                        print(f"        Total Amount: ₹{bill.get('total_amount', 0):,.2f}")
+                        print(f"        CGST: ₹{bill.get('total_cgst', 0):,.2f}")
+                        print(f"        SGST: ₹{bill.get('total_sgst', 0):,.2f}")
+                        
+                        # Show customer info
+                        if bill.get('customer_data'):
+                            customer = bill['customer_data']
+                            print(f"        Customer: {customer.get('name', 'N/A')} ({customer.get('mobile', 'N/A')})")
+                        elif bill.get('customer_id'):
+                            print(f"        Customer ID: {bill.get('customer_id', 'N/A')[:8]}...")
+                    
+                    if bills_count > 3:
+                        print(f"     ... and {bills_count - 3} more bills")
+                else:
+                    print("   ✅ No spare parts bills found - database is clean")
+            else:
+                print("❌ Unexpected response format for spare parts bills")
+                all_tests_passed = False
+        else:
+            print("❌ Failed to retrieve spare parts bills data")
+            all_tests_passed = False
+        
+        # 8. BACKUP SYSTEM DATA INVENTORY
+        print("\n💾 8. BACKUP SYSTEM DATA INVENTORY")
+        print("-" * 50)
+        
+        # Check backup jobs
+        success, backup_jobs_response = self.test_get_backup_jobs()
+        if success:
+            print("✅ GET /api/backup/jobs endpoint accessible")
+            data_inventory['backup_jobs']['success'] = True
+            
+            if isinstance(backup_jobs_response, list):
+                backup_jobs_count = len(backup_jobs_response)
+                data_inventory['backup_jobs']['count'] = backup_jobs_count
+                data_inventory['backup_jobs']['data'] = backup_jobs_response
+                
+                print(f"   Total Backup Jobs: {backup_jobs_count}")
+                
+                if backup_jobs_count > 0:
+                    # Analyze backup jobs
+                    status_counts = {}
+                    total_backup_size = 0
+                    
+                    for job in backup_jobs_response:
+                        status = job.get('status', 'unknown')
+                        size = job.get('backup_size_mb', 0)
+                        
+                        status_counts[status] = status_counts.get(status, 0) + 1
+                        total_backup_size += size
+                    
+                    print(f"   Total Backup Size: {total_backup_size:.2f} MB")
+                    print(f"   Backup Status Distribution:")
+                    for status, count in status_counts.items():
+                        print(f"     {status}: {count}")
+                    
+                    print(f"   Sample Backup Jobs:")
+                    for i, job in enumerate(backup_jobs_response[:2]):  # Show first 2
+                        print(f"     {i+1}. Job ID: {job.get('id', 'N/A')[:8]}...")
+                        print(f"        Status: {job.get('status', 'N/A')}")
+                        print(f"        Size: {job.get('backup_size_mb', 0):.2f} MB")
+                        print(f"        Records: {job.get('total_records', 0)}")
+                        print(f"        Created: {job.get('created_at', 'N/A')}")
+                else:
+                    print("   ✅ No backup jobs found - database is clean")
+        else:
+            print("❌ Failed to retrieve backup jobs data")
+        
+        # Check backup configuration
+        success, backup_config_response = self.test_get_backup_config()
+        if success:
+            print("✅ GET /api/backup/config endpoint accessible")
+            data_inventory['backup_config']['success'] = True
+            data_inventory['backup_config']['count'] = 1  # Config is a single document
+            data_inventory['backup_config']['data'] = [backup_config_response]
+            
+            print(f"   Backup Configuration:")
+            print(f"     Enabled: {backup_config_response.get('backup_enabled', 'N/A')}")
+            print(f"     Time: {backup_config_response.get('backup_time', 'N/A')}")
+            print(f"     Retention: {backup_config_response.get('retention_days', 'N/A')} days")
+            print(f"     Location: {backup_config_response.get('backup_location', 'N/A')}")
+        else:
+            print("❌ Failed to retrieve backup configuration")
+        
+        # 9. COMPREHENSIVE DATA SUMMARY
+        print("\n" + "=" * 80)
+        print("📊 COMPREHENSIVE DATA INVENTORY SUMMARY")
+        print("=" * 80)
+        
+        total_records = 0
+        collections_with_data = []
+        
+        print("📋 DATA COLLECTION SUMMARY:")
+        for collection, info in data_inventory.items():
+            if collection == 'authentication':
+                continue
+                
+            count = info.get('count', 0)
+            success = info.get('success', False)
+            status = "✅" if success else "❌"
+            
+            print(f"   {status} {collection.replace('_', ' ').title():<25} {count:>6} records")
+            
+            if count > 0:
+                total_records += count
+                collections_with_data.append(collection)
+        
+        print(f"\n🎯 TOTAL RECORDS ACROSS ALL COLLECTIONS: {total_records}")
+        
+        if total_records > 0:
+            print(f"\n⚠️ COLLECTIONS WITH DATA THAT NEED CLEARING:")
+            for collection in collections_with_data:
+                count = data_inventory[collection]['count']
+                print(f"   • {collection.replace('_', ' ').title()}: {count} records")
+            
+            print(f"\n🗑️ RECOMMENDED DATA CLEARING APPROACH:")
+            print(f"   1. MANUAL API DELETION (Recommended):")
+            print(f"      - Use DELETE endpoints if available")
+            print(f"      - Or create a cleanup script using existing APIs")
+            
+            print(f"\n   2. DATABASE DIRECT APPROACH:")
+            print(f"      - Connect to MongoDB directly")
+            print(f"      - Drop collections: {', '.join(collections_with_data)}")
+            print(f"      - Command: db.{'{collection_name}'}.deleteMany({{}})")
+            
+            print(f"\n   3. BACKUP AND RESTORE APPROACH:")
+            print(f"      - Create backup of current data (if needed)")
+            print(f"      - Clear all collections")
+            print(f"      - Start with fresh database")
+            
+            print(f"\n⚠️ IMPORTANT CONSIDERATIONS:")
+            print(f"   • Authentication data (users) should be preserved")
+            print(f"   • Backup configuration can be preserved")
+            print(f"   • Consider creating a data cleanup API endpoint")
+            print(f"   • Test data clearing in staging environment first")
+            
+        else:
+            print(f"\n✅ DATABASE IS CLEAN!")
+            print(f"   No testing data found in any collections")
+            print(f"   Database is ready for fresh testing")
+        
+        # 10. FINAL RESULTS
+        print(f"\n" + "=" * 80)
+        print(f"🎯 DATA INVENTORY TESTING RESULTS")
+        print("=" * 80)
+        
+        successful_collections = sum(1 for info in data_inventory.values() 
+                                   if isinstance(info, dict) and info.get('success', False))
+        total_collections = len([k for k in data_inventory.keys() if k != 'authentication'])
+        
+        print(f"   Collections Checked: {successful_collections}/{total_collections}")
+        print(f"   Authentication: {'✅ Success' if data_inventory['authentication'] else '❌ Failed'}")
+        print(f"   Total Data Records: {total_records}")
+        print(f"   Collections with Data: {len(collections_with_data)}")
+        
+        overall_success = all_tests_passed and data_inventory['authentication']
+        status = "✅ COMPLETED SUCCESSFULLY" if overall_success else "❌ COMPLETED WITH ISSUES"
+        print(f"\n🎯 OVERALL STATUS: {status}")
+        
+        return overall_success, data_inventory
+
     def test_pydantic_error_handling(self):
         """
         COMPREHENSIVE PYDANTIC ERROR HANDLING TESTING
