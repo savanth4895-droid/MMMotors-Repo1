@@ -4814,12 +4814,30 @@ const ViewCustomerDetails = () => {
   };
 
   const handleEditCustomer = (customer) => {
+    const associatedVehicle = vehicles.find(v => v.customer_id === customer.id || 
+      (v.chassis_no === customer.chassis_no && customer.chassis_no !== 'N/A'));
+    
     setEditingCustomer(customer);
     setEditFormData({
-      name: customer.name,
-      phone: customer.phone,
+      // Customer details
+      name: customer.name || '',
+      care_of: customer.care_of || '',
+      mobile: customer.mobile || customer.phone || '',
+      address: customer.address || '',
       email: customer.email || '',
-      address: customer.address
+      
+      // Vehicle details if associated
+      brand: customer.brand !== 'N/A' ? customer.brand : (associatedVehicle?.brand || ''),
+      model: customer.model !== 'N/A' ? customer.model : (associatedVehicle?.model || ''),
+      color: customer.color !== 'N/A' ? customer.color : (associatedVehicle?.color || ''),
+      chassis_no: customer.chassis_no !== 'N/A' ? customer.chassis_no : (associatedVehicle?.chassis_no || ''),
+      engine_no: customer.engine_no !== 'N/A' ? customer.engine_no : (associatedVehicle?.engine_no || ''),
+      vehicle_no: customer.vehicle_no !== 'N/A' ? customer.vehicle_no : (associatedVehicle?.vehicle_no || ''),
+      
+      // Insurance details
+      insurance_nominee: associatedVehicle?.insurance_nominee || '',
+      relation: associatedVehicle?.relation || '',
+      age: associatedVehicle?.age || ''
     });
     setShowEditModal(true);
   };
@@ -4829,12 +4847,43 @@ const ViewCustomerDetails = () => {
     
     try {
       setLoading(true);
-      await axios.put(`${API}/customers/${editingCustomer.id}`, editFormData);
+      
+      // Update customer data
+      const customerUpdateData = {
+        name: editFormData.name,
+        care_of: editFormData.care_of,
+        mobile: editFormData.mobile,
+        address: editFormData.address,
+        email: editFormData.email
+      };
+      
+      await axios.put(`${API}/customers/${editingCustomer.id}`, customerUpdateData);
+      
+      // Update associated vehicle if exists
+      const associatedVehicle = vehicles.find(v => v.customer_id === editingCustomer.id || 
+        (v.chassis_no === editingCustomer.chassis_no && editingCustomer.chassis_no !== 'N/A'));
+      
+      if (associatedVehicle) {
+        const vehicleUpdateData = {
+          brand: editFormData.brand,
+          model: editFormData.model,
+          color: editFormData.color,
+          chassis_no: editFormData.chassis_no,
+          engine_no: editFormData.engine_no,
+          vehicle_no: editFormData.vehicle_no,
+          insurance_nominee: editFormData.insurance_nominee,
+          relation: editFormData.relation,
+          age: editFormData.age
+        };
+        
+        await axios.put(`${API}/vehicles/${associatedVehicle.id}`, vehicleUpdateData);
+      }
+      
       toast.success('Customer updated successfully!');
       setShowEditModal(false);
       setEditingCustomer(null);
       setEditFormData({});
-      fetchAllData(); // Refresh the data
+      fetchAllData(); // Refresh the list
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to update customer');
     } finally {
