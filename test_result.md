@@ -57,8 +57,8 @@
 ##   test_priority: "high_first"  # or "sequential" or "stuck_first"
 ##
 ## agent_communication:
-##     -agent: "main"  # or "testing" or "user"
-##     -message: "Communication message between agents"
+##     -agent: "main"
+##     -message: "URGENT BUG FIX COMPLETED: Fixed UTF-8 encoding error in data import functionality. Updated parse_csv_file function to handle multiple character encodings (UTF-8, ISO-8859-1, Windows-1252, CP1252) with fallback error handling. This resolves the 'utf-8 codec can't decode byte 0xa0' error reported by user. Backend has been restarted and is ready for testing. Need to test CSV import with files containing special characters to verify fix works properly."
 
 # Protocol Guidelines for Main agent
 #
