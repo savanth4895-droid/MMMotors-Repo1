@@ -3745,7 +3745,6 @@ const CustomersManagement = () => {
                       placeholder="S/O, D/O, W/O"
                       value={customerData.care_of}
                       onChange={(e) => handleInputChange('care_of', e.target.value)}
-                      required
                     />
                   </div>
                   <div>
