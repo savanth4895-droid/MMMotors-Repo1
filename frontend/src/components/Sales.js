@@ -5279,19 +5279,14 @@ const ViewCustomerDetails = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="edit_mobile">Mobile Number *</Label>
+                      <Label htmlFor="edit_mobile">Mobile Number</Label>
                       <Input
                         id="edit_mobile"
                         type="tel"
                         value={editFormData.mobile || ''}
                         onChange={(e) => setEditFormData({...editFormData, mobile: e.target.value})}
                         placeholder="Enter mobile number"
-                        required
-                        className={!editFormData.mobile?.trim() ? 'border-red-500' : ''}
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                     <div>
                       <Label htmlFor="edit_email">Email</Label>
