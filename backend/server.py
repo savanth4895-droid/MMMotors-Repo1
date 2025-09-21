@@ -381,10 +381,11 @@ async def create_customer(customer_data: CustomerCreate, current_user: User = De
     await db.customers.insert_one(customer.dict())
     return customer
 
-@api_router.get("/customers", response_model=List[Customer])
+@api_router.get("/customers")
 async def get_customers(current_user: User = Depends(get_current_user)):
     customers = await db.customers.find().to_list(1000)
-    return [Customer(**customer) for customer in customers]
+    # Return raw customer data to include extended fields like vehicle_info, insurance_info, sales_info
+    return customers
 
 @api_router.get("/customers/{customer_id}", response_model=Customer)
 async def get_customer(customer_id: str, current_user: User = Depends(get_current_user)):
