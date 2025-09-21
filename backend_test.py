@@ -2703,6 +2703,366 @@ Test User,9876543220,test@example.com,"123 Main St"""
         
         return overall_success, test_results
 
+    def test_updated_customer_import_field_mapping(self):
+        """
+        COMPREHENSIVE TESTING OF UPDATED CUSTOMER IMPORT FIELD MAPPING
+        
+        This test specifically validates the updated field mapping for customer import 
+        with vehicle and insurance information as requested in the review.
+        
+        SPECIFIC TESTING AREAS:
+        1. CSV import with complete field mapping including vehicle and insurance data
+        2. Verify form fields are properly mapped:
+           - Brand → vehicle_brand
+           - Model → vehicle_model  
+           - Color → vehicle_color
+           - Vehicle Number → vehicle_no
+           - Chassis Number → chassis_no
+           - Engine Number → engine_no
+           - Nominee Name → insurance_nominee
+           - Relation → insurance_relation
+           - Age → insurance_age
+        3. Verify imported customers include vehicle_info, insurance_info, and sales_info
+        4. Test template download to ensure all fields are included
+        5. Test complete customer import workflow
+        
+        EXPECTED RESULTS:
+        - Customer records should include vehicle_info, insurance_info, and sales_info sections
+        - All form fields should be properly stored in the database
+        - Import success rate should remain high (90%+)
+        - Template should show clear field mappings
+        """
+        print("\n" + "=" * 80)
+        print("🔄 UPDATED CUSTOMER IMPORT FIELD MAPPING TESTING")
+        print("=" * 80)
+        print("Testing the updated field mapping for customer import with vehicle and insurance information")
+        print("Focus: Complete field mapping including vehicle_info, insurance_info, and sales_info")
+        
+        all_tests_passed = True
+        test_results = {
+            'authentication': False,
+            'template_download': False,
+            'complete_field_mapping': False,
+            'vehicle_info_mapping': False,
+            'insurance_info_mapping': False,
+            'sales_info_mapping': False,
+            'customer_record_structure': False,
+            'import_success_rate': False,
+            'workflow_completion': False
+        }
+        
+        # 1. AUTHENTICATION TESTING
+        print("\n🔐 1. AUTHENTICATION WITH ADMIN/ADMIN123")
+        print("-" * 50)
+        success, auth_response = self.test_login_user("admin", "admin123")
+        if success:
+            print("✅ Authentication successful with admin/admin123")
+            test_results['authentication'] = True
+        else:
+            print("❌ Authentication failed with admin/admin123")
+            all_tests_passed = False
+            return False, test_results
+        
+        # 2. TEMPLATE DOWNLOAD TESTING
+        print("\n📄 2. CSV TEMPLATE DOWNLOAD WITH ALL MAPPED FIELDS")
+        print("-" * 50)
+        success, template_response = self.run_test(
+            "Download Customer Import Template",
+            "GET",
+            "import/template/customers",
+            200
+        )
+        
+        if success:
+            print("✅ Customer import template downloaded successfully")
+            test_results['template_download'] = True
+            
+            # Verify template contains all required mapped fields
+            if isinstance(template_response, str):
+                lines = template_response.split('\n')
+                if lines:
+                    headers = lines[0].lower()
+                    print(f"   Template Headers: {lines[0]}")
+                    
+                    # Check for all required field mappings
+                    required_fields = [
+                        'vehicle_brand', 'vehicle_model', 'vehicle_color', 'vehicle_no',
+                        'chassis_no', 'engine_no', 'insurance_nominee', 'insurance_relation',
+                        'insurance_age', 'sale_amount', 'payment_method', 'hypothecation',
+                        'sale_date', 'invoice_number'
+                    ]
+                    
+                    missing_fields = []
+                    for field in required_fields:
+                        if field not in headers:
+                            missing_fields.append(field)
+                    
+                    if not missing_fields:
+                        print("   ✅ Template contains all required mapped fields")
+                        test_results['complete_field_mapping'] = True
+                    else:
+                        print(f"   ⚠️ Template missing fields: {missing_fields}")
+                        all_tests_passed = False
+        else:
+            print("❌ Failed to download customer import template")
+            all_tests_passed = False
+        
+        # 3. COMPREHENSIVE FIELD MAPPING TESTING
+        print("\n🗂️ 3. COMPREHENSIVE FIELD MAPPING TESTING")
+        print("-" * 50)
+        
+        # Create CSV content with ALL mapped fields as specified in the review
+        comprehensive_csv_content = """name,care_of,mobile,phone,email,address,vehicle_brand,vehicle_model,vehicle_color,vehicle_no,chassis_no,engine_no,insurance_nominee,insurance_relation,insurance_age,sale_amount,payment_method,hypothecation,sale_date,invoice_number
+Arjun Reddy,S/O Venkat Reddy,9876543210,9876543210,arjun@example.com,"123 Jubilee Hills, Hyderabad",TVS,Apache RTR 160,Red,TS01AB1234,ABC123456789012345,ENG987654321,Priya Reddy,spouse,28,75000,cash,cash,2024-01-15,INV001
+Priya Sharma,D/O Rajesh Sharma,9876543211,9876543211,priya@example.com,"456 Banjara Hills, Hyderabad",BAJAJ,Pulsar 150,Blue,TS02CD5678,DEF123456789012345,ENG987654322,Arjun Sharma,father,55,65000,finance,"Bank Finance",2024-01-16,INV002
+Vikram Singh,S/O Harpal Singh,9876543212,9876543212,vikram@example.com,"789 Madhapur, Hyderabad",HERO,Splendor Plus,Black,TS03EF9012,GHI123456789012345,ENG987654323,Simran Singh,spouse,30,45000,cash,cash,2024-01-17,INV003
+Simran Kaur,D/O Jasbir Kaur,9876543213,9876543213,simran@example.com,"321 Gachibowli, Hyderabad",KTM,Duke 200,Orange,TS04GH3456,JKL123456789012345,ENG987654324,Vikram Kaur,husband,35,125000,finance,"Bank Finance",2024-01-18,INV004
+Rajesh Kumar,S/O Mohan Kumar,9876543214,9876543214,rajesh@example.com,"654 Kondapur, Hyderabad",SUZUKI,Gixxer 250,White,TS05IJ7890,MNO123456789012345,ENG987654325,Neha Kumar,spouse,27,135000,cash,cash,2024-01-19,INV005"""
+        
+        # Test comprehensive field mapping import
+        success, import_response = self.test_csv_import_with_content(
+            "customers", 
+            comprehensive_csv_content, 
+            "comprehensive_field_mapping_test.csv"
+        )
+        
+        if success:
+            print("✅ CSV import with comprehensive field mapping completed successfully")
+            
+            # Check import results
+            total_records = import_response.get('total_records', 0)
+            successful_records = import_response.get('successful_records', 0)
+            failed_records = import_response.get('failed_records', 0)
+            
+            print(f"   Total Records: {total_records}")
+            print(f"   Successful Records: {successful_records}")
+            print(f"   Failed Records: {failed_records}")
+            
+            if total_records > 0:
+                success_rate = (successful_records / total_records) * 100
+                print(f"   Success Rate: {success_rate:.1f}%")
+                
+                if success_rate >= 90:
+                    print("   ✅ Import success rate is 90%+ (field mapping working correctly)")
+                    test_results['import_success_rate'] = True
+                else:
+                    print(f"   ⚠️ Success rate is {success_rate:.1f}% (may need investigation)")
+                    if failed_records > 0:
+                        errors = import_response.get('errors', [])
+                        print(f"   Sample Errors:")
+                        for error in errors[:3]:
+                            print(f"     Row {error.get('row', 'N/A')}: {error.get('error', 'N/A')}")
+        else:
+            print("❌ CSV import with comprehensive field mapping failed")
+            all_tests_passed = False
+        
+        # 4. CUSTOMER RECORD STRUCTURE VERIFICATION
+        print("\n👤 4. CUSTOMER RECORD STRUCTURE VERIFICATION")
+        print("-" * 50)
+        
+        # Get imported customers to verify structure
+        success, customers_response = self.test_get_customers()
+        
+        if success and isinstance(customers_response, list):
+            print("✅ Customer data retrieved successfully")
+            
+            # Find recently imported customers
+            imported_customers = [c for c in customers_response if c.get('name') in [
+                'Arjun Reddy', 'Priya Sharma', 'Vikram Singh', 'Simran Kaur', 'Rajesh Kumar'
+            ]]
+            
+            if imported_customers:
+                print(f"   Found {len(imported_customers)} imported customers")
+                test_results['customer_record_structure'] = True
+                
+                # Verify customer record structure
+                for i, customer in enumerate(imported_customers[:3]):  # Check first 3
+                    customer_name = customer.get('name', 'Unknown')
+                    print(f"\n   📋 Customer {i+1}: {customer_name}")
+                    
+                    # Check basic customer fields
+                    print(f"     Basic Info:")
+                    print(f"       Name: {customer.get('name', 'N/A')}")
+                    print(f"       Phone: {customer.get('phone', 'N/A')}")
+                    print(f"       Email: {customer.get('email', 'N/A')}")
+                    print(f"       Address: {customer.get('address', 'N/A')}")
+                    
+                    # Check vehicle_info section
+                    vehicle_info = customer.get('vehicle_info', {})
+                    if vehicle_info:
+                        print(f"     ✅ Vehicle Info Present:")
+                        print(f"       Brand: {vehicle_info.get('brand', 'N/A')}")
+                        print(f"       Model: {vehicle_info.get('model', 'N/A')}")
+                        print(f"       Color: {vehicle_info.get('color', 'N/A')}")
+                        print(f"       Vehicle Number: {vehicle_info.get('vehicle_number', 'N/A')}")
+                        print(f"       Chassis Number: {vehicle_info.get('chassis_number', 'N/A')}")
+                        print(f"       Engine Number: {vehicle_info.get('engine_number', 'N/A')}")
+                        test_results['vehicle_info_mapping'] = True
+                    else:
+                        print(f"     ❌ Vehicle Info Missing")
+                        all_tests_passed = False
+                    
+                    # Check insurance_info section
+                    insurance_info = customer.get('insurance_info', {})
+                    if insurance_info:
+                        print(f"     ✅ Insurance Info Present:")
+                        print(f"       Nominee Name: {insurance_info.get('nominee_name', 'N/A')}")
+                        print(f"       Relation: {insurance_info.get('relation', 'N/A')}")
+                        print(f"       Age: {insurance_info.get('age', 'N/A')}")
+                        test_results['insurance_info_mapping'] = True
+                    else:
+                        print(f"     ❌ Insurance Info Missing")
+                        all_tests_passed = False
+                    
+                    # Check sales_info section
+                    sales_info = customer.get('sales_info', {})
+                    if sales_info:
+                        print(f"     ✅ Sales Info Present:")
+                        print(f"       Amount: {sales_info.get('amount', 'N/A')}")
+                        print(f"       Payment Method: {sales_info.get('payment_method', 'N/A')}")
+                        print(f"       Hypothecation: {sales_info.get('hypothecation', 'N/A')}")
+                        print(f"       Sale Date: {sales_info.get('sale_date', 'N/A')}")
+                        print(f"       Invoice Number: {sales_info.get('invoice_number', 'N/A')}")
+                        test_results['sales_info_mapping'] = True
+                    else:
+                        print(f"     ❌ Sales Info Missing")
+                        all_tests_passed = False
+            else:
+                print("   ⚠️ No recently imported customers found")
+                all_tests_passed = False
+        else:
+            print("❌ Failed to retrieve customer data for verification")
+            all_tests_passed = False
+        
+        # 5. FIELD MAPPING VERIFICATION
+        print("\n🔗 5. SPECIFIC FIELD MAPPING VERIFICATION")
+        print("-" * 50)
+        
+        if imported_customers:
+            print("   Verifying specific field mappings as requested:")
+            
+            mapping_verification = {
+                'Brand → vehicle_brand': False,
+                'Model → vehicle_model': False,
+                'Color → vehicle_color': False,
+                'Vehicle Number → vehicle_no': False,
+                'Chassis Number → chassis_no': False,
+                'Engine Number → engine_no': False,
+                'Nominee Name → insurance_nominee': False,
+                'Relation → insurance_relation': False,
+                'Age → insurance_age': False
+            }
+            
+            # Check first customer for mapping verification
+            if imported_customers:
+                customer = imported_customers[0]
+                vehicle_info = customer.get('vehicle_info', {})
+                insurance_info = customer.get('insurance_info', {})
+                
+                # Vehicle field mappings
+                if vehicle_info.get('brand') == 'TVS':
+                    mapping_verification['Brand → vehicle_brand'] = True
+                if vehicle_info.get('model') == 'Apache RTR 160':
+                    mapping_verification['Model → vehicle_model'] = True
+                if vehicle_info.get('color') == 'Red':
+                    mapping_verification['Color → vehicle_color'] = True
+                if vehicle_info.get('vehicle_number') == 'TS01AB1234':
+                    mapping_verification['Vehicle Number → vehicle_no'] = True
+                if vehicle_info.get('chassis_number') == 'ABC123456789012345':
+                    mapping_verification['Chassis Number → chassis_no'] = True
+                if vehicle_info.get('engine_number') == 'ENG987654321':
+                    mapping_verification['Engine Number → engine_no'] = True
+                
+                # Insurance field mappings
+                if insurance_info.get('nominee_name') == 'Priya Reddy':
+                    mapping_verification['Nominee Name → insurance_nominee'] = True
+                if insurance_info.get('relation') == 'spouse':
+                    mapping_verification['Relation → insurance_relation'] = True
+                if insurance_info.get('age') == '28':
+                    mapping_verification['Age → insurance_age'] = True
+            
+            # Print mapping verification results
+            for mapping, verified in mapping_verification.items():
+                status = "✅" if verified else "❌"
+                print(f"     {status} {mapping}")
+                if not verified:
+                    all_tests_passed = False
+        
+        # 6. WORKFLOW COMPLETION TESTING
+        print("\n🔄 6. COMPLETE CUSTOMER IMPORT WORKFLOW TESTING")
+        print("-" * 50)
+        
+        workflow_steps = [
+            test_results['authentication'],
+            test_results['template_download'],
+            test_results['complete_field_mapping'],
+            test_results['customer_record_structure'],
+            test_results['vehicle_info_mapping'],
+            test_results['insurance_info_mapping'],
+            test_results['sales_info_mapping']
+        ]
+        
+        completed_steps = sum(1 for step in workflow_steps if step)
+        total_steps = len(workflow_steps)
+        
+        print(f"   Workflow Steps Completed: {completed_steps}/{total_steps}")
+        
+        if completed_steps == total_steps:
+            print("   ✅ Complete customer import workflow successful")
+            test_results['workflow_completion'] = True
+        else:
+            print("   ❌ Customer import workflow incomplete")
+            all_tests_passed = False
+        
+        # 7. COMPREHENSIVE RESULTS SUMMARY
+        print("\n" + "=" * 80)
+        print("📊 UPDATED CUSTOMER IMPORT FIELD MAPPING TEST RESULTS")
+        print("=" * 80)
+        
+        successful_tests = sum(1 for result in test_results.values() if result)
+        total_tests = len(test_results)
+        
+        print(f"📋 TEST RESULTS SUMMARY:")
+        for test_name, result in test_results.items():
+            status = "✅" if result else "❌"
+            print(f"   {status} {test_name.replace('_', ' ').title()}")
+        
+        print(f"\n🎯 OVERALL RESULTS:")
+        print(f"   Tests Passed: {successful_tests}/{total_tests}")
+        print(f"   Success Rate: {(successful_tests/total_tests)*100:.1f}%")
+        
+        # Key findings
+        print(f"\n🔍 KEY FINDINGS:")
+        if test_results['complete_field_mapping']:
+            print("   ✅ CSV template includes all required mapped fields")
+        if test_results['vehicle_info_mapping']:
+            print("   ✅ Vehicle information properly mapped and stored")
+        if test_results['insurance_info_mapping']:
+            print("   ✅ Insurance information properly mapped and stored")
+        if test_results['sales_info_mapping']:
+            print("   ✅ Sales information properly mapped and stored")
+        if test_results['customer_record_structure']:
+            print("   ✅ Customer records include vehicle_info, insurance_info, and sales_info sections")
+        
+        # Recommendations
+        print(f"\n💡 RECOMMENDATIONS:")
+        if test_results['import_success_rate']:
+            print("   • Import success rate is excellent (90%+)")
+        if test_results['workflow_completion']:
+            print("   • Complete customer import workflow is functional")
+        if all_tests_passed:
+            print("   • Updated field mapping is working as expected")
+            print("   • Customer import with vehicle and insurance data is ready for production")
+        else:
+            print("   • Some field mappings may need adjustment")
+            print("   • Review failed test cases for specific issues")
+        
+        overall_success = all_tests_passed and test_results['authentication']
+        status = "✅ COMPLETED SUCCESSFULLY" if overall_success else "❌ COMPLETED WITH ISSUES"
+        print(f"\n🎯 OVERALL STATUS: {status}")
+        
+        return overall_success, test_results
+
     def test_get_import_jobs(self):
         """Test getting import job history"""
         return self.run_test("Get Import Jobs", "GET", "import/jobs", 200)
