@@ -930,7 +930,6 @@ const CreateInvoice = () => {
               type="date"
               value={invoiceData.date}
               onChange={(e) => handleInputChange('date', e.target.value)}
-              required
             />
           </div>
 
