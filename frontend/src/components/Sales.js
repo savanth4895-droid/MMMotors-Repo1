@@ -4164,6 +4164,7 @@ const CustomersManagement = () => {
                         onChange={(e) => setEditFormData({...editFormData, mobile: e.target.value})}
                         placeholder="Enter mobile number"
                         required
+                        className={!editFormData.mobile?.trim() ? 'border-red-500' : ''}
                       />
                     </div>
                     <div>
@@ -5317,6 +5318,7 @@ const ViewCustomerDetails = () => {
                         onChange={(e) => setEditFormData({...editFormData, mobile: e.target.value})}
                         placeholder="Enter mobile number"
                         required
+                        className={!editFormData.mobile?.trim() ? 'border-red-500' : ''}
                       />
                     </div>
                     <div>
