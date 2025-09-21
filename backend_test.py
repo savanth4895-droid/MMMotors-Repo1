@@ -2127,7 +2127,7 @@ HERO,Splendor Plus ₹Edition,GHI123456789012345,ENG987654323,Pearl White,KEY003
         spare_parts_csv = """name,part_number,brand,quantity,unit,unit_price,hsn_sac,gst_percentage,supplier
 Brake Pad—Premium,BP001,TVS,50,Nos,250.00,87084090,18.0,ABC Supplies • Mumbai
 Engine Oil "Synthetic",EO001,CASTROL,25,Ltr,450.00,27101981,28.0,XYZ Motors—Delhi
-Chain Set ₹Special,CS001,BAJAJ,30,Set,850.00,87089900,18.0,Premium Parts • Pune
+Chain Set Special,CS001,BAJAJ,30,Set,850.00,87089900,18.0,Premium Parts • Pune
 """
         
         success, import_result = self.test_csv_import_upload("spare_parts", spare_parts_csv.encode('utf-8'), "spare_parts_special.csv")
