@@ -3234,6 +3234,14 @@ const CustomersManagement = () => {
   const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
   const [touched, setTouched] = useState({});
+  
+  // Modal states for view and edit functionality
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [editingCustomer, setEditingCustomer] = useState(null);
+  const [editFormData, setEditFormData] = useState({});
+  
   const [customerData, setCustomerData] = useState({
     date: new Date().toISOString().split('T')[0],
     name: '',
