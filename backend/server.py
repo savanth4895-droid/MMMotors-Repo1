@@ -909,8 +909,29 @@ async def download_import_template(
 
 # Helper functions for file parsing and data import
 async def parse_csv_file(file_content: bytes) -> List[Dict]:
-    """Parse CSV file content"""
-    content = file_content.decode('utf-8')
+    """Parse CSV file content with multiple encoding support"""
+    # List of encodings to try in order of preference
+    encodings = ['utf-8', 'iso-8859-1', 'windows-1252', 'cp1252']
+    
+    content = None
+    successful_encoding = None
+    
+    for encoding in encodings:
+        try:
+            content = file_content.decode(encoding)
+            successful_encoding = encoding
+            break
+        except UnicodeDecodeError:
+            continue
+    
+    # If all encodings fail, use UTF-8 with error handling
+    if content is None:
+        content = file_content.decode('utf-8', errors='replace')
+        successful_encoding = 'utf-8 (with error replacement)'
+    
+    # Log which encoding was used for debugging
+    logging.info(f"CSV file parsed successfully using encoding: {successful_encoding}")
+    
     csv_reader = csv.DictReader(io.StringIO(content))
     return list(csv_reader)
 
