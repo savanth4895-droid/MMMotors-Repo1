@@ -3782,7 +3782,6 @@ const CustomersManagement = () => {
                       placeholder="Enter complete address"
                       value={customerData.address}
                       onChange={(e) => handleInputChange('address', e.target.value)}
-                      required
                       className={touched.address && validationErrors.address ? 'border-red-500' : ''}
                     />
                     {touched.address && validationErrors.address && (
