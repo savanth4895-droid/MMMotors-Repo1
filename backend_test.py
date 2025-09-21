@@ -2803,6 +2803,9 @@ Test User,9876543220,test@example.com,"123 Main St"""
                     else:
                         print(f"   ⚠️ Template missing fields: {missing_fields}")
                         all_tests_passed = False
+                else:
+                    print("   ⚠️ Template appears to be empty")
+                    all_tests_passed = False
         else:
             print("❌ Failed to download customer import template")
             all_tests_passed = False
