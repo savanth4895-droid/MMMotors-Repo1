@@ -1038,7 +1038,6 @@ const CreateInvoice = () => {
                   placeholder="Enter vehicle registration number"
                   value={invoiceData.vehicle_no}
                   onChange={(e) => handleInputChange('vehicle_no', e.target.value)}
-                  required
                 />
               </div>
             </div>
