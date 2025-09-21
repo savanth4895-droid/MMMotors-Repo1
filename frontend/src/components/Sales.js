@@ -955,7 +955,6 @@ const CreateInvoice = () => {
                   placeholder="S/O, D/O, W/O"
                   value={invoiceData.care_of}
                   onChange={(e) => handleInputChange('care_of', e.target.value)}
-                  required
                 />
               </div>
               <div>
