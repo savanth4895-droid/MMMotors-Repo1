@@ -4177,7 +4177,7 @@ const CustomersManagement = () => {
                       />
                     </div>
                     <div className="md:col-span-2">
-                      <Label htmlFor="edit_address">Address</Label>
+                      <Label htmlFor="edit_address">Address *</Label>
                       <Input
                         id="edit_address"
                         type="text"
@@ -4185,7 +4185,11 @@ const CustomersManagement = () => {
                         onChange={(e) => setEditFormData({...editFormData, address: e.target.value})}
                         placeholder="Enter complete address"
                         required
+                        className={!editFormData.address?.trim() ? 'border-red-500' : ''}
                       />
+                      {!editFormData.address?.trim() && (
+                        <p className="text-red-500 text-sm mt-1">Address is required</p>
+                      )}
                     </div>
                   </div>
                 </div>
