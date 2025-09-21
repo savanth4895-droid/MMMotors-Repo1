@@ -3433,7 +3433,9 @@ if __name__ == "__main__":
     import sys
     
     if len(sys.argv) > 1:
-        if sys.argv[1] == "data_inventory":
+        if sys.argv[1] == "comprehensive":
+            sys.exit(test_comprehensive_backend())
+        elif sys.argv[1] == "data_inventory":
             sys.exit(test_comprehensive_data_inventory_only())
         elif sys.argv[1] == "pydantic":
             sys.exit(test_pydantic_error_handling_only())
@@ -3457,4 +3459,5 @@ if __name__ == "__main__":
             print(f"   Success Rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
             sys.exit(0 if success else 1)
     
-    sys.exit(main())
+    # Default to comprehensive testing
+    sys.exit(test_comprehensive_backend())
