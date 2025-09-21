@@ -1054,7 +1054,6 @@ const CreateInvoice = () => {
                   placeholder="Enter nominee name"
                   value={invoiceData.insurance_nominee}
                   onChange={(e) => handleInputChange('insurance_nominee', e.target.value)}
-                  required
                 />
               </div>
               <div>
