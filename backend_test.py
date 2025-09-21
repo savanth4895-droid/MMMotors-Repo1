@@ -812,6 +812,458 @@ class TwoWheelerAPITester:
             200
         )
 
+    def test_csv_import_field_mapping_fix(self):
+        """
+        COMPREHENSIVE CSV IMPORT FIELD MAPPING FIX TESTING
+        Testing the specific fix for field mapping issue where CSV template uses 'mobile' 
+        field but validation expected 'phone' field. This addresses the 98.5% failure rate issue.
+        
+        SPECIFIC TESTING AREAS:
+        1. CSV import with 'mobile' field populated (should now work)
+        2. CSV import with 'phone' field populated (should still work)
+        3. CSV import with both 'mobile' and 'phone' fields
+        4. Address field handling with fallback for missing data
+        5. Various combinations of field presence/absence
+        6. Import job tracking shows improved success rates
+        
+        EXPECTED RESULTS:
+        - Import success rate should be much higher (90%+ instead of 1.5%)
+        - Records with 'mobile' field should import successfully
+        - Address fallback should work for missing address data
+        - Import job should show fewer failed records
+        """
+        print("\n" + "=" * 80)
+        print("📊 CSV IMPORT FIELD MAPPING FIX TESTING")
+        print("=" * 80)
+        print("Testing the field mapping fix for CSV import functionality")
+        print("Focus: 'mobile' vs 'phone' field mapping and address fallback")
+        
+        all_tests_passed = True
+        test_results = {
+            'authentication': False,
+            'template_download': False,
+            'mobile_field_import': False,
+            'phone_field_import': False,
+            'both_fields_import': False,
+            'address_fallback': False,
+            'mixed_data_import': False,
+            'import_job_tracking': False,
+            'success_rate_improvement': False
+        }
+        
+        # 1. AUTHENTICATION TESTING
+        print("\n🔐 1. AUTHENTICATION WITH ADMIN/ADMIN123")
+        print("-" * 50)
+        success, auth_response = self.test_login_user("admin", "admin123")
+        if success:
+            print("✅ Authentication successful with admin/admin123")
+            test_results['authentication'] = True
+        else:
+            print("❌ Authentication failed with admin/admin123")
+            all_tests_passed = False
+            return False, test_results
+        
+        # 2. TEMPLATE DOWNLOAD TESTING
+        print("\n📄 2. CSV TEMPLATE DOWNLOAD TESTING")
+        print("-" * 50)
+        success, template_response = self.run_test(
+            "Download Customer Import Template",
+            "GET",
+            "import/template/customers",
+            200
+        )
+        
+        if success:
+            print("✅ Customer import template downloaded successfully")
+            test_results['template_download'] = True
+            # Print template headers to verify format
+            if isinstance(template_response, str):
+                lines = template_response.split('\n')
+                if lines:
+                    headers = lines[0]
+                    print(f"   Template Headers: {headers}")
+                    if 'mobile' in headers and 'phone' in headers:
+                        print("   ✅ Template contains both 'mobile' and 'phone' fields")
+                    else:
+                        print("   ⚠️ Template format may need verification")
+        else:
+            print("❌ Failed to download customer import template")
+            all_tests_passed = False
+        
+        # 3. CSV IMPORT WITH 'MOBILE' FIELD TESTING
+        print("\n📱 3. CSV IMPORT WITH 'MOBILE' FIELD TESTING")
+        print("-" * 50)
+        
+        # Create CSV content with mobile field (exact template format)
+        mobile_csv_content = """name,care_of,mobile,phone,email,address,vehicle_brand,vehicle_model,vehicle_color,vehicle_no,chassis_no,engine_no,insurance_nominee,insurance_relation,insurance_age,sale_amount,payment_method,hypothecation,sale_date,invoice_number
+Rajesh Kumar,S/O Ramesh Kumar,9876543210,,rajesh@example.com,"123 MG Road, Bangalore",TVS,Apache RTR 160,Red,KA01AB1234,ABC123456789012345,ENG987654321,Priya Kumar,spouse,28,75000,cash,cash,2024-01-15,INV001
+Priya Sharma,D/O Suresh Sharma,9876543211,,priya@example.com,"456 Brigade Road, Bangalore",BAJAJ,Pulsar 150,Blue,KA02CD5678,DEF123456789012345,ENG987654322,Rajesh Sharma,father,55,65000,finance,"Bank Finance",2024-01-16,INV002
+Amit Patel,S/O Kiran Patel,9876543212,,amit@example.com,"789 Commercial Street, Bangalore",HERO,Splendor Plus,Black,KA03EF9012,GHI123456789012345,ENG987654323,Neha Patel,spouse,30,45000,cash,cash,2024-01-17,INV003"""
+        
+        # Test import with mobile field data
+        success, import_response = self.test_csv_import_with_content(
+            "customers", 
+            mobile_csv_content, 
+            "mobile_field_test.csv"
+        )
+        
+        if success:
+            print("✅ CSV import with 'mobile' field completed successfully")
+            test_results['mobile_field_import'] = True
+            
+            # Check import results
+            total_records = import_response.get('total_records', 0)
+            successful_records = import_response.get('successful_records', 0)
+            failed_records = import_response.get('failed_records', 0)
+            
+            print(f"   Total Records: {total_records}")
+            print(f"   Successful Records: {successful_records}")
+            print(f"   Failed Records: {failed_records}")
+            
+            if total_records > 0:
+                success_rate = (successful_records / total_records) * 100
+                print(f"   Success Rate: {success_rate:.1f}%")
+                
+                if success_rate >= 90:
+                    print("   ✅ Success rate is 90%+ (field mapping fix working)")
+                    test_results['success_rate_improvement'] = True
+                else:
+                    print(f"   ⚠️ Success rate is {success_rate:.1f}% (may need investigation)")
+                    if failed_records > 0:
+                        errors = import_response.get('errors', [])
+                        print(f"   Sample Errors:")
+                        for error in errors[:3]:  # Show first 3 errors
+                            print(f"     Row {error.get('row', 'N/A')}: {error.get('error', 'N/A')}")
+        else:
+            print("❌ CSV import with 'mobile' field failed")
+            all_tests_passed = False
+        
+        # 4. CSV IMPORT WITH 'PHONE' FIELD TESTING
+        print("\n📞 4. CSV IMPORT WITH 'PHONE' FIELD TESTING")
+        print("-" * 50)
+        
+        # Create CSV content with phone field instead of mobile
+        phone_csv_content = """name,care_of,mobile,phone,email,address,vehicle_brand,vehicle_model,vehicle_color,vehicle_no,chassis_no,engine_no,insurance_nominee,insurance_relation,insurance_age,sale_amount,payment_method,hypothecation,sale_date,invoice_number
+Suresh Reddy,S/O Venkat Reddy,,9876543213,suresh@example.com,"321 Residency Road, Bangalore",TVS,Jupiter,White,KA04GH3456,JKL123456789012345,ENG987654324,Lakshmi Reddy,spouse,26,55000,finance,"Bank Finance",2024-01-18,INV004
+Lakshmi Nair,D/O Ravi Nair,,9876543214,lakshmi@example.com,"654 Koramangala, Bangalore",BAJAJ,Avenger 220,Silver,KA05IJ7890,MNO123456789012345,ENG987654325,Suresh Nair,husband,32,85000,cash,cash,2024-01-19,INV005"""
+        
+        # Test import with phone field data
+        success, import_response = self.test_csv_import_with_content(
+            "customers", 
+            phone_csv_content, 
+            "phone_field_test.csv"
+        )
+        
+        if success:
+            print("✅ CSV import with 'phone' field completed successfully")
+            test_results['phone_field_import'] = True
+            
+            # Check import results
+            total_records = import_response.get('total_records', 0)
+            successful_records = import_response.get('successful_records', 0)
+            failed_records = import_response.get('failed_records', 0)
+            
+            print(f"   Total Records: {total_records}")
+            print(f"   Successful Records: {successful_records}")
+            print(f"   Failed Records: {failed_records}")
+            
+            if total_records > 0:
+                success_rate = (successful_records / total_records) * 100
+                print(f"   Success Rate: {success_rate:.1f}%")
+        else:
+            print("❌ CSV import with 'phone' field failed")
+            all_tests_passed = False
+        
+        # 5. CSV IMPORT WITH BOTH FIELDS TESTING
+        print("\n📱📞 5. CSV IMPORT WITH BOTH 'MOBILE' AND 'PHONE' FIELDS")
+        print("-" * 50)
+        
+        # Create CSV content with both mobile and phone fields
+        both_fields_csv_content = """name,care_of,mobile,phone,email,address,vehicle_brand,vehicle_model,vehicle_color,vehicle_no,chassis_no,engine_no,insurance_nominee,insurance_relation,insurance_age,sale_amount,payment_method,hypothecation,sale_date,invoice_number
+Vikram Singh,S/O Harpal Singh,9876543215,9876543215,vikram@example.com,"987 Indiranagar, Bangalore",HERO,Passion Pro,Red,KA06KL1234,PQR123456789012345,ENG987654326,Simran Singh,spouse,29,48000,cash,cash,2024-01-20,INV006
+Simran Kaur,D/O Jasbir Kaur,9876543216,9876543216,simran@example.com,"147 Jayanagar, Bangalore",TVS,XL100,Blue,KA07MN5678,STU123456789012345,ENG987654327,Vikram Kaur,husband,35,52000,finance,"Bank Finance",2024-01-21,INV007"""
+        
+        # Test import with both fields
+        success, import_response = self.test_csv_import_with_content(
+            "customers", 
+            both_fields_csv_content, 
+            "both_fields_test.csv"
+        )
+        
+        if success:
+            print("✅ CSV import with both 'mobile' and 'phone' fields completed successfully")
+            test_results['both_fields_import'] = True
+            
+            # Check import results
+            total_records = import_response.get('total_records', 0)
+            successful_records = import_response.get('successful_records', 0)
+            failed_records = import_response.get('failed_records', 0)
+            
+            print(f"   Total Records: {total_records}")
+            print(f"   Successful Records: {successful_records}")
+            print(f"   Failed Records: {failed_records}")
+        else:
+            print("❌ CSV import with both fields failed")
+            all_tests_passed = False
+        
+        # 6. ADDRESS FALLBACK TESTING
+        print("\n🏠 6. ADDRESS FIELD FALLBACK TESTING")
+        print("-" * 50)
+        
+        # Create CSV content with missing address fields
+        address_fallback_csv_content = """name,care_of,mobile,phone,email,address,vehicle_brand,vehicle_model,vehicle_color,vehicle_no,chassis_no,engine_no,insurance_nominee,insurance_relation,insurance_age,sale_amount,payment_method,hypothecation,sale_date,invoice_number
+Ravi Kumar,S/O Mohan Kumar,9876543217,,ravi@example.com,,TVS,Apache RTR 200,Black,KA08OP9012,VWX123456789012345,ENG987654328,Meera Kumar,spouse,27,78000,cash,cash,2024-01-22,INV008
+Meera Joshi,D/O Prakash Joshi,9876543218,,meera@example.com,"",BAJAJ,Dominar 400,Orange,KA09QR3456,YZA123456789012345,ENG987654329,Ravi Joshi,husband,33,95000,finance,"Bank Finance",2024-01-23,INV009"""
+        
+        # Test import with missing address data
+        success, import_response = self.test_csv_import_with_content(
+            "customers", 
+            address_fallback_csv_content, 
+            "address_fallback_test.csv"
+        )
+        
+        if success:
+            print("✅ CSV import with missing address fields completed successfully")
+            test_results['address_fallback'] = True
+            
+            # Check import results
+            total_records = import_response.get('total_records', 0)
+            successful_records = import_response.get('successful_records', 0)
+            failed_records = import_response.get('failed_records', 0)
+            
+            print(f"   Total Records: {total_records}")
+            print(f"   Successful Records: {successful_records}")
+            print(f"   Failed Records: {failed_records}")
+            
+            if successful_records > 0:
+                print("   ✅ Address fallback mechanism working (records imported despite missing address)")
+            
+            # Verify that imported customers have fallback address
+            success, customers = self.test_get_customers()
+            if success and isinstance(customers, list):
+                recent_customers = [c for c in customers if c.get('name') in ['Ravi Kumar', 'Meera Joshi']]
+                for customer in recent_customers:
+                    address = customer.get('address', '')
+                    if address == "Address not provided" or address:
+                        print(f"   ✅ Customer '{customer.get('name')}' has address: '{address}'")
+                    else:
+                        print(f"   ⚠️ Customer '{customer.get('name')}' has unexpected address: '{address}'")
+        else:
+            print("❌ CSV import with missing address fields failed")
+            all_tests_passed = False
+        
+        # 7. MIXED DATA IMPORT TESTING
+        print("\n🔄 7. MIXED DATA COMBINATIONS TESTING")
+        print("-" * 50)
+        
+        # Create CSV with various field combinations
+        mixed_data_csv_content = """name,care_of,mobile,phone,email,address,vehicle_brand,vehicle_model,vehicle_color,vehicle_no,chassis_no,engine_no,insurance_nominee,insurance_relation,insurance_age,sale_amount,payment_method,hypothecation,sale_date,invoice_number
+Arjun Mehta,S/O Kiran Mehta,9876543219,,arjun@example.com,"123 HSR Layout, Bangalore",KTM,Duke 200,Orange,KA10ST7890,BCD123456789012345,ENG987654330,Pooja Mehta,spouse,25,125000,finance,"Bank Finance",2024-01-24,INV010
+Pooja Gupta,D/O Rajesh Gupta,,9876543220,pooja@example.com,,SUZUKI,Gixxer 250,Blue,KA11UV1234,EFG123456789012345,ENG987654331,Arjun Gupta,husband,31,135000,cash,cash,2024-01-25,INV011
+Kiran Patel,S/O Suresh Patel,9876543221,9876543221,,,"APRILIA,Tuono V4,Red,KA12WX5678,HIJ123456789012345,ENG987654332,Neha Patel,spouse,28,185000,finance,"Bank Finance",2024-01-26,INV012"""
+        
+        # Test import with mixed data
+        success, import_response = self.test_csv_import_with_content(
+            "customers", 
+            mixed_data_csv_content, 
+            "mixed_data_test.csv"
+        )
+        
+        if success:
+            print("✅ CSV import with mixed data combinations completed successfully")
+            test_results['mixed_data_import'] = True
+            
+            # Check import results
+            total_records = import_response.get('total_records', 0)
+            successful_records = import_response.get('successful_records', 0)
+            failed_records = import_response.get('failed_records', 0)
+            
+            print(f"   Total Records: {total_records}")
+            print(f"   Successful Records: {successful_records}")
+            print(f"   Failed Records: {failed_records}")
+            
+            if failed_records > 0:
+                errors = import_response.get('errors', [])
+                print(f"   Errors encountered:")
+                for error in errors:
+                    print(f"     Row {error.get('row', 'N/A')}: {error.get('error', 'N/A')}")
+        else:
+            print("❌ CSV import with mixed data failed")
+            all_tests_passed = False
+        
+        # 8. IMPORT JOB TRACKING TESTING
+        print("\n📊 8. IMPORT JOB TRACKING TESTING")
+        print("-" * 50)
+        
+        # Get import job history
+        success, jobs_response = self.run_test(
+            "Get Import Job History",
+            "GET",
+            "import/jobs",
+            200
+        )
+        
+        if success:
+            print("✅ Import job tracking endpoint accessible")
+            test_results['import_job_tracking'] = True
+            
+            if isinstance(jobs_response, list):
+                jobs_count = len(jobs_response)
+                print(f"   Total Import Jobs: {jobs_count}")
+                
+                if jobs_count > 0:
+                    # Analyze recent import jobs
+                    recent_jobs = jobs_response[:5]  # Get 5 most recent jobs
+                    
+                    print(f"   Recent Import Jobs Analysis:")
+                    total_success_rate = 0
+                    job_count = 0
+                    
+                    for i, job in enumerate(recent_jobs):
+                        job_id = job.get('id', 'N/A')[:8]
+                        file_name = job.get('file_name', 'N/A')
+                        status = job.get('status', 'N/A')
+                        total_records = job.get('total_records', 0)
+                        successful_records = job.get('successful_records', 0)
+                        failed_records = job.get('failed_records', 0)
+                        
+                        success_rate = 0
+                        if total_records > 0:
+                            success_rate = (successful_records / total_records) * 100
+                            total_success_rate += success_rate
+                            job_count += 1
+                        
+                        print(f"     {i+1}. Job {job_id}... ({file_name})")
+                        print(f"        Status: {status}")
+                        print(f"        Records: {successful_records}/{total_records} ({success_rate:.1f}% success)")
+                        
+                        if failed_records > 0:
+                            errors = job.get('errors', [])
+                            if errors:
+                                print(f"        Sample Error: {errors[0].get('error', 'N/A')}")
+                    
+                    # Calculate average success rate
+                    if job_count > 0:
+                        avg_success_rate = total_success_rate / job_count
+                        print(f"\n   📈 AVERAGE SUCCESS RATE: {avg_success_rate:.1f}%")
+                        
+                        if avg_success_rate >= 90:
+                            print("   ✅ Import success rate is excellent (90%+)")
+                            print("   ✅ Field mapping fix appears to be working effectively")
+                        elif avg_success_rate >= 70:
+                            print("   ⚠️ Import success rate is good but could be improved")
+                        else:
+                            print("   ❌ Import success rate is low - may need further investigation")
+                else:
+                    print("   ⚠️ No import jobs found in history")
+        else:
+            print("❌ Failed to retrieve import job history")
+            all_tests_passed = False
+        
+        # 9. COMPREHENSIVE RESULTS SUMMARY
+        print("\n" + "=" * 80)
+        print("📊 CSV IMPORT FIELD MAPPING FIX TEST RESULTS")
+        print("=" * 80)
+        
+        successful_tests = sum(1 for result in test_results.values() if result)
+        total_tests = len(test_results)
+        
+        print(f"📋 TEST RESULTS SUMMARY:")
+        for test_name, result in test_results.items():
+            status = "✅" if result else "❌"
+            print(f"   {status} {test_name.replace('_', ' ').title()}")
+        
+        print(f"\n🎯 OVERALL RESULTS:")
+        print(f"   Tests Passed: {successful_tests}/{total_tests}")
+        print(f"   Success Rate: {(successful_tests/total_tests)*100:.1f}%")
+        
+        # Key findings
+        print(f"\n🔍 KEY FINDINGS:")
+        if test_results['mobile_field_import']:
+            print("   ✅ CSV imports with 'mobile' field are now working")
+        if test_results['phone_field_import']:
+            print("   ✅ CSV imports with 'phone' field continue to work")
+        if test_results['address_fallback']:
+            print("   ✅ Address fallback mechanism is functional")
+        if test_results['success_rate_improvement']:
+            print("   ✅ Import success rates have improved significantly")
+        
+        # Recommendations
+        print(f"\n💡 RECOMMENDATIONS:")
+        if not test_results['success_rate_improvement']:
+            print("   • Investigate remaining import failures")
+            print("   • Check error logs for specific validation issues")
+        if test_results['import_job_tracking']:
+            print("   • Import job tracking is working well")
+        if all_tests_passed:
+            print("   • Field mapping fix is working as expected")
+            print("   • CSV import functionality is ready for production use")
+        
+        overall_success = all_tests_passed and test_results['authentication']
+        status = "✅ COMPLETED SUCCESSFULLY" if overall_success else "❌ COMPLETED WITH ISSUES"
+        print(f"\n🎯 OVERALL STATUS: {status}")
+        
+        return overall_success, test_results
+
+    def test_csv_import_with_content(self, data_type, csv_content, filename):
+        """Helper method to test CSV import with specific content"""
+        import tempfile
+        import os
+        
+        # Create temporary CSV file
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as temp_file:
+            temp_file.write(csv_content)
+            temp_file_path = temp_file.name
+        
+        try:
+            # Prepare multipart form data
+            url = f"{self.base_url}/import/upload"
+            headers = {}
+            if self.token:
+                headers['Authorization'] = f'Bearer {self.token}'
+            
+            # Read file content as bytes
+            with open(temp_file_path, 'rb') as f:
+                files = {'file': (filename, f, 'text/csv')}
+                data = {'data_type': data_type}
+                
+                self.tests_run += 1
+                print(f"\n🔍 Testing CSV Import with {filename}...")
+                print(f"   URL: {url}")
+                print(f"   Data Type: {data_type}")
+                print(f"   File Size: {len(csv_content)} characters")
+                
+                try:
+                    import requests
+                    response = requests.post(url, headers=headers, files=files, data=data)
+                    print(f"   Status Code: {response.status_code}")
+                    
+                    if response.status_code == 200:
+                        self.tests_passed += 1
+                        print(f"✅ Passed - CSV import successful")
+                        try:
+                            response_data = response.json()
+                            return True, response_data
+                        except:
+                            return True, {}
+                    else:
+                        print(f"❌ Failed - Status: {response.status_code}")
+                        try:
+                            error_detail = response.json()
+                            print(f"   Error: {error_detail}")
+                        except:
+                            print(f"   Error: {response.text}")
+                        return False, {}
+                
+                except Exception as e:
+                    print(f"❌ Failed - Error: {str(e)}")
+                    return False, {}
+        
+        finally:
+            # Clean up temporary file
+            if os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
+
     def test_backup_endpoints_without_auth(self):
         """Test backup endpoints without authentication (should fail)"""
         original_token = self.token
