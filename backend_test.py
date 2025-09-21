@@ -2117,4 +2117,17 @@ def main():
     return 0 if tester.tests_passed == tester.tests_run else 1
 
 if __name__ == "__main__":
+    import sys
+    
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "pydantic":
+            sys.exit(test_pydantic_error_handling_only())
+        elif sys.argv[1] == "bills":
+            sys.exit(test_bill_view_functionality_only())
+        elif sys.argv[1] == "customer_update":
+            print("🚀 FOCUSED CUSTOMER UPDATE FUNCTIONALITY TESTING")
+            print("=" * 60)
+            success, results = test_customer_update_functionality()
+            sys.exit(0 if success else 1)
+    
     sys.exit(main())
