@@ -5111,62 +5111,79 @@ const ViewCustomerDetails = () => {
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold">Customer Details</h2>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowViewModal(false)}
-                >
+                <Button variant="outline" onClick={() => setShowViewModal(false)}>
                   Close
                 </Button>
               </div>
 
-              <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Customer Information */}
-                <div className="border rounded-lg p-4">
-                  <h3 className="text-lg font-semibold mb-3 text-blue-600">Customer Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><strong>Name:</strong> {selectedCustomer.name}</div>
-                    <div><strong>Mobile:</strong> {selectedCustomer.mobile}</div>
-                    <div><strong>Email:</strong> {selectedCustomer.email || 'N/A'}</div>
-                    <div><strong>Registration Date:</strong> {new Date(selectedCustomer.date).toLocaleDateString('en-IN')}</div>
-                    <div className="md:col-span-2"><strong>Address:</strong> {selectedCustomer.address}</div>
+                <div className="space-y-4">
+                  <div className="border rounded-lg p-4 bg-blue-50">
+                    <h3 className="text-lg font-semibold text-blue-800 mb-3 flex items-center">
+                      👤 Customer Information
+                    </h3>
+                    <div className="space-y-2">
+                      <div><strong>Name:</strong> {selectedCustomer.name || 'N/A'}</div>
+                      <div><strong>Care Of:</strong> {selectedCustomer.care_of || 'N/A'}</div>
+                      <div><strong>Mobile:</strong> {selectedCustomer.mobile || selectedCustomer.phone || 'N/A'}</div>
+                      <div><strong>Email:</strong> {selectedCustomer.email || 'N/A'}</div>
+                      <div><strong>Address:</strong> {selectedCustomer.address || 'N/A'}</div>
+                      <div><strong>Registration Date:</strong> {new Date(selectedCustomer.date).toLocaleDateString('en-IN')}</div>
+                    </div>
                   </div>
                 </div>
 
                 {/* Vehicle Information */}
-                <div className="border rounded-lg p-4">
-                  <h3 className="text-lg font-semibold mb-3 text-blue-600">Vehicle Information</h3>
-                  {selectedCustomer.brand !== 'N/A' ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div><strong>Brand:</strong> {selectedCustomer.brand}</div>
-                      <div><strong>Model:</strong> {selectedCustomer.model}</div>
-                      <div><strong>Color:</strong> {selectedCustomer.color}</div>
-                      <div><strong>Vehicle Status:</strong> {selectedCustomer.vehicle_status}</div>
-                      <div><strong>Chassis Number:</strong> {selectedCustomer.chassis_no}</div>
-                      <div><strong>Engine Number:</strong> {selectedCustomer.engine_no}</div>
-                      <div className="md:col-span-2"><strong>Vehicle Registration:</strong> {selectedCustomer.vehicle_no}</div>
-                    </div>
-                  ) : (
-                    <p className="text-gray-500 italic">No vehicle information available</p>
-                  )}
+                <div className="space-y-4">
+                  <div className="border rounded-lg p-4 bg-green-50">
+                    <h3 className="text-lg font-semibold text-green-800 mb-3 flex items-center">
+                      🏍️ Vehicle Information
+                    </h3>
+                    {selectedCustomer.brand !== 'N/A' ? (
+                      <div className="space-y-2">
+                        <div><strong>Brand:</strong> {selectedCustomer.brand || 'N/A'}</div>
+                        <div><strong>Model:</strong> {selectedCustomer.model || 'N/A'}</div>
+                        <div><strong>Color:</strong> {selectedCustomer.color || 'N/A'}</div>
+                        <div><strong>Vehicle No:</strong> {selectedCustomer.vehicle_no || 'N/A'}</div>
+                        <div><strong>Chassis No:</strong> {selectedCustomer.chassis_no || 'N/A'}</div>
+                        <div><strong>Engine No:</strong> {selectedCustomer.engine_no || 'N/A'}</div>
+                        {selectedCustomer.vehicle_status && (
+                          <div><strong>Status:</strong> {selectedCustomer.vehicle_status}</div>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500">No vehicle information available</p>
+                    )}
+                  </div>
                 </div>
+              </div>
 
-                {/* Sales Information */}
-                {selectedCustomer.sale_amount && (
-                  <div className="border rounded-lg p-4">
-                    <h3 className="text-lg font-semibold mb-3 text-blue-600">Sales Information</h3>
+              {/* Sales Information */}
+              {selectedCustomer.sale_amount && (
+                <div className="mt-6">
+                  <div className="border rounded-lg p-4 bg-purple-50">
+                    <h3 className="text-lg font-semibold text-purple-800 mb-3 flex items-center">
+                      💰 Sales Information
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div><strong>Sale Amount:</strong> ₹{selectedCustomer.sale_amount?.toLocaleString()}</div>
                       <div><strong>Payment Method:</strong> {selectedCustomer.payment_method?.toUpperCase()}</div>
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
               <div className="mt-6 flex justify-end gap-2">
                 <Button 
                   variant="outline" 
-                  onClick={() => handleEditCustomer(selectedCustomer)}
+                  onClick={() => {
+                    setShowViewModal(false);
+                    handleEditCustomer(selectedCustomer);
+                  }}
+                  className="flex items-center gap-2"
                 >
+                  <FileText className="w-4 h-4" />
                   Edit Customer
                 </Button>
                 <Button onClick={() => setShowViewModal(false)}>
