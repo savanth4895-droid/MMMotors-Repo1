@@ -2866,10 +2866,12 @@ Rajesh Kumar,S/O Mohan Kumar,9876543214,9876543214,rajesh@example.com,"654 Konda
         if success and isinstance(customers_response, list):
             print("✅ Customer data retrieved successfully")
             
-            # Find recently imported customers
-            imported_customers = [c for c in customers_response if c.get('name') in [
-                'Arjun Reddy', 'Priya Sharma', 'Vikram Singh', 'Simran Kaur', 'Rajesh Kumar'
-            ]]
+            # Find recently imported customers with extended information
+            imported_customers = []
+            for customer in customers_response:
+                if (customer.get('name') in ['Arjun Reddy', 'Priya Sharma', 'Vikram Singh', 'Simran Kaur', 'Rajesh Kumar'] and
+                    ('vehicle_info' in customer or 'insurance_info' in customer or 'sales_info' in customer)):
+                    imported_customers.append(customer)
             
             if imported_customers:
                 print(f"   Found {len(imported_customers)} imported customers")
