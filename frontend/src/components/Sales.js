@@ -959,7 +959,7 @@ const CreateInvoice = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="mobile">Mobile Number</Label>
+                <Label htmlFor="mobile">Mobile Number *</Label>
                 <Input
                   id="mobile"
                   placeholder="Enter mobile number"
@@ -2989,7 +2989,7 @@ const ViewInvoices = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="customer_mobile">Mobile Number</Label>
+                        <Label htmlFor="customer_mobile">Mobile Number *</Label>
                         <Input
                           id="customer_mobile"
                           type="tel"
@@ -4156,7 +4156,7 @@ const CustomersManagement = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="edit_mobile">Mobile Number</Label>
+                      <Label htmlFor="edit_mobile">Mobile Number *</Label>
                       <Input
                         id="edit_mobile"
                         type="tel"
@@ -5309,7 +5309,7 @@ const ViewCustomerDetails = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="edit_mobile">Mobile Number</Label>
+                      <Label htmlFor="edit_mobile">Mobile Number *</Label>
                       <Input
                         id="edit_mobile"
                         type="tel"
