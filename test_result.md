@@ -106,6 +106,21 @@
 user_problem_statement: "Fix UTF-8 encoding error during data import: 'utf-8 codec can't decode byte 0xa0 in position 6947: invalid start byte'. This error occurs when users try to upload CSV files that contain special characters or are saved in different encodings."
 
 backend:
+  - task: "Data Import CSV Field Mapping Fix"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+      - agent: "main"
+      - comment: "USER REPORTED BUG: Import showing 98.5% failure rate (136/138 records failed) even after UTF-8 encoding fix. Import completes but records fail validation."
+      - working: true
+      - agent: "main"
+      - comment: "✅ FIXED: Updated import_customers_data function to handle field mapping correctly. CSV template uses 'mobile' field but validation expected 'phone' field. Now checks both mobile and phone fields with fallback logic. Added proper address fallback for missing address data. Fixed validation logic to accept either mobile or phone as primary phone number field."
+
   - task: "Data Import CSV Encoding Fix"
     implemented: true
     working: true
