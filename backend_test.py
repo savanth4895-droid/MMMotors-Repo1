@@ -2091,7 +2091,7 @@ Café Owner,9876543216,cafe@example.com,"Café de la Gare, Zürich"
         customer_csv_win1252 = """name,phone,email,address
 Smart "Quotes" User,9876543217,smart@example.com,"123 Main St—with dash"
 Résumé Writer,9876543218,resume@example.com,"456 Oak Ave • Suite 100"
-Currency ₹ User,9876543219,currency@example.com,"789 Pine St, ₹50,000 area"
+Currency User,9876543219,currency@example.com,"789 Pine St, Special area"
 """
         
         success, import_result = self.test_csv_import_upload("customers", customer_csv_win1252.encode('windows-1252'), "customers_win1252.csv")
