@@ -1588,35 +1588,35 @@ const ViewInvoices = () => {
               font-size: 11px;
             }
             
-            /* Service Schedule - Matching Target */
+            /* Service Schedule - Compact */
             .service-message {
               background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-              padding: 15px;
-              border-radius: 6px;
-              margin-bottom: 15px;
+              padding: 10px;
+              border-radius: 4px;
+              margin-bottom: 10px;
               border: 1px solid #3b82f6;
             }
             .service-message p {
               margin: 0;
-              font-size: 12px;
+              font-size: 10px;
               color: #1e40af;
             }
             .service-message .customer-greeting {
               font-weight: bold;
-              margin-bottom: 6px;
+              margin-bottom: 4px;
             }
             .service-table {
               width: 100%;
               border-collapse: collapse;
-              font-size: 12px;
-              border-radius: 6px;
+              font-size: 10px;
+              border-radius: 4px;
               overflow: hidden;
-              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+              box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             }
             .service-table th {
               background: linear-gradient(135deg, #2563eb, #3b82f6);
               color: white;
-              padding: 12px;
+              padding: 8px;
               text-align: left;
               font-weight: bold;
               border-right: 1px solid rgba(255,255,255,0.3);
@@ -1625,7 +1625,7 @@ const ViewInvoices = () => {
               border-right: none;
             }
             .service-table td {
-              padding: 12px;
+              padding: 6px 8px;
               border-bottom: 1px solid #e2e8f0;
               border-right: 1px solid #e2e8f0;
               background: #f8fafc;
@@ -1642,13 +1642,13 @@ const ViewInvoices = () => {
             }
             .service-note {
               background: linear-gradient(90deg, #fef3c7, #fde68a);
-              padding: 10px;
+              padding: 6px;
               text-align: center;
               font-weight: bold;
               color: #92400e;
-              font-size: 12px;
+              font-size: 9px;
               border: 1px solid #f59e0b;
-              border-radius: 0 0 6px 6px;
+              border-radius: 0 0 4px 4px;
             }
             
             /* Footer - Matching Target */
