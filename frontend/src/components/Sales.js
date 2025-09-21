@@ -3939,10 +3939,22 @@ const CustomersManagement = () => {
                       </td>
                       <td className="p-3">
                         <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleViewCustomer(customer)}
+                            className="flex items-center gap-1"
+                          >
                             <Eye className="w-4 h-4" />
+                            View
                           </Button>
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleEditCustomer(customer)}
+                            className="flex items-center gap-1"
+                          >
+                            <FileText className="w-4 h-4" />
                             Edit
                           </Button>
                         </div>
