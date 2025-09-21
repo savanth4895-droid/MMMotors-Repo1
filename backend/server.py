@@ -995,7 +995,6 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                     'chassis_number': row.get('chassis_no', '').strip(),
                     'engine_number': row.get('engine_no', '').strip()
                 }
-                logging.info(f"Vehicle info created: {vehicle_info}")
             
             # Map insurance nominee fields
             if row.get('insurance_nominee') or row.get('insurance_relation'):
@@ -1004,7 +1003,6 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                     'relation': row.get('insurance_relation', '').strip(),
                     'age': row.get('insurance_age', '').strip()
                 }
-                logging.info(f"Insurance info created: {insurance_info}")
             
             # Map sales information if available
             if row.get('sale_amount') or row.get('payment_method'):
@@ -1015,21 +1013,16 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                     'sale_date': row.get('sale_date', '').strip(),
                     'invoice_number': row.get('invoice_number', '').strip()
                 }
-                logging.info(f"Sales info created: {sales_info}")
             
             # Add extended information to customer record
             customer_dict = customer.dict()
             if vehicle_info and any(vehicle_info.values()):
                 customer_dict['vehicle_info'] = vehicle_info
-                logging.info(f"Added vehicle_info to customer: {customer_dict['vehicle_info']}")
             if insurance_info and any(insurance_info.values()):
                 customer_dict['insurance_info'] = insurance_info
-                logging.info(f"Added insurance_info to customer: {customer_dict['insurance_info']}")
             if sales_info and any(sales_info.values()):
                 customer_dict['sales_info'] = sales_info
-                logging.info(f"Added sales_info to customer: {customer_dict['sales_info']}")
             
-            logging.info(f"Final customer_dict keys: {list(customer_dict.keys())}")
             await db.customers.insert_one(customer_dict)
             successful += 1
             
