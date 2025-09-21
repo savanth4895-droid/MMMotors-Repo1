@@ -1453,39 +1453,39 @@ const ViewInvoices = () => {
               margin-bottom: 6px;
             }
             
-            /* Content Sections - Matching Target */
+            /* Content Sections - Compact */
             .section-grid {
               display: grid;
               grid-template-columns: 1fr 1fr;
-              gap: 15px;
-              margin-bottom: 15px;
+              gap: 10px;
+              margin-bottom: 10px;
             }
             .full-width-section {
-              margin-bottom: 15px;
+              margin-bottom: 10px;
             }
             .detail-card {
-              border-radius: 8px;
+              border-radius: 6px;
               overflow: hidden;
-              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+              box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             }
             .detail-header {
-              padding: 10px 15px;
+              padding: 8px 12px;
               font-weight: bold;
-              font-size: 14px;
+              font-size: 12px;
               color: white;
               display: flex;
               align-items: center;
             }
             .detail-content {
-              padding: 15px;
+              padding: 10px 12px;
               background: #f8fafc;
-              font-size: 12px;
+              font-size: 11px;
             }
             .detail-row {
               display: flex;
               justify-content: space-between;
-              margin-bottom: 8px;
-              padding-bottom: 6px;
+              margin-bottom: 6px;
+              padding-bottom: 4px;
               border-bottom: 1px solid #e2e8f0;
             }
             .detail-row:last-child {
