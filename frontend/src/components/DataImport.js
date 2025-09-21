@@ -40,7 +40,7 @@ const DataImport = () => {
       value: 'customers', 
       label: 'Customers', 
       icon: Users, 
-      description: 'Import customer information',
+      description: 'Import comprehensive customer information including personal details, vehicle data, insurance, and sales records',
       fields: [
         // Basic customer details
         'name', 
