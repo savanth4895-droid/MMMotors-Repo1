@@ -1651,49 +1651,49 @@ const ViewInvoices = () => {
               border-radius: 0 0 4px 4px;
             }
             
-            /* Footer - Matching Target */
+            /* Footer - Compact */
             .footer {
               background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
-              border-radius: 8px;
-              padding: 20px;
+              border-radius: 6px;
+              padding: 12px;
               text-align: center;
-              margin-top: 20px;
+              margin-top: 15px;
               border: 1px solid #cbd5e1;
             }
             .footer-badges {
               display: flex;
               justify-content: center;
-              gap: 30px;
-              margin-bottom: 15px;
-              font-size: 12px;
+              gap: 20px;
+              margin-bottom: 8px;
+              font-size: 10px;
               color: #475569;
             }
             .footer-badge {
               display: flex;
               align-items: center;
-              gap: 5px;
+              gap: 4px;
             }
             .footer-title {
               font-weight: bold;
-              font-size: 18px;
+              font-size: 14px;
               color: #1e293b;
-              margin-bottom: 8px;
+              margin-bottom: 4px;
             }
             .footer-subtitle {
-              font-size: 13px;
-              color: #64748b;
-              margin-bottom: 10px;
-            }
-            .footer-features {
-              font-size: 12px;
-              color: #64748b;
-              margin-bottom: 15px;
-            }
-            .footer-contact {
               font-size: 11px;
               color: #64748b;
+              margin-bottom: 6px;
+            }
+            .footer-features {
+              font-size: 10px;
+              color: #64748b;
+              margin-bottom: 8px;
+            }
+            .footer-contact {
+              font-size: 9px;
+              color: #64748b;
               border-top: 1px solid #cbd5e1;
-              padding-top: 15px;
+              padding-top: 8px;
             }
             
             @media print {
