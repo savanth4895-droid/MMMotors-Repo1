@@ -962,7 +962,6 @@ const CreateInvoice = () => {
                   placeholder="Enter mobile number"
                   value={invoiceData.mobile}
                   onChange={(e) => handleInputChange('mobile', e.target.value)}
-                  required
                 />
               </div>
               <div>
