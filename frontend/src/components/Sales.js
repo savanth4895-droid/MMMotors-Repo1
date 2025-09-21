@@ -1099,7 +1099,6 @@ const CreateInvoice = () => {
                   placeholder="Enter amount"
                   value={invoiceData.amount}
                   onChange={(e) => handleInputChange('amount', e.target.value)}
-                  required
                 />
               </div>
               <div>
