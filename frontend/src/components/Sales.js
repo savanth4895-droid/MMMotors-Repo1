@@ -2909,7 +2909,6 @@ const ViewInvoices = () => {
                         type="date"
                         value={editFormData.sale_date?.split('T')[0] || ''}
                         onChange={(e) => setEditFormData({...editFormData, sale_date: e.target.value})}
-                        required
                       />
                     </div>
                   </div>
