@@ -568,7 +568,7 @@ backend:
 
 test_plan:
   current_focus:
-    - "Service Bills Contact Details Update and A4 Optimization"
+    - "Customer Management Edit Functionality Frontend Testing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
