@@ -429,7 +429,7 @@ const CreateInvoice = () => {
       setShowPreview(true);
       toast.success('Invoice generated successfully!');
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to generate invoice');
+      toast.error(getErrorMessage(error) || 'Failed to generate invoice');
     } finally {
       setLoading(false);
     }
