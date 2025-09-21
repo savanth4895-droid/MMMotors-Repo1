@@ -856,21 +856,25 @@ class TwoWheelerAPITester:
             print("❌ Should have failed with invalid job ID")
             return False, response
 
-    def test_comprehensive_data_inventory(self):
+    def test_data_clearing_verification(self):
         """
-        COMPREHENSIVE DATABASE DATA INVENTORY
-        Check what testing data currently exists in the database and provide 
-        a comprehensive list of all data that needs to be cleared.
+        DATA CLEARING VERIFICATION TESTING
+        Verify that all testing data has been successfully cleared from the database.
         
-        SPECIFIC DATA CHECKING:
-        1. Customer Data: Check GET /api/customers to see how many customers exist
-        2. Vehicle Data: Check GET /api/vehicles to see how many vehicles exist  
-        3. Sales/Invoice Data: Check GET /api/sales to see how many sales records exist
-        4. Service Data: Check service-related endpoints to see service records
-        5. Spare Parts Data: Check spare parts inventory
-        6. Spare Parts Bills: Check spare parts billing data
-        7. Backup Jobs: Check backup system data
-        8. Any other data collections
+        VERIFICATION TESTING:
+        1. Authentication: Verify admin login still works (users should be preserved)
+        2. Customer Data: Check GET /api/customers returns empty list or no customers
+        3. Vehicle Data: Check GET /api/vehicles returns empty list or no vehicles  
+        4. Sales Data: Check GET /api/sales returns empty list or no sales
+        5. Service Data: Check GET /api/services returns empty list or no services
+        6. Spare Parts Data: Check GET /api/spare-parts returns empty list or no spare parts
+        7. Backup Data: Verify backup system is clean
+        
+        EXPECTED RESULTS:
+        - Authentication should still work (users preserved)
+        - All data collections should be empty (0 records)
+        - API endpoints should return empty arrays []
+        - System should be ready for fresh data entry
         """
         print("\n" + "=" * 80)
         print("📊 COMPREHENSIVE DATABASE DATA INVENTORY")
