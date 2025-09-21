@@ -1316,7 +1316,7 @@ const ViewInvoices = () => {
       setEditFormData({});
       fetchInvoices(); // Refresh the list
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to update invoice');
+      toast.error(getErrorMessage(error) || 'Failed to update invoice');
     } finally {
       setLoading(false);
     }
