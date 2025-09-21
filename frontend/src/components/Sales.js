@@ -118,21 +118,9 @@ const numberToWords = (num) => {
 const MotorcycleIcon = ({ className = "w-5 h-5" }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M5 16c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zm12 0c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zm1.5-9H16l-3-3h-2v2h1.5l1.5 1.5H8L6 5.5H4.5C3.7 5.5 3 6.2 3 7s.7 1.5 1.5 1.5H6l2 2.5h8l2-2.5h.5c.8 0 1.5-.7 1.5-1.5s-.7-1.5-1.5-1.5z"/>
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
     <circle cx="7" cy="16" r="1"/>
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
     <circle cx="19" cy="16" r="1"/>
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
     <path d="M8.5 12l1.5-1.5h4L15.5 12H8.5z"/>
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
   </svg>
 );
 import { toast } from 'sonner';
@@ -218,9 +206,6 @@ const Sales = () => {
                   className="flex items-center space-x-2"
                 >
                   <Icon className="w-4 h-4" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   <span>{item.name}</span>
                 </Button>
               </Link>
@@ -232,33 +217,12 @@ const Sales = () => {
       {/* Routes */}
       <Routes>
         <Route path="/" element={<SalesOverview />} />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
         <Route path="/create-invoice" element={<CreateInvoice />} />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
         <Route path="/invoices" element={<ViewInvoices />} />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
         <Route path="/customers" element={<CustomersManagement />} />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
         <Route path="/customer-details" element={<ViewCustomerDetails />} />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
         <Route path="/reports" element={<SalesReports />} />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
         <Route path="/insurance" element={<InsuranceManagement />} />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
       </Routes>
     </div>
   );
@@ -348,18 +312,12 @@ const SalesOverview = () => {
           <Link to="/sales/create-invoice">
             <Button className="w-full justify-start">
               <Plus className="w-4 h-4 mr-2" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               Create Invoice
             </Button>
           </Link>
           <Link to="/sales/customers">
             <Button variant="outline" className="w-full justify-start">
               <Users className="w-4 h-4 mr-2" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               Add Customer
             </Button>
           </Link>
@@ -706,9 +664,6 @@ const CreateInvoice = () => {
                     <h3 className="text-white font-bold flex items-center text-xs">
                       <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                       </svg>
                       CUSTOMER DETAILS
                     </h3>
@@ -739,9 +694,6 @@ const CreateInvoice = () => {
                     <h3 className="text-white font-bold flex items-center text-xs">
                       <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12,2L14,6H18L14,8L15,12L12,10L9,12L10,8L6,6H10L12,2Z"/>
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                       </svg>
                       VEHICLE DETAILS
                     </h3>
@@ -787,9 +739,6 @@ const CreateInvoice = () => {
                   <h3 className="text-white font-bold flex items-center text-xs">
                     <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10V11.5H16.2V16H7.8V11.5H9.2V10C9.2,8.6 10.6,7 12,7M12,8.2C11.2,8.2 10.5,8.9 10.5,9.7V11.5H13.5V9.7C13.5,8.9 12.8,8.2 12,8.2Z"/>
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </svg>
                     INSURANCE NOMINEE DETAILS
                   </h3>
@@ -818,9 +767,6 @@ const CreateInvoice = () => {
                   <h3 className="text-white font-bold flex items-center text-xs">
                     <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M7,15H9C9,16.08 10.37,17 12,17C13.63,17 15,16.08 15,15C15,13.9 13.96,13.5 11.76,12.97C9.64,12.44 7,11.78 7,9C7,7.21 8.47,5.69 10.5,5.18V3H13.5V5.18C15.53,5.69 17,7.21 17,9H15C15,7.92 13.63,7 12,7C10.37,7 9,7.92 9,9C9,10.1 10.04,10.5 12.24,11.03C14.36,11.56 17,12.22 17,15C17,16.79 15.53,18.31 13.5,18.82V21H10.5V18.82C8.47,18.31 7,16.79 7,15Z"/>
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </svg>
                     PAYMENT SUMMARY
                   </h3>
@@ -863,9 +809,6 @@ const CreateInvoice = () => {
                   <h3 className="text-white font-bold text-center flex items-center justify-center text-xs">
                     <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22C6.47,22 2,17.5 2,12A10,10 0 0,1 12,2M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z"/>
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </svg>
                     SERVICE SCHEDULE
                   </h3>
@@ -928,27 +871,18 @@ const CreateInvoice = () => {
                     <div className="flex items-center">
                       <svg className="w-3 h-3 mr-1 text-green-600" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M9,11H15L13,9H11V7H13V9H15V7A2,2 0 0,0 13,5H11A2,2 0 0,0 9,7V9H7L9,11M20,6H16V4A2,2 0 0,0 14,2H10A2,2 0 0,0 8,4V6H4A2,2 0 0,0 2,8V19A2,2 0 0,0 4,21H20A2,2 0 0,0 22,19V8A2,2 0 0,0 20,6Z"/>
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                       </svg>
                       <span className="text-xs font-medium">Authorized Dealer</span>
                     </div>
                     <div className="flex items-center">
                       <svg className="w-3 h-3 mr-1 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,7V13H12.5L16.2,16.7L17.3,15.6L14.2,12.5H13V7H11Z"/>
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                       </svg>
                       <span className="text-xs font-medium">24/7 Service Support</span>
                     </div>
                     <div className="flex items-center">
                       <svg className="w-3 h-3 mr-1 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                       </svg>
                       <span className="text-xs font-medium">Quality Guaranteed</span>
                     </div>
@@ -998,9 +932,6 @@ const CreateInvoice = () => {
               onChange={(e) => handleInputChange('date', e.target.value)}
               required
             />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
           </div>
 
           {/* Customer Details */}
@@ -1016,9 +947,6 @@ const CreateInvoice = () => {
                   onChange={(e) => handleInputChange('name', e.target.value)}
                   required
                 />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               </div>
               <div>
                 <Label htmlFor="care_of">C/O (Care Of)</Label>
@@ -1029,9 +957,6 @@ const CreateInvoice = () => {
                   onChange={(e) => handleInputChange('care_of', e.target.value)}
                   required
                 />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               </div>
               <div>
                 <Label htmlFor="mobile">Mobile Number *</Label>
@@ -1042,9 +967,6 @@ const CreateInvoice = () => {
                   onChange={(e) => handleInputChange('mobile', e.target.value)}
                   required
                 />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               </div>
               <div>
                 <Label htmlFor="address">Address</Label>
@@ -1055,9 +977,6 @@ const CreateInvoice = () => {
                   onChange={(e) => handleInputChange('address', e.target.value)}
                   required
                 />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               </div>
             </div>
           </div>
@@ -1071,9 +990,6 @@ const CreateInvoice = () => {
                 <Select value={invoiceData.brand} onValueChange={(value) => handleInputChange('brand', value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select brand" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   </SelectTrigger>
                   <SelectContent>
                     {brands.map((brand) => (
@@ -1093,9 +1009,6 @@ const CreateInvoice = () => {
                   onChange={(e) => handleInputChange('model', e.target.value)}
                   required
                 />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               </div>
               <div>
                 <Label htmlFor="color">Color</Label>
@@ -1106,9 +1019,6 @@ const CreateInvoice = () => {
                   onChange={(e) => handleInputChange('color', e.target.value)}
                   required
                 />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               </div>
               <div>
                 <Label htmlFor="chassis_no">Chassis No</Label>
@@ -1119,9 +1029,6 @@ const CreateInvoice = () => {
                   onChange={(e) => handleInputChange('chassis_no', e.target.value)}
                   required
                 />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               </div>
               <div>
                 <Label htmlFor="engine_no">Engine No</Label>
@@ -1132,9 +1039,6 @@ const CreateInvoice = () => {
                   onChange={(e) => handleInputChange('engine_no', e.target.value)}
                   required
                 />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               </div>
               <div>
                 <Label htmlFor="vehicle_no">Vehicle No</Label>
@@ -1145,9 +1049,6 @@ const CreateInvoice = () => {
                   onChange={(e) => handleInputChange('vehicle_no', e.target.value)}
                   required
                 />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               </div>
             </div>
           </div>
@@ -1165,18 +1066,12 @@ const CreateInvoice = () => {
                   onChange={(e) => handleInputChange('insurance_nominee', e.target.value)}
                   required
                 />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               </div>
               <div>
                 <Label htmlFor="relation">Relation</Label>
                 <Select value={invoiceData.relation} onValueChange={(value) => handleInputChange('relation', value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select relation" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="father">Father</SelectItem>
@@ -1200,9 +1095,6 @@ const CreateInvoice = () => {
                   onChange={(e) => handleInputChange('age', e.target.value)}
                   required
                 />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               </div>
             </div>
           </div>
@@ -1221,18 +1113,12 @@ const CreateInvoice = () => {
                   onChange={(e) => handleInputChange('amount', e.target.value)}
                   required
                 />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               </div>
               <div>
                 <Label htmlFor="payment_method">Payment Method</Label>
                 <Select value={invoiceData.payment_method} onValueChange={(value) => handleInputChange('payment_method', value)}>
                   <SelectTrigger>
                     <SelectValue />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="cash">Cash</SelectItem>
@@ -1251,9 +1137,6 @@ const CreateInvoice = () => {
                   value={invoiceData.hypothecation}
                   onChange={(e) => handleInputChange('hypothecation', e.target.value)}
                 />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               </div>
             </div>
           </div>
@@ -2584,18 +2467,12 @@ const ViewInvoices = () => {
         </div>
         <div className="relative">
           <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
           <Input
             placeholder="Search by invoice no, customer, vehicle, or amount..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 w-full sm:w-80"
           />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
         </div>
       </div>
 
@@ -2605,9 +2482,6 @@ const ViewInvoices = () => {
           <CardContent className="p-4">
             <div className="flex items-center">
               <FileText className="h-8 w-8 text-blue-600" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Invoices</p>
                 <p className="text-2xl font-bold text-gray-900">{invoices.length}</p>
@@ -2619,9 +2493,6 @@ const ViewInvoices = () => {
           <CardContent className="p-4">
             <div className="flex items-center">
               <TrendingUp className="h-8 w-8 text-green-600" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Revenue</p>
                 <p className="text-2xl font-bold text-gray-900">
@@ -2635,9 +2506,6 @@ const ViewInvoices = () => {
           <CardContent className="p-4">
             <div className="flex items-center">
               <Calendar className="h-8 w-8 text-purple-600" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">This Month</p>
                 <p className="text-2xl font-bold text-gray-900">
@@ -2653,9 +2521,6 @@ const ViewInvoices = () => {
           <CardContent className="p-4">
             <div className="flex items-center">
               <Users className="h-8 w-8 text-orange-600" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Unique Customers</p>
                 <p className="text-2xl font-bold text-gray-900">
@@ -2734,9 +2599,6 @@ const ViewInvoices = () => {
                             className="flex items-center gap-1"
                           >
                             <Eye className="w-4 h-4" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                             View
                           </Button>
                           <Button
@@ -2746,9 +2608,6 @@ const ViewInvoices = () => {
                             className="flex items-center gap-1"
                           >
                             <FileText className="w-4 h-4" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                             Edit
                           </Button>
                           <Button
@@ -2846,9 +2705,6 @@ const ViewInvoices = () => {
                             <h3 className="text-white font-bold flex items-center text-xs">
                               <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                               </svg>
                               CUSTOMER DETAILS
                             </h3>
@@ -2875,9 +2731,6 @@ const ViewInvoices = () => {
                             <h3 className="text-white font-bold flex items-center text-xs">
                               <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M12,2L14,6H18L14,8L15,12L12,10L9,12L10,8L6,6H10L12,2Z"/>
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                               </svg>
                               VEHICLE DETAILS
                             </h3>
@@ -2923,9 +2776,6 @@ const ViewInvoices = () => {
                           <h3 className="text-white font-bold flex items-center text-xs">
                             <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                               <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10V11.5H16.2V16H7.8V11.5H9.2V10C9.2,8.6 10.6,7 12,7M12,8.2C11.2,8.2 10.5,8.9 10.5,9.7V11.5H13.5V9.7C13.5,8.9 12.8,8.2 12,8.2Z"/>
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                             </svg>
                             INSURANCE NOMINEE DETAILS
                           </h3>
@@ -2954,9 +2804,6 @@ const ViewInvoices = () => {
                           <h3 className="text-white font-bold flex items-center text-xs">
                             <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                               <path d="M7,15H9C9,16.08 10.37,17 12,17C13.63,17 15,16.08 15,15C15,13.9 13.96,13.5 11.76,12.97C9.64,12.44 7,11.78 7,9C7,7.21 8.47,5.69 10.5,5.18V3H13.5V5.18C15.53,5.69 17,7.21 17,9H15C15,7.92 13.63,7 12,7C10.37,7 9,7.92 9,9C9,10.1 10.04,10.5 12.24,11.03C14.36,11.56 17,12.22 17,15C17,16.79 15.53,18.31 13.5,18.82V21H10.5V18.82C8.47,18.31 7,16.79 7,15Z"/>
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                             </svg>
                             PAYMENT SUMMARY
                           </h3>
@@ -2996,27 +2843,18 @@ const ViewInvoices = () => {
                             <div className="flex items-center">
                               <svg className="w-3 h-3 mr-1 text-green-600" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M9,11H15L13,9H11V7H13V9H15V7A2,2 0 0,0 13,5H11A2,2 0 0,0 9,7V9H7L9,11M20,6H16V4A2,2 0 0,0 14,2H10A2,2 0 0,0 8,4V6H4A2,2 0 0,0 2,8V19A2,2 0 0,0 4,21H20A2,2 0 0,0 22,19V8A2,2 0 0,0 20,6Z"/>
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                               </svg>
                               <span className="text-xs font-medium">Authorized Dealer</span>
                             </div>
                             <div className="flex items-center">
                               <svg className="w-3 h-3 mr-1 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,7V13H12.5L16.2,16.7L17.3,15.6L14.2,12.5H13V7H11Z"/>
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                               </svg>
                               <span className="text-xs font-medium">24/7 Service Support</span>
                             </div>
                             <div className="flex items-center">
                               <svg className="w-3 h-3 mr-1 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                               </svg>
                               <span className="text-xs font-medium">Quality Guaranteed</span>
                             </div>
@@ -3077,9 +2915,6 @@ const ViewInvoices = () => {
                         onChange={(e) => setEditFormData({...editFormData, invoice_number: e.target.value})}
                         required
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                     <div>
                       <Label htmlFor="sale_date">Sale Date</Label>
@@ -3090,9 +2925,6 @@ const ViewInvoices = () => {
                         onChange={(e) => setEditFormData({...editFormData, sale_date: e.target.value})}
                         required
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -3121,9 +2953,6 @@ const ViewInvoices = () => {
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select customer" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                         </SelectTrigger>
                         <SelectContent>
                           {customers.map((customer) => (
@@ -3145,9 +2974,6 @@ const ViewInvoices = () => {
                           onChange={(e) => setEditFormData({...editFormData, customer_name: e.target.value})}
                           placeholder="Enter customer name"
                         />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                       </div>
                       <div>
                         <Label htmlFor="customer_care_of">Care Of (C/O)</Label>
@@ -3158,9 +2984,6 @@ const ViewInvoices = () => {
                           onChange={(e) => setEditFormData({...editFormData, customer_care_of: e.target.value})}
                           placeholder="S/O, D/O, W/O"
                         />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                       </div>
                     </div>
 
@@ -3174,9 +2997,6 @@ const ViewInvoices = () => {
                           onChange={(e) => setEditFormData({...editFormData, customer_mobile: e.target.value})}
                           placeholder="Enter mobile number"
                         />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                       </div>
                       <div>
                         <Label htmlFor="customer_address">Address</Label>
@@ -3187,9 +3007,6 @@ const ViewInvoices = () => {
                           onChange={(e) => setEditFormData({...editFormData, customer_address: e.target.value})}
                           placeholder="Enter address"
                         />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                       </div>
                     </div>
                   </div>
@@ -3221,9 +3038,6 @@ const ViewInvoices = () => {
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select vehicle" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                         </SelectTrigger>
                         <SelectContent>
                           {vehicles.map((vehicle) => (
@@ -3245,9 +3059,6 @@ const ViewInvoices = () => {
                           onChange={(e) => setEditFormData({...editFormData, vehicle_brand: e.target.value})}
                           placeholder="Enter brand"
                         />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                       </div>
                       <div>
                         <Label htmlFor="vehicle_model">Model</Label>
@@ -3258,9 +3069,6 @@ const ViewInvoices = () => {
                           onChange={(e) => setEditFormData({...editFormData, vehicle_model: e.target.value})}
                           placeholder="Enter model"
                         />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                       </div>
                       <div>
                         <Label htmlFor="vehicle_color">Color</Label>
@@ -3271,9 +3079,6 @@ const ViewInvoices = () => {
                           onChange={(e) => setEditFormData({...editFormData, vehicle_color: e.target.value})}
                           placeholder="Enter color"
                         />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                       </div>
                     </div>
 
@@ -3287,9 +3092,6 @@ const ViewInvoices = () => {
                           onChange={(e) => setEditFormData({...editFormData, vehicle_no: e.target.value})}
                           placeholder="Enter vehicle number"
                         />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                       </div>
                       <div>
                         <Label htmlFor="chassis_no">Chassis Number</Label>
@@ -3300,9 +3102,6 @@ const ViewInvoices = () => {
                           onChange={(e) => setEditFormData({...editFormData, chassis_no: e.target.value})}
                           placeholder="Enter chassis number"
                         />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                       </div>
                       <div>
                         <Label htmlFor="engine_no">Engine Number</Label>
@@ -3313,9 +3112,6 @@ const ViewInvoices = () => {
                           onChange={(e) => setEditFormData({...editFormData, engine_no: e.target.value})}
                           placeholder="Enter engine number"
                         />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                       </div>
                     </div>
                   </div>
@@ -3342,9 +3138,6 @@ const ViewInvoices = () => {
                         })}
                         placeholder="Enter nominee name"
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                     <div>
                       <Label htmlFor="nominee_relation">Relation</Label>
@@ -3360,9 +3153,6 @@ const ViewInvoices = () => {
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select relation" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="father">Father</SelectItem>
@@ -3393,9 +3183,6 @@ const ViewInvoices = () => {
                         })}
                         placeholder="Enter age"
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -3417,9 +3204,6 @@ const ViewInvoices = () => {
                         placeholder="Enter amount"
                         required
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                     <div>
                       <Label htmlFor="payment_method">Payment Method</Label>
@@ -3429,9 +3213,6 @@ const ViewInvoices = () => {
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select payment method" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="cash">Cash</SelectItem>
@@ -3450,9 +3231,6 @@ const ViewInvoices = () => {
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select hypothecation" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Cash">Cash</SelectItem>
@@ -3575,8 +3353,6 @@ const CustomersManagement = () => {
       
       case 'mobile':
         if (!value.trim()) {
-          error = 'Mobile number is required';
-        } else if (!/^[6-9]\d{9}$/.test(value.trim())) {
           error = 'Enter valid 10-digit mobile number';
         }
         break;
@@ -3848,8 +3624,6 @@ const CustomersManagement = () => {
       }
       
       if (!editFormData.mobile || !editFormData.mobile.trim()) {
-        toast.error('Mobile number is required');
-        return;
       }
       
       if (!editFormData.address || !editFormData.address.trim()) {
@@ -3930,30 +3704,18 @@ const CustomersManagement = () => {
         <div className="flex flex-wrap gap-2">
           <Button onClick={() => setShowAddForm(!showAddForm)} className="flex items-center gap-2">
             <Plus className="w-4 h-4" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
             Add Customer
           </Button>
           <Button onClick={handleImport} variant="outline" className="flex items-center gap-2">
             <Search className="w-4 h-4" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
             Import
           </Button>
           <Button onClick={handleExport} variant="outline" className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
             Export
           </Button>
           <Button variant="outline" className="flex items-center gap-2">
             <Eye className="w-4 h-4" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
             View All
           </Button>
         </div>
@@ -3962,18 +3724,12 @@ const CustomersManagement = () => {
       {/* Search Bar */}
       <div className="relative">
         <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
         <Input
           placeholder="Search customers by name, phone, email, or address..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10"
         />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
       </div>
 
       {/* Add Customer Form */}
@@ -3995,9 +3751,6 @@ const CustomersManagement = () => {
                   onChange={(e) => handleInputChange('date', e.target.value)}
                   required
                 />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               </div>
 
               {/* Customer Details Section */}
@@ -4014,9 +3767,6 @@ const CustomersManagement = () => {
                       required
                       className={touched.name && validationErrors.name ? 'border-red-500' : ''}
                     />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     {touched.name && validationErrors.name && (
                       <p className="text-red-500 text-sm mt-1">{validationErrors.name}</p>
                     )}
@@ -4030,9 +3780,6 @@ const CustomersManagement = () => {
                       onChange={(e) => handleInputChange('care_of', e.target.value)}
                       required
                     />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   </div>
                   <div>
                     <Label htmlFor="mobile">Mobile Number *</Label>
@@ -4044,9 +3791,6 @@ const CustomersManagement = () => {
                       required
                       className={touched.mobile && validationErrors.mobile ? 'border-red-500' : ''}
                     />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     {touched.mobile && validationErrors.mobile && (
                       <p className="text-red-500 text-sm mt-1">{validationErrors.mobile}</p>
                     )}
@@ -4061,9 +3805,6 @@ const CustomersManagement = () => {
                       required
                       className={touched.address && validationErrors.address ? 'border-red-500' : ''}
                     />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     {touched.address && validationErrors.address && (
                       <p className="text-red-500 text-sm mt-1">{validationErrors.address}</p>
                     )}
@@ -4080,9 +3821,6 @@ const CustomersManagement = () => {
                     <Select value={customerData.brand} onValueChange={(value) => handleInputChange('brand', value)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select brand" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                       </SelectTrigger>
                       <SelectContent>
                         {brands.map((brand) => (
@@ -4101,9 +3839,6 @@ const CustomersManagement = () => {
                       value={customerData.model}
                       onChange={(e) => handleInputChange('model', e.target.value)}
                     />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   </div>
                   <div>
                     <Label htmlFor="color">Color</Label>
@@ -4113,9 +3848,6 @@ const CustomersManagement = () => {
                       value={customerData.color}
                       onChange={(e) => handleInputChange('color', e.target.value)}
                     />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   </div>
                   <div>
                     <Label htmlFor="chassis_no">Chassis No</Label>
@@ -4126,9 +3858,6 @@ const CustomersManagement = () => {
                       onChange={(e) => handleInputChange('chassis_no', e.target.value.toUpperCase())}
                       className={touched.chassis_no && validationErrors.chassis_no ? 'border-red-500' : ''}
                     />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     {touched.chassis_no && validationErrors.chassis_no && (
                       <p className="text-red-500 text-sm mt-1">{validationErrors.chassis_no}</p>
                     )}
@@ -4142,9 +3871,6 @@ const CustomersManagement = () => {
                       onChange={(e) => handleInputChange('engine_no', e.target.value.toUpperCase())}
                       className={touched.engine_no && validationErrors.engine_no ? 'border-red-500' : ''}
                     />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     {touched.engine_no && validationErrors.engine_no && (
                       <p className="text-red-500 text-sm mt-1">{validationErrors.engine_no}</p>
                     )}
@@ -4158,9 +3884,6 @@ const CustomersManagement = () => {
                       onChange={(e) => handleInputChange('vehicle_no', e.target.value.toUpperCase())}
                       className={touched.vehicle_no && validationErrors.vehicle_no ? 'border-red-500' : ''}
                     />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     {touched.vehicle_no && validationErrors.vehicle_no && (
                       <p className="text-red-500 text-sm mt-1">{validationErrors.vehicle_no}</p>
                     )}
@@ -4180,18 +3903,12 @@ const CustomersManagement = () => {
                       value={customerData.insurance_nominee}
                       onChange={(e) => handleInputChange('insurance_nominee', e.target.value)}
                     />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   </div>
                   <div>
                     <Label htmlFor="relation">Relation</Label>
                     <Select value={customerData.relation} onValueChange={(value) => handleInputChange('relation', value)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select relation" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                       </SelectTrigger>
                       <SelectContent>
                         {relations.map((relation) => (
@@ -4211,9 +3928,6 @@ const CustomersManagement = () => {
                       value={customerData.age}
                       onChange={(e) => handleInputChange('age', e.target.value)}
                     />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   </div>
                 </div>
               </div>
@@ -4293,9 +4007,6 @@ const CustomersManagement = () => {
                             className="flex items-center gap-1"
                           >
                             <Eye className="w-4 h-4" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                             View
                           </Button>
                           <Button 
@@ -4305,9 +4016,6 @@ const CustomersManagement = () => {
                             className="flex items-center gap-1"
                           >
                             <FileText className="w-4 h-4" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                             Edit
                           </Button>
                         </div>
@@ -4388,9 +4096,6 @@ const CustomersManagement = () => {
                   className="flex items-center gap-2"
                 >
                   <FileText className="w-4 h-4" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   Edit Customer
                 </Button>
                 <Button onClick={() => setShowViewModal(false)}>
@@ -4432,9 +4137,6 @@ const CustomersManagement = () => {
                         required
                         className={!editFormData.name?.trim() ? 'border-red-500' : ''}
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                       {!editFormData.name?.trim() && (
                         <p className="text-red-500 text-sm mt-1">Customer name is required</p>
                       )}
@@ -4448,9 +4150,6 @@ const CustomersManagement = () => {
                         onChange={(e) => setEditFormData({...editFormData, care_of: e.target.value})}
                         placeholder="S/O, D/O, W/O"
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                     <div>
                       <Label htmlFor="edit_mobile">Mobile Number *</Label>
@@ -4476,9 +4175,6 @@ const CustomersManagement = () => {
                         onChange={(e) => setEditFormData({...editFormData, email: e.target.value})}
                         placeholder="Enter email address"
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                     <div className="md:col-span-2">
                       <Label htmlFor="edit_address">Address</Label>
@@ -4491,9 +4187,6 @@ const CustomersManagement = () => {
                         required
                       />
                     </div>
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   </div>
                 </div>
 
@@ -4511,9 +4204,6 @@ const CustomersManagement = () => {
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select brand" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                         </SelectTrigger>
                         <SelectContent>
                           {brands.map(brand => (
@@ -4531,9 +4221,6 @@ const CustomersManagement = () => {
                         onChange={(e) => setEditFormData({...editFormData, model: e.target.value})}
                         placeholder="Enter model"
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                     <div>
                       <Label htmlFor="edit_color">Color</Label>
@@ -4544,9 +4231,6 @@ const CustomersManagement = () => {
                         onChange={(e) => setEditFormData({...editFormData, color: e.target.value})}
                         placeholder="Enter color"
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                     <div>
                       <Label htmlFor="edit_vehicle_no">Vehicle Number</Label>
@@ -4557,9 +4241,6 @@ const CustomersManagement = () => {
                         onChange={(e) => setEditFormData({...editFormData, vehicle_no: e.target.value.toUpperCase()})}
                         placeholder="KA05AB1234"
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                     <div>
                       <Label htmlFor="edit_chassis_no">Chassis Number</Label>
@@ -4571,9 +4252,6 @@ const CustomersManagement = () => {
                         placeholder="17-character chassis number"
                         maxLength={17}
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                     <div>
                       <Label htmlFor="edit_engine_no">Engine Number</Label>
@@ -4584,9 +4262,6 @@ const CustomersManagement = () => {
                         onChange={(e) => setEditFormData({...editFormData, engine_no: e.target.value.toUpperCase()})}
                         placeholder="Enter engine number"
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -4606,9 +4281,6 @@ const CustomersManagement = () => {
                         onChange={(e) => setEditFormData({...editFormData, insurance_nominee: e.target.value})}
                         placeholder="Enter nominee name"
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                     <div>
                       <Label htmlFor="edit_relation">Relation</Label>
@@ -4618,9 +4290,6 @@ const CustomersManagement = () => {
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select relation" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                         </SelectTrigger>
                         <SelectContent>
                           {relations.map(relation => (
@@ -4642,9 +4311,6 @@ const CustomersManagement = () => {
                         onChange={(e) => setEditFormData({...editFormData, age: e.target.value})}
                         placeholder="Enter age"
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -4848,16 +4514,10 @@ const SalesReports = () => {
         <div className="flex gap-2">
           <Button onClick={exportReport} variant="outline" className="flex items-center gap-2">
             <Download className="w-4 h-4" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
             Export Report
           </Button>
           <Button variant="outline" className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
             Print Report
           </Button>
         </div>
@@ -4869,9 +4529,6 @@ const SalesReports = () => {
           <CardContent className="p-6">
             <div className="flex items-center">
               <BarChart3 className="h-8 w-8 text-blue-600" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Sales</p>
                 <p className="text-2xl font-bold text-gray-900">{totalStats.totalSales}</p>
@@ -4883,9 +4540,6 @@ const SalesReports = () => {
           <CardContent className="p-6">
             <div className="flex items-center">
               <TrendingUp className="h-8 w-8 text-green-600" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Revenue</p>
                 <p className="text-2xl font-bold text-gray-900">₹{totalStats.totalRevenue.toLocaleString()}</p>
@@ -4897,9 +4551,6 @@ const SalesReports = () => {
           <CardContent className="p-6">
             <div className="flex items-center">
               <PieChart className="h-8 w-8 text-purple-600" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Average Order</p>
                 <p className="text-2xl font-bold text-gray-900">₹{Math.round(totalStats.averageOrderValue).toLocaleString()}</p>
@@ -4911,9 +4562,6 @@ const SalesReports = () => {
           <CardContent className="p-6">
             <div className="flex items-center">
               <MotorcycleIcon className="h-8 w-8 text-orange-600" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Top Brand</p>
                 <p className="text-2xl font-bold text-gray-900">{totalStats.topBrand || 'N/A'}</p>
@@ -4930,9 +4578,6 @@ const SalesReports = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-blue-600" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               Monthly Sales Performance
             </CardTitle>
             <CardDescription>
@@ -4944,9 +4589,6 @@ const SalesReports = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   <XAxis 
                     dataKey="month" 
                     tick={{ fontSize: 12 }}
@@ -4954,17 +4596,8 @@ const SalesReports = () => {
                     textAnchor="end"
                     height={60}
                   />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'white', 
@@ -4977,17 +4610,8 @@ const SalesReports = () => {
                       name === 'revenue' ? 'Revenue' : 'Sales Count'
                     ]}
                   />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   <Legend />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   <Bar yAxisId="left" dataKey="sales" fill="#3b82f6" name="Sales Count" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   <Line 
                     yAxisId="right" 
                     type="monotone" 
@@ -4997,9 +4621,6 @@ const SalesReports = () => {
                     name="Revenue (₹)"
                     dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
                   />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -5011,9 +4632,6 @@ const SalesReports = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <PieChart className="w-5 h-5 text-green-600" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               Brand-wise Sales Distribution
             </CardTitle>
             <CardDescription>
@@ -5025,22 +4643,13 @@ const SalesReports = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={brandData} layout="horizontal">
                   <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   <XAxis type="number" tick={{ fontSize: 12 }} />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   <YAxis 
                     type="category" 
                     dataKey="brand" 
                     tick={{ fontSize: 12 }}
                     width={80}
                   />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'white', 
@@ -5053,17 +4662,8 @@ const SalesReports = () => {
                       name === 'revenue' ? 'Revenue' : 'Sales Count'
                     ]}
                   />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   <Legend />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   <Bar dataKey="revenue" fill="#10b981" name="Revenue (₹)" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -5415,16 +5015,10 @@ const ViewCustomerDetails = () => {
         <div className="flex gap-2">
           <Button onClick={exportToCSV} variant="outline" className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
             Export CSV
           </Button>
           <Button variant="outline" className="flex items-center gap-2">
             <Plus className="w-4 h-4" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
             Print Report
           </Button>
         </div>
@@ -5433,18 +5027,12 @@ const ViewCustomerDetails = () => {
       {/* Search Bar */}
       <div className="relative">
         <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
         <Input
           placeholder="Search by name, mobile, address, brand, model, chassis no, engine no, or vehicle no..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10"
         />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
       </div>
 
       {/* Statistics Cards */}
@@ -5453,9 +5041,6 @@ const ViewCustomerDetails = () => {
           <CardContent className="p-4">
             <div className="flex items-center">
               <Users className="h-8 w-8 text-blue-600" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Customers</p>
                 <p className="text-2xl font-bold text-gray-900">{customerDetails.length}</p>
@@ -5467,9 +5052,6 @@ const ViewCustomerDetails = () => {
           <CardContent className="p-4">
             <div className="flex items-center">
               <MotorcycleIcon className="h-8 w-8 text-green-600" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">With Vehicles</p>
                 <p className="text-2xl font-bold text-gray-900">
@@ -5483,9 +5065,6 @@ const ViewCustomerDetails = () => {
           <CardContent className="p-4">
             <div className="flex items-center">
               <TrendingUp className="h-8 w-8 text-purple-600" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Sales</p>
                 <p className="text-2xl font-bold text-gray-900">
@@ -5499,9 +5078,6 @@ const ViewCustomerDetails = () => {
           <CardContent className="p-4">
             <div className="flex items-center">
               <FileText className="h-8 w-8 text-orange-600" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Filtered Results</p>
                 <p className="text-2xl font-bold text-gray-900">{filteredDetails.length}</p>
@@ -5575,9 +5151,6 @@ const ViewCustomerDetails = () => {
                             className="flex items-center gap-1"
                           >
                             <Eye className="w-4 h-4" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                             View
                           </Button>
                           <Button
@@ -5587,9 +5160,6 @@ const ViewCustomerDetails = () => {
                             className="flex items-center gap-1"
                           >
                             <FileText className="w-4 h-4" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                             Edit
                           </Button>
                         </div>
@@ -5683,9 +5253,6 @@ const ViewCustomerDetails = () => {
                   className="flex items-center gap-2"
                 >
                   <FileText className="w-4 h-4" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   Edit Customer
                 </Button>
                 <Button onClick={() => setShowViewModal(false)}>
@@ -5727,9 +5294,6 @@ const ViewCustomerDetails = () => {
                         required
                         className={!editFormData.name?.trim() ? 'border-red-500' : ''}
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                       {!editFormData.name?.trim() && (
                         <p className="text-red-500 text-sm mt-1">Customer name is required</p>
                       )}
@@ -5743,9 +5307,6 @@ const ViewCustomerDetails = () => {
                         onChange={(e) => setEditFormData({...editFormData, care_of: e.target.value})}
                         placeholder="S/O, D/O, W/O"
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                     <div>
                       <Label htmlFor="edit_mobile">Mobile Number *</Label>
@@ -5771,9 +5332,6 @@ const ViewCustomerDetails = () => {
                         onChange={(e) => setEditFormData({...editFormData, email: e.target.value})}
                         placeholder="Enter email address"
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                     <div className="md:col-span-2">
                       <Label htmlFor="edit_address">Address</Label>
@@ -5786,9 +5344,6 @@ const ViewCustomerDetails = () => {
                         required
                       />
                     </div>
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                   </div>
                 </div>
 
@@ -5807,9 +5362,6 @@ const ViewCustomerDetails = () => {
                         onChange={(e) => setEditFormData({...editFormData, brand: e.target.value})}
                         placeholder="Enter brand"
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                     <div>
                       <Label htmlFor="edit_model">Model</Label>
@@ -5820,9 +5372,6 @@ const ViewCustomerDetails = () => {
                         onChange={(e) => setEditFormData({...editFormData, model: e.target.value})}
                         placeholder="Enter model"
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                     <div>
                       <Label htmlFor="edit_color">Color</Label>
@@ -5833,9 +5382,6 @@ const ViewCustomerDetails = () => {
                         onChange={(e) => setEditFormData({...editFormData, color: e.target.value})}
                         placeholder="Enter color"
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                     <div>
                       <Label htmlFor="edit_vehicle_no">Vehicle Number</Label>
@@ -5846,9 +5392,6 @@ const ViewCustomerDetails = () => {
                         onChange={(e) => setEditFormData({...editFormData, vehicle_no: e.target.value.toUpperCase()})}
                         placeholder="KA05AB1234"
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                     <div>
                       <Label htmlFor="edit_chassis_no">Chassis Number</Label>
@@ -5860,9 +5403,6 @@ const ViewCustomerDetails = () => {
                         placeholder="17-character chassis number"
                         maxLength={17}
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                     <div>
                       <Label htmlFor="edit_engine_no">Engine Number</Label>
@@ -5873,9 +5413,6 @@ const ViewCustomerDetails = () => {
                         onChange={(e) => setEditFormData({...editFormData, engine_no: e.target.value.toUpperCase()})}
                         placeholder="Enter engine number"
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -5895,9 +5432,6 @@ const ViewCustomerDetails = () => {
                         onChange={(e) => setEditFormData({...editFormData, insurance_nominee: e.target.value})}
                         placeholder="Enter nominee name"
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                     <div>
                       <Label htmlFor="edit_relation">Relation</Label>
@@ -5908,9 +5442,6 @@ const ViewCustomerDetails = () => {
                         onChange={(e) => setEditFormData({...editFormData, relation: e.target.value})}
                         placeholder="Enter relation"
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                     <div>
                       <Label htmlFor="edit_age">Age</Label>
@@ -5923,9 +5454,6 @@ const ViewCustomerDetails = () => {
                         onChange={(e) => setEditFormData({...editFormData, age: e.target.value})}
                         placeholder="Enter age"
                       />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -6128,16 +5656,10 @@ const InsuranceManagement = () => {
         <div className="flex gap-2">
           <Button onClick={exportInsuranceData} variant="outline" className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
             Export Data
           </Button>
           <Button variant="outline" className="flex items-center gap-2">
             <Plus className="w-4 h-4" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
             Send Reminders
           </Button>
         </div>
@@ -6146,18 +5668,12 @@ const InsuranceManagement = () => {
       {/* Search Bar */}
       <div className="relative">
         <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
         <Input
           placeholder="Search by customer name, phone, vehicle model, or registration number..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10"
         />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
       </div>
 
       {/* Statistics Cards */}
@@ -6166,9 +5682,6 @@ const InsuranceManagement = () => {
           <CardContent className="p-6">
             <div className="flex items-center">
               <Shield className="h-8 w-8 text-red-600" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Expired</p>
                 <p className="text-2xl font-bold text-red-600">{expiredCount}</p>
@@ -6180,9 +5693,6 @@ const InsuranceManagement = () => {
           <CardContent className="p-6">
             <div className="flex items-center">
               <Calendar className="h-8 w-8 text-yellow-600" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Expiring Soon</p>
                 <p className="text-2xl font-bold text-yellow-600">{expiringSoonCount}</p>
@@ -6194,9 +5704,6 @@ const InsuranceManagement = () => {
           <CardContent className="p-6">
             <div className="flex items-center">
               <Shield className="h-8 w-8 text-green-600" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Active</p>
                 <p className="text-2xl font-bold text-green-600">{activeCount}</p>
@@ -6208,9 +5715,6 @@ const InsuranceManagement = () => {
           <CardContent className="p-6">
             <div className="flex items-center">
               <Users className="h-8 w-8 text-blue-600" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Policies</p>
                 <p className="text-2xl font-bold text-blue-600">{insuranceData.length}</p>
@@ -6280,9 +5784,6 @@ const InsuranceManagement = () => {
                             className="flex items-center gap-1"
                           >
                             <Eye className="w-4 h-4" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                             View
                           </Button>
                           <Button
@@ -6292,9 +5793,6 @@ const InsuranceManagement = () => {
                             className="flex items-center gap-1"
                           >
                             <FileText className="w-4 h-4" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                             Edit
                           </Button>
                         </div>
@@ -6409,9 +5907,6 @@ const InsuranceManagement = () => {
 
               <div className="text-center py-8">
                 <Shield className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                      {!editFormData.mobile?.trim() && (
-                        <p className="text-red-500 text-sm mt-1">Mobile number is required</p>
-                      )}
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Insurance Policy Management</h3>
                 <p className="text-gray-500 mb-4">
                   Edit functionality for insurance policies will be implemented in the next update.
