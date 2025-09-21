@@ -41,7 +41,32 @@ const DataImport = () => {
       label: 'Customers', 
       icon: Users, 
       description: 'Import customer information',
-      fields: ['name', 'phone', 'email', 'address']
+      fields: [
+        // Basic customer details
+        'name', 
+        'care_of', 
+        'mobile', 
+        'phone', 
+        'email', 
+        'address',
+        // Vehicle details
+        'vehicle_brand',
+        'vehicle_model', 
+        'vehicle_color',
+        'vehicle_no',
+        'chassis_no',
+        'engine_no',
+        // Insurance details
+        'insurance_nominee',
+        'insurance_relation',
+        'insurance_age',
+        // Sales details
+        'sale_amount',
+        'payment_method',
+        'hypothecation',
+        'sale_date',
+        'invoice_number'
+      ]
     },
     { 
       value: 'vehicles', 
