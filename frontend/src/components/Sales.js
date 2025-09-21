@@ -3967,6 +3967,298 @@ const CustomersManagement = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* View Customer Modal */}
+      {showViewModal && selectedCustomer && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Customer Details</h2>
+                <Button variant="outline" onClick={() => setShowViewModal(false)}>
+                  Close
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Customer Information */}
+                <div className="space-y-4">
+                  <div className="border rounded-lg p-4 bg-blue-50">
+                    <h3 className="text-lg font-semibold text-blue-800 mb-3 flex items-center">
+                      👤 Customer Information
+                    </h3>
+                    <div className="space-y-2">
+                      <div><strong>Name:</strong> {selectedCustomer.name || 'N/A'}</div>
+                      <div><strong>Care Of:</strong> {selectedCustomer.care_of || 'N/A'}</div>
+                      <div><strong>Mobile:</strong> {selectedCustomer.mobile || selectedCustomer.phone || 'N/A'}</div>
+                      <div><strong>Email:</strong> {selectedCustomer.email || 'N/A'}</div>
+                      <div><strong>Address:</strong> {selectedCustomer.address || 'N/A'}</div>
+                      <div><strong>Date Added:</strong> {new Date(selectedCustomer.created_at).toLocaleDateString('en-IN')}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Vehicle Information */}
+                <div className="space-y-4">
+                  <div className="border rounded-lg p-4 bg-green-50">
+                    <h3 className="text-lg font-semibold text-green-800 mb-3 flex items-center">
+                      🏍️ Associated Vehicle
+                    </h3>
+                    {(() => {
+                      const customerVehicle = vehicles.find(v => v.customer_id === selectedCustomer.id);
+                      if (customerVehicle) {
+                        return (
+                          <div className="space-y-2">
+                            <div><strong>Brand:</strong> {customerVehicle.brand || 'N/A'}</div>
+                            <div><strong>Model:</strong> {customerVehicle.model || 'N/A'}</div>
+                            <div><strong>Color:</strong> {customerVehicle.color || 'N/A'}</div>
+                            <div><strong>Vehicle No:</strong> {customerVehicle.vehicle_no || 'N/A'}</div>
+                            <div><strong>Chassis No:</strong> {customerVehicle.chassis_no || 'N/A'}</div>
+                            <div><strong>Engine No:</strong> {customerVehicle.engine_no || 'N/A'}</div>
+                          </div>
+                        );
+                      } else {
+                        return <p className="text-gray-500">No vehicle associated with this customer</p>;
+                      }
+                    })()}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowViewModal(false);
+                    handleEditCustomer(selectedCustomer);
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  Edit Customer
+                </Button>
+                <Button onClick={() => setShowViewModal(false)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Customer Modal */}
+      {showEditModal && editingCustomer && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Edit Customer</h2>
+                <Button variant="outline" onClick={handleCancelEdit}>
+                  Cancel
+                </Button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Customer Details Section */}
+                <div className="border rounded-lg p-4 bg-blue-50">
+                  <h3 className="text-lg font-semibold text-blue-800 mb-4 flex items-center">
+                    👤 Customer Details
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="edit_name">Customer Name</Label>
+                      <Input
+                        id="edit_name"
+                        type="text"
+                        value={editFormData.name || ''}
+                        onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
+                        placeholder="Enter customer name"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit_care_of">Care Of (C/O)</Label>
+                      <Input
+                        id="edit_care_of"
+                        type="text"
+                        value={editFormData.care_of || ''}
+                        onChange={(e) => setEditFormData({...editFormData, care_of: e.target.value})}
+                        placeholder="S/O, D/O, W/O"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit_mobile">Mobile Number</Label>
+                      <Input
+                        id="edit_mobile"
+                        type="tel"
+                        value={editFormData.mobile || ''}
+                        onChange={(e) => setEditFormData({...editFormData, mobile: e.target.value})}
+                        placeholder="Enter mobile number"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit_email">Email</Label>
+                      <Input
+                        id="edit_email"
+                        type="email"
+                        value={editFormData.email || ''}
+                        onChange={(e) => setEditFormData({...editFormData, email: e.target.value})}
+                        placeholder="Enter email address"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label htmlFor="edit_address">Address</Label>
+                      <Input
+                        id="edit_address"
+                        type="text"
+                        value={editFormData.address || ''}
+                        onChange={(e) => setEditFormData({...editFormData, address: e.target.value})}
+                        placeholder="Enter complete address"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Vehicle Details Section */}
+                <div className="border rounded-lg p-4 bg-green-50">
+                  <h3 className="text-lg font-semibold text-green-800 mb-4 flex items-center">
+                    🏍️ Vehicle Details
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="edit_brand">Brand</Label>
+                      <Select
+                        value={editFormData.brand || ''}
+                        onValueChange={(value) => setEditFormData({...editFormData, brand: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select brand" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {brands.map(brand => (
+                            <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="edit_model">Model</Label>
+                      <Input
+                        id="edit_model"
+                        type="text"
+                        value={editFormData.model || ''}
+                        onChange={(e) => setEditFormData({...editFormData, model: e.target.value})}
+                        placeholder="Enter model"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit_color">Color</Label>
+                      <Input
+                        id="edit_color"
+                        type="text"
+                        value={editFormData.color || ''}
+                        onChange={(e) => setEditFormData({...editFormData, color: e.target.value})}
+                        placeholder="Enter color"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit_vehicle_no">Vehicle Number</Label>
+                      <Input
+                        id="edit_vehicle_no"
+                        type="text"
+                        value={editFormData.vehicle_no || ''}
+                        onChange={(e) => setEditFormData({...editFormData, vehicle_no: e.target.value.toUpperCase()})}
+                        placeholder="KA05AB1234"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit_chassis_no">Chassis Number</Label>
+                      <Input
+                        id="edit_chassis_no"
+                        type="text"
+                        value={editFormData.chassis_no || ''}
+                        onChange={(e) => setEditFormData({...editFormData, chassis_no: e.target.value.toUpperCase()})}
+                        placeholder="17-character chassis number"
+                        maxLength={17}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit_engine_no">Engine Number</Label>
+                      <Input
+                        id="edit_engine_no"
+                        type="text"
+                        value={editFormData.engine_no || ''}
+                        onChange={(e) => setEditFormData({...editFormData, engine_no: e.target.value.toUpperCase()})}
+                        placeholder="Enter engine number"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Insurance Details Section */}
+                <div className="border rounded-lg p-4 bg-purple-50">
+                  <h3 className="text-lg font-semibold text-purple-800 mb-4 flex items-center">
+                    🛡️ Insurance Nominee Details
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="edit_nominee">Nominee Name</Label>
+                      <Input
+                        id="edit_nominee"
+                        type="text"
+                        value={editFormData.insurance_nominee || ''}
+                        onChange={(e) => setEditFormData({...editFormData, insurance_nominee: e.target.value})}
+                        placeholder="Enter nominee name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit_relation">Relation</Label>
+                      <Select
+                        value={editFormData.relation || ''}
+                        onValueChange={(value) => setEditFormData({...editFormData, relation: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select relation" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {relations.map(relation => (
+                            <SelectItem key={relation} value={relation}>
+                              {relation.charAt(0).toUpperCase() + relation.slice(1)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="edit_age">Age</Label>
+                      <Input
+                        id="edit_age"
+                        type="number"
+                        min="18"
+                        max="100"
+                        value={editFormData.age || ''}
+                        onChange={(e) => setEditFormData({...editFormData, age: e.target.value})}
+                        placeholder="Enter age"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-2">
+                <Button variant="outline" onClick={handleCancelEdit}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveEdit} disabled={loading}>
+                  {loading ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
