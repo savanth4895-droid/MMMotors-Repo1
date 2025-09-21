@@ -387,12 +387,13 @@ async def get_customers(current_user: User = Depends(get_current_user)):
     # Return raw customer data to include extended fields like vehicle_info, insurance_info, sales_info
     return customers
 
-@api_router.get("/customers/{customer_id}", response_model=Customer)
+@api_router.get("/customers/{customer_id}")
 async def get_customer(customer_id: str, current_user: User = Depends(get_current_user)):
     customer = await db.customers.find_one({"id": customer_id})
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
-    return Customer(**customer)
+    # Return raw customer data to include extended fields
+    return customer
 
 @api_router.put("/customers/{customer_id}", response_model=Customer)
 async def update_customer(customer_id: str, customer_data: CustomerCreate, current_user: User = Depends(get_current_user)):
