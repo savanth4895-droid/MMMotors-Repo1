@@ -4920,7 +4920,7 @@ const ViewCustomerDetails = () => {
       setEditFormData({});
       fetchAllData(); // Refresh the list
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to update customer');
+      toast.error(getErrorMessage(error) || 'Failed to update customer');
     } finally {
       setLoading(false);
     }
