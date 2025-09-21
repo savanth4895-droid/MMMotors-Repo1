@@ -3342,25 +3342,24 @@ const CustomersManagement = () => {
     
     switch (field) {
       case 'name':
-        if (!value.trim()) {
-          error = 'Customer name is required';
-        } else if (value.trim().length < 2) {
+        // Removed required validation - name is now optional
+        if (value.trim() && value.trim().length < 2) {
           error = 'Name must be at least 2 characters';
-        } else if (!/^[a-zA-Z\s]+$/.test(value.trim())) {
+        } else if (value.trim() && !/^[a-zA-Z\s]+$/.test(value.trim())) {
           error = 'Name should only contain letters and spaces';
         }
         break;
       
       case 'mobile':
-        if (!value.trim()) {
+        // Removed required validation - mobile is now optional
+        if (value.trim() && !/^\d{10}$/.test(value.trim())) {
           error = 'Enter valid 10-digit mobile number';
         }
         break;
       
       case 'address':
-        if (!value.trim()) {
-          error = 'Address is required';
-        } else if (value.trim().length < 10) {
+        // Removed required validation - address is now optional
+        if (value.trim() && value.trim().length < 10) {
           error = 'Address must be at least 10 characters';
         }
         break;
