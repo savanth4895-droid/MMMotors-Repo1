@@ -3436,7 +3436,7 @@ const CustomersManagement = () => {
     const error = validateField(field, value);
     setValidationErrors(prev => ({
       ...prev,
-      [field]: error
+      [field]: typeof error === 'string' ? error : (error ? 'Invalid input' : '')
     }));
   };
 
