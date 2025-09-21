@@ -3748,7 +3748,6 @@ const CustomersManagement = () => {
                       placeholder="Enter customer name"
                       value={customerData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
-                      required
                       className={touched.name && validationErrors.name ? 'border-red-500' : ''}
                     />
                     {touched.name && validationErrors.name && (
