@@ -2766,48 +2766,61 @@ Test User,9876543220,test@example.com,"123 Main St"""
         # 2. TEMPLATE DOWNLOAD TESTING
         print("\n📄 2. CSV TEMPLATE DOWNLOAD WITH ALL MAPPED FIELDS")
         print("-" * 50)
-        success, template_response = self.run_test(
-            "Download Customer Import Template",
-            "GET",
-            "import/template/customers",
-            200
-        )
         
-        if success:
-            print("✅ Customer import template downloaded successfully")
-            test_results['template_download'] = True
+        # Use direct request for CSV template instead of run_test
+        url = f"{self.base_url}/import/template/customers"
+        headers = {'Authorization': f'Bearer {self.token}'}
+        
+        try:
+            response = requests.get(url, headers=headers)
+            print(f"🔍 Testing Download Customer Import Template...")
+            print(f"   URL: {url}")
+            print(f"   Status Code: {response.status_code}")
             
-            # Verify template contains all required mapped fields
-            if isinstance(template_response, str):
-                lines = template_response.split('\n')
-                if lines:
-                    headers = lines[0].lower()
-                    print(f"   Template Headers: {lines[0]}")
-                    
-                    # Check for all required field mappings
-                    required_fields = [
-                        'vehicle_brand', 'vehicle_model', 'vehicle_color', 'vehicle_no',
-                        'chassis_no', 'engine_no', 'insurance_nominee', 'insurance_relation',
-                        'insurance_age', 'sale_amount', 'payment_method', 'hypothecation',
-                        'sale_date', 'invoice_number'
-                    ]
-                    
-                    missing_fields = []
-                    for field in required_fields:
-                        if field not in headers:
-                            missing_fields.append(field)
-                    
-                    if not missing_fields:
-                        print("   ✅ Template contains all required mapped fields")
-                        test_results['complete_field_mapping'] = True
+            if response.status_code == 200:
+                print("✅ Passed - Status: 200")
+                print("✅ Customer import template downloaded successfully")
+                test_results['template_download'] = True
+                
+                # Verify template contains all required mapped fields
+                template_content = response.text
+                if template_content:
+                    lines = template_content.split('\n')
+                    if lines:
+                        headers_line = lines[0].lower()
+                        print(f"   Template Headers: {lines[0]}")
+                        
+                        # Check for all required field mappings
+                        required_fields = [
+                            'vehicle_brand', 'vehicle_model', 'vehicle_color', 'vehicle_no',
+                            'chassis_no', 'engine_no', 'insurance_nominee', 'insurance_relation',
+                            'insurance_age', 'sale_amount', 'payment_method', 'hypothecation',
+                            'sale_date', 'invoice_number'
+                        ]
+                        
+                        missing_fields = []
+                        for field in required_fields:
+                            if field not in headers_line:
+                                missing_fields.append(field)
+                        
+                        if not missing_fields:
+                            print("   ✅ Template contains all required mapped fields")
+                            test_results['complete_field_mapping'] = True
+                        else:
+                            print(f"   ⚠️ Template missing fields: {missing_fields}")
+                            all_tests_passed = False
                     else:
-                        print(f"   ⚠️ Template missing fields: {missing_fields}")
+                        print("   ⚠️ Template appears to be empty")
                         all_tests_passed = False
                 else:
-                    print("   ⚠️ Template appears to be empty")
+                    print("   ⚠️ Template content is empty")
                     all_tests_passed = False
-        else:
-            print("❌ Failed to download customer import template")
+            else:
+                print(f"❌ Failed - Status: {response.status_code}")
+                print("❌ Failed to download customer import template")
+                all_tests_passed = False
+        except Exception as e:
+            print(f"❌ Exception during template download: {str(e)}")
             all_tests_passed = False
         
         # 3. COMPREHENSIVE FIELD MAPPING TESTING
