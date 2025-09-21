@@ -395,7 +395,9 @@ async def get_customer(customer_id: str, current_user: User = Depends(get_curren
     customer = await db.customers.find_one({"id": customer_id})
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
-    # Return raw customer data to include extended fields
+    # Convert ObjectId to string for JSON serialization
+    if '_id' in customer:
+        customer['_id'] = str(customer['_id'])
     return customer
 
 @api_router.put("/customers/{customer_id}", response_model=Customer)
