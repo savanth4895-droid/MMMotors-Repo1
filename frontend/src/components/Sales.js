@@ -1236,11 +1236,35 @@ const ViewInvoices = () => {
     
     setEditingInvoice(invoice);
     setEditFormData({
-      customer_id: invoice.customer_id,
-      vehicle_id: invoice.vehicle_id,
+      // Basic Invoice Details
+      invoice_number: invoice.invoice_number,
+      sale_date: invoice.sale_date,
       amount: invoice.amount,
       payment_method: invoice.payment_method,
-      insurance_details: invoice.insurance_details || {}
+      hypothecation: invoice.hypothecation || 'Cash',
+      
+      // Customer Details
+      customer_id: invoice.customer_id,
+      customer_name: customer?.name || '',
+      customer_care_of: customer?.care_of || '',
+      customer_mobile: customer?.mobile || customer?.phone || '',
+      customer_address: customer?.address || '',
+      
+      // Vehicle Details
+      vehicle_id: invoice.vehicle_id,
+      vehicle_brand: vehicle?.brand || '',
+      vehicle_model: vehicle?.model || '',
+      vehicle_color: vehicle?.color || '',
+      vehicle_no: vehicle?.vehicle_no || '',
+      chassis_no: vehicle?.chassis_no || '',
+      engine_no: vehicle?.engine_no || '',
+      
+      // Insurance Details
+      insurance_details: invoice.insurance_details || {
+        nominee: '',
+        relation: '',
+        age: ''
+      }
     });
     setShowEditModal(true);
   };
