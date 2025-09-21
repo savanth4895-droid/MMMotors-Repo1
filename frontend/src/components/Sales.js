@@ -3734,7 +3734,6 @@ const CustomersManagement = () => {
                   type="date"
                   value={customerData.date}
                   onChange={(e) => handleInputChange('date', e.target.value)}
-                  required
                 />
               </div>
 
