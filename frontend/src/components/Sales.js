@@ -142,6 +142,41 @@ import {
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Helper function to safely extract error messages
+const getErrorMessage = (error) => {
+  if (typeof error === 'string') {
+    return error;
+  }
+  
+  if (error?.response?.data) {
+    // Handle Pydantic validation errors
+    if (Array.isArray(error.response.data) && error.response.data.length > 0) {
+      return error.response.data.map(err => err.msg || err.message || 'Validation error').join(', ');
+    }
+    
+    // Handle detail errors
+    if (error.response.data.detail) {
+      if (typeof error.response.data.detail === 'string') {
+        return error.response.data.detail;
+      }
+      if (Array.isArray(error.response.data.detail)) {
+        return error.response.data.detail.map(err => err.msg || err.message || 'Error').join(', ');
+      }
+    }
+    
+    // Handle message errors
+    if (error.response.data.message) {
+      return error.response.data.message;
+    }
+  }
+  
+  if (error?.message) {
+    return error.message;
+  }
+  
+  return 'An unexpected error occurred';
+};
+
 const Sales = () => {
   const location = useLocation();
   
