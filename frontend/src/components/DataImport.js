@@ -322,20 +322,31 @@ const DataImport = () => {
                         <div>
                           <h5 className="text-sm font-medium text-green-600 mb-1">Vehicle Details:</h5>
                           <div className="flex flex-wrap gap-1">
-                            {['vehicle_brand', 'vehicle_model', 'vehicle_color', 'vehicle_no', 'chassis_no', 'engine_no'].map((field) => (
+                            {[
+                              'vehicle_brand (Brand)', 
+                              'vehicle_model (Model)', 
+                              'vehicle_color (Color)', 
+                              'vehicle_no (Vehicle Number)', 
+                              'chassis_no (Chassis Number)', 
+                              'engine_no (Engine Number)'
+                            ].map((field) => (
                               <Badge key={field} variant="outline" className="text-xs">
-                                {field.replace('_', ' ')}
+                                {field}
                               </Badge>
                             ))}
                           </div>
                         </div>
                         
                         <div>
-                          <h5 className="text-sm font-medium text-purple-600 mb-1">Insurance Details:</h5>
+                          <h5 className="text-sm font-medium text-purple-600 mb-1">Insurance Nominee Details:</h5>
                           <div className="flex flex-wrap gap-1">
-                            {['insurance_nominee', 'insurance_relation', 'insurance_age'].map((field) => (
+                            {[
+                              'insurance_nominee (Nominee Name)', 
+                              'insurance_relation (Relation)', 
+                              'insurance_age (Age)'
+                            ].map((field) => (
                               <Badge key={field} variant="outline" className="text-xs">
-                                {field.replace('_', ' ')}
+                                {field}
                               </Badge>
                             ))}
                           </div>
