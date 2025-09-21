@@ -3614,7 +3614,7 @@ const CustomersManagement = () => {
   };
 
   const handleSaveEdit = async () => {
-    if (!editingCustomer) return;
+    if (!editingCustomer || loading) return;
     
     try {
       setLoading(true);
