@@ -971,7 +971,6 @@ const CreateInvoice = () => {
                   placeholder="Enter complete address"
                   value={invoiceData.address}
                   onChange={(e) => handleInputChange('address', e.target.value)}
-                  required
                 />
               </div>
             </div>
