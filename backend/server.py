@@ -948,15 +948,26 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
     
     for idx, row in enumerate(data):
         try:
-            # Validate required fields
-            if not row.get('name') or not row.get('phone'):
-                raise ValueError("Name and phone are required")
+            # Get phone number from either 'mobile' or 'phone' field
+            phone_number = row.get('mobile', '').strip() or row.get('phone', '').strip()
+            
+            # Validate required fields - name and phone (mobile or phone)
+            name = row.get('name', '').strip()
+            if not name:
+                raise ValueError("Name is required")
+            if not phone_number:
+                raise ValueError("Phone number (mobile or phone) is required")
+            
+            # Get address with fallback to empty string if not provided
+            address = row.get('address', '').strip()
+            if not address:
+                address = "Address not provided"
             
             customer_data = CustomerCreate(
-                name=row['name'].strip(),
-                phone=row['phone'].strip(),
+                name=name,
+                phone=phone_number,
                 email=row.get('email', '').strip() or None,
-                address=row.get('address', '').strip()
+                address=address
             )
             
             customer = Customer(**customer_data.dict())
