@@ -2187,6 +2187,34 @@ const ViewInvoices = () => {
                         </div>
                       </div>
 
+                      {/* Insurance Nominee Details - Compact */}
+                      <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200 overflow-hidden">
+                        <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-2 py-1">
+                          <h3 className="text-white font-bold flex items-center text-xs">
+                            <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10V11.5H16.2V16H7.8V11.5H9.2V10C9.2,8.6 10.6,7 12,7M12,8.2C11.2,8.2 10.5,8.9 10.5,9.7V11.5H13.5V9.7C13.5,8.9 12.8,8.2 12,8.2Z"/>
+                            </svg>
+                            INSURANCE NOMINEE DETAILS
+                          </h3>
+                        </div>
+                        <div className="p-2">
+                          <div className="grid grid-cols-3 gap-2">
+                            <div className="text-center">
+                              <span className="text-purple-700 font-medium text-xs block">Nominee Name</span>
+                              <div className="text-slate-900 font-semibold mt-0.5 text-xs">{selectedInvoice.insurance_details?.nominee || 'N/A'}</div>
+                            </div>
+                            <div className="text-center">
+                              <span className="text-purple-700 font-medium text-xs block">Relation</span>
+                              <div className="text-slate-900 font-semibold mt-0.5 capitalize text-xs">{selectedInvoice.insurance_details?.relation || 'N/A'}</div>
+                            </div>
+                            <div className="text-center">
+                              <span className="text-purple-700 font-medium text-xs block">Age</span>
+                              <div className="text-slate-900 font-semibold mt-0.5 text-xs">{selectedInvoice.insurance_details?.age || 'N/A'} years</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
                       {/* Payment Summary - Compact */}
                       <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200 overflow-hidden">
                         <div className="bg-gradient-to-r from-green-600 to-green-700 px-2 py-1">
