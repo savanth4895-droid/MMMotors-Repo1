@@ -2637,11 +2637,45 @@ def main():
 
     return 0 if tester.tests_passed == tester.tests_run else 1
 
+def test_comprehensive_data_inventory_only():
+    """
+    Focused testing for Comprehensive Database Data Inventory
+    As requested in the review request to check what testing data currently exists
+    """
+    print("🚀 COMPREHENSIVE DATABASE DATA INVENTORY")
+    print("=" * 80)
+    print("Checking what testing data currently exists in the database...")
+    print("Goal: Provide comprehensive list of all data that needs to be cleared")
+    
+    tester = TwoWheelerAPITester()
+    
+    # Test basic connectivity first
+    print("\n📡 Testing Basic Connectivity...")
+    success, _ = tester.test_root_endpoint()
+    if not success:
+        print("❌ Cannot connect to API. Stopping tests.")
+        return 1
+    
+    # Run the comprehensive data inventory test
+    success, inventory_results = tester.test_comprehensive_data_inventory()
+    
+    # Print final results
+    print("\n" + "=" * 80)
+    print(f"📊 Final Test Results:")
+    print(f"   Tests Run: {tester.tests_run}")
+    print(f"   Tests Passed: {tester.tests_passed}")
+    print(f"   Tests Failed: {tester.tests_run - tester.tests_passed}")
+    print(f"   Success Rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
+    
+    return 0 if success else 1
+
 if __name__ == "__main__":
     import sys
     
     if len(sys.argv) > 1:
-        if sys.argv[1] == "pydantic":
+        if sys.argv[1] == "data_inventory":
+            sys.exit(test_comprehensive_data_inventory_only())
+        elif sys.argv[1] == "pydantic":
             sys.exit(test_pydantic_error_handling_only())
         elif sys.argv[1] == "bills":
             sys.exit(test_bill_view_functionality_only())
