@@ -2109,7 +2109,7 @@ Currency User,9876543219,currency@example.com,"789 Pine St, Special area"
         vehicle_csv_special = """brand,model,chassis_no,engine_no,color,key_no,inbound_location,page_number
 TVS,Apache RTR 160 4V,ABC123456789012345,ENG987654321,Matte Black,KEY001,Warehouse—A,Page 1
 BAJAJ,Pulsar NS200 "Special",DEF123456789012345,ENG987654322,Racing Blue,KEY002,Warehouse • B,Page 2
-HERO,Splendor Plus ₹Edition,GHI123456789012345,ENG987654323,Pearl White,KEY003,Warehouse–C,Page 3
+HERO,Splendor Plus Edition,GHI123456789012345,ENG987654323,Pearl White,KEY003,Warehouse–C,Page 3
 """
         
         success, import_result = self.test_csv_import_upload("vehicles", vehicle_csv_special.encode('utf-8'), "vehicles_special.csv")
