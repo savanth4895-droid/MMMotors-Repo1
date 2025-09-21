@@ -5284,7 +5284,7 @@ const ViewCustomerDetails = () => {
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="edit_name">Customer Name</Label>
+                      <Label htmlFor="edit_name">Customer Name *</Label>
                       <Input
                         id="edit_name"
                         type="text"
@@ -5292,7 +5292,11 @@ const ViewCustomerDetails = () => {
                         onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
                         placeholder="Enter customer name"
                         required
+                        className={!editFormData.name?.trim() ? 'border-red-500' : ''}
                       />
+                      {!editFormData.name?.trim() && (
+                        <p className="text-red-500 text-sm mt-1">Customer name is required</p>
+                      )}
                     </div>
                     <div>
                       <Label htmlFor="edit_care_of">Care Of (C/O)</Label>
