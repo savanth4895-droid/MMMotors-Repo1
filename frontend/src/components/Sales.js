@@ -5181,7 +5181,24 @@ const ViewCustomerDetails = () => {
                         {new Date(detail.date).toLocaleDateString('en-IN')}
                       </td>
                       <td className="p-3">
-                        <div className="font-medium text-gray-900">{detail.name}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="font-medium text-gray-900">{detail.name}</div>
+                          {detail.vehicle_info && Object.keys(detail.vehicle_info).some(key => detail.vehicle_info[key]) && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                              🏍️
+                            </span>
+                          )}
+                          {detail.insurance_info && Object.keys(detail.insurance_info).some(key => detail.insurance_info[key]) && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                              🛡️
+                            </span>
+                          )}
+                          {detail.sales_info && Object.keys(detail.sales_info).some(key => detail.sales_info[key]) && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                              💰
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="p-3 text-gray-600">{detail.mobile}</td>
                       <td className="p-3 text-gray-600 max-w-xs truncate" title={detail.address}>
