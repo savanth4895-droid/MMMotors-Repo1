@@ -5260,21 +5260,35 @@ const ViewCustomerDetails = () => {
                 </div>
               )}
 
-              <div className="mt-6 flex justify-end gap-2">
+              <div className="mt-6 flex justify-between">
                 <Button 
-                  variant="outline" 
+                  variant="outline"
                   onClick={() => {
                     setShowViewModal(false);
-                    handleEditCustomer(selectedCustomer);
+                    handleDeleteCustomer(selectedCustomer);
                   }}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                  disabled={loading}
                 >
-                  <FileText className="w-4 h-4" />
-                  Edit Customer
+                  <Trash2 className="w-4 h-4" />
+                  Delete Customer
                 </Button>
-                <Button onClick={() => setShowViewModal(false)}>
-                  Close
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowViewModal(false);
+                      handleEditCustomer(selectedCustomer);
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Edit Customer
+                  </Button>
+                  <Button onClick={() => setShowViewModal(false)}>
+                    Close
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
