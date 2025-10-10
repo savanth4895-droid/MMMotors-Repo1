@@ -20,7 +20,8 @@ import {
   Calendar,
   BarChart3,
   PieChart,
-  Download
+  Download,
+  Trash2
 } from 'lucide-react';
 // Utility function to convert number to words
 const numberToWords = (num) => {
