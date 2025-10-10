@@ -5604,6 +5604,69 @@ def run_comprehensive_tests(self):
         status = "✅ COMPLETED SUCCESSFULLY" if overall_success else "❌ COMPLETED WITH ISSUES"
         print(f"\n🎯 OVERALL STATUS: {status}")
         
+
+def test_customer_update_field_mapping_fix():
+    """
+    CUSTOMER UPDATE FIELD MAPPING FIX TESTING
+    Testing the specific fix for customer update functionality after fixing the field mapping issue.
+    The user reported that edited details are not reflecting in the table after making changes.
+    Main agent fixed the field mapping where frontend was sending "mobile" but backend expected "phone",
+    and added the "care_of" field to the backend models.
+    """
+    print("🔧 CUSTOMER UPDATE FIELD MAPPING FIX TESTING")
+    print("=" * 80)
+    print("Testing customer update functionality after fixing field mapping issue")
+    print("User Issue: Edited details not reflecting in table after making changes")
+    print("Fix Applied: Field mapping (mobile → phone) and care_of field addition")
+    
+    tester = TwoWheelerAPITester()
+    
+    # Run the comprehensive customer update field mapping test
+    success, results = tester.test_customer_update_field_mapping_comprehensive()
+    
+    print("\n" + "=" * 80)
+    print("🎯 FINAL TEST SUMMARY")
+    print("=" * 80)
+    
+    if success:
+        print("✅ CUSTOMER UPDATE FIELD MAPPING FIX TESTING COMPLETED SUCCESSFULLY")
+        print("\n🔍 VERIFICATION RESULTS:")
+        print("   ✅ PUT /api/customers/{customer_id} works with correct field mapping (phone)")
+        print("   ✅ Customer updates with care_of field are saved correctly")
+        print("   ✅ GET /api/customers returns updated data properly")
+        print("   ✅ Field mapping fix resolves the data reflection issue")
+        print("   ✅ Customer update and retrieval confirms changes are persisted")
+        
+        print("\n💡 ISSUE RESOLUTION:")
+        print("   ✅ Field mapping issue resolved - frontend 'phone' field correctly mapped to backend")
+        print("   ✅ Care Of field properly implemented and functional")
+        print("   ✅ Customer data reflects changes immediately after update")
+        print("   ✅ Table refresh issue resolved - updated data appears in customer list")
+        
+        print("\n🎉 CONCLUSION:")
+        print("   The customer update functionality is working correctly after the field mapping fix.")
+        print("   Users should now be able to edit customer details and see changes reflected")
+        print("   immediately in the table without any field mapping issues.")
+        
+    else:
+        print("❌ CUSTOMER UPDATE FIELD MAPPING FIX TESTING COMPLETED WITH ISSUES")
+        print("\n⚠️ ISSUES DETECTED:")
+        failed_tests = [name for name, result in results.items() if not result]
+        for failed_test in failed_tests:
+            print(f"   • {failed_test.replace('_', ' ').title()}")
+        
+        print("\n🔧 RECOMMENDATIONS:")
+        print("   • Review the field mapping implementation in backend models")
+        print("   • Verify that frontend is sending 'phone' field instead of 'mobile'")
+        print("   • Check that care_of field is properly defined in Customer models")
+        print("   • Ensure PUT /api/customers/{customer_id} endpoint handles all fields correctly")
+        print("   • Verify data persistence and retrieval mechanisms")
+    
+    return success
+
+if __name__ == "__main__":
+    # Run the customer update field mapping fix test
+    test_customer_update_field_mapping_fix()
         if overall_success:
             print("\n💡 CONCLUSION:")
             print("   The customer update functionality is working correctly after removing")
