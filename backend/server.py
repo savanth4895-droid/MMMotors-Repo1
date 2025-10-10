@@ -94,10 +94,10 @@ class Customer(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class CustomerCreate(BaseModel):
-    name: str
-    phone: str
+    name: Optional[str] = None
+    phone: Optional[str] = None
     email: Optional[EmailStr] = None
-    address: str
+    address: Optional[str] = None
 
 class Vehicle(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
