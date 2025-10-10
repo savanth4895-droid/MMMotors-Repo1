@@ -5668,13 +5668,6 @@ def test_customer_update_field_mapping_fix():
 if __name__ == "__main__":
     # Run the customer update field mapping fix test
     test_customer_update_field_mapping_fix()
-        else:
-            print("\n⚠️ ISSUES FOUND:")
-            print("   Some customer update scenarios failed. The 'Field required' errors")
-            print("   may still occur in certain conditions. Review the failed test cases")
-            print("   above for specific issues that need to be addressed.")
-        
-        return overall_success, test_results
 
 def main():
     print("🚀 Starting Two Wheeler Business Management System API Tests")
