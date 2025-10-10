@@ -3968,7 +3968,26 @@ const CustomersManagement = () => {
                 ) : (
                   filteredCustomers.map((customer) => (
                     <tr key={customer.id} className="border-b hover:bg-gray-50 transition-colors">
-                      <td className="p-3 font-medium">{customer.name}</td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-2">
+                          <div className="font-medium">{customer.name}</div>
+                          {customer.vehicle_info && Object.keys(customer.vehicle_info).some(key => customer.vehicle_info[key]) && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800" title="Has Vehicle Details from Import">
+                              🏍️
+                            </span>
+                          )}
+                          {customer.insurance_info && Object.keys(customer.insurance_info).some(key => customer.insurance_info[key]) && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800" title="Has Insurance Nominee Details from Import">
+                              🛡️
+                            </span>
+                          )}
+                          {customer.sales_info && Object.keys(customer.sales_info).some(key => customer.sales_info[key]) && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800" title="Has Sales Information from Import">
+                              💰
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       <td className="p-3 text-gray-600">{customer.phone}</td>
                       <td className="p-3 text-gray-600">{customer.address}</td>
                       <td className="p-3 text-gray-600">{getCustomerVehicle(customer.id)}</td>
