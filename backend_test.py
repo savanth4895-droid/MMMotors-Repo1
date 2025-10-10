@@ -4531,7 +4531,7 @@ def test_customer_update_functionality():
         
         return all_tests_passed, test_results
 
-def run_comprehensive_tests(self):
+    def run_comprehensive_tests(self):
         """Run comprehensive test suite covering all M M Motors backend functionality"""
         print("🚀 STARTING COMPREHENSIVE M M MOTORS BACKEND API TESTING")
         print("=" * 80)
