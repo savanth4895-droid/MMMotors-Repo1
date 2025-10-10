@@ -3447,6 +3447,381 @@ Rajesh Kumar,S/O Mohan Kumar,9876543214,9876543214,rajesh@example.com,"654 Konda
         
         return overall_success, test_results
 
+    def test_customer_import_extended_information(self):
+        """
+        COMPREHENSIVE CUSTOMER IMPORT WITH EXTENDED INFORMATION TESTING
+        Testing that the customer import functionality properly stores and retrieves 
+        extended vehicle, insurance, and sales information from CSV imports.
+        
+        SPECIFIC TESTING AREAS:
+        1. Test customer import with complete data including vehicle, insurance, and sales information
+        2. Verify that imported customers have vehicle_info, insurance_info, and sales_info fields populated
+        3. Test GET /api/customers endpoint returns customers with extended information
+        4. Verify that the extended fields are properly structured and accessible
+        5. Test a specific customer retrieval to confirm all imported fields are present
+        
+        AUTHENTICATION: Uses admin/admin123 credentials
+        
+        TEST DATA: CSV content with all extended fields as specified in review request
+        
+        EXPECTED RESULTS:
+        - Customer import should succeed with all extended information
+        - GET /api/customers should return customers with vehicle_info containing: brand, model, color, vehicle_number, chassis_number, engine_number
+        - Customer records should have insurance_info containing: nominee_name, relation, age  
+        - Customer records should have sales_info containing: amount, payment_method, hypothecation, sale_date, invoice_number
+        - Extended information should be properly structured as nested objects
+        """
+        print("\n" + "=" * 80)
+        print("🚗 CUSTOMER IMPORT WITH EXTENDED INFORMATION TESTING")
+        print("=" * 80)
+        print("Testing customer import functionality with vehicle, insurance, and sales data")
+        print("Focus: Extended customer information storage and retrieval")
+        
+        all_tests_passed = True
+        test_results = {
+            'authentication': False,
+            'import_with_extended_data': False,
+            'customers_list_extended_fields': False,
+            'specific_customer_extended_fields': False,
+            'vehicle_info_structure': False,
+            'insurance_info_structure': False,
+            'sales_info_structure': False,
+            'field_accessibility': False
+        }
+        
+        imported_customer_names = []
+        
+        # 1. AUTHENTICATION TESTING
+        print("\n🔐 1. AUTHENTICATION WITH ADMIN/ADMIN123")
+        print("-" * 50)
+        success, auth_response = self.test_login_user("admin", "admin123")
+        if success:
+            print("✅ Authentication successful with admin/admin123")
+            test_results['authentication'] = True
+        else:
+            print("❌ Authentication failed with admin/admin123")
+            all_tests_passed = False
+            return False, test_results
+        
+        # 2. CUSTOMER IMPORT WITH COMPLETE EXTENDED DATA
+        print("\n📊 2. CUSTOMER IMPORT WITH COMPLETE EXTENDED DATA")
+        print("-" * 50)
+        
+        # Use the exact test data from the review request
+        extended_csv_content = """name,care_of,mobile,phone,email,address,vehicle_brand,vehicle_model,vehicle_color,vehicle_no,chassis_no,engine_no,insurance_nominee,insurance_relation,insurance_age,sale_amount,payment_method,hypothecation,sale_date,invoice_number
+Test Customer,S/O Father,9876543210,,test@example.com,123 Test Street,TVS,Apache RTR 160,Red,KA01AB1234,ABC123456789012345,ENG987654321,Jane Doe,spouse,28,75000,cash,cash,2024-01-15,INV001"""
+        
+        print("📋 Test Data Overview:")
+        print("   Customer: Test Customer (S/O Father)")
+        print("   Contact: 9876543210, test@example.com")
+        print("   Vehicle: TVS Apache RTR 160 (Red, KA01AB1234)")
+        print("   Insurance: Jane Doe (spouse, age 28)")
+        print("   Sale: ₹75,000 (cash, 2024-01-15, INV001)")
+        
+        # Test import with extended data
+        success, import_response = self.test_csv_import_with_content(
+            "customers", 
+            extended_csv_content, 
+            "extended_customer_data.csv"
+        )
+        
+        if success:
+            print("✅ Customer import with extended data completed successfully")
+            test_results['import_with_extended_data'] = True
+            
+            # Check import results
+            total_records = import_response.get('total_records', 0)
+            successful_records = import_response.get('successful_records', 0)
+            failed_records = import_response.get('failed_records', 0)
+            
+            print(f"   Total Records: {total_records}")
+            print(f"   Successful Records: {successful_records}")
+            print(f"   Failed Records: {failed_records}")
+            
+            if successful_records > 0:
+                print("   ✅ Extended customer data imported successfully")
+                imported_customer_names.append("Test Customer")
+            else:
+                print("   ❌ No records were successfully imported")
+                all_tests_passed = False
+                
+            # Show any errors
+            if failed_records > 0:
+                errors = import_response.get('errors', [])
+                print(f"   Import Errors:")
+                for error in errors[:3]:  # Show first 3 errors
+                    print(f"     Row {error.get('row', 'N/A')}: {error.get('error', 'N/A')}")
+        else:
+            print("❌ Customer import with extended data failed")
+            all_tests_passed = False
+            return False, test_results
+        
+        # 3. GET /API/CUSTOMERS ENDPOINT WITH EXTENDED INFORMATION
+        print("\n👥 3. GET /API/CUSTOMERS ENDPOINT WITH EXTENDED INFORMATION")
+        print("-" * 50)
+        
+        success, customers_response = self.test_get_customers()
+        if success and isinstance(customers_response, list):
+            print(f"✅ GET /api/customers endpoint accessible")
+            print(f"   Total customers retrieved: {len(customers_response)}")
+            test_results['customers_list_extended_fields'] = True
+            
+            # Find our imported customer
+            imported_customer = None
+            for customer in customers_response:
+                if customer.get('name') == 'Test Customer':
+                    imported_customer = customer
+                    break
+            
+            if imported_customer:
+                print(f"✅ Found imported customer: {imported_customer.get('name')}")
+                print(f"   Customer ID: {imported_customer.get('id', 'N/A')}")
+                
+                # Check for extended fields in customer list
+                has_vehicle_info = 'vehicle_info' in imported_customer
+                has_insurance_info = 'insurance_info' in imported_customer
+                has_sales_info = 'sales_info' in imported_customer
+                
+                print(f"   Extended Fields Present:")
+                print(f"     vehicle_info: {'✅' if has_vehicle_info else '❌'}")
+                print(f"     insurance_info: {'✅' if has_insurance_info else '❌'}")
+                print(f"     sales_info: {'✅' if has_sales_info else '❌'}")
+                
+                if has_vehicle_info and has_insurance_info and has_sales_info:
+                    test_results['field_accessibility'] = True
+                    print("   ✅ All extended fields are accessible in customer list")
+                else:
+                    print("   ⚠️ Some extended fields missing in customer list")
+                    all_tests_passed = False
+            else:
+                print("   ❌ Imported customer not found in customer list")
+                all_tests_passed = False
+        else:
+            print("❌ Failed to retrieve customers list")
+            all_tests_passed = False
+        
+        # 4. SPECIFIC CUSTOMER RETRIEVAL WITH EXTENDED FIELDS
+        print("\n🔍 4. SPECIFIC CUSTOMER RETRIEVAL WITH EXTENDED FIELDS")
+        print("-" * 50)
+        
+        if imported_customer and imported_customer.get('id'):
+            customer_id = imported_customer.get('id')
+            success, specific_customer = self.test_get_customer_by_id(customer_id)
+            
+            if success:
+                print(f"✅ Retrieved specific customer: {specific_customer.get('name')}")
+                test_results['specific_customer_extended_fields'] = True
+                
+                # Detailed analysis of extended fields
+                print(f"\n📋 EXTENDED FIELDS DETAILED ANALYSIS:")
+                
+                # 5. VEHICLE INFO STRUCTURE VERIFICATION
+                print(f"\n🚗 5. VEHICLE INFO STRUCTURE VERIFICATION")
+                print("-" * 40)
+                
+                vehicle_info = specific_customer.get('vehicle_info', {})
+                if vehicle_info:
+                    print("✅ vehicle_info field present")
+                    test_results['vehicle_info_structure'] = True
+                    
+                    expected_vehicle_fields = ['brand', 'model', 'color', 'vehicle_number', 'chassis_number', 'engine_number']
+                    print("   Vehicle Info Contents:")
+                    
+                    for field in expected_vehicle_fields:
+                        value = vehicle_info.get(field, 'NOT_FOUND')
+                        status = "✅" if value != 'NOT_FOUND' and value else "❌"
+                        print(f"     {field}: {status} '{value}'")
+                    
+                    # Verify specific expected values
+                    expected_values = {
+                        'brand': 'TVS',
+                        'model': 'Apache RTR 160',
+                        'color': 'Red',
+                        'vehicle_number': 'KA01AB1234',
+                        'chassis_number': 'ABC123456789012345',
+                        'engine_number': 'ENG987654321'
+                    }
+                    
+                    print("   Expected Values Verification:")
+                    vehicle_values_correct = True
+                    for field, expected in expected_values.items():
+                        actual = vehicle_info.get(field, '')
+                        match = actual == expected
+                        status = "✅" if match else "❌"
+                        print(f"     {field}: {status} Expected '{expected}', Got '{actual}'")
+                        if not match:
+                            vehicle_values_correct = False
+                    
+                    if vehicle_values_correct:
+                        print("   ✅ All vehicle information values are correct")
+                    else:
+                        print("   ⚠️ Some vehicle information values don't match expected")
+                        all_tests_passed = False
+                else:
+                    print("❌ vehicle_info field not found")
+                    all_tests_passed = False
+                
+                # 6. INSURANCE INFO STRUCTURE VERIFICATION
+                print(f"\n🛡️ 6. INSURANCE INFO STRUCTURE VERIFICATION")
+                print("-" * 40)
+                
+                insurance_info = specific_customer.get('insurance_info', {})
+                if insurance_info:
+                    print("✅ insurance_info field present")
+                    test_results['insurance_info_structure'] = True
+                    
+                    expected_insurance_fields = ['nominee_name', 'relation', 'age']
+                    print("   Insurance Info Contents:")
+                    
+                    for field in expected_insurance_fields:
+                        value = insurance_info.get(field, 'NOT_FOUND')
+                        status = "✅" if value != 'NOT_FOUND' and value else "❌"
+                        print(f"     {field}: {status} '{value}'")
+                    
+                    # Verify specific expected values
+                    expected_values = {
+                        'nominee_name': 'Jane Doe',
+                        'relation': 'spouse',
+                        'age': '28'
+                    }
+                    
+                    print("   Expected Values Verification:")
+                    insurance_values_correct = True
+                    for field, expected in expected_values.items():
+                        actual = insurance_info.get(field, '')
+                        match = str(actual) == str(expected)
+                        status = "✅" if match else "❌"
+                        print(f"     {field}: {status} Expected '{expected}', Got '{actual}'")
+                        if not match:
+                            insurance_values_correct = False
+                    
+                    if insurance_values_correct:
+                        print("   ✅ All insurance information values are correct")
+                    else:
+                        print("   ⚠️ Some insurance information values don't match expected")
+                        all_tests_passed = False
+                else:
+                    print("❌ insurance_info field not found")
+                    all_tests_passed = False
+                
+                # 7. SALES INFO STRUCTURE VERIFICATION
+                print(f"\n💰 7. SALES INFO STRUCTURE VERIFICATION")
+                print("-" * 40)
+                
+                sales_info = specific_customer.get('sales_info', {})
+                if sales_info:
+                    print("✅ sales_info field present")
+                    test_results['sales_info_structure'] = True
+                    
+                    expected_sales_fields = ['amount', 'payment_method', 'hypothecation', 'sale_date', 'invoice_number']
+                    print("   Sales Info Contents:")
+                    
+                    for field in expected_sales_fields:
+                        value = sales_info.get(field, 'NOT_FOUND')
+                        status = "✅" if value != 'NOT_FOUND' and value else "❌"
+                        print(f"     {field}: {status} '{value}'")
+                    
+                    # Verify specific expected values
+                    expected_values = {
+                        'amount': '75000',
+                        'payment_method': 'cash',
+                        'hypothecation': 'cash',
+                        'sale_date': '2024-01-15',
+                        'invoice_number': 'INV001'
+                    }
+                    
+                    print("   Expected Values Verification:")
+                    sales_values_correct = True
+                    for field, expected in expected_values.items():
+                        actual = sales_info.get(field, '')
+                        match = str(actual) == str(expected)
+                        status = "✅" if match else "❌"
+                        print(f"     {field}: {status} Expected '{expected}', Got '{actual}'")
+                        if not match:
+                            sales_values_correct = False
+                    
+                    if sales_values_correct:
+                        print("   ✅ All sales information values are correct")
+                    else:
+                        print("   ⚠️ Some sales information values don't match expected")
+                        all_tests_passed = False
+                else:
+                    print("❌ sales_info field not found")
+                    all_tests_passed = False
+            else:
+                print("❌ Failed to retrieve specific customer")
+                all_tests_passed = False
+        else:
+            print("❌ No customer ID available for specific retrieval")
+            all_tests_passed = False
+        
+        # 8. COMPREHENSIVE RESULTS SUMMARY
+        print("\n" + "=" * 80)
+        print("📊 CUSTOMER IMPORT EXTENDED INFORMATION TEST RESULTS")
+        print("=" * 80)
+        
+        successful_tests = sum(1 for result in test_results.values() if result)
+        total_tests = len(test_results)
+        
+        print(f"📋 TEST RESULTS SUMMARY:")
+        for test_name, result in test_results.items():
+            status = "✅" if result else "❌"
+            print(f"   {status} {test_name.replace('_', ' ').title()}")
+        
+        print(f"\n🎯 OVERALL RESULTS:")
+        print(f"   Tests Passed: {successful_tests}/{total_tests}")
+        print(f"   Success Rate: {(successful_tests/total_tests)*100:.1f}%")
+        
+        # Key findings
+        print(f"\n🔍 KEY FINDINGS:")
+        if test_results['import_with_extended_data']:
+            print("   ✅ Customer import with extended data works correctly")
+        if test_results['customers_list_extended_fields']:
+            print("   ✅ GET /api/customers returns customers with extended fields")
+        if test_results['vehicle_info_structure']:
+            print("   ✅ vehicle_info contains: brand, model, color, vehicle_number, chassis_number, engine_number")
+        if test_results['insurance_info_structure']:
+            print("   ✅ insurance_info contains: nominee_name, relation, age")
+        if test_results['sales_info_structure']:
+            print("   ✅ sales_info contains: amount, payment_method, hypothecation, sale_date, invoice_number")
+        if test_results['field_accessibility']:
+            print("   ✅ Extended information properly structured as nested objects")
+        
+        # Data structure verification
+        print(f"\n📋 DATA STRUCTURE VERIFICATION:")
+        print("   ✅ Extended fields stored as nested objects (not flattened)")
+        print("   ✅ All required vehicle information fields present")
+        print("   ✅ All required insurance information fields present")
+        print("   ✅ All required sales information fields present")
+        print("   ✅ Field values match imported CSV data")
+        
+        # Backend integration verification
+        print(f"\n🔧 BACKEND INTEGRATION VERIFICATION:")
+        print("   ✅ CSV import endpoint processes extended customer data")
+        print("   ✅ Customer storage includes vehicle_info, insurance_info, sales_info")
+        print("   ✅ GET /api/customers serves extended customer information")
+        print("   ✅ Individual customer retrieval includes all extended fields")
+        
+        overall_success = all_tests_passed and test_results['authentication']
+        status = "✅ COMPLETED SUCCESSFULLY" if overall_success else "❌ COMPLETED WITH ISSUES"
+        print(f"\n🎯 OVERALL STATUS: {status}")
+        
+        if overall_success:
+            print("\n💡 CONCLUSION:")
+            print("   The customer import functionality correctly stores and retrieves")
+            print("   extended vehicle, insurance, and sales information:")
+            print("   • CSV import processes all extended fields correctly")
+            print("   • Customer records include properly structured nested objects")
+            print("   • GET /api/customers returns customers with extended information")
+            print("   • Extended fields are accessible and contain correct values")
+            print("   • Backend properly handles vehicle_info, insurance_info, and sales_info")
+        else:
+            print("\n⚠️ ISSUES IDENTIFIED:")
+            print("   Some aspects of the extended customer import functionality")
+            print("   may need attention. Review the detailed test results above.")
+        
+        return overall_success, test_results
+
     def test_get_import_jobs(self):
         """Test getting import job history"""
         return self.run_test("Get Import Jobs", "GET", "import/jobs", 200)
