@@ -50,9 +50,9 @@ const DataImport = () => {
         'email', 
         'address',
         // Vehicle details
-        'vehicle_brand',
-        'vehicle_model', 
-        'vehicle_color',
+        'brand',
+        'model', 
+        'color',
         'vehicle_no',
         'chassis_no',
         'engine_no',

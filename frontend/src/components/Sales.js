@@ -344,7 +344,7 @@ const CreateInvoice = () => {
     relation: '',
     age: '',
     amount: '',
-    payment_method: 'cash',
+    payment_method: '',
     hypothecation: ''
   });
   const [loading, setLoading] = useState(false);
