@@ -977,12 +977,12 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
             # Get phone number from either 'mobile' or 'phone' field
             phone_number = row.get('mobile', '').strip() or row.get('phone', '').strip()
             
-            # Validate required fields - name and phone (mobile or phone)
+            # Get name and phone with fallbacks (no longer required)
             name = row.get('name', '').strip()
             if not name:
-                raise ValueError("Name is required")
+                name = "Customer"
             if not phone_number:
-                raise ValueError("Phone number (mobile or phone) is required")
+                phone_number = "0000000000"  # Default phone number
             
             # Get address with fallback to empty string if not provided
             address = row.get('address', '').strip()
