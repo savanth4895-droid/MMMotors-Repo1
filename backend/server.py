@@ -416,6 +416,25 @@ async def update_customer(customer_id: str, customer_data: CustomerCreate, curre
     await db.customers.replace_one({"id": customer_id}, updated_customer.dict())
     return updated_customer
 
+@api_router.delete("/customers/{customer_id}")
+async def delete_customer(customer_id: str, current_user: User = Depends(get_current_user)):
+    # Check if customer exists
+    existing_customer = await db.customers.find_one({"id": customer_id})
+    if not existing_customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    
+    # Check if customer has associated sales records
+    sales_count = await db.sales.count_documents({"customer_id": customer_id})
+    if sales_count > 0:
+        raise HTTPException(status_code=400, detail=f"Cannot delete customer. Customer has {sales_count} associated sales record(s). Please delete sales records first.")
+    
+    # Delete the customer
+    result = await db.customers.delete_one({"id": customer_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    
+    return {"message": "Customer deleted successfully", "deleted_customer_id": customer_id}
+
 # Vehicle endpoints
 @api_router.post("/vehicles", response_model=Vehicle)
 async def create_vehicle(vehicle_data: VehicleCreate, current_user: User = Depends(get_current_user)):
