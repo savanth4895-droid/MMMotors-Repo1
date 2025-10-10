@@ -5601,8 +5601,6 @@ const ViewCustomerDetails = () => {
                       <Input
                         id="edit_age"
                         type="number"
-                        min="18"
-                        max="100"
                         value={editFormData.age || ''}
                         onChange={(e) => setEditFormData({...editFormData, age: e.target.value})}
                         placeholder="Enter age"
