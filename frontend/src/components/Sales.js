@@ -3622,7 +3622,7 @@ const CustomersManagement = () => {
       const customerUpdateData = {
         name: editFormData.name?.trim() || '',
         care_of: editFormData.care_of?.trim() || '',
-        mobile: editFormData.mobile?.trim() || '',
+        phone: editFormData.mobile?.trim() || '',  // Map mobile field to phone for backend
         address: editFormData.address?.trim() || '',
         email: editFormData.email?.trim() || ''
       };
