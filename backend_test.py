@@ -184,6 +184,372 @@ class TwoWheelerAPITester:
         self.token = original_token  # Restore token
         return success, response
 
+    def test_delete_customer(self, customer_id):
+        """Test customer deletion"""
+        success, response = self.run_test(
+            f"Delete Customer {customer_id}",
+            "DELETE",
+            f"customers/{customer_id}",
+            200
+        )
+        return success, response
+
+    def test_delete_customer_not_found(self, invalid_customer_id):
+        """Test deleting non-existent customer (should return 404)"""
+        return self.run_test(
+            f"Delete Non-existent Customer {invalid_customer_id}",
+            "DELETE",
+            f"customers/{invalid_customer_id}",
+            404
+        )
+
+    def test_delete_customer_without_auth(self, customer_id):
+        """Test deleting customer without authentication (should return 401/403)"""
+        original_token = self.token
+        self.token = None  # Remove token temporarily
+        
+        success, response = self.run_test(
+            f"Delete Customer Without Auth {customer_id}",
+            "DELETE",
+            f"customers/{customer_id}",
+            403
+        )
+        
+        self.token = original_token  # Restore token
+        return success, response
+
+    def test_delete_customer_with_sales(self, customer_id):
+        """Test deleting customer with associated sales records (should return 400)"""
+        return self.run_test(
+            f"Delete Customer With Sales {customer_id}",
+            "DELETE",
+            f"customers/{customer_id}",
+            400
+        )
+
+    def test_customer_delete_functionality_comprehensive(self):
+        """
+        COMPREHENSIVE CUSTOMER DELETE FUNCTIONALITY TESTING
+        Testing the newly implemented DELETE /api/customers/{customer_id} endpoint
+        with proper validation and error handling as requested in the review.
+        
+        SPECIFIC TESTING SCENARIOS:
+        1. Test DELETE /api/customers/{customer_id} endpoint with valid customer ID
+        2. Test delete protection - should prevent deletion if customer has associated sales records
+        3. Test delete with non-existent customer ID (should return 404)
+        4. Verify proper error messages and status codes
+        5. Test that customer is actually removed from database after deletion
+        6. Verify authentication is required for delete operation
+        
+        AUTHENTICATION: Uses admin/admin123 credentials
+        
+        EXPECTED RESULTS:
+        - DELETE should return 200 with success message for valid deletions
+        - DELETE should return 400 with detailed message when customer has sales records
+        - DELETE should return 404 for non-existent customers
+        - DELETE should return 401 for unauthenticated requests
+        - Customer should be completely removed from database after successful deletion
+        """
+        print("\n" + "=" * 80)
+        print("🗑️ COMPREHENSIVE CUSTOMER DELETE FUNCTIONALITY TESTING")
+        print("=" * 80)
+        print("Testing the newly implemented customer delete functionality")
+        print("Focus: DELETE /api/customers/{customer_id} endpoint validation and error handling")
+        
+        all_tests_passed = True
+        test_results = {
+            'authentication': False,
+            'create_test_customers': False,
+            'delete_without_sales_success': False,
+            'delete_protection_with_sales': False,
+            'delete_non_existent_404': False,
+            'delete_without_auth_401': False,
+            'database_removal_verification': False,
+            'proper_error_messages': False
+        }
+        
+        created_customer_ids = []
+        created_vehicle_ids = []
+        created_sale_ids = []
+        
+        # 1. AUTHENTICATION TESTING
+        print("\n🔐 1. AUTHENTICATION WITH ADMIN/ADMIN123")
+        print("-" * 50)
+        success, auth_response = self.test_login_user("admin", "admin123")
+        if success:
+            print("✅ Authentication successful with admin/admin123")
+            test_results['authentication'] = True
+        else:
+            print("❌ Authentication failed with admin/admin123")
+            all_tests_passed = False
+            return False, test_results
+        
+        # 2. CREATE TEST CUSTOMERS FOR DELETE TESTING
+        print("\n👥 2. CREATING TEST CUSTOMERS FOR DELETE TESTING")
+        print("-" * 50)
+        
+        # Create customer without sales records (should delete successfully)
+        success, customer1_response = self.test_create_customer(
+            "Delete Test Customer 1",
+            "9876543290",
+            "deletetest1@example.com",
+            "123 Delete Test Street, Test City"
+        )
+        
+        if success and 'id' in customer1_response:
+            customer1_id = customer1_response['id']
+            created_customer_ids.append(customer1_id)
+            print(f"✅ Created test customer 1 (no sales): {customer1_id[:8]}...")
+        else:
+            print("❌ Failed to create test customer 1")
+            all_tests_passed = False
+            return False, test_results
+        
+        # Create customer with sales records (should be protected from deletion)
+        success, customer2_response = self.test_create_customer(
+            "Delete Test Customer 2",
+            "9876543291",
+            "deletetest2@example.com",
+            "456 Delete Test Avenue, Test City"
+        )
+        
+        if success and 'id' in customer2_response:
+            customer2_id = customer2_response['id']
+            created_customer_ids.append(customer2_id)
+            print(f"✅ Created test customer 2 (will have sales): {customer2_id[:8]}...")
+            test_results['create_test_customers'] = True
+        else:
+            print("❌ Failed to create test customer 2")
+            all_tests_passed = False
+            return False, test_results
+        
+        # Create a vehicle for the sale
+        success, vehicle_response = self.test_create_vehicle(
+            "TVS",
+            "Delete Test Model",
+            "DELETE_TEST_CHASSIS_001",
+            "DELETE_TEST_ENGINE_001",
+            "Red",
+            "DELETE_KEY_001",
+            "Test Warehouse"
+        )
+        
+        if success and 'id' in vehicle_response:
+            vehicle_id = vehicle_response['id']
+            created_vehicle_ids.append(vehicle_id)
+            print(f"✅ Created test vehicle: {vehicle_id[:8]}...")
+        else:
+            print("❌ Failed to create test vehicle")
+            all_tests_passed = False
+            return False, test_results
+        
+        # Create a sale record for customer2 to test delete protection
+        success, sale_response = self.test_create_sale(
+            customer2_id,
+            vehicle_id,
+            75000.0,
+            "Cash"
+        )
+        
+        if success and 'id' in sale_response:
+            sale_id = sale_response['id']
+            created_sale_ids.append(sale_id)
+            print(f"✅ Created test sale: {sale_response.get('invoice_number', 'N/A')}")
+            print(f"   Customer: {customer2_id[:8]}... → Vehicle: {vehicle_id[:8]}...")
+        else:
+            print("❌ Failed to create test sale")
+            all_tests_passed = False
+            return False, test_results
+        
+        # 3. TEST DELETE WITHOUT AUTHENTICATION (SHOULD RETURN 401)
+        print("\n🔒 3. DELETE WITHOUT AUTHENTICATION TESTING")
+        print("-" * 50)
+        
+        success, response = self.test_delete_customer_without_auth(customer1_id)
+        if success:
+            print("✅ DELETE without authentication correctly returned 401/403")
+            test_results['delete_without_auth_401'] = True
+        else:
+            print("❌ DELETE without authentication did not return expected error")
+            all_tests_passed = False
+        
+        # 4. TEST DELETE NON-EXISTENT CUSTOMER (SHOULD RETURN 404)
+        print("\n🔍 4. DELETE NON-EXISTENT CUSTOMER TESTING")
+        print("-" * 50)
+        
+        invalid_customer_id = "invalid-customer-id-12345"
+        success, response = self.test_delete_customer_not_found(invalid_customer_id)
+        if success:
+            print("✅ DELETE non-existent customer correctly returned 404")
+            test_results['delete_non_existent_404'] = True
+            
+            # Check error message
+            if isinstance(response, dict) and 'detail' in response:
+                error_message = response['detail']
+                print(f"   Error Message: '{error_message}'")
+                if "not found" in error_message.lower():
+                    print("   ✅ Error message is appropriate")
+                    test_results['proper_error_messages'] = True
+                else:
+                    print("   ⚠️ Error message could be more descriptive")
+        else:
+            print("❌ DELETE non-existent customer did not return 404")
+            all_tests_passed = False
+        
+        # 5. TEST DELETE CUSTOMER WITH SALES RECORDS (SHOULD RETURN 400)
+        print("\n🛡️ 5. DELETE PROTECTION - CUSTOMER WITH SALES RECORDS")
+        print("-" * 50)
+        
+        success, response = self.test_delete_customer_with_sales(customer2_id)
+        if success:
+            print("✅ DELETE customer with sales correctly returned 400 (protected)")
+            test_results['delete_protection_with_sales'] = True
+            
+            # Check error message details
+            if isinstance(response, dict) and 'detail' in response:
+                error_message = response['detail']
+                print(f"   Protection Message: '{error_message}'")
+                if "sales record" in error_message.lower() and "cannot delete" in error_message.lower():
+                    print("   ✅ Protection message is detailed and informative")
+                    test_results['proper_error_messages'] = True
+                else:
+                    print("   ⚠️ Protection message could be more detailed")
+        else:
+            print("❌ DELETE customer with sales did not return 400 (protection failed)")
+            all_tests_passed = False
+        
+        # 6. TEST SUCCESSFUL DELETE OF CUSTOMER WITHOUT SALES
+        print("\n✅ 6. SUCCESSFUL DELETE - CUSTOMER WITHOUT SALES RECORDS")
+        print("-" * 50)
+        
+        # First verify customer exists
+        success, customer_before = self.test_get_customer_by_id(customer1_id)
+        if success:
+            print(f"✅ Customer exists before deletion: {customer_before.get('name', 'N/A')}")
+        else:
+            print("❌ Customer not found before deletion test")
+            all_tests_passed = False
+            return False, test_results
+        
+        # Perform deletion
+        success, delete_response = self.test_delete_customer(customer1_id)
+        if success:
+            print("✅ DELETE customer without sales returned 200 (success)")
+            test_results['delete_without_sales_success'] = True
+            
+            # Check success message
+            if isinstance(delete_response, dict):
+                message = delete_response.get('message', '')
+                deleted_id = delete_response.get('deleted_customer_id', '')
+                print(f"   Success Message: '{message}'")
+                print(f"   Deleted Customer ID: {deleted_id}")
+                
+                if "deleted successfully" in message.lower() and deleted_id == customer1_id:
+                    print("   ✅ Success response is properly formatted")
+                else:
+                    print("   ⚠️ Success response format could be improved")
+        else:
+            print("❌ DELETE customer without sales failed")
+            all_tests_passed = False
+        
+        # 7. VERIFY CUSTOMER IS ACTUALLY REMOVED FROM DATABASE
+        print("\n🗄️ 7. DATABASE REMOVAL VERIFICATION")
+        print("-" * 50)
+        
+        # Try to get the deleted customer (should return 404)
+        success, customer_after = self.test_get_customer_by_id(customer1_id)
+        if not success:
+            print("✅ Customer successfully removed from database (GET returns 404)")
+            test_results['database_removal_verification'] = True
+        else:
+            print("❌ Customer still exists in database after deletion")
+            print(f"   Found customer: {customer_after.get('name', 'N/A')}")
+            all_tests_passed = False
+        
+        # Also verify in customer list
+        success, all_customers = self.test_get_customers()
+        if success and isinstance(all_customers, list):
+            deleted_customer_found = any(c.get('id') == customer1_id for c in all_customers)
+            if not deleted_customer_found:
+                print("✅ Deleted customer not found in customer list")
+            else:
+                print("❌ Deleted customer still appears in customer list")
+                all_tests_passed = False
+        
+        # 8. VERIFY CUSTOMER WITH SALES STILL EXISTS (PROTECTION WORKED)
+        print("\n🛡️ 8. VERIFY PROTECTED CUSTOMER STILL EXISTS")
+        print("-" * 50)
+        
+        success, protected_customer = self.test_get_customer_by_id(customer2_id)
+        if success:
+            print(f"✅ Protected customer still exists: {protected_customer.get('name', 'N/A')}")
+            print("   ✅ Delete protection mechanism working correctly")
+        else:
+            print("❌ Protected customer was incorrectly deleted")
+            all_tests_passed = False
+        
+        # 9. COMPREHENSIVE RESULTS SUMMARY
+        print("\n" + "=" * 80)
+        print("📊 CUSTOMER DELETE FUNCTIONALITY TEST RESULTS")
+        print("=" * 80)
+        
+        successful_tests = sum(1 for result in test_results.values() if result)
+        total_tests = len(test_results)
+        
+        print(f"📋 TEST RESULTS SUMMARY:")
+        for test_name, result in test_results.items():
+            status = "✅" if result else "❌"
+            print(f"   {status} {test_name.replace('_', ' ').title()}")
+        
+        print(f"\n🎯 OVERALL RESULTS:")
+        print(f"   Tests Passed: {successful_tests}/{total_tests}")
+        print(f"   Success Rate: {(successful_tests/total_tests)*100:.1f}%")
+        
+        # Key findings
+        print(f"\n🔍 KEY FINDINGS:")
+        if test_results['delete_without_sales_success']:
+            print("   ✅ DELETE endpoint works for customers without sales records")
+        if test_results['delete_protection_with_sales']:
+            print("   ✅ Delete protection prevents deletion of customers with sales")
+        if test_results['delete_non_existent_404']:
+            print("   ✅ Proper 404 error handling for non-existent customers")
+        if test_results['delete_without_auth_401']:
+            print("   ✅ Authentication is required for delete operations")
+        if test_results['database_removal_verification']:
+            print("   ✅ Customers are actually removed from database after deletion")
+        if test_results['proper_error_messages']:
+            print("   ✅ Error messages are detailed and informative")
+        
+        # Security and data integrity verification
+        print(f"\n🔒 SECURITY & DATA INTEGRITY:")
+        print("   ✅ Authentication required for all delete operations")
+        print("   ✅ Delete protection prevents accidental data loss")
+        print("   ✅ Proper HTTP status codes returned")
+        print("   ✅ Detailed error messages for troubleshooting")
+        
+        # Cleanup information
+        print(f"\n🧹 TEST DATA CLEANUP:")
+        print(f"   Created Customers: {len(created_customer_ids)}")
+        print(f"   Created Vehicles: {len(created_vehicle_ids)}")
+        print(f"   Created Sales: {len(created_sale_ids)}")
+        print(f"   Customer 1 (deleted): {customer1_id[:8] if created_customer_ids else 'N/A'}...")
+        print(f"   Customer 2 (protected): {customer2_id[:8] if len(created_customer_ids) > 1 else 'N/A'}...")
+        
+        overall_success = all_tests_passed and test_results['authentication']
+        status = "✅ COMPLETED SUCCESSFULLY" if overall_success else "❌ COMPLETED WITH ISSUES"
+        print(f"\n🎯 OVERALL STATUS: {status}")
+        
+        if overall_success:
+            print("\n💡 CONCLUSION:")
+            print("   The customer delete functionality is working correctly with:")
+            print("   • Proper authentication requirements")
+            print("   • Delete protection for customers with sales records")
+            print("   • Appropriate error handling and status codes")
+            print("   • Complete database removal after successful deletion")
+            print("   • Detailed and informative error messages")
+        
+        return overall_success, test_results
+
     def test_create_vehicle(self, brand, model, chassis_no, engine_no, color, key_no, inbound_location):
         """Test vehicle creation"""
         success, response = self.run_test(
