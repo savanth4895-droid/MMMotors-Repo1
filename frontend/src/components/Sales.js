@@ -3157,8 +3157,6 @@ const ViewInvoices = () => {
                       <Input
                         id="nominee_age"
                         type="number"
-                        min="1"
-                        max="100"
                         value={editFormData.insurance_details?.age || ''}
                         onChange={(e) => setEditFormData({
                           ...editFormData, 
