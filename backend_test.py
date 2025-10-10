@@ -4610,7 +4610,7 @@ def test_comprehensive_backend():
     
     return 0 if success else 1
 
-    def test_customer_update_functionality_comprehensive(self):
+def run_comprehensive_tests(self):
         """
         COMPREHENSIVE CUSTOMER UPDATE FUNCTIONALITY TESTING
         Testing the customer update functionality after removing required field constraints
