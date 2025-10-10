@@ -3995,6 +3995,16 @@ const CustomersManagement = () => {
                             <FileText className="w-4 h-4" />
                             Edit
                           </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleDeleteCustomer(customer)}
+                            className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            disabled={loading}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete
+                          </Button>
                         </div>
                       </td>
                     </tr>
