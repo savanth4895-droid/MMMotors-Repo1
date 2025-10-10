@@ -5668,16 +5668,6 @@ def test_customer_update_field_mapping_fix():
 if __name__ == "__main__":
     # Run the customer update field mapping fix test
     test_customer_update_field_mapping_fix()
-        if overall_success:
-            print("\n💡 CONCLUSION:")
-            print("   The customer update functionality is working correctly after removing")
-            print("   required field constraints. Key improvements verified:")
-            print("   • All fields are now optional in Customer and CustomerCreate models")
-            print("   • PUT /api/customers/{id} accepts partial data without validation errors")
-            print("   • No 'Field required' errors occur during customer updates")
-            print("   • Customer updates work with any combination of filled/empty fields")
-            print("   • Data persistence works correctly for all update scenarios")
-            print("   • The Edit Customer Details form should now work without field errors")
         else:
             print("\n⚠️ ISSUES FOUND:")
             print("   Some customer update scenarios failed. The 'Field required' errors")
