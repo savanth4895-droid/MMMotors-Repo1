@@ -4858,6 +4858,23 @@ const ViewCustomerDetails = () => {
     setShowViewModal(true);
   };
 
+  // Delete customer functionality
+  const handleDeleteCustomer = async (customer) => {
+    if (window.confirm(`Are you sure you want to delete customer "${customer.name}"? This action cannot be undone.`)) {
+      try {
+        setLoading(true);
+        await axios.delete(`${API}/customers/${customer.id}`);
+        toast.success('Customer deleted successfully!');
+        fetchCustomers(); // Refresh the list
+      } catch (error) {
+        const errorMessage = getErrorMessage(error);
+        toast.error(errorMessage || 'Failed to delete customer');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   const handleEditCustomer = (customer) => {
     const associatedVehicle = vehicles.find(v => v.customer_id === customer.id || 
       (v.chassis_no === customer.chassis_no && customer.chassis_no !== 'N/A'));
