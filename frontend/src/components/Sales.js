@@ -4879,7 +4879,7 @@ const ViewCustomerDetails = () => {
         setLoading(true);
         await axios.delete(`${API}/customers/${customer.id}`);
         toast.success('Customer deleted successfully!');
-        fetchCustomers(); // Refresh the list
+        fetchAllData(); // Refresh the list
       } catch (error) {
         const errorMessage = getErrorMessage(error);
         toast.error(errorMessage || 'Failed to delete customer');
