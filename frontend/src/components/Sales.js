@@ -5270,9 +5270,27 @@ const ViewCustomerDetails = () => {
 
                 {/* Vehicle Information */}
                 <div className="space-y-4">
+                  {/* Vehicle Details from Import */}
+                  {selectedCustomer.vehicle_info && Object.keys(selectedCustomer.vehicle_info).some(key => selectedCustomer.vehicle_info[key]) && (
+                    <div className="border rounded-lg p-4 bg-blue-50">
+                      <h3 className="text-lg font-semibold text-blue-800 mb-3 flex items-center">
+                        🏍️ Vehicle Details (From Import)
+                      </h3>
+                      <div className="space-y-2">
+                        <div><strong>Brand:</strong> {selectedCustomer.vehicle_info.brand || 'N/A'}</div>
+                        <div><strong>Model:</strong> {selectedCustomer.vehicle_info.model || 'N/A'}</div>
+                        <div><strong>Color:</strong> {selectedCustomer.vehicle_info.color || 'N/A'}</div>
+                        <div><strong>Vehicle Number:</strong> {selectedCustomer.vehicle_info.vehicle_number || 'N/A'}</div>
+                        <div><strong>Chassis Number:</strong> {selectedCustomer.vehicle_info.chassis_number || 'N/A'}</div>
+                        <div><strong>Engine Number:</strong> {selectedCustomer.vehicle_info.engine_number || 'N/A'}</div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Legacy Vehicle Information */}
                   <div className="border rounded-lg p-4 bg-green-50">
                     <h3 className="text-lg font-semibold text-green-800 mb-3 flex items-center">
-                      🏍️ Vehicle Information
+                      🚗 Vehicle Information (Legacy)
                     </h3>
                     {selectedCustomer.brand !== 'N/A' ? (
                       <div className="space-y-2">
@@ -5287,9 +5305,23 @@ const ViewCustomerDetails = () => {
                         )}
                       </div>
                     ) : (
-                      <p className="text-gray-500">No vehicle information available</p>
+                      <p className="text-gray-500">No legacy vehicle information available</p>
                     )}
                   </div>
+                  
+                  {/* Insurance Nominee Details from Import */}
+                  {selectedCustomer.insurance_info && Object.keys(selectedCustomer.insurance_info).some(key => selectedCustomer.insurance_info[key]) && (
+                    <div className="border rounded-lg p-4 bg-purple-50">
+                      <h3 className="text-lg font-semibold text-purple-800 mb-3 flex items-center">
+                        🛡️ Insurance Nominee Details (From Import)
+                      </h3>
+                      <div className="space-y-2">
+                        <div><strong>Nominee Name:</strong> {selectedCustomer.insurance_info.nominee_name || 'N/A'}</div>
+                        <div><strong>Relation:</strong> {selectedCustomer.insurance_info.relation || 'N/A'}</div>
+                        <div><strong>Age:</strong> {selectedCustomer.insurance_info.age || 'N/A'}</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
