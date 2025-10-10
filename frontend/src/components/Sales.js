@@ -4990,7 +4990,7 @@ const ViewCustomerDetails = () => {
       const customerUpdateData = {
         name: editFormData.name,
         care_of: editFormData.care_of,
-        mobile: editFormData.mobile,
+        phone: editFormData.mobile,  // Map mobile field to phone for backend
         address: editFormData.address,
         email: editFormData.email
       };
