@@ -5326,19 +5326,36 @@ const ViewCustomerDetails = () => {
               </div>
 
               {/* Sales Information */}
-              {selectedCustomer.sale_amount && (
-                <div className="mt-6">
+              <div className="mt-6 space-y-4">
+                {/* Sales Information from Import */}
+                {selectedCustomer.sales_info && Object.keys(selectedCustomer.sales_info).some(key => selectedCustomer.sales_info[key]) && (
+                  <div className="border rounded-lg p-4 bg-orange-50">
+                    <h3 className="text-lg font-semibold text-orange-800 mb-3 flex items-center">
+                      💰 Sales Information (From Import)
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div><strong>Amount:</strong> {selectedCustomer.sales_info.amount ? `₹${selectedCustomer.sales_info.amount}` : 'N/A'}</div>
+                      <div><strong>Payment Method:</strong> {selectedCustomer.sales_info.payment_method || 'N/A'}</div>
+                      <div><strong>Hypothecation:</strong> {selectedCustomer.sales_info.hypothecation || 'N/A'}</div>
+                      <div><strong>Sale Date:</strong> {selectedCustomer.sales_info.sale_date || 'N/A'}</div>
+                      <div><strong>Invoice Number:</strong> {selectedCustomer.sales_info.invoice_number || 'N/A'}</div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Legacy Sales Information */}
+                {selectedCustomer.sale_amount && (
                   <div className="border rounded-lg p-4 bg-purple-50">
                     <h3 className="text-lg font-semibold text-purple-800 mb-3 flex items-center">
-                      💰 Sales Information
+                      💰 Sales Information (Legacy)
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div><strong>Sale Amount:</strong> ₹{selectedCustomer.sale_amount?.toLocaleString()}</div>
                       <div><strong>Payment Method:</strong> {selectedCustomer.payment_method?.toUpperCase()}</div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
               <div className="mt-6 flex justify-between">
                 <Button 
