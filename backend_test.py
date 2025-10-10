@@ -6488,5 +6488,5 @@ if __name__ == "__main__":
             print(f"   Success Rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
             sys.exit(0 if success else 1)
     
-    # Default to comprehensive testing
-    sys.exit(test_comprehensive_backend())
+    # Default to customer update field mapping testing
+    sys.exit(test_customer_update_field_mapping_fix())
