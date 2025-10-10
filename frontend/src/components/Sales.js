@@ -4892,6 +4892,7 @@ const ViewCustomerDetails = () => {
         id: customer.id,
         date: customerSale ? customerSale.sale_date : customer.created_at,
         name: customer.name,
+        care_of: customer.care_of,
         mobile: customer.phone,
         address: customer.address,
         email: customer.email,
@@ -4903,7 +4904,11 @@ const ViewCustomerDetails = () => {
         vehicle_no: customerVehicle?.vehicle_no || 'N/A',
         vehicle_status: customerVehicle?.status || 'N/A',
         sale_amount: customerSale?.amount || null,
-        payment_method: customerSale?.payment_method || null
+        payment_method: customerSale?.payment_method || null,
+        // Extended information from imports
+        vehicle_info: customer.vehicle_info,
+        insurance_info: customer.insurance_info,
+        sales_info: customer.sales_info
       };
     });
     
