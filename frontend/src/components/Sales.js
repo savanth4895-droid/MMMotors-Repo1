@@ -4306,8 +4306,7 @@ const CustomersManagement = () => {
                         type="text"
                         value={editFormData.chassis_no || ''}
                         onChange={(e) => setEditFormData({...editFormData, chassis_no: e.target.value.toUpperCase()})}
-                        placeholder="17-character chassis number"
-                        maxLength={17}
+                        placeholder="Enter chassis number"
                       />
                     </div>
                     <div>
@@ -5551,8 +5550,7 @@ const ViewCustomerDetails = () => {
                         type="text"
                         value={editFormData.chassis_no || ''}
                         onChange={(e) => setEditFormData({...editFormData, chassis_no: e.target.value.toUpperCase()})}
-                        placeholder="17-character chassis number"
-                        maxLength={17}
+                        placeholder="Enter chassis number"
                       />
                     </div>
                     <div>
