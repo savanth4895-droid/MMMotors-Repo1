@@ -3109,22 +3109,6 @@ KTM,,KTM_CHASSIS_001,KTM_ENGINE_001,,KTM_KEY_001,,
         self.token = original_token  # Restore token
         return success, response
 
-    def test_create_spare_part_bill(self, customer_id, items):
-        """Test spare part bill creation (legacy format)"""
-        success, response = self.run_test(
-            "Create Spare Part Bill (Legacy)",
-            "POST",
-            "spare-parts/bills",
-            200,
-            data={
-                "customer_id": customer_id,
-                "items": items
-            }
-        )
-        if success and 'id' in response:
-            self.created_ids['bills'].append(response['id'])
-        return success, response
-
     def test_create_gst_spare_part_bill(self, customer_data, items, subtotal, total_discount, total_cgst, total_sgst, total_tax, total_amount):
         """Test GST-compliant spare part bill creation with customer data"""
         success, response = self.run_test(
