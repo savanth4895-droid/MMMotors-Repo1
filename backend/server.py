@@ -89,7 +89,7 @@ class Customer(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: Optional[str] = None
     care_of: Optional[str] = None
-    phone: Optional[str] = None
+    mobile: Optional[str] = None
     email: Optional[EmailStr] = None
     address: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
