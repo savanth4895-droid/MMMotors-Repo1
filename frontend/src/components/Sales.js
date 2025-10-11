@@ -2965,15 +2965,21 @@ const ViewInvoices = () => {
                           <div className="grid grid-cols-3 gap-2">
                             <div className="text-center">
                               <span className="text-purple-700 font-medium text-xs block">Nominee Name</span>
-                              <div className="text-slate-900 font-semibold mt-0.5 text-xs">{selectedInvoice.insurance_details?.nominee || 'N/A'}</div>
+                              <div className="text-slate-900 font-semibold mt-0.5 text-xs">
+                                {selectedInvoice.customer?.insurance_info?.nominee_name || selectedInvoice.insurance_details?.nominee || selectedInvoice.insurance?.nominee || 'N/A'}
+                              </div>
                             </div>
                             <div className="text-center">
                               <span className="text-purple-700 font-medium text-xs block">Relation</span>
-                              <div className="text-slate-900 font-semibold mt-0.5 capitalize text-xs">{selectedInvoice.insurance_details?.relation || 'N/A'}</div>
+                              <div className="text-slate-900 font-semibold mt-0.5 capitalize text-xs">
+                                {selectedInvoice.customer?.insurance_info?.relation || selectedInvoice.insurance_details?.relation || selectedInvoice.insurance?.relation || 'N/A'}
+                              </div>
                             </div>
                             <div className="text-center">
                               <span className="text-purple-700 font-medium text-xs block">Age</span>
-                              <div className="text-slate-900 font-semibold mt-0.5 text-xs">{selectedInvoice.insurance_details?.age || 'N/A'} years</div>
+                              <div className="text-slate-900 font-semibold mt-0.5 text-xs">
+                                {selectedInvoice.customer?.insurance_info?.age || selectedInvoice.insurance_details?.age || selectedInvoice.insurance?.age || 'N/A'} years
+                              </div>
                             </div>
                           </div>
                         </div>
