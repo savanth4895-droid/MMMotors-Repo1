@@ -389,12 +389,12 @@ const NewService = () => {
   };
 
   // Debounced search functions
-  const debouncedSearchByPhone = React.useCallback(
+  const debouncedSearchByPhone = useCallback(
     debounce((phoneNumber) => searchByPhone(phoneNumber), 500),
     []
   );
 
-  const debouncedSearchByChassisNumber = React.useCallback(
+  const debouncedSearchByChassisNumber = useCallback(
     debounce((chassisNumber) => searchByChassisNumber(chassisNumber), 500),
     []
   );
