@@ -7927,3 +7927,25 @@ if __name__ == "__main__":
     
     # Default to customer update field mapping testing
     sys.exit(test_customer_update_field_mapping_fix())
+
+def test_customer_update_vehicle_insurance_preservation():
+    """
+    Test runner for customer update with vehicle and insurance information preservation
+    """
+    print("🚀 CUSTOMER UPDATE WITH VEHICLE & INSURANCE PRESERVATION TESTING")
+    print("=" * 80)
+    
+    tester = TwoWheelerAPITester()
+    success, results = tester.test_customer_update_with_vehicle_insurance_preservation()
+    
+    print("\n" + "=" * 80)
+    print(f"📊 Final Test Results:")
+    print(f"   Tests Run: {tester.tests_run}")
+    print(f"   Tests Passed: {tester.tests_passed}")
+    print(f"   Tests Failed: {tester.tests_run - tester.tests_passed}")
+    if tester.tests_run > 0:
+        print(f"   Success Rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
+    else:
+        print(f"   Success Rate: 0.0%")
+    
+    return 0 if success else 1
