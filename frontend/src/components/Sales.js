@@ -1108,14 +1108,42 @@ const CreateInvoice = () => {
                 />
               </div>
               <div className="relative">
-                <Label htmlFor="chassis_no">Chassis No</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="chassis_no">Chassis No</Label>
+                  {selectedVehicle && (
+                    <div className="flex items-center gap-1">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        ✓ From Inventory
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedVehicle(null);
+                          setInvoiceData(prev => ({
+                            ...prev,
+                            brand: '',
+                            model: '',
+                            color: '',
+                            chassis_no: '',
+                            engine_no: '',
+                            vehicle_no: ''
+                          }));
+                        }}
+                        className="text-red-500 hover:text-red-700 text-xs"
+                        title="Clear selection and enter manually"
+                      >
+                        ✗
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <Input
                   id="chassis_no"
-                  placeholder="Enter chassis number (min 3 chars for suggestions)"
+                  placeholder={selectedVehicle ? "Selected from inventory" : "Enter chassis number (min 3 chars for suggestions)"}
                   value={invoiceData.chassis_no}
                   onChange={(e) => handleInputChange('chassis_no', e.target.value)}
                   onFocus={() => {
-                    if (invoiceData.chassis_no.length >= 3) {
+                    if (invoiceData.chassis_no.length >= 3 && !selectedVehicle) {
                       setShowSuggestions(true);
                     }
                   }}
@@ -1123,6 +1151,8 @@ const CreateInvoice = () => {
                     // Delay hiding suggestions to allow clicking on them
                     setTimeout(() => setShowSuggestions(false), 150);
                   }}
+                  disabled={selectedVehicle}
+                  className={selectedVehicle ? 'bg-green-50 border-green-200' : ''}
                 />
                 
                 {/* Vehicle Suggestions Dropdown */}
