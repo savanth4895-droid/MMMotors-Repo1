@@ -6889,6 +6889,8 @@ def run_comprehensive_tests(self):
         status = "✅ COMPLETED SUCCESSFULLY" if overall_success else "❌ COMPLETED WITH ISSUES"
         print(f"\n🎯 OVERALL STATUS: {status}")
         
+        return overall_success, test_results
+
     def test_customer_update_with_vehicle_insurance_preservation(self):
         """
         COMPREHENSIVE CUSTOMER UPDATE WITH VEHICLE AND INSURANCE INFORMATION PRESERVATION TESTING
