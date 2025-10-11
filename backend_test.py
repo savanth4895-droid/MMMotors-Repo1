@@ -961,12 +961,17 @@ class TwoWheelerAPITester:
         print("\n🔩❌ 6. TEST DELETE SPARE PART SUCCESS (NO REFERENCES)")
         print("-" * 50)
         
-        success, delete_response = self.run_test(
-            "Delete Spare Part Without References",
-            "DELETE",
-            f"spare-parts/{created_ids['spare_parts'][0]}",
-            200
-        )
+        if len(created_ids['spare_parts']) > 0:
+            success, delete_response = self.run_test(
+                "Delete Spare Part Without References",
+                "DELETE",
+                f"spare-parts/{created_ids['spare_parts'][0]}",
+                200
+            )
+        else:
+            print("❌ Cannot test spare part deletion - no spare parts created")
+            success = False
+            delete_response = {}
         
         if success:
             print("✅ DELETE spare part without references successful")
