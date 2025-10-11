@@ -2162,12 +2162,8 @@ const ServicesBilling = () => {
   };
 
   const fetchServiceByJobCard = async (jobCard) => {
-    if (!jobCard.trim()) {
-      setServiceDetails(null);
-      return;
-    }
-
     setFetchingService(true);
+    setJobCardSuggestions([]); // Clear suggestions when fetching
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/services/job-card/${jobCard}`, {
@@ -2203,7 +2199,7 @@ const ServicesBilling = () => {
       
       setBillItems([updatedItem]);
       
-      toast.success(`Service details loaded for Job Card: ${jobCard}`);
+      toast.success(`Customer details loaded: ${service.customer_name} (${service.customer_phone})`);
       
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Service not found with this job card number');
