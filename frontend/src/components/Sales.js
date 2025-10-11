@@ -1096,6 +1096,8 @@ const CreateInvoice = () => {
                   placeholder="Enter model name"
                   value={invoiceData.model}
                   onChange={(e) => handleInputChange('model', e.target.value)}
+                  disabled={selectedVehicle}
+                  className={selectedVehicle ? 'bg-green-50 border-green-200' : ''}
                 />
               </div>
               <div>
@@ -1105,6 +1107,8 @@ const CreateInvoice = () => {
                   placeholder="Enter color"
                   value={invoiceData.color}
                   onChange={(e) => handleInputChange('color', e.target.value)}
+                  disabled={selectedVehicle}
+                  className={selectedVehicle ? 'bg-green-50 border-green-200' : ''}
                 />
               </div>
               <div className="relative">
