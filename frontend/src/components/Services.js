@@ -3888,8 +3888,8 @@ const ServiceDue = () => {
         
         return {
           id: vehicleKey,
-          customer_name: vehicleData.customer_name,
-          vehicle_reg_no: vehicleData.vehicle_details,
+          customer_name: vehicleData.customer_name || 'Unknown',
+          vehicle_reg_no: vehicleData.vehicle_details || 'N/A',
           last_service_date: vehicleData.latest_service_date,
           purchase_date: vehicleData.purchase_date,
           base_date: baseDate,
@@ -3897,7 +3897,8 @@ const ServiceDue = () => {
           days_until_due: daysDifference,
           is_overdue: daysDifference < 0,
           is_due_soon: daysDifference >= 0 && daysDifference <= 7,
-          service_type: serviceType
+          service_type: serviceType,
+          customer_id: vehicleData.customer_id
         };
       }).filter(vehicle => vehicle !== null);
       
