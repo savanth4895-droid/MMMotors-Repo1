@@ -5722,7 +5722,7 @@ const InsuranceManagement = () => {
         return {
           id: sale.id,
           customer_name: customer?.name || 'Unknown',
-          phone_number: customer?.phone || 'N/A',
+          phone_number: customer?.mobile || customer?.phone || 'N/A',
           vehicle_model: vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Unknown Vehicle',
           vehicle_reg_no: vehicle?.vehicle_no || 'N/A',
           purchase_date: sale.sale_date,
