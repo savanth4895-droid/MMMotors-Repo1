@@ -237,6 +237,20 @@ const NewService = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [chassisOptions, setChassisOptions] = useState([]);
 
+  // Close chassis options when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('#chassis_no') && !event.target.closest('.chassis-dropdown')) {
+        setChassisOptions([]);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA'];
   const serviceTypes = [
     'Regular Service',
