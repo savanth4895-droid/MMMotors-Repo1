@@ -351,6 +351,9 @@ const CreateInvoice = () => {
   const [loading, setLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [generatedInvoice, setGeneratedInvoice] = useState(null);
+  const [vehicleSuggestions, setVehicleSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
 
   const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA'];
 
