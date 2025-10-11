@@ -5218,14 +5218,17 @@ const ViewCustomerDetails = () => {
                 <tr className="border-b bg-gray-50">
                   <th className="text-left p-3 font-semibold">Date</th>
                   <th className="text-left p-3 font-semibold">Name</th>
+                  <th className="text-left p-3 font-semibold">Care Of</th>
                   <th className="text-left p-3 font-semibold">Mobile Number</th>
+                  <th className="text-left p-3 font-semibold">Email</th>
                   <th className="text-left p-3 font-semibold">Address</th>
                   <th className="text-left p-3 font-semibold">Brand</th>
                   <th className="text-left p-3 font-semibold">Model</th>
                   <th className="text-left p-3 font-semibold">Color</th>
+                  <th className="text-left p-3 font-semibold">Vehicle No.</th>
                   <th className="text-left p-3 font-semibold">Chassis NO.</th>
                   <th className="text-left p-3 font-semibold">Engine NO.</th>
-                  <th className="text-left p-3 font-semibold">Vehicle No.</th>
+                  <th className="text-left p-3 font-semibold">Insurance</th>
                   <th className="text-left p-3 font-semibold">Actions</th>
                 </tr>
               </thead>
