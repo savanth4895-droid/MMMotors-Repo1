@@ -507,6 +507,8 @@ const NewService = () => {
             mobile: serviceData.phone_number,
             email: '',
             address: 'Service Registration'
+          }, {
+            headers: { Authorization: `Bearer ${token}` }
           });
           customerId = customerResponse.data.id;
         }
