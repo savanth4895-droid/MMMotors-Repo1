@@ -1825,11 +1825,11 @@ const ViewInvoices = () => {
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Chassis No:</span>
-                    <span class="detail-value">${invoice.vehicle?.chassis_no || 'N/A'}</span>
+                    <span class="detail-value">${invoice.customer?.vehicle_info?.chassis_number || invoice.vehicle?.chassis_no || 'N/A'}</span>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Engine No:</span>
-                    <span class="detail-value">${invoice.vehicle?.engine_no || 'N/A'}</span>
+                    <span class="detail-value">${invoice.customer?.vehicle_info?.engine_number || invoice.vehicle?.engine_no || 'N/A'}</span>
                   </div>
                 </div>
               </div>
@@ -2328,11 +2328,11 @@ const ViewInvoices = () => {
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Chassis No:</span>
-                    <span class="detail-value">${invoice.vehicle?.chassis_no || 'N/A'}</span>
+                    <span class="detail-value">${invoice.customer?.vehicle_info?.chassis_number || invoice.vehicle?.chassis_no || 'N/A'}</span>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Engine No:</span>
-                    <span class="detail-value">${invoice.vehicle?.engine_no || 'N/A'}</span>
+                    <span class="detail-value">${invoice.customer?.vehicle_info?.engine_number || invoice.vehicle?.engine_no || 'N/A'}</span>
                   </div>
                 </div>
               </div>
