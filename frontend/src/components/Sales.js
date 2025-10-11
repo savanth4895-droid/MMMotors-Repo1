@@ -2747,11 +2747,11 @@ const ViewInvoices = () => {
                             <div className="space-y-0.5">
                               <div className="flex justify-between text-xs">
                                 <span className="text-emerald-700 font-medium">Chassis No:</span>
-                                <span className="text-slate-900 font-mono text-xs">{selectedInvoice.vehicle?.chassis_no || 'N/A'}</span>
+                                <span className="text-slate-900 font-mono text-xs">{selectedInvoice.customer?.vehicle_info?.chassis_number || selectedInvoice.vehicle?.chassis_no || 'N/A'}</span>
                               </div>
                               <div className="flex justify-between text-xs">
                                 <span className="text-emerald-700 font-medium">Engine No:</span>
-                                <span className="text-slate-900 font-mono text-xs">{selectedInvoice.vehicle?.engine_no || 'N/A'}</span>
+                                <span className="text-slate-900 font-mono text-xs">{selectedInvoice.customer?.vehicle_info?.engine_number || selectedInvoice.vehicle?.engine_no || 'N/A'}</span>
                               </div>
                             </div>
                           </div>
