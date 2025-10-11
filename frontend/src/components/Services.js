@@ -556,12 +556,20 @@ const NewService = () => {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="vehicle_reg_no">Vehicle Reg. No</Label>
+                <Label htmlFor="vehicle_reg_no">
+                  Vehicle Reg. No / Chassis No
+                  {searchLoading && <span className="ml-2 text-blue-600 text-sm">Searching...</span>}
+                </Label>
                 <Input
                   id="vehicle_reg_no"
-                  placeholder="Enter vehicle registration number"
+                  placeholder="Enter chassis/reg number to auto-fill details"
                   value={serviceData.vehicle_reg_no}
-                  onChange={(e) => handleInputChange('vehicle_reg_no', e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    handleInputChange('vehicle_reg_no', value);
+                    debouncedSearchByChassisNumber(value);
+                  }}
+                  className={searchLoading ? "border-blue-300" : ""}
                   required
                 />
               </div>
