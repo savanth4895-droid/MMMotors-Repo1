@@ -4192,7 +4192,7 @@ const ServiceDue = () => {
                         </span>
                       </td>
                       <td className="p-3 text-sm font-medium">
-                        {service.due_date.toLocaleDateString()}
+                        {service.due_date ? service.due_date.toLocaleDateString() : 'N/A'}
                       </td>
                       <td className="p-3 text-sm">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getDueDateColor(service)}`}>
