@@ -1148,6 +1148,19 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                     'invoice_number': row.get('invoice_number', '').strip()
                 }
             
+            # Check for duplicate customer before inserting
+            if phone_number and phone_number != "0000000000":
+                existing_customer = await db.customers.find_one({"mobile": phone_number})
+                if existing_customer:
+                    # Skip duplicate customer
+                    failed += 1
+                    errors.append({
+                        "row": idx + 2,  # +2 because CSV has header and is 1-indexed
+                        "data": row,
+                        "error": f"Duplicate customer with mobile number '{phone_number}' already exists"
+                    })
+                    continue
+            
             # Add extended information to customer record
             customer_dict = customer.dict()
             if vehicle_info and any(vehicle_info.values()):
