@@ -994,7 +994,7 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
             # Create basic customer record
             customer_data = CustomerCreate(
                 name=name,
-                phone=phone_number,
+                mobile=phone_number,
                 email=row.get('email', '').strip() or None,
                 address=address
             )
