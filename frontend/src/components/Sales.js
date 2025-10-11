@@ -1475,11 +1475,11 @@ const ViewInvoices = () => {
       chassis_no: vehicle?.chassis_no || '',
       engine_no: vehicle?.engine_no || '',
       
-      // Insurance Details
-      insurance_details: invoice.insurance_details || {
-        nominee: '',
-        relation: '',
-        age: ''
+      // Insurance Details - prioritize customer insurance_info
+      insurance_details: {
+        nominee: customer?.insurance_info?.nominee_name || invoice.insurance_details?.nominee || '',
+        relation: customer?.insurance_info?.relation || invoice.insurance_details?.relation || '',
+        age: customer?.insurance_info?.age || invoice.insurance_details?.age || ''
       }
     });
     setShowEditModal(true);
