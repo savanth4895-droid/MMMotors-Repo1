@@ -2038,15 +2038,15 @@ const ViewInvoices = () => {
                   <div class="insurance-grid">
                     <div class="insurance-item">
                       <div class="insurance-label">Nominee Name</div>
-                      <div class="insurance-value">${invoice.insurance_details?.nominee || 'N/A'}</div>
+                      <div class="insurance-value">${invoice.customer?.insurance_info?.nominee_name || invoice.insurance_details?.nominee || invoice.insurance?.nominee || 'N/A'}</div>
                     </div>
                     <div class="insurance-item">
                       <div class="insurance-label">Relation</div>
-                      <div class="insurance-value" style="text-transform: capitalize;">${invoice.insurance_details?.relation || 'N/A'}</div>
+                      <div class="insurance-value" style="text-transform: capitalize;">${invoice.customer?.insurance_info?.relation || invoice.insurance_details?.relation || invoice.insurance?.relation || 'N/A'}</div>
                     </div>
                     <div class="insurance-item">
                       <div class="insurance-label">Age</div>
-                      <div class="insurance-value">${invoice.insurance_details?.age || 'N/A'} years</div>
+                      <div class="insurance-value">${invoice.customer?.insurance_info?.age || invoice.insurance_details?.age || invoice.insurance?.age || 'N/A'} years</div>
                     </div>
                   </div>
                 </div>
