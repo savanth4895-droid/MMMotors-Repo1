@@ -559,7 +559,7 @@ const NewService = () => {
               <div>
                 <h4 className="text-sm font-medium text-blue-800">Auto-fill Feature</h4>
                 <p className="text-xs text-blue-600">
-                  Enter phone number or chassis/registration number to automatically fill customer and vehicle details from existing sales records.
+                  Enter mobile number or chassis/registration number to automatically fill customer and vehicle details from existing sales records.
                 </p>
               </div>
             </div>
