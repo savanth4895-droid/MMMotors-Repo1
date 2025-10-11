@@ -3312,7 +3312,7 @@ const CustomersManagement = () => {
     if (searchTerm) {
       filtered = customers.filter(customer =>
         customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        customer.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        customer.mobile?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         customer.address?.toLowerCase().includes(searchTerm.toLowerCase())
       );
