@@ -676,7 +676,7 @@ async def get_service_by_job_card(job_card_number: str, current_user: User = Dep
         "job_card_number": service["job_card_number"],
         "customer_id": service["customer_id"],
         "customer_name": customer["name"],
-        "customer_phone": customer["phone"],
+        "customer_phone": customer["mobile"],
         "customer_address": customer["address"],
         "vehicle_number": service["vehicle_number"],
         "service_type": service["service_type"],
