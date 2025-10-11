@@ -512,12 +512,10 @@ const NewService = () => {
           customerId = customerResponse.data.id;
         }
       } catch (error) {
-        // Create customer if customer API fails
-        const token = localStorage.getItem('token');
+        // Create customer if customer API fails  
         const customerResponse = await axios.post(`${API}/customers`, {
           name: serviceData.customer_name,
           mobile: serviceData.phone_number,
-          email: '',
           address: 'Service Registration'
         }, {
           headers: { Authorization: `Bearer ${token}` }
