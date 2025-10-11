@@ -902,6 +902,25 @@ async def update_spare_part(part_id: str, spare_part_data: SparePartCreate, curr
     await db.spare_parts.replace_one({"id": part_id}, updated_part.dict())
     return updated_part
 
+@api_router.delete("/spare-parts/{part_id}")
+async def delete_spare_part(part_id: str, current_user: User = Depends(get_current_user)):
+    # Check if spare part exists
+    existing_part = await db.spare_parts.find_one({"id": part_id})
+    if not existing_part:
+        raise HTTPException(status_code=404, detail="Spare part not found")
+    
+    # Check if spare part is referenced in any bills
+    bills_count = await db.spare_part_bills.count_documents({"items.part_id": part_id})
+    if bills_count > 0:
+        raise HTTPException(status_code=400, detail=f"Cannot delete spare part. Part is referenced in {bills_count} bill(s). Please remove from bills first.")
+    
+    # Delete the spare part
+    result = await db.spare_parts.delete_one({"id": part_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Spare part not found")
+    
+    return {"message": "Spare part deleted successfully", "deleted_part_id": part_id}
+
 # Dashboard stats
 @api_router.get("/dashboard/stats")
 async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
