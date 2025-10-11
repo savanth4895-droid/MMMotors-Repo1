@@ -761,6 +761,20 @@ async def get_service_by_job_card(job_card_number: str, current_user: User = Dep
     
     return service_details
 
+@api_router.delete("/services/{service_id}")
+async def delete_service(service_id: str, current_user: User = Depends(get_current_user)):
+    # Check if service exists
+    existing_service = await db.services.find_one({"id": service_id})
+    if not existing_service:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    # Delete the service
+    result = await db.services.delete_one({"id": service_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    return {"message": "Service deleted successfully", "deleted_service_id": service_id}
+
 # Spare Parts endpoints
 @api_router.post("/spare-parts", response_model=SparePart)
 async def create_spare_part(spare_part_data: SparePartCreate, current_user: User = Depends(get_current_user)):
