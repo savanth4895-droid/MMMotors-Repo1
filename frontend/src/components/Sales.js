@@ -1821,7 +1821,7 @@ const ViewInvoices = () => {
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Vehicle No:</span>
-                    <span class="detail-value">${invoice.vehicle?.vehicle_no || 'N/A'}</span>
+                    <span class="detail-value">${invoice.customer?.vehicle_info?.vehicle_number || invoice.vehicle?.vehicle_no || 'N/A'}</span>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Chassis No:</span>
@@ -2324,7 +2324,7 @@ const ViewInvoices = () => {
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Vehicle No:</span>
-                    <span class="detail-value">${invoice.vehicle?.vehicle_no || 'N/A'}</span>
+                    <span class="detail-value">${invoice.customer?.vehicle_info?.vehicle_number || invoice.vehicle?.vehicle_no || 'N/A'}</span>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Chassis No:</span>
