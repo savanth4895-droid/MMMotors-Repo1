@@ -2182,6 +2182,54 @@ KTM,,KTM_CHASSIS_001,KTM_ENGINE_001,,KTM_KEY_001,,
             self.created_ids['sales'].append(response['id'])
         return success, response
 
+    def test_csv_import_with_content(self, data_type, csv_content, filename):
+        """Test CSV import with provided content"""
+        import io
+        
+        # Create a file-like object from the CSV content
+        csv_file = io.BytesIO(csv_content.encode('utf-8'))
+        
+        url = f"{self.base_url}/import/upload"
+        headers = {}
+        if self.token:
+            headers['Authorization'] = f'Bearer {self.token}'
+        
+        self.tests_run += 1
+        print(f"\n🔍 Testing CSV Import ({data_type})...")
+        print(f"   URL: {url}")
+        print(f"   Filename: {filename}")
+        print(f"   Data Type: {data_type}")
+        
+        try:
+            files = {'file': (filename, csv_file, 'text/csv')}
+            data = {'data_type': data_type}
+            
+            response = requests.post(url, files=files, data=data, headers=headers)
+            
+            print(f"   Status Code: {response.status_code}")
+            
+            success = response.status_code == 200
+            if success:
+                self.tests_passed += 1
+                print(f"✅ Passed - Status: {response.status_code}")
+                try:
+                    response_data = response.json()
+                    return True, response_data
+                except:
+                    return True, {}
+            else:
+                print(f"❌ Failed - Expected 200, got {response.status_code}")
+                try:
+                    error_detail = response.json()
+                    print(f"   Error: {error_detail}")
+                except:
+                    print(f"   Error: {response.text}")
+                return False, {}
+        
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            return False, {}
+
     def test_get_sales(self):
         """Test getting all sales"""
         return self.run_test("Get Sales", "GET", "sales", 200)
