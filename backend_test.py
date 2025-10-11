@@ -1621,6 +1621,65 @@ Import Test Customer 2,D/O Test Mother,9876543293,,importtest2@example.com,"456 
             200
         )
 
+    def test_csv_import_with_content(self, data_type, csv_content, filename):
+        """Helper method to test CSV import with custom content"""
+        import tempfile
+        import os
+        
+        # Create temporary CSV file
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as temp_file:
+            temp_file.write(csv_content)
+            temp_file_path = temp_file.name
+        
+        try:
+            # Prepare multipart form data
+            url = f"{self.base_url}/import/upload"
+            headers = {}
+            if self.token:
+                headers['Authorization'] = f'Bearer {self.token}'
+            
+            # Read file content for upload
+            with open(temp_file_path, 'rb') as f:
+                files = {'file': (filename, f, 'text/csv')}
+                data = {'data_type': data_type}
+                
+                self.tests_run += 1
+                print(f"\n🔍 Testing CSV Import with {filename}...")
+                print(f"   URL: {url}")
+                print(f"   Data Type: {data_type}")
+                
+                try:
+                    import requests
+                    response = requests.post(url, files=files, data=data, headers=headers)
+                    print(f"   Status Code: {response.status_code}")
+                    
+                    if response.status_code == 200:
+                        self.tests_passed += 1
+                        print(f"✅ Passed - CSV import successful")
+                        try:
+                            response_data = response.json()
+                            return True, response_data
+                        except:
+                            return True, {}
+                    else:
+                        print(f"❌ Failed - Status: {response.status_code}")
+                        try:
+                            error_detail = response.json()
+                            print(f"   Error: {error_detail}")
+                        except:
+                            print(f"   Error: {response.text}")
+                        return False, {}
+                
+                except Exception as e:
+                    print(f"❌ Failed - Error: {str(e)}")
+                    return False, {}
+        
+        finally:
+            # Clean up temporary file
+            try:
+                os.unlink(temp_file_path)
+            except:
+                pass
     def test_csv_import_field_mapping_fix(self):
         """
         COMPREHENSIVE CSV IMPORT FIELD MAPPING FIX TESTING
