@@ -895,12 +895,17 @@ class TwoWheelerAPITester:
         print("\n🚗🛡️ 4. TEST DELETE VEHICLE WITH SALES PROTECTION")
         print("-" * 50)
         
-        success, delete_response = self.run_test(
-            "Delete Vehicle With Sales Records",
-            "DELETE",
-            f"vehicles/{created_ids['vehicles'][1]}",
-            400
-        )
+        if len(created_ids['vehicles']) > 1:
+            success, delete_response = self.run_test(
+                "Delete Vehicle With Sales Records",
+                "DELETE",
+                f"vehicles/{created_ids['vehicles'][1]}",
+                400
+            )
+        else:
+            print("❌ Cannot test vehicle sales protection - insufficient vehicles")
+            success = False
+            delete_response = {}
         
         if success:
             print("✅ DELETE vehicle with sales correctly returned 400 (protected)")
