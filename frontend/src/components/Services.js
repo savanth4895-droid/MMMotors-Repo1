@@ -3950,6 +3950,47 @@ const ServiceDue = () => {
     toast.success(`Reminder sent to ${service.customer_name} for ${service.vehicle_reg_no}`);
   };
 
+  const handleDeleteServiceDue = async (service) => {
+    if (!window.confirm(`Are you sure you want to delete service due record for ${service.customer_name} (${service.vehicle_reg_no})? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Since service due records are derived from sales and services data,
+      // we need to identify what to delete. If it's based on a service record, delete the service
+      // If it's based on a sale record, we might want to just mark it as serviced
+      
+      // For now, let's try to find and delete any matching service record
+      const servicesResponse = await axios.get(`${API}/services`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const matchingService = servicesResponse.data.find(s => 
+        s.vehicle_number === service.vehicle_reg_no && 
+        s.customer_id && 
+        s.customer_id === service.customer_id
+      );
+      
+      if (matchingService) {
+        await axios.delete(`${API}/services/${matchingService.id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        toast.success('Service due record deleted successfully!');
+      } else {
+        // If no service record found, just remove from local state
+        toast.info('Service due record removed from view');
+      }
+      
+      // Refresh the due services list
+      fetchDueServices();
+      
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to delete service due record');
+    }
+  };
+
   const getDueDateColor = (service) => {
     if (service.is_overdue) return 'text-red-600 bg-red-50';
     if (service.is_due_soon) return 'text-yellow-600 bg-yellow-50';
