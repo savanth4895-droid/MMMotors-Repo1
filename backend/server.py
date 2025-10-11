@@ -586,6 +586,30 @@ async def update_vehicle_status(vehicle_id: str, status_data: dict, current_user
     updated_vehicle = await db.vehicles.find_one({"id": vehicle_id})
     return Vehicle(**updated_vehicle)
 
+@api_router.delete("/vehicles/{vehicle_id}")
+async def delete_vehicle(vehicle_id: str, current_user: User = Depends(get_current_user)):
+    # Check if vehicle exists
+    existing_vehicle = await db.vehicles.find_one({"id": vehicle_id})
+    if not existing_vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Check if vehicle has associated sales records
+    sales_count = await db.sales.count_documents({"vehicle_id": vehicle_id})
+    if sales_count > 0:
+        raise HTTPException(status_code=400, detail=f"Cannot delete vehicle. Vehicle has {sales_count} associated sales record(s). Please delete sales records first.")
+    
+    # Check if vehicle has associated service records
+    services_count = await db.services.count_documents({"vehicle_id": vehicle_id})
+    if services_count > 0:
+        raise HTTPException(status_code=400, detail=f"Cannot delete vehicle. Vehicle has {services_count} associated service record(s). Please delete service records first.")
+    
+    # Delete the vehicle
+    result = await db.vehicles.delete_one({"id": vehicle_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    return {"message": "Vehicle deleted successfully", "deleted_vehicle_id": vehicle_id}
+
 # Sales endpoints
 @api_router.post("/sales", response_model=Sale)
 async def create_sale(sale_data: SaleCreate, current_user: User = Depends(get_current_user)):
