@@ -2294,8 +2294,8 @@ const ViewInvoices = () => {
                     <span class="detail-value">${invoice.customer?.name || 'N/A'}</span>
                   </div>
                   <div class="detail-row">
-                    <span class="detail-label">Phone:</span>
-                    <span class="detail-value">${invoice.customer?.phone || 'N/A'}</span>
+                    <span class="detail-label">Mobile:</span>
+                    <span class="detail-value">${invoice.customer?.mobile || invoice.customer?.phone || 'N/A'}</span>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Address:</span>
