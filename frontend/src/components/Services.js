@@ -244,6 +244,148 @@ const NewService = () => {
     }));
   };
 
+  // Search for customer data by phone number
+  const searchByPhone = async (phoneNumber) => {
+    if (!phoneNumber || phoneNumber.length < 4) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      setSearchLoading(true);
+      const token = localStorage.getItem('token');
+      
+      // Search customers and sales data
+      const [customersResponse, salesResponse] = await Promise.all([
+        axios.get(`${API}/customers`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/sales`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+
+      // Find matching customer by mobile phone
+      const matchingCustomer = customersResponse.data.find(customer => 
+        customer.mobile && customer.mobile.includes(phoneNumber)
+      );
+
+      if (matchingCustomer) {
+        // Find associated sales record to get vehicle information
+        const customerSales = salesResponse.data.filter(sale => 
+          sale.customer_id === matchingCustomer.id
+        );
+
+        let vehicleInfo = null;
+        if (customerSales.length > 0) {
+          // Get vehicle details from the most recent sale
+          const latestSale = customerSales.sort((a, b) => 
+            new Date(b.sale_date) - new Date(a.sale_date)
+          )[0];
+          
+          // Fetch vehicle details
+          try {
+            const vehicleResponse = await axios.get(`${API}/vehicles/${latestSale.vehicle_id}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            vehicleInfo = vehicleResponse.data;
+          } catch (error) {
+            console.log('Vehicle not found for sale');
+          }
+        }
+
+        // Auto-populate form with found data
+        setServiceData(prev => ({
+          ...prev,
+          customer_name: matchingCustomer.name || '',
+          phone_number: matchingCustomer.mobile || '',
+          vehicle_brand: vehicleInfo?.brand || matchingCustomer.vehicle_info?.brand || '',
+          vehicle_model: vehicleInfo?.model || matchingCustomer.vehicle_info?.model || '',
+          vehicle_year: new Date().getFullYear().toString(), // Default to current year if not available
+          vehicle_reg_no: vehicleInfo?.vehicle_number || matchingCustomer.vehicle_info?.vehicle_number || ''
+        }));
+
+        toast.success('Customer details found and populated!');
+      }
+    } catch (error) {
+      console.error('Error searching by phone:', error);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // Search for vehicle data by chassis number
+  const searchByChassisNumber = async (chassisNumber) => {
+    if (!chassisNumber || chassisNumber.length < 4) {
+      return;
+    }
+
+    try {
+      setSearchLoading(true);
+      const token = localStorage.getItem('token');
+      
+      // Search vehicles and sales data
+      const [vehiclesResponse, salesResponse, customersResponse] = await Promise.all([
+        axios.get(`${API}/vehicles`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/sales`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/customers`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+
+      // Find matching vehicle by chassis number
+      const matchingVehicle = vehiclesResponse.data.find(vehicle => 
+        vehicle.chassis_no && vehicle.chassis_no.toLowerCase().includes(chassisNumber.toLowerCase())
+      );
+
+      if (matchingVehicle) {
+        // Find associated sales record and customer
+        const vehicleSale = salesResponse.data.find(sale => 
+          sale.vehicle_id === matchingVehicle.id
+        );
+
+        let customerInfo = null;
+        if (vehicleSale) {
+          customerInfo = customersResponse.data.find(customer => 
+            customer.id === vehicleSale.customer_id
+          );
+        }
+
+        // Auto-populate form with found data
+        setServiceData(prev => ({
+          ...prev,
+          customer_name: customerInfo?.name || '',
+          phone_number: customerInfo?.mobile || '',
+          vehicle_brand: matchingVehicle.brand || '',
+          vehicle_model: matchingVehicle.model || '',
+          vehicle_year: new Date().getFullYear().toString(), // Default to current year if not available
+          vehicle_reg_no: chassisNumber // Use the searched chassis as reg number if no specific vehicle number
+        }));
+
+        toast.success('Vehicle details found and populated!');
+      }
+    } catch (error) {
+      console.error('Error searching by chassis:', error);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // Debounced search functions
+  const debouncedSearchByPhone = React.useCallback(
+    debounce((phoneNumber) => searchByPhone(phoneNumber), 500),
+    []
+  );
+
+  const debouncedSearchByChassisNumber = React.useCallback(
+    debounce((chassisNumber) => searchByChassisNumber(chassisNumber), 500),
+    []
+  );
+
   const resetForm = () => {
     setServiceData({
       customer_name: '',
