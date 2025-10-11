@@ -507,6 +507,27 @@ const Inventory = () => {
     setEditFormData({});
   };
 
+  const handleDeletePart = async (partId, partName) => {
+    if (!window.confirm(`Are you sure you want to delete spare part "${partName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/spare-parts/${partId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Remove from local state
+      const updatedParts = parts.filter(part => part.id !== partId);
+      setParts(updatedParts);
+      
+      toast.success('Spare part deleted successfully!');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to delete spare part');
+    }
+  };
+
   if (loading) {
     return <div className="flex justify-center p-8"><div className="spinner"></div></div>;
   }
