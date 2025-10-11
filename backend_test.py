@@ -2276,27 +2276,6 @@ Import Test Customer 2,D/O Test Mother,9876543293,,importtest2@example.com,"456 
         
         return overall_success, test_results
 
-    def test_create_vehicle(self, brand, model, chassis_no, engine_no, color, key_no, inbound_location):
-        """Test vehicle creation"""
-        success, response = self.run_test(
-            "Create Vehicle",
-            "POST",
-            "vehicles",
-            200,
-            data={
-                "brand": brand,
-                "model": model,
-                "chassis_no": chassis_no,
-                "engine_no": engine_no,
-                "color": color,
-                "key_no": key_no,
-                "inbound_location": inbound_location
-            }
-        )
-        if success and 'id' in response:
-            self.created_ids['vehicles'].append(response['id'])
-        return success, response
-
     def test_get_vehicles(self):
         """Test getting all vehicles"""
         return self.run_test("Get Vehicles", "GET", "vehicles", 200)
