@@ -1256,6 +1256,27 @@ const JobCards = () => {
     }
   };
 
+  const handleDeleteService = async (serviceId, jobCardNumber) => {
+    if (!window.confirm(`Are you sure you want to delete service "${jobCardNumber}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/services/${serviceId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Remove from local state
+      const updatedJobCards = jobCards.filter(job => job.id !== serviceId);
+      setJobCards(updatedJobCards);
+      
+      toast.success('Service deleted successfully!');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to delete service');
+    }
+  };
+
   if (loading) {
     return <div className="flex justify-center p-8"><div className="spinner"></div></div>;
   }
