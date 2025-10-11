@@ -1209,7 +1209,7 @@ async def import_services_data(data: List[Dict], import_job: ImportJob, user_id:
                 # Create new customer
                 customer_data = CustomerCreate(
                     name=customer_name,
-                    phone=customer_phone,
+                    mobile=customer_mobile,
                     address="Imported via service data"
                 )
                 customer = Customer(**customer_data.dict())
