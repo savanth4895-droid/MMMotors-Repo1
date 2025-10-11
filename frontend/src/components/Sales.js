@@ -4893,7 +4893,7 @@ const ViewCustomerDetails = () => {
         date: customerSale ? customerSale.sale_date : customer.created_at,
         name: customer.name,
         care_of: customer.care_of,
-        mobile: customer.phone,
+        mobile: customer.mobile,
         address: customer.address,
         email: customer.email,
         brand: customerVehicle?.brand || 'N/A',
