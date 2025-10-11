@@ -2540,15 +2540,15 @@ const ViewInvoices = () => {
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
                   <div style="text-align: center;">
                     <div style="font-size: 10px; color: #7c3aed; font-weight: 600; margin-bottom: 4px;">Nominee Name</div>
-                    <div style="font-weight: bold;">${invoice.insurance_details?.nominee || 'N/A'}</div>
+                    <div style="font-weight: bold;">${invoice.customer?.insurance_info?.nominee_name || invoice.insurance_details?.nominee || invoice.insurance?.nominee || 'N/A'}</div>
                   </div>
                   <div style="text-align: center;">
                     <div style="font-size: 10px; color: #7c3aed; font-weight: 600; margin-bottom: 4px;">Relation</div>
-                    <div style="font-weight: bold; text-transform: capitalize;">${invoice.insurance_details?.relation || 'N/A'}</div>
+                    <div style="font-weight: bold; text-transform: capitalize;">${invoice.customer?.insurance_info?.relation || invoice.insurance_details?.relation || invoice.insurance?.relation || 'N/A'}</div>
                   </div>
                   <div style="text-align: center;">
                     <div style="font-size: 10px; color: #7c3aed; font-weight: 600; margin-bottom: 4px;">Age</div>
-                    <div style="font-weight: bold;">${invoice.insurance_details?.age || 'N/A'} years</div>
+                    <div style="font-weight: bold;">${invoice.customer?.insurance_info?.age || invoice.insurance_details?.age || invoice.insurance?.age || 'N/A'} years</div>
                   </div>
                 </div>
               </div>
