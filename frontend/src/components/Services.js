@@ -606,36 +606,63 @@ const NewService = () => {
               </div>
               <div>
                 <Label htmlFor="vehicle_year">Vehicle Year</Label>
-                <Select value={serviceData.vehicle_year} onValueChange={(value) => handleInputChange('vehicle_year', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select vehicle year" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({length: 25}, (_, i) => 2024 - i).map((year) => (
-                      <SelectItem key={year} value={year.toString()}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input
+                  id="vehicle_year"
+                  placeholder="Enter vehicle year (e.g., 2024)"
+                  value={serviceData.vehicle_year}
+                  onChange={(e) => handleInputChange('vehicle_year', e.target.value)}
+                  type="number"
+                  min="1990"
+                  max="2030"
+                  required
+                />
               </div>
               <div>
-                <Label htmlFor="vehicle_reg_no">
-                  Vehicle Reg. No / Chassis No
+                <Label htmlFor="vehicle_reg_no">Vehicle Registration No</Label>
+                <Input
+                  id="vehicle_reg_no"
+                  placeholder="Enter vehicle registration number"
+                  value={serviceData.vehicle_reg_no}
+                  onChange={(e) => handleInputChange('vehicle_reg_no', e.target.value)}
+                  required
+                />
+              </div>
+              <div className="md:col-span-2 relative">
+                <Label htmlFor="chassis_no">
+                  Chassis Number
                   {searchLoading && <span className="ml-2 text-blue-600 text-sm">Searching...</span>}
                 </Label>
                 <Input
-                  id="vehicle_reg_no"
-                  placeholder="Enter chassis/reg number to auto-fill details"
-                  value={serviceData.vehicle_reg_no}
+                  id="chassis_no"
+                  placeholder="Enter chassis number for auto-complete and auto-fill"
+                  value={serviceData.chassis_no}
                   onChange={(e) => {
                     const value = e.target.value;
-                    handleInputChange('vehicle_reg_no', value);
-                    debouncedSearchByChassisNumber(value);
+                    handleInputChange('chassis_no', value);
+                    debouncedSearchChassisNumbers(value);
+                    if (value.length >= 4) {
+                      debouncedSearchByChassisNumber(value);
+                    }
                   }}
                   className={searchLoading ? "border-blue-300" : ""}
                   required
                 />
+                
+                {/* Chassis Number Dropdown Suggestions */}
+                {chassisOptions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-60 overflow-y-auto">
+                    {chassisOptions.map((option, index) => (
+                      <div
+                        key={index}
+                        className="p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                        onClick={() => handleChassisSelection(option)}
+                      >
+                        <div className="font-medium text-sm">{option.chassis_no}</div>
+                        <div className="text-xs text-gray-600">{option.brand} {option.model}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
