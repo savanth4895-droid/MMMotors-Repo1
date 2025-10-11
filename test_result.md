@@ -782,7 +782,7 @@ backend:
 
 test_plan:
   current_focus:
-    - "Service Registration API Endpoints Testing"
+    - "Service Due Page Delete Functionality"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
