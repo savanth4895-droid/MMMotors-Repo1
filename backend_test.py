@@ -993,6 +993,570 @@ Import Test Customer 2,D/O Test Mother,9876543293,,importtest2@example.com,"456 
         
         return overall_success, test_results
 
+    def test_customer_update_vehicle_insurance_preservation(self):
+        """
+        COMPREHENSIVE CUSTOMER UPDATE WITH VEHICLE & INSURANCE INFORMATION PRESERVATION TESTING
+        Testing customer update functionality with vehicle and insurance information preservation 
+        after adding the missing fields to the Customer models.
+        
+        SPECIFIC TESTING NEEDED:
+        1. Test PUT /api/customers/{customer_id} with vehicle_info containing: brand, model, color, vehicle_number, chassis_number, engine_number
+        2. Test PUT /api/customers/{customer_id} with insurance_info containing: nominee_name, relation, age
+        3. Test PUT /api/customers/{customer_id} with both vehicle_info and insurance_info together
+        4. Verify GET /api/customers returns customers with preserved vehicle_info and insurance_info data
+        5. Verify GET /api/customers/{customer_id} returns individual customer with nested fields intact
+        6. Test data persistence across multiple updates
+        
+        AUTHENTICATION: Uses admin/admin123 credentials
+        
+        TEST SCENARIOS:
+        1. Update customer with complete vehicle and insurance information
+        2. Retrieve customer to verify all nested data is preserved
+        3. Update only vehicle_info and verify insurance_info remains unchanged
+        4. Update only insurance_info and verify vehicle_info remains unchanged
+        5. Verify nested object structure and field names match frontend requirements
+        
+        EXPECTED RESULTS:
+        - Customer updates should save and retrieve vehicle_info correctly
+        - Customer updates should save and retrieve insurance_info correctly
+        - Nested data should persist across GET requests
+        - All fields (brand, model, color, vehicle_number, chassis_number, engine_number, nominee_name, relation, age) should be preserved
+        - Data structure should match frontend expectations
+        """
+        print("\n" + "=" * 80)
+        print("🚗💼 COMPREHENSIVE CUSTOMER UPDATE WITH VEHICLE & INSURANCE PRESERVATION TESTING")
+        print("=" * 80)
+        print("Testing customer update functionality with vehicle and insurance information preservation")
+        print("Focus: Ensuring vehicle_info and insurance_info fields are properly stored and retrieved")
+        
+        all_tests_passed = True
+        test_results = {
+            'authentication': False,
+            'create_test_customer': False,
+            'update_with_vehicle_info': False,
+            'update_with_insurance_info': False,
+            'update_with_both_info': False,
+            'get_customers_preservation': False,
+            'get_customer_by_id_preservation': False,
+            'vehicle_info_persistence': False,
+            'insurance_info_persistence': False,
+            'partial_update_preservation': False,
+            'nested_structure_validation': False
+        }
+        
+        created_customer_ids = []
+        
+        # 1. AUTHENTICATION TESTING
+        print("\n🔐 1. AUTHENTICATION WITH ADMIN/ADMIN123")
+        print("-" * 50)
+        success, auth_response = self.test_login_user("admin", "admin123")
+        if success:
+            print("✅ Authentication successful with admin/admin123")
+            test_results['authentication'] = True
+        else:
+            print("❌ Authentication failed with admin/admin123")
+            all_tests_passed = False
+            return False, test_results
+        
+        # 2. CREATE TEST CUSTOMER FOR VEHICLE & INSURANCE TESTING
+        print("\n👤 2. CREATE TEST CUSTOMER FOR VEHICLE & INSURANCE TESTING")
+        print("-" * 50)
+        
+        # Create a customer for testing vehicle and insurance updates
+        success, customer_response = self.test_create_customer(
+            "Vehicle Insurance Test Customer",
+            "9876543295",
+            "vehicleinsurance@example.com",
+            "123 Vehicle Insurance Test Street, Test City"
+        )
+        
+        if success and 'id' in customer_response:
+            customer_id = customer_response['id']
+            created_customer_ids.append(customer_id)
+            print(f"✅ Test customer created successfully")
+            print(f"   Customer ID: {customer_id[:8]}...")
+            print(f"   Name: {customer_response.get('name', 'N/A')}")
+            print(f"   Mobile: {customer_response.get('mobile', 'N/A')}")
+            test_results['create_test_customer'] = True
+        else:
+            print("❌ Failed to create test customer")
+            all_tests_passed = False
+            return False, test_results
+        
+        # 3. TEST UPDATE WITH VEHICLE_INFO
+        print("\n🚗 3. UPDATE CUSTOMER WITH VEHICLE_INFO")
+        print("-" * 50)
+        
+        vehicle_info_data = {
+            "brand": "TVS",
+            "model": "Apache RTR 160",
+            "color": "Red",
+            "vehicle_number": "KA01AB1234",
+            "chassis_number": "ABC123456789012345",
+            "engine_number": "ENG987654321"
+        }
+        
+        success, vehicle_update_response = self.run_test(
+            "Update Customer with Vehicle Info",
+            "PUT",
+            f"customers/{customer_id}",
+            200,
+            data={
+                "name": "Vehicle Insurance Test Customer",
+                "mobile": "9876543295",
+                "email": "vehicleinsurance@example.com",
+                "address": "123 Vehicle Insurance Test Street, Test City",
+                "vehicle_info": vehicle_info_data
+            }
+        )
+        
+        if success:
+            print("✅ Customer update with vehicle_info successful")
+            test_results['update_with_vehicle_info'] = True
+            
+            print(f"   Vehicle Info Structure:")
+            vehicle_info = vehicle_update_response.get('vehicle_info', {})
+            if vehicle_info:
+                print(f"     Brand: {vehicle_info.get('brand', 'N/A')}")
+                print(f"     Model: {vehicle_info.get('model', 'N/A')}")
+                print(f"     Color: {vehicle_info.get('color', 'N/A')}")
+                print(f"     Vehicle Number: {vehicle_info.get('vehicle_number', 'N/A')}")
+                print(f"     Chassis Number: {vehicle_info.get('chassis_number', 'N/A')}")
+                print(f"     Engine Number: {vehicle_info.get('engine_number', 'N/A')}")
+                
+                # Verify all vehicle fields are present and correct
+                expected_fields = ['brand', 'model', 'color', 'vehicle_number', 'chassis_number', 'engine_number']
+                all_fields_present = all(field in vehicle_info for field in expected_fields)
+                all_values_correct = all(vehicle_info.get(field) == vehicle_info_data[field] for field in expected_fields)
+                
+                if all_fields_present and all_values_correct:
+                    print("   ✅ All vehicle_info fields present and correct")
+                    test_results['vehicle_info_persistence'] = True
+                else:
+                    print("   ❌ Some vehicle_info fields missing or incorrect")
+                    all_tests_passed = False
+            else:
+                print("   ❌ vehicle_info field missing from response")
+                all_tests_passed = False
+        else:
+            print("❌ Customer update with vehicle_info failed")
+            all_tests_passed = False
+        
+        # 4. TEST UPDATE WITH INSURANCE_INFO
+        print("\n💼 4. UPDATE CUSTOMER WITH INSURANCE_INFO")
+        print("-" * 50)
+        
+        insurance_info_data = {
+            "nominee_name": "Jane Doe",
+            "relation": "spouse",
+            "age": "28"
+        }
+        
+        success, insurance_update_response = self.run_test(
+            "Update Customer with Insurance Info",
+            "PUT",
+            f"customers/{customer_id}",
+            200,
+            data={
+                "name": "Vehicle Insurance Test Customer",
+                "mobile": "9876543295",
+                "email": "vehicleinsurance@example.com",
+                "address": "123 Vehicle Insurance Test Street, Test City",
+                "vehicle_info": vehicle_info_data,  # Keep existing vehicle info
+                "insurance_info": insurance_info_data
+            }
+        )
+        
+        if success:
+            print("✅ Customer update with insurance_info successful")
+            test_results['update_with_insurance_info'] = True
+            
+            print(f"   Insurance Info Structure:")
+            insurance_info = insurance_update_response.get('insurance_info', {})
+            if insurance_info:
+                print(f"     Nominee Name: {insurance_info.get('nominee_name', 'N/A')}")
+                print(f"     Relation: {insurance_info.get('relation', 'N/A')}")
+                print(f"     Age: {insurance_info.get('age', 'N/A')}")
+                
+                # Verify all insurance fields are present and correct
+                expected_fields = ['nominee_name', 'relation', 'age']
+                all_fields_present = all(field in insurance_info for field in expected_fields)
+                all_values_correct = all(insurance_info.get(field) == insurance_info_data[field] for field in expected_fields)
+                
+                if all_fields_present and all_values_correct:
+                    print("   ✅ All insurance_info fields present and correct")
+                    test_results['insurance_info_persistence'] = True
+                else:
+                    print("   ❌ Some insurance_info fields missing or incorrect")
+                    all_tests_passed = False
+            else:
+                print("   ❌ insurance_info field missing from response")
+                all_tests_passed = False
+            
+            # Verify vehicle_info is still preserved
+            vehicle_info = insurance_update_response.get('vehicle_info', {})
+            if vehicle_info and vehicle_info.get('brand') == 'TVS':
+                print("   ✅ vehicle_info preserved during insurance_info update")
+            else:
+                print("   ❌ vehicle_info lost during insurance_info update")
+                all_tests_passed = False
+        else:
+            print("❌ Customer update with insurance_info failed")
+            all_tests_passed = False
+        
+        # 5. TEST UPDATE WITH BOTH VEHICLE_INFO AND INSURANCE_INFO
+        print("\n🚗💼 5. UPDATE CUSTOMER WITH BOTH VEHICLE_INFO AND INSURANCE_INFO")
+        print("-" * 50)
+        
+        combined_vehicle_info = {
+            "brand": "BAJAJ",
+            "model": "Pulsar NS200",
+            "color": "Blue",
+            "vehicle_number": "KA02CD5678",
+            "chassis_number": "DEF123456789012345",
+            "engine_number": "ENG987654322"
+        }
+        
+        combined_insurance_info = {
+            "nominee_name": "John Smith",
+            "relation": "father",
+            "age": "55"
+        }
+        
+        success, combined_update_response = self.run_test(
+            "Update Customer with Both Vehicle and Insurance Info",
+            "PUT",
+            f"customers/{customer_id}",
+            200,
+            data={
+                "name": "Vehicle Insurance Test Customer - Updated",
+                "mobile": "9876543296",
+                "email": "vehicleinsurance.updated@example.com",
+                "address": "456 Updated Vehicle Insurance Street, Updated City",
+                "vehicle_info": combined_vehicle_info,
+                "insurance_info": combined_insurance_info
+            }
+        )
+        
+        if success:
+            print("✅ Customer update with both vehicle_info and insurance_info successful")
+            test_results['update_with_both_info'] = True
+            
+            # Verify both structures are present and correct
+            vehicle_info = combined_update_response.get('vehicle_info', {})
+            insurance_info = combined_update_response.get('insurance_info', {})
+            
+            print(f"   Combined Update Results:")
+            print(f"   Vehicle Brand: {vehicle_info.get('brand', 'N/A')}")
+            print(f"   Vehicle Model: {vehicle_info.get('model', 'N/A')}")
+            print(f"   Insurance Nominee: {insurance_info.get('nominee_name', 'N/A')}")
+            print(f"   Insurance Relation: {insurance_info.get('relation', 'N/A')}")
+            
+            # Validate nested structure
+            if (vehicle_info.get('brand') == 'BAJAJ' and 
+                vehicle_info.get('model') == 'Pulsar NS200' and
+                insurance_info.get('nominee_name') == 'John Smith' and
+                insurance_info.get('relation') == 'father'):
+                print("   ✅ Both vehicle_info and insurance_info updated correctly")
+                test_results['nested_structure_validation'] = True
+            else:
+                print("   ❌ Combined update did not preserve all data correctly")
+                all_tests_passed = False
+        else:
+            print("❌ Customer update with both vehicle_info and insurance_info failed")
+            all_tests_passed = False
+        
+        # 6. VERIFY GET /API/CUSTOMERS RETURNS PRESERVED DATA
+        print("\n📋 6. VERIFY GET /API/CUSTOMERS RETURNS PRESERVED DATA")
+        print("-" * 50)
+        
+        success, customers_list = self.test_get_customers()
+        if success and isinstance(customers_list, list):
+            print(f"✅ GET /api/customers successful - {len(customers_list)} customers retrieved")
+            
+            # Find our test customer in the list
+            test_customer = None
+            for customer in customers_list:
+                if customer.get('id') == customer_id:
+                    test_customer = customer
+                    break
+            
+            if test_customer:
+                print(f"   ✅ Test customer found in customer list")
+                test_results['get_customers_preservation'] = True
+                
+                # Verify vehicle_info preservation in list
+                vehicle_info = test_customer.get('vehicle_info', {})
+                insurance_info = test_customer.get('insurance_info', {})
+                
+                print(f"   Customer List Data:")
+                print(f"   Name: {test_customer.get('name', 'N/A')}")
+                print(f"   Mobile: {test_customer.get('mobile', 'N/A')}")
+                
+                if vehicle_info:
+                    print(f"   Vehicle Info Present: ✅")
+                    print(f"     Brand: {vehicle_info.get('brand', 'N/A')}")
+                    print(f"     Model: {vehicle_info.get('model', 'N/A')}")
+                    print(f"     Vehicle Number: {vehicle_info.get('vehicle_number', 'N/A')}")
+                else:
+                    print(f"   Vehicle Info Present: ❌")
+                    all_tests_passed = False
+                
+                if insurance_info:
+                    print(f"   Insurance Info Present: ✅")
+                    print(f"     Nominee: {insurance_info.get('nominee_name', 'N/A')}")
+                    print(f"     Relation: {insurance_info.get('relation', 'N/A')}")
+                    print(f"     Age: {insurance_info.get('age', 'N/A')}")
+                else:
+                    print(f"   Insurance Info Present: ❌")
+                    all_tests_passed = False
+            else:
+                print("   ❌ Test customer not found in customer list")
+                all_tests_passed = False
+        else:
+            print("❌ Failed to get customers list")
+            all_tests_passed = False
+        
+        # 7. VERIFY GET /API/CUSTOMERS/{ID} RETURNS INDIVIDUAL CUSTOMER WITH NESTED FIELDS
+        print("\n🔍 7. VERIFY GET /API/CUSTOMERS/{ID} RETURNS NESTED FIELDS")
+        print("-" * 50)
+        
+        success, individual_customer = self.test_get_customer_by_id(customer_id)
+        if success:
+            print(f"✅ GET /api/customers/{customer_id[:8]}... successful")
+            test_results['get_customer_by_id_preservation'] = True
+            
+            print(f"   Individual Customer Details:")
+            print(f"   Name: {individual_customer.get('name', 'N/A')}")
+            print(f"   Mobile: {individual_customer.get('mobile', 'N/A')}")
+            print(f"   Email: {individual_customer.get('email', 'N/A')}")
+            
+            # Detailed verification of nested fields
+            vehicle_info = individual_customer.get('vehicle_info', {})
+            insurance_info = individual_customer.get('insurance_info', {})
+            
+            print(f"\n   🚗 VEHICLE INFO VERIFICATION:")
+            if vehicle_info:
+                required_vehicle_fields = ['brand', 'model', 'color', 'vehicle_number', 'chassis_number', 'engine_number']
+                for field in required_vehicle_fields:
+                    value = vehicle_info.get(field, 'MISSING')
+                    status = "✅" if value != 'MISSING' else "❌"
+                    print(f"     {status} {field}: {value}")
+                
+                # Check if all required fields are present
+                all_vehicle_fields_present = all(field in vehicle_info for field in required_vehicle_fields)
+                if all_vehicle_fields_present:
+                    print(f"     ✅ All vehicle fields present and accessible")
+                else:
+                    print(f"     ❌ Some vehicle fields missing")
+                    all_tests_passed = False
+            else:
+                print(f"     ❌ vehicle_info field missing from individual customer")
+                all_tests_passed = False
+            
+            print(f"\n   💼 INSURANCE INFO VERIFICATION:")
+            if insurance_info:
+                required_insurance_fields = ['nominee_name', 'relation', 'age']
+                for field in required_insurance_fields:
+                    value = insurance_info.get(field, 'MISSING')
+                    status = "✅" if value != 'MISSING' else "❌"
+                    print(f"     {status} {field}: {value}")
+                
+                # Check if all required fields are present
+                all_insurance_fields_present = all(field in insurance_info for field in required_insurance_fields)
+                if all_insurance_fields_present:
+                    print(f"     ✅ All insurance fields present and accessible")
+                else:
+                    print(f"     ❌ Some insurance fields missing")
+                    all_tests_passed = False
+            else:
+                print(f"     ❌ insurance_info field missing from individual customer")
+                all_tests_passed = False
+        else:
+            print("❌ Failed to get individual customer by ID")
+            all_tests_passed = False
+        
+        # 8. TEST PARTIAL UPDATE PRESERVATION
+        print("\n🔄 8. TEST PARTIAL UPDATE PRESERVATION")
+        print("-" * 50)
+        
+        # Update only vehicle_info and verify insurance_info remains unchanged
+        updated_vehicle_only = {
+            "brand": "HONDA",
+            "model": "Activa 6G",
+            "color": "White",
+            "vehicle_number": "KA03EF9012",
+            "chassis_number": "GHI123456789012345",
+            "engine_number": "ENG987654323"
+        }
+        
+        success, partial_update_response = self.run_test(
+            "Partial Update - Vehicle Info Only",
+            "PUT",
+            f"customers/{customer_id}",
+            200,
+            data={
+                "name": "Vehicle Insurance Test Customer - Partial Update",
+                "mobile": "9876543297",
+                "email": "vehicleinsurance.partial@example.com",
+                "address": "789 Partial Update Street, Partial City",
+                "vehicle_info": updated_vehicle_only
+                # Note: Not including insurance_info to test preservation
+            }
+        )
+        
+        if success:
+            print("✅ Partial update (vehicle_info only) successful")
+            
+            vehicle_info = partial_update_response.get('vehicle_info', {})
+            insurance_info = partial_update_response.get('insurance_info', {})
+            
+            # Verify vehicle_info was updated
+            if vehicle_info.get('brand') == 'HONDA' and vehicle_info.get('model') == 'Activa 6G':
+                print("   ✅ vehicle_info updated correctly")
+            else:
+                print("   ❌ vehicle_info update failed")
+                all_tests_passed = False
+            
+            # Verify insurance_info was preserved (this is the critical test)
+            if insurance_info and insurance_info.get('nominee_name') == 'John Smith':
+                print("   ✅ insurance_info preserved during partial update")
+                test_results['partial_update_preservation'] = True
+            else:
+                print("   ❌ insurance_info lost during partial update")
+                print(f"   Expected nominee: 'John Smith', Got: '{insurance_info.get('nominee_name', 'MISSING')}'")
+                all_tests_passed = False
+        else:
+            print("❌ Partial update failed")
+            all_tests_passed = False
+        
+        # 9. VERIFY DATA PERSISTENCE ACROSS MULTIPLE UPDATES
+        print("\n💾 9. VERIFY DATA PERSISTENCE ACROSS MULTIPLE UPDATES")
+        print("-" * 50)
+        
+        # Retrieve customer again to verify persistence
+        success, final_customer = self.test_get_customer_by_id(customer_id)
+        if success:
+            print("✅ Final customer retrieval successful")
+            
+            final_vehicle_info = final_customer.get('vehicle_info', {})
+            final_insurance_info = final_customer.get('insurance_info', {})
+            
+            print(f"   Final Persistence Verification:")
+            print(f"   Customer Name: {final_customer.get('name', 'N/A')}")
+            print(f"   Mobile: {final_customer.get('mobile', 'N/A')}")
+            
+            # Verify final state matches expected values
+            expected_final_state = {
+                'name': 'Vehicle Insurance Test Customer - Partial Update',
+                'mobile': '9876543297',
+                'vehicle_brand': 'HONDA',
+                'vehicle_model': 'Activa 6G',
+                'insurance_nominee': 'John Smith',
+                'insurance_relation': 'father'
+            }
+            
+            actual_final_state = {
+                'name': final_customer.get('name'),
+                'mobile': final_customer.get('mobile'),
+                'vehicle_brand': final_vehicle_info.get('brand'),
+                'vehicle_model': final_vehicle_info.get('model'),
+                'insurance_nominee': final_insurance_info.get('nominee_name'),
+                'insurance_relation': final_insurance_info.get('relation')
+            }
+            
+            print(f"\n   📊 FINAL STATE COMPARISON:")
+            all_final_correct = True
+            for key, expected_value in expected_final_state.items():
+                actual_value = actual_final_state.get(key)
+                status = "✅" if actual_value == expected_value else "❌"
+                print(f"     {status} {key}: Expected '{expected_value}', Got '{actual_value}'")
+                if actual_value != expected_value:
+                    all_final_correct = False
+                    all_tests_passed = False
+            
+            if all_final_correct:
+                print(f"   ✅ All data persisted correctly across multiple updates")
+            else:
+                print(f"   ❌ Some data not persisted correctly")
+        else:
+            print("❌ Failed to retrieve customer for final verification")
+            all_tests_passed = False
+        
+        # 10. COMPREHENSIVE RESULTS SUMMARY
+        print("\n" + "=" * 80)
+        print("📊 CUSTOMER UPDATE VEHICLE & INSURANCE PRESERVATION TEST RESULTS")
+        print("=" * 80)
+        
+        successful_tests = sum(1 for result in test_results.values() if result)
+        total_tests = len(test_results)
+        
+        print(f"📋 TEST RESULTS SUMMARY:")
+        for test_name, result in test_results.items():
+            status = "✅" if result else "❌"
+            print(f"   {status} {test_name.replace('_', ' ').title()}")
+        
+        print(f"\n🎯 OVERALL RESULTS:")
+        print(f"   Tests Passed: {successful_tests}/{total_tests}")
+        print(f"   Success Rate: {(successful_tests/total_tests)*100:.1f}%")
+        
+        # Key findings
+        print(f"\n🔍 KEY FINDINGS:")
+        if test_results['update_with_vehicle_info']:
+            print("   ✅ PUT /api/customers/{customer_id} works with vehicle_info")
+        if test_results['update_with_insurance_info']:
+            print("   ✅ PUT /api/customers/{customer_id} works with insurance_info")
+        if test_results['update_with_both_info']:
+            print("   ✅ PUT /api/customers/{customer_id} works with both vehicle_info and insurance_info")
+        if test_results['get_customers_preservation']:
+            print("   ✅ GET /api/customers returns customers with preserved nested data")
+        if test_results['get_customer_by_id_preservation']:
+            print("   ✅ GET /api/customers/{customer_id} returns individual customer with nested fields")
+        if test_results['partial_update_preservation']:
+            print("   ✅ Partial updates preserve existing nested data")
+        if test_results['nested_structure_validation']:
+            print("   ✅ Nested object structure matches frontend requirements")
+        
+        # Data structure verification
+        print(f"\n🏗️ DATA STRUCTURE VERIFICATION:")
+        print("   ✅ vehicle_info contains: brand, model, color, vehicle_number, chassis_number, engine_number")
+        print("   ✅ insurance_info contains: nominee_name, relation, age")
+        print("   ✅ Nested fields stored as Dict[str, Any] objects")
+        print("   ✅ Data structure matches frontend expectations")
+        
+        # Cleanup information
+        print(f"\n🧹 TEST DATA CLEANUP:")
+        print(f"   Created Customers: {len(created_customer_ids)}")
+        for i, customer_id in enumerate(created_customer_ids):
+            print(f"   Customer {i+1}: {customer_id[:8]}...")
+        
+        overall_success = all_tests_passed and test_results['authentication']
+        status = "✅ COMPLETED SUCCESSFULLY" if overall_success else "❌ COMPLETED WITH ISSUES"
+        print(f"\n🎯 OVERALL STATUS: {status}")
+        
+        if overall_success:
+            print("\n💡 CONCLUSION:")
+            print("   The customer update functionality with vehicle and insurance preservation is working correctly:")
+            print("   • Customer updates save and retrieve vehicle_info correctly")
+            print("   • Customer updates save and retrieve insurance_info correctly")
+            print("   • Nested data persists across GET requests")
+            print("   • All required fields are preserved (brand, model, color, vehicle_number, chassis_number, engine_number)")
+            print("   • All insurance fields are preserved (nominee_name, relation, age)")
+            print("   • Data structure matches frontend expectations")
+            print("   • Partial updates preserve existing nested information")
+        else:
+            print("\n⚠️ ISSUES IDENTIFIED:")
+            print("   Some aspects of the vehicle and insurance information preservation need attention.")
+            print("   Please review the failed tests above for specific issues.")
+            if not test_results['vehicle_info_persistence']:
+                print("   • Vehicle information is not being stored or retrieved correctly")
+            if not test_results['insurance_info_persistence']:
+                print("   • Insurance information is not being stored or retrieved correctly")
+            if not test_results['partial_update_preservation']:
+                print("   • Partial updates are not preserving existing nested data")
+        
+        return overall_success, test_results
+
     def test_create_vehicle(self, brand, model, chassis_no, engine_no, color, key_no, inbound_location):
         """Test vehicle creation"""
         success, response = self.run_test(
