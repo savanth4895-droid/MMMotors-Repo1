@@ -3006,9 +3006,12 @@ const CreateBillContent = ({
                               <User className="w-4 h-4 text-blue-600" />
                             </div>
                             <div>
-                              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Customer</p>
+                              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Customer Details</p>
                               <p className="font-semibold text-slate-800">{serviceDetails.customer_name}</p>
-                              <p className="text-xs text-slate-500">{serviceDetails.customer_phone}</p>
+                              <p className="text-xs text-blue-600 font-medium">📱 {serviceDetails.customer_phone}</p>
+                              {serviceDetails.customer_address && (
+                                <p className="text-xs text-slate-500 mt-1">📍 {serviceDetails.customer_address}</p>
+                              )}
                             </div>
                           </div>
                           <div className="flex items-start gap-3">
