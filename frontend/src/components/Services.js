@@ -3797,12 +3797,19 @@ const ServiceDue = () => {
   const fetchDueServices = async () => {
     try {
       setLoading(true);
+      const token = localStorage.getItem('token');
       
       // Fetch all necessary data
       const [servicesResponse, salesResponse, customersResponse] = await Promise.all([
-        axios.get(`${API}/services`),
-        axios.get(`${API}/sales`),  // To get purchase dates
-        axios.get(`${API}/customers`)
+        axios.get(`${API}/services`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/sales`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/customers`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
       ]);
       
       const services = servicesResponse.data;
