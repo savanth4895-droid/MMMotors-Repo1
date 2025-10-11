@@ -2741,7 +2741,7 @@ const ViewInvoices = () => {
                               </div>
                               <div className="border-b border-emerald-200 pb-0.5">
                                 <span className="text-emerald-700 font-medium text-xs">Vehicle No</span>
-                                <div className="text-slate-900 font-mono font-bold text-xs">{selectedInvoice.vehicle?.vehicle_no || 'N/A'}</div>
+                                <div className="text-slate-900 font-mono font-bold text-xs">{selectedInvoice.customer?.vehicle_info?.vehicle_number || selectedInvoice.vehicle?.vehicle_no || 'N/A'}</div>
                               </div>
                             </div>
                             <div className="space-y-0.5">
