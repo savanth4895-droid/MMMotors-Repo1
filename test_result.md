@@ -782,7 +782,7 @@ backend:
 
 test_plan:
   current_focus:
-    - "Phone to Mobile Field Replacement Backend Testing"
+    - "Service Registration API Endpoints Testing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
