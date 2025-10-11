@@ -581,12 +581,12 @@ const NewService = () => {
               </div>
               <div>
                 <Label htmlFor="phone_number">
-                  Phone Number
+                  Mobile
                   {searchLoading && <span className="ml-2 text-blue-600 text-sm">Searching...</span>}
                 </Label>
                 <Input
                   id="phone_number"
-                  placeholder="Enter phone number to auto-fill details"
+                  placeholder="Enter mobile number to auto-fill details"
                   value={serviceData.phone_number}
                   onChange={(e) => {
                     const value = e.target.value;
