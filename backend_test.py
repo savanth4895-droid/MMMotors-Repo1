@@ -817,18 +817,26 @@ class TwoWheelerAPITester:
             created_ids['spare_parts'].append(spare_part2['id'])
             print(f"✅ Created spare part 2: {spare_part2['id'][:8]}...")
         
-        # Create services for testing
-        success, service1 = self.test_create_service(
-            created_ids['customers'][0], created_ids['vehicles'][0], "KA01AB1234", "periodic_service", "Delete test service", 1500.0
-        )
-        if success and 'id' in service1:
-            created_ids['services'].append(service1['id'])
-            print(f"✅ Created service 1: {service1['id'][:8]}...")
+        # Create services for testing (only if we have customers and vehicles)
+        if len(created_ids['customers']) > 0 and len(created_ids['vehicles']) > 0:
+            success, service1 = self.test_create_service(
+                created_ids['customers'][0], created_ids['vehicles'][0], "KA01AB1234", "periodic_service", "Delete test service", 1500.0
+            )
+            if success and 'id' in service1:
+                created_ids['services'].append(service1['id'])
+                print(f"✅ Created service 1: {service1['id'][:8]}...")
+        else:
+            print("❌ Cannot create service - missing customers or vehicles")
         
-        # Create a sale to test vehicle delete protection
-        success, sale1 = self.test_create_sale(
-            created_ids['customers'][1], created_ids['vehicles'][1], 75000.0, "Cash"
-        )
+        # Create a sale to test vehicle delete protection (only if we have enough customers and vehicles)
+        if len(created_ids['customers']) > 1 and len(created_ids['vehicles']) > 1:
+            success, sale1 = self.test_create_sale(
+                created_ids['customers'][1], created_ids['vehicles'][1], 75000.0, "Cash"
+            )
+        else:
+            print("❌ Cannot create sale - insufficient customers or vehicles")
+            success = False
+            sale1 = {}
         if success and 'id' in sale1:
             created_ids['sales'].append(sale1['id'])
             print(f"✅ Created sale 1: {sale1['id'][:8]}...")
