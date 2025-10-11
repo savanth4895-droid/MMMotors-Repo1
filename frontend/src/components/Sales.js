@@ -5249,23 +5249,27 @@ const ViewCustomerDetails = () => {
                         <div className="flex items-center gap-2">
                           <div className="font-medium text-gray-900">{detail.name}</div>
                           {detail.vehicle_info && Object.keys(detail.vehicle_info).some(key => detail.vehicle_info[key]) && (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800" title="Has Vehicle Details from Import">
                               🏍️
                             </span>
                           )}
                           {detail.insurance_info && Object.keys(detail.insurance_info).some(key => detail.insurance_info[key]) && (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800" title="Has Insurance Nominee Details from Import">
                               🛡️
                             </span>
                           )}
                           {detail.sales_info && Object.keys(detail.sales_info).some(key => detail.sales_info[key]) && (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800" title="Has Sales Information from Import">
                               💰
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="p-3 text-gray-600">{detail.mobile}</td>
+                      <td className="p-3 text-gray-600">{detail.care_of || 'N/A'}</td>
+                      <td className="p-3 text-gray-600 font-mono">{detail.mobile}</td>
+                      <td className="p-3 text-gray-600 max-w-xs truncate" title={detail.email}>
+                        {detail.email || 'N/A'}
+                      </td>
                       <td className="p-3 text-gray-600 max-w-xs truncate" title={detail.address}>
                         {detail.address}
                       </td>
@@ -5276,9 +5280,27 @@ const ViewCustomerDetails = () => {
                       </td>
                       <td className="p-3 text-gray-600">{detail.model}</td>
                       <td className="p-3 text-gray-600">{detail.color}</td>
+                      <td className="p-3 text-gray-600 font-mono text-sm font-bold">
+                        {detail.vehicle_no !== 'N/A' ? (
+                          <span className="text-green-600">{detail.vehicle_no}</span>
+                        ) : (
+                          <span className="text-gray-400">N/A</span>
+                        )}
+                      </td>
                       <td className="p-3 text-gray-600 font-mono text-sm">{detail.chassis_no}</td>
                       <td className="p-3 text-gray-600 font-mono text-sm">{detail.engine_no}</td>
-                      <td className="p-3 text-gray-600 font-mono text-sm">{detail.vehicle_no}</td>
+                      <td className="p-3 text-gray-600">
+                        {detail.insurance_info && detail.insurance_info.nominee_name ? (
+                          <div className="text-sm">
+                            <div className="font-medium text-green-600">{detail.insurance_info.nominee_name}</div>
+                            <div className="text-xs text-gray-500">
+                              {detail.insurance_info.relation} ({detail.insurance_info.age}y)
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">N/A</span>
+                        )}
+                      </td>
                       <td className="p-3">
                         <div className="flex items-center gap-2">
                           <Button
