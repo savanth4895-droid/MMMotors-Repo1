@@ -501,7 +501,7 @@ const NewService = () => {
           // Create new customer
           const customerResponse = await axios.post(`${API}/customers`, {
             name: serviceData.customer_name,
-            phone: serviceData.phone_number,
+            mobile: serviceData.phone_number,
             email: '',
             address: 'Service Registration'
           });
