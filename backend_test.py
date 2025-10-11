@@ -997,12 +997,17 @@ class TwoWheelerAPITester:
         print("\n🔩🛡️ 7. TEST DELETE SPARE PART WITH BILLS PROTECTION")
         print("-" * 50)
         
-        success, delete_response = self.run_test(
-            "Delete Spare Part With Bills",
-            "DELETE",
-            f"spare-parts/{created_ids['spare_parts'][1]}",
-            400
-        )
+        if len(created_ids['spare_parts']) > 1:
+            success, delete_response = self.run_test(
+                "Delete Spare Part With Bills",
+                "DELETE",
+                f"spare-parts/{created_ids['spare_parts'][1]}",
+                400
+            )
+        else:
+            print("❌ Cannot test spare part bills protection - insufficient spare parts")
+            success = False
+            delete_response = {}
         
         if success:
             print("✅ DELETE spare part with bills correctly returned 400 (protected)")
