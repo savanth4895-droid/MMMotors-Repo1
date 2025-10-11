@@ -2209,15 +2209,37 @@ const ServicesBilling = () => {
     }
   };
 
+  // Debounced search function for job card suggestions
+  const debouncedJobCardSearch = useCallback(
+    debounce((partialJobCard) => fetchJobCardSuggestions(partialJobCard), 300),
+    []
+  );
+
   const handleJobCardSearch = (e) => {
     const jobCard = e.target.value.toUpperCase();
     setJobCardNumber(jobCard);
+    // Trigger suggestions as user types
+    if (jobCard.length >= 3) {
+      debouncedJobCardSearch(jobCard);
+    } else {
+      setJobCardSuggestions([]);
+    }
+  };
+
+  const handleJobCardSelection = (selectedJobCard) => {
+    setJobCardNumber(selectedJobCard.job_card_number);
+    setJobCardSuggestions([]);
+    // Fetch full service details for selected job card
+    fetchServiceByJobCard(selectedJobCard.job_card_number);
   };
 
   const handleJobCardBlur = () => {
-    if (jobCardNumber) {
-      fetchServiceByJobCard(jobCardNumber);
-    }
+    // Delay clearing suggestions to allow clicking on them
+    setTimeout(() => {
+      if (jobCardNumber && jobCardSuggestions.length === 0) {
+        fetchServiceByJobCard(jobCardNumber);
+      }
+    }, 200);
   };
 
   const clearServiceDetails = () => {
