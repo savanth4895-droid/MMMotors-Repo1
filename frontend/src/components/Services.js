@@ -505,8 +505,9 @@ const NewService = () => {
       await axios.post(`${API}/services`, {
         customer_id: customerId,
         vehicle_number: serviceData.vehicle_reg_no,
+        chassis_number: serviceData.chassis_no,
         service_type: serviceData.service_type.toLowerCase().replace(' ', '_'),
-        description: `${serviceData.vehicle_brand} ${serviceData.vehicle_model} (${serviceData.vehicle_year}) - ${serviceData.description}`,
+        description: `${serviceData.vehicle_brand} ${serviceData.vehicle_model} (${serviceData.vehicle_year}) - Chassis: ${serviceData.chassis_no} - ${serviceData.description}`,
         amount: parseFloat(serviceData.estimated_amount) || 0
       });
 
