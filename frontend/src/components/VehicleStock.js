@@ -532,6 +532,27 @@ const BrandDetails = () => {
     setVehicles(updatedVehicles);
   };
 
+  const handleDeleteVehicle = async (vehicleId, chassisNo) => {
+    if (!window.confirm(`Are you sure you want to delete vehicle with chassis number "${chassisNo}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/vehicles/${vehicleId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Remove from local state
+      const updatedVehicles = vehicles.filter(v => v.id !== vehicleId);
+      setVehicles(updatedVehicles);
+      
+      toast.success('Vehicle deleted successfully!');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to delete vehicle');
+    }
+  };
+
   const exportBrandData = () => {
     try {
       const csvContent = [
