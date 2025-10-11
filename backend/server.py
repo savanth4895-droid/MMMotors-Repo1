@@ -415,12 +415,54 @@ async def update_customer(customer_id: str, customer_data: CustomerCreate, curre
     if not existing_customer:
         raise HTTPException(status_code=404, detail="Customer not found")
     
-    # Update customer data
-    update_data = customer_data.dict()
+    # Prepare update data by merging with existing data to preserve nested fields
+    update_data = customer_data.dict(exclude_unset=True)  # Only include fields that were explicitly set
+    
+    # Always preserve these fields
     update_data["id"] = customer_id  # Keep the original ID
     update_data["created_at"] = existing_customer["created_at"]  # Keep original creation date
     
-    updated_customer = Customer(**update_data)
+    # Merge nested fields to preserve existing data
+    # Handle vehicle_info preservation
+    if "vehicle_info" in update_data:
+        existing_vehicle_info = existing_customer.get("vehicle_info", {})
+        if existing_vehicle_info and update_data["vehicle_info"]:
+            # Merge existing vehicle_info with new vehicle_info
+            merged_vehicle_info = {**existing_vehicle_info, **update_data["vehicle_info"]}
+            update_data["vehicle_info"] = merged_vehicle_info
+    else:
+        # Preserve existing vehicle_info if not included in update
+        if "vehicle_info" in existing_customer:
+            update_data["vehicle_info"] = existing_customer["vehicle_info"]
+    
+    # Handle insurance_info preservation
+    if "insurance_info" in update_data:
+        existing_insurance_info = existing_customer.get("insurance_info", {})
+        if existing_insurance_info and update_data["insurance_info"]:
+            # Merge existing insurance_info with new insurance_info
+            merged_insurance_info = {**existing_insurance_info, **update_data["insurance_info"]}
+            update_data["insurance_info"] = merged_insurance_info
+    else:
+        # Preserve existing insurance_info if not included in update
+        if "insurance_info" in existing_customer:
+            update_data["insurance_info"] = existing_customer["insurance_info"]
+    
+    # Handle sales_info preservation
+    if "sales_info" in update_data:
+        existing_sales_info = existing_customer.get("sales_info", {})
+        if existing_sales_info and update_data["sales_info"]:
+            # Merge existing sales_info with new sales_info
+            merged_sales_info = {**existing_sales_info, **update_data["sales_info"]}
+            update_data["sales_info"] = merged_sales_info
+    else:
+        # Preserve existing sales_info if not included in update
+        if "sales_info" in existing_customer:
+            update_data["sales_info"] = existing_customer["sales_info"]
+    
+    # Create the complete updated customer data by merging with existing
+    complete_update_data = {**existing_customer, **update_data}
+    
+    updated_customer = Customer(**complete_update_data)
     await db.customers.replace_one({"id": customer_id}, updated_customer.dict())
     return updated_customer
 
