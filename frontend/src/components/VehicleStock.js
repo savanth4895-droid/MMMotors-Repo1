@@ -728,15 +728,26 @@ const BrandDetails = () => {
                       <td className="p-3 text-gray-600">{vehicle.page_number || 'N/A'}</td>
                       <td className="p-3 text-gray-600">{vehicle.outbound_location || 'N/A'}</td>
                       <td className="p-3">
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleEditVehicle(vehicle)}
-                          className="flex items-center gap-1"
-                        >
-                          <Edit className="w-3 h-3" />
-                          Edit
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleEditVehicle(vehicle)}
+                            className="flex items-center gap-1"
+                          >
+                            <Edit className="w-3 h-3" />
+                            Edit
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleDeleteVehicle(vehicle.id, vehicle.chassis_no)}
+                            className="flex items-center gap-1 text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            Delete
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))
