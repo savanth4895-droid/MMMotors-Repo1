@@ -686,7 +686,7 @@ backend:
 
 test_plan:
   current_focus:
-    - "Customer Management Edit Functionality Frontend Testing"
+    - "Phone to Mobile Field Replacement Backend Testing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
