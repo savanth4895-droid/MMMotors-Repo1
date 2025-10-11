@@ -106,6 +106,18 @@
 user_problem_statement: "Add delete buttons in action column in vehicle stock, service and Spare parts pages and avoid creating duplicate data and remove already existing duplicate data in the application across all the pages. User confirmed to: 1) Check all pages for duplicates, 2) Use hard delete (permanent removal), 3) Remove duplicates with same chassis number and same customer phone, 4) Work on all three pages simultaneously."
 
 backend:
+  - task: "Delete Endpoints Implementation"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+      - agent: "main"
+      - comment: "Added DELETE endpoints for vehicles, services, and spare parts with referential integrity checks. Added duplicate detection and cleanup endpoints. Added duplicate prevention to create and import functions."
+      
   - task: "Data Import CSV Field Mapping Fix"
     implemented: true
     working: true
