@@ -92,6 +92,9 @@ class Customer(BaseModel):
     mobile: Optional[str] = None
     email: Optional[EmailStr] = None
     address: Optional[str] = None
+    vehicle_info: Optional[Dict[str, Any]] = None
+    insurance_info: Optional[Dict[str, Any]] = None
+    sales_info: Optional[Dict[str, Any]] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class CustomerCreate(BaseModel):
