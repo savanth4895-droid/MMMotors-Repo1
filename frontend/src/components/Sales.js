@@ -444,14 +444,25 @@ const CreateInvoice = () => {
     setLoading(true);
 
     try {
-      // Create customer first
-      const customerResponse = await axios.post(`${API}/customers`, {
+      // Create customer first with insurance nominee details
+      const customerData = {
         name: invoiceData.name,
         mobile: invoiceData.mobile,
         care_of: invoiceData.care_of,
         email: null,
         address: invoiceData.address
-      });
+      };
+
+      // Add insurance nominee details if provided
+      if (invoiceData.insurance_nominee || invoiceData.relation || invoiceData.age) {
+        customerData.insurance_info = {
+          nominee_name: invoiceData.insurance_nominee || '',
+          relation: invoiceData.relation || '',
+          age: invoiceData.age || ''
+        };
+      }
+
+      const customerResponse = await axios.post(`${API}/customers`, customerData);
 
       let vehicleResponse;
       
