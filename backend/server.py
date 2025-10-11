@@ -103,13 +103,13 @@ class CustomerCreate(BaseModel):
 
 class Vehicle(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    brand: str  # TVS, BAJAJ, HERO, HONDA, TRIUMPH, KTM, SUZUKI, APRILIA
-    model: str
-    chassis_no: str
-    engine_no: str
-    color: str
-    key_no: str
-    inbound_location: str
+    brand: Optional[str] = None  # TVS, BAJAJ, HERO, HONDA, TRIUMPH, KTM, SUZUKI, APRILIA
+    model: Optional[str] = None
+    chassis_no: Optional[str] = None
+    engine_no: Optional[str] = None
+    color: Optional[str] = None
+    key_no: Optional[str] = None
+    inbound_location: Optional[str] = None
     outbound_location: Optional[str] = None
     status: VehicleStatus = VehicleStatus.IN_STOCK
     page_number: Optional[str] = None
