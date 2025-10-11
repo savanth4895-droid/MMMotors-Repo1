@@ -329,7 +329,8 @@ const NewService = () => {
           vehicle_brand: vehicleInfo?.brand || matchingCustomer.vehicle_info?.brand || '',
           vehicle_model: vehicleInfo?.model || matchingCustomer.vehicle_info?.model || '',
           vehicle_year: new Date().getFullYear().toString(), // Default to current year if not available
-          vehicle_reg_no: vehicleInfo?.vehicle_number || matchingCustomer.vehicle_info?.vehicle_number || ''
+          vehicle_reg_no: vehicleInfo?.vehicle_number || matchingCustomer.vehicle_info?.vehicle_number || '',
+          chassis_no: vehicleInfo?.chassis_no || matchingCustomer.vehicle_info?.chassis_no || ''
         }));
 
         toast.success('Customer details found and populated!');
