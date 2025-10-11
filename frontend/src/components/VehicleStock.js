@@ -18,7 +18,8 @@ import {
   ArrowLeft,
   Edit,
   Save,
-  X
+  X,
+  Trash2
 } from 'lucide-react';
 
 // Custom Motorcycle Icon Component
