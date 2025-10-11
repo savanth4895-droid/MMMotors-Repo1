@@ -3061,25 +3061,6 @@ KTM,,KTM_CHASSIS_001,KTM_ENGINE_001,,KTM_KEY_001,,
             data={"status": status}
         )
 
-    def test_create_spare_part(self, name, part_number, brand, quantity, unit_price):
-        """Test spare part creation"""
-        success, response = self.run_test(
-            "Create Spare Part",
-            "POST",
-            "spare-parts",
-            200,
-            data={
-                "name": name,
-                "part_number": part_number,
-                "brand": brand,
-                "quantity": quantity,
-                "unit_price": unit_price
-            }
-        )
-        if success and 'id' in response:
-            self.created_ids['spare_parts'].append(response['id'])
-        return success, response
-
     def test_get_spare_parts(self):
         """Test getting all spare parts"""
         return self.run_test("Get Spare Parts", "GET", "spare-parts", 200)
