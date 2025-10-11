@@ -103,7 +103,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Test vehicle field validation after making all fields optional. The user was getting 'Field required' errors in the Edit Customer Details page, which I traced to the Vehicle model still having required fields that were being updated during customer edits. Need to verify that vehicle updates work without 'Field required' errors and that all vehicle fields are properly optional."
+user_problem_statement: "Add delete buttons in action column in vehicle stock, service and Spare parts pages and avoid creating duplicate data and remove already existing duplicate data in the application across all the pages. User confirmed to: 1) Check all pages for duplicates, 2) Use hard delete (permanent removal), 3) Remove duplicates with same chassis number and same customer phone, 4) Work on all three pages simultaneously."
 
 backend:
   - task: "Data Import CSV Field Mapping Fix"
