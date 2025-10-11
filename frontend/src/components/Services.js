@@ -458,10 +458,12 @@ const NewService = () => {
       vehicle_model: '',
       vehicle_year: '',
       vehicle_reg_no: '',
+      chassis_no: '',
       service_type: '',
       description: '',
       estimated_amount: ''
     });
+    setChassisOptions([]);
   };
 
   const handleSave = async (e) => {
