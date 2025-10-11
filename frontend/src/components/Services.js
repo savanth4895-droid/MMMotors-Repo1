@@ -259,6 +259,18 @@ const NewService = () => {
     }));
   };
 
+  const handleChassisSelection = (selectedChassis) => {
+    setServiceData(prev => ({
+      ...prev,
+      chassis_no: selectedChassis.chassis_no,
+      vehicle_brand: selectedChassis.brand,
+      vehicle_model: selectedChassis.model
+    }));
+    setChassisOptions([]);
+    // Auto-fill other details based on selected chassis
+    debouncedSearchByChassisNumber(selectedChassis.chassis_no);
+  };
+
   // Search for customer data by phone number
   const searchByPhone = async (phoneNumber) => {
     if (!phoneNumber || phoneNumber.length < 4) {
