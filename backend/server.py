@@ -1193,16 +1193,16 @@ async def import_services_data(data: List[Dict], import_job: ImportJob, user_id:
     for idx, row in enumerate(data):
         try:
             # Validate required fields
-            required_fields = ['customer_name', 'customer_phone', 'vehicle_number', 'service_type', 'amount']
+            required_fields = ['customer_name', 'customer_mobile', 'vehicle_number', 'service_type', 'amount']
             for field in required_fields:
                 if not row.get(field):
                     raise ValueError(f"{field} is required")
             
             # Find or create customer
             customer_name = row['customer_name'].strip()
-            customer_phone = row['customer_phone'].strip()
+            customer_mobile = row['customer_mobile'].strip()
             
-            existing_customer = await db.customers.find_one({"phone": customer_phone})
+            existing_customer = await db.customers.find_one({"mobile": customer_mobile})
             if existing_customer:
                 customer_id = existing_customer['id']
             else:
