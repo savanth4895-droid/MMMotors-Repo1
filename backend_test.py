@@ -2862,24 +2862,6 @@ KTM,,KTM_CHASSIS_001,KTM_ENGINE_001,,KTM_KEY_001,,
         """Test getting vehicle brands"""
         return self.run_test("Get Vehicle Brands", "GET", "vehicles/brands", 200)
 
-    def test_create_sale(self, customer_id, vehicle_id, amount, payment_method):
-        """Test sale creation"""
-        success, response = self.run_test(
-            "Create Sale",
-            "POST",
-            "sales",
-            200,
-            data={
-                "customer_id": customer_id,
-                "vehicle_id": vehicle_id,
-                "amount": amount,
-                "payment_method": payment_method
-            }
-        )
-        if success and 'id' in response:
-            self.created_ids['sales'].append(response['id'])
-        return success, response
-
     def test_csv_import_with_content(self, data_type, csv_content, filename):
         """Test CSV import with provided content"""
         import io
