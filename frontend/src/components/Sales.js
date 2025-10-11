@@ -1809,15 +1809,15 @@ const ViewInvoices = () => {
                 <div class="detail-content">
                   <div class="detail-row">
                     <span class="detail-label">Brand:</span>
-                    <span class="detail-value">${invoice.vehicle?.brand || 'N/A'}</span>
+                    <span class="detail-value">${invoice.customer?.vehicle_info?.brand || invoice.vehicle?.brand || 'N/A'}</span>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Model:</span>
-                    <span class="detail-value">${invoice.vehicle?.model || 'N/A'}</span>
+                    <span class="detail-value">${invoice.customer?.vehicle_info?.model || invoice.vehicle?.model || 'N/A'}</span>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Color:</span>
-                    <span class="detail-value">${invoice.vehicle?.color || 'N/A'}</span>
+                    <span class="detail-value">${invoice.customer?.vehicle_info?.color || invoice.vehicle?.color || 'N/A'}</span>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Vehicle No:</span>
@@ -2312,15 +2312,15 @@ const ViewInvoices = () => {
                 <div class="detail-content">
                   <div class="detail-row">
                     <span class="detail-label">Brand:</span>
-                    <span class="detail-value">${invoice.vehicle?.brand || 'N/A'}</span>
+                    <span class="detail-value">${invoice.customer?.vehicle_info?.brand || invoice.vehicle?.brand || 'N/A'}</span>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Model:</span>
-                    <span class="detail-value">${invoice.vehicle?.model || 'N/A'}</span>
+                    <span class="detail-value">${invoice.customer?.vehicle_info?.model || invoice.vehicle?.model || 'N/A'}</span>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Color:</span>
-                    <span class="detail-value">${invoice.vehicle?.color || 'N/A'}</span>
+                    <span class="detail-value">${invoice.customer?.vehicle_info?.color || invoice.vehicle?.color || 'N/A'}</span>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Vehicle No:</span>
