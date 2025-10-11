@@ -103,7 +103,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Fix UTF-8 encoding error during data import: 'utf-8 codec can't decode byte 0xa0 in position 6947: invalid start byte'. This error occurs when users try to upload CSV files that contain special characters or are saved in different encodings."
+user_problem_statement: "Test the phone to mobile field replacement in the backend. I have replaced all phone fields with mobile fields in the Customer models and related functions. Need to verify that customer creation, updates, retrieval, and import functionality all work correctly with the mobile field instead of phone field."
 
 backend:
   - task: "Data Import CSV Field Mapping Fix"
