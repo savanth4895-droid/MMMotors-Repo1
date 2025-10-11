@@ -1356,9 +1356,9 @@ const ViewInvoices = () => {
           <div style="margin-bottom: 12px; border: 2px solid #ccc; padding: 10px; border-radius: 6px;">
             <h3 style="margin: 0 0 8px 0; font-size: 12px; color: #2563eb; border-bottom: 1px solid #ccc; padding-bottom: 3px;">Vehicle Details</h3>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Brand:</strong> ${invoice.vehicle?.brand || 'N/A'}</div>
-              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Model:</strong> ${invoice.vehicle?.model || 'N/A'}</div>
-              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Color:</strong> ${invoice.vehicle?.color || 'N/A'}</div>
+              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Brand:</strong> ${invoice.customer?.vehicle_info?.brand || invoice.vehicle?.brand || 'N/A'}</div>
+              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Model:</strong> ${invoice.customer?.vehicle_info?.model || invoice.vehicle?.model || 'N/A'}</div>
+              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Color:</strong> ${invoice.customer?.vehicle_info?.color || invoice.vehicle?.color || 'N/A'}</div>
               <div style="font-size: 10px; margin-bottom: 4px;"><strong>Chassis No:</strong> ${invoice.customer?.vehicle_info?.chassis_number || invoice.vehicle?.chassis_no || 'N/A'}</div>
               <div style="font-size: 10px; margin-bottom: 4px;"><strong>Engine No:</strong> ${invoice.customer?.vehicle_info?.engine_number || invoice.vehicle?.engine_no || 'N/A'}</div>
               <div style="font-size: 10px; margin-bottom: 4px;"><strong>Vehicle No:</strong> ${invoice.customer?.vehicle_info?.vehicle_number || invoice.vehicle?.vehicle_no || 'N/A'}</div>
