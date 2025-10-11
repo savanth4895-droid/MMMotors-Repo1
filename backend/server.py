@@ -488,6 +488,10 @@ async def delete_customer(customer_id: str, current_user: User = Depends(get_cur
 # Vehicle endpoints
 @api_router.post("/vehicles", response_model=Vehicle)
 async def create_vehicle(vehicle_data: VehicleCreate, current_user: User = Depends(get_current_user)):
+    # Check for duplicate chassis number
+    if vehicle_data.chassis_no and await check_vehicle_duplicate(vehicle_data.chassis_no):
+        raise HTTPException(status_code=400, detail=f"Vehicle with chassis number '{vehicle_data.chassis_no}' already exists")
+    
     vehicle = Vehicle(**vehicle_data.dict())
     await db.vehicles.insert_one(vehicle.dict())
     return vehicle
