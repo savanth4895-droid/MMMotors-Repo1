@@ -227,6 +227,147 @@ class TwoWheelerAPITester:
             400
         )
 
+    def test_create_vehicle(self, brand, model, chassis_no, engine_no, color, key_no, inbound_location, page_number=None):
+        """Test vehicle creation"""
+        success, response = self.run_test(
+            "Create Vehicle",
+            "POST",
+            "vehicles",
+            200,
+            data={
+                "brand": brand,
+                "model": model,
+                "chassis_no": chassis_no,
+                "engine_no": engine_no,
+                "color": color,
+                "key_no": key_no,
+                "inbound_location": inbound_location,
+                "page_number": page_number
+            }
+        )
+        if success and 'id' in response:
+            self.created_ids['vehicles'].append(response['id'])
+        return success, response
+
+    def test_create_service(self, customer_id, vehicle_id, vehicle_number, service_type, description, amount):
+        """Test service creation"""
+        success, response = self.run_test(
+            "Create Service",
+            "POST",
+            "services",
+            200,
+            data={
+                "customer_id": customer_id,
+                "vehicle_id": vehicle_id,
+                "vehicle_number": vehicle_number,
+                "service_type": service_type,
+                "description": description,
+                "amount": amount
+            }
+        )
+        if success and 'id' in response:
+            self.created_ids['services'].append(response['id'])
+        return success, response
+
+    def test_create_spare_part(self, name, part_number, brand, quantity, unit, unit_price, hsn_sac, gst_percentage, supplier):
+        """Test spare part creation"""
+        success, response = self.run_test(
+            "Create Spare Part",
+            "POST",
+            "spare-parts",
+            200,
+            data={
+                "name": name,
+                "part_number": part_number,
+                "brand": brand,
+                "quantity": quantity,
+                "unit": unit,
+                "unit_price": unit_price,
+                "hsn_sac": hsn_sac,
+                "gst_percentage": gst_percentage,
+                "supplier": supplier
+            }
+        )
+        if success and 'id' in response:
+            self.created_ids['spare_parts'].append(response['id'])
+        return success, response
+
+    def test_create_sale(self, customer_id, vehicle_id, amount, payment_method):
+        """Test sale creation"""
+        success, response = self.run_test(
+            "Create Sale",
+            "POST",
+            "sales",
+            200,
+            data={
+                "customer_id": customer_id,
+                "vehicle_id": vehicle_id,
+                "amount": amount,
+                "payment_method": payment_method
+            }
+        )
+        if success and 'id' in response:
+            self.created_ids['sales'].append(response['id'])
+        return success, response
+
+    def test_create_spare_part_bill(self, customer_data, items, subtotal, total_discount, total_cgst, total_sgst, total_tax, total_amount):
+        """Test spare part bill creation"""
+        success, response = self.run_test(
+            "Create Spare Part Bill",
+            "POST",
+            "spare-parts/bills",
+            200,
+            data={
+                "customer_data": customer_data,
+                "items": items,
+                "subtotal": subtotal,
+                "total_discount": total_discount,
+                "total_cgst": total_cgst,
+                "total_sgst": total_sgst,
+                "total_tax": total_tax,
+                "total_amount": total_amount
+            }
+        )
+        if success and 'id' in response:
+            self.created_ids['bills'].append(response['id'])
+        return success, response
+
+    def test_csv_import_with_content(self, data_type, csv_content, filename):
+        """Test CSV import with provided content"""
+        import io
+        import requests
+        
+        url = f"{self.base_url}/import/upload"
+        headers = {}
+        if self.token:
+            headers['Authorization'] = f'Bearer {self.token}'
+        
+        # Create a file-like object from the CSV content
+        csv_file = io.StringIO(csv_content)
+        files = {'file': (filename, csv_file, 'text/csv')}
+        data = {'data_type': data_type}
+        
+        try:
+            response = requests.post(url, headers=headers, files=files, data=data)
+            
+            success = response.status_code == 200
+            if success:
+                try:
+                    response_data = response.json()
+                    return True, response_data
+                except:
+                    return True, {}
+            else:
+                try:
+                    error_detail = response.json()
+                    print(f"   Import Error: {error_detail}")
+                except:
+                    print(f"   Import Error: {response.text}")
+                return False, {}
+        except Exception as e:
+            print(f"   Import Exception: {str(e)}")
+            return False, {}
+
     def test_customer_delete_functionality_comprehensive(self):
         """
         COMPREHENSIVE CUSTOMER DELETE FUNCTIONALITY TESTING
