@@ -492,7 +492,7 @@ const NewService = () => {
       try {
         const customersResponse = await axios.get(`${API}/customers`);
         const existingCustomer = customersResponse.data.find(
-          customer => customer.phone === serviceData.phone_number
+          customer => customer.mobile === serviceData.phone_number
         );
         
         if (existingCustomer) {
