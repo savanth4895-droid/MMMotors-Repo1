@@ -132,8 +132,8 @@ class TwoWheelerAPITester:
         """Test getting customer by ID"""
         return self.run_test(f"Get Customer {customer_id}", "GET", f"customers/{customer_id}", 200)
 
-    def test_update_customer(self, customer_id, name, phone, email, address):
-        """Test updating customer information"""
+    def test_update_customer(self, customer_id, name, mobile, email, address):
+        """Test updating customer information with mobile field"""
         success, response = self.run_test(
             f"Update Customer {customer_id}",
             "PUT",
@@ -141,7 +141,7 @@ class TwoWheelerAPITester:
             200,
             data={
                 "name": name,
-                "phone": phone,
+                "mobile": mobile,
                 "email": email,
                 "address": address
             }
