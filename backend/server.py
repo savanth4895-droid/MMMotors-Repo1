@@ -385,6 +385,10 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
 # Customer endpoints
 @api_router.post("/customers", response_model=Customer)
 async def create_customer(customer_data: CustomerCreate, current_user: User = Depends(get_current_user)):
+    # Check for duplicate mobile number
+    if customer_data.mobile and await check_customer_duplicate(customer_data.mobile):
+        raise HTTPException(status_code=400, detail=f"Customer with mobile number '{customer_data.mobile}' already exists")
+    
     customer = Customer(**customer_data.dict())
     await db.customers.insert_one(customer.dict())
     return customer
