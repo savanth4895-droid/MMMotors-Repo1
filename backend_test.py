@@ -10174,11 +10174,11 @@ if __name__ == "__main__":
             print(f"   Success Rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
             sys.exit(0 if success else 1)
     
-    # Default to delete functionality and duplicate management testing
-    print("🚀 DELETE FUNCTIONALITY AND DUPLICATE MANAGEMENT TESTING (DEFAULT)")
+    # Default to service registration testing
+    print("🚀 SERVICE REGISTRATION API ENDPOINTS TESTING (DEFAULT)")
     print("=" * 60)
     tester = TwoWheelerAPITester()
-    success, results = tester.test_delete_functionality_and_duplicate_management()
+    success, results = tester.test_service_registration_api_endpoints()
     print("\n" + "=" * 60)
     print(f"📊 Final Test Results:")
     print(f"   Tests Run: {tester.tests_run}")
