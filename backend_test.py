@@ -9777,9 +9777,31 @@ if __name__ == "__main__":
             print(f"   Tests Failed: {tester.tests_run - tester.tests_passed}")
             print(f"   Success Rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
             sys.exit(0 if success else 1)
+        elif sys.argv[1] == "delete_duplicate":
+            print("🚀 DELETE FUNCTIONALITY AND DUPLICATE MANAGEMENT TESTING")
+            print("=" * 60)
+            tester = TwoWheelerAPITester()
+            success, results = tester.test_delete_functionality_and_duplicate_management()
+            print("\n" + "=" * 60)
+            print(f"📊 Final Test Results:")
+            print(f"   Tests Run: {tester.tests_run}")
+            print(f"   Tests Passed: {tester.tests_passed}")
+            print(f"   Tests Failed: {tester.tests_run - tester.tests_passed}")
+            print(f"   Success Rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
+            sys.exit(0 if success else 1)
     
-    # Default to customer update field mapping testing
-    sys.exit(test_customer_update_field_mapping_fix())
+    # Default to delete functionality and duplicate management testing
+    print("🚀 DELETE FUNCTIONALITY AND DUPLICATE MANAGEMENT TESTING (DEFAULT)")
+    print("=" * 60)
+    tester = TwoWheelerAPITester()
+    success, results = tester.test_delete_functionality_and_duplicate_management()
+    print("\n" + "=" * 60)
+    print(f"📊 Final Test Results:")
+    print(f"   Tests Run: {tester.tests_run}")
+    print(f"   Tests Passed: {tester.tests_passed}")
+    print(f"   Tests Failed: {tester.tests_run - tester.tests_passed}")
+    print(f"   Success Rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
+    sys.exit(0 if success else 1)
 
 def test_customer_update_vehicle_insurance_preservation():
     """
