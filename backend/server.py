@@ -103,6 +103,9 @@ class CustomerCreate(BaseModel):
     mobile: Optional[str] = None
     email: Optional[EmailStr] = None
     address: Optional[str] = None
+    vehicle_info: Optional[Dict[str, Any]] = None
+    insurance_info: Optional[Dict[str, Any]] = None
+    sales_info: Optional[Dict[str, Any]] = None
 
 class Vehicle(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
