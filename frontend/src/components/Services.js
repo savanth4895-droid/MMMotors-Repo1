@@ -3834,27 +3834,31 @@ const ServiceDue = () => {
       
       // Then, update with latest service dates
       services.forEach(service => {
-        const customer = customers.find(c => c.id === service.customer_id);
-        const customerName = customer?.name || service.customer_name || 'Unknown';
-        const serviceDate = new Date(service.completion_date || service.created_at);
-        
-        // Create a unique key for each customer-vehicle combination
-        const vehicleKey = `${service.customer_id}-${service.vehicle_reg_no}`;
-        
-        if (!vehicleServiceMap[vehicleKey]) {
-          vehicleServiceMap[vehicleKey] = {
-            purchase_date: null,
-            latest_service_date: serviceDate,
-            customer_name: customerName,
-            vehicle_details: service.vehicle_reg_no
-          };
-        } else {
-          // Update with the latest service date
-          if (!vehicleServiceMap[vehicleKey].latest_service_date || 
-              serviceDate > vehicleServiceMap[vehicleKey].latest_service_date) {
-            vehicleServiceMap[vehicleKey].latest_service_date = serviceDate;
+        if (service && service.customer_id && service.vehicle_number) {
+          const customer = customers.find(c => c && c.id === service.customer_id);
+          const customerName = customer?.name || service.customer_name || 'Unknown';
+          const serviceDate = new Date(service.completion_date || service.created_at || new Date());
+          
+          // Create a unique key for each customer-vehicle combination
+          const vehicleKey = `${service.customer_id}-${service.vehicle_number}`;
+          
+          if (!vehicleServiceMap[vehicleKey]) {
+            vehicleServiceMap[vehicleKey] = {
+              purchase_date: null,
+              latest_service_date: serviceDate,
+              customer_name: customerName,
+              vehicle_details: service.vehicle_number,
+              customer_id: service.customer_id
+            };
+          } else {
+            // Update with the latest service date
+            if (!vehicleServiceMap[vehicleKey].latest_service_date || 
+                serviceDate > vehicleServiceMap[vehicleKey].latest_service_date) {
+              vehicleServiceMap[vehicleKey].latest_service_date = serviceDate;
+            }
+            vehicleServiceMap[vehicleKey].customer_name = customerName;
+            vehicleServiceMap[vehicleKey].customer_id = service.customer_id;
           }
-          vehicleServiceMap[vehicleKey].customer_name = customerName;
         }
       });
       
