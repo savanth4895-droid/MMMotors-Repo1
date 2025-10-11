@@ -3618,7 +3618,7 @@ const CustomersManagement = () => {
         API
       });
       
-      // Update customer data
+      // Prepare customer data with vehicle and insurance information
       const customerUpdateData = {
         name: editFormData.name?.trim() || '',
         care_of: editFormData.care_of?.trim() || '',
@@ -3627,24 +3627,45 @@ const CustomersManagement = () => {
         email: editFormData.email?.trim() || ''
       };
       
+      // Add vehicle information to customer record
+      if (editFormData.brand || editFormData.model || editFormData.color || 
+          editFormData.chassis_no || editFormData.engine_no || editFormData.vehicle_no) {
+        customerUpdateData.vehicle_info = {
+          brand: editFormData.brand?.trim() || '',
+          model: editFormData.model?.trim() || '',
+          color: editFormData.color?.trim() || '',
+          vehicle_number: editFormData.vehicle_no?.trim() || '',
+          chassis_number: editFormData.chassis_no?.trim() || '',
+          engine_number: editFormData.engine_no?.trim() || ''
+        };
+      }
+      
+      // Add insurance information to customer record
+      if (editFormData.insurance_nominee || editFormData.relation || editFormData.age) {
+        customerUpdateData.insurance_info = {
+          nominee_name: editFormData.insurance_nominee?.trim() || '',
+          relation: editFormData.relation?.trim() || '',
+          age: editFormData.age?.trim() || ''
+        };
+      }
+      
       console.log('Customer update data:', customerUpdateData);
       
       const customerResponse = await axios.put(`${API}/customers/${editingCustomer.id}`, customerUpdateData);
       console.log('Customer update response:', customerResponse.data);
       
-      // Update associated vehicle if exists
+      // Update associated inventory vehicle if exists (only inventory-specific fields)
       const associatedVehicle = vehicles.find(v => v.customer_id === editingCustomer.id);
-      if (associatedVehicle && (editFormData.brand || editFormData.model || editFormData.color || editFormData.vehicle_no || editFormData.chassis_no || editFormData.engine_no)) {
+      if (associatedVehicle && (editFormData.brand || editFormData.model || editFormData.color || editFormData.chassis_no || editFormData.engine_no)) {
+        // Only update inventory vehicle fields that actually exist in Vehicle model
         const vehicleUpdateData = {
-          brand: editFormData.brand?.trim() || '',
-          model: editFormData.model?.trim() || '',
-          color: editFormData.color?.trim() || '',
-          chassis_no: editFormData.chassis_no?.trim() || '',
-          engine_no: editFormData.engine_no?.trim() || '',
-          vehicle_no: editFormData.vehicle_no?.trim() || '',
-          insurance_nominee: editFormData.insurance_nominee?.trim() || '',
-          relation: editFormData.relation?.trim() || '',
-          age: editFormData.age ? parseInt(editFormData.age) : null
+          brand: editFormData.brand?.trim() || associatedVehicle.brand,
+          model: editFormData.model?.trim() || associatedVehicle.model,
+          color: editFormData.color?.trim() || associatedVehicle.color,
+          chassis_no: editFormData.chassis_no?.trim() || associatedVehicle.chassis_no,
+          engine_no: editFormData.engine_no?.trim() || associatedVehicle.engine_no
+          // Note: vehicle_no is not a field in Vehicle model - stored in customer.vehicle_info
+          // Note: insurance fields belong to customer, not vehicle
         };
         
         console.log('Vehicle update data:', vehicleUpdateData);
