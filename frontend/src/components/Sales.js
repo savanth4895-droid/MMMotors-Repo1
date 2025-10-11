@@ -4991,7 +4991,7 @@ const ViewCustomerDetails = () => {
     try {
       setLoading(true);
       
-      // Update customer data
+      // Prepare customer data with vehicle and insurance information
       const customerUpdateData = {
         name: editFormData.name,
         care_of: editFormData.care_of,
@@ -5000,23 +5000,44 @@ const ViewCustomerDetails = () => {
         email: editFormData.email
       };
       
+      // Add vehicle information to customer record (as we did with imports)
+      if (editFormData.brand || editFormData.model || editFormData.color || 
+          editFormData.chassis_no || editFormData.engine_no || editFormData.vehicle_no) {
+        customerUpdateData.vehicle_info = {
+          brand: editFormData.brand || '',
+          model: editFormData.model || '',
+          color: editFormData.color || '',
+          vehicle_number: editFormData.vehicle_no || '',
+          chassis_number: editFormData.chassis_no || '',
+          engine_number: editFormData.engine_no || ''
+        };
+      }
+      
+      // Add insurance information to customer record
+      if (editFormData.insurance_nominee || editFormData.relation || editFormData.age) {
+        customerUpdateData.insurance_info = {
+          nominee_name: editFormData.insurance_nominee || '',
+          relation: editFormData.relation || '',
+          age: editFormData.age || ''
+        };
+      }
+      
       await axios.put(`${API}/customers/${editingCustomer.id}`, customerUpdateData);
       
-      // Update associated vehicle if exists
+      // Update associated inventory vehicle if exists (only inventory-specific fields)
       const associatedVehicle = vehicles.find(v => v.customer_id === editingCustomer.id || 
         (v.chassis_no === editingCustomer.chassis_no && editingCustomer.chassis_no !== 'N/A'));
       
       if (associatedVehicle) {
+        // Only update inventory vehicle fields that actually exist in Vehicle model
         const vehicleUpdateData = {
-          brand: editFormData.brand,
-          model: editFormData.model,
-          color: editFormData.color,
-          chassis_no: editFormData.chassis_no,
-          engine_no: editFormData.engine_no,
-          vehicle_no: editFormData.vehicle_no,
-          insurance_nominee: editFormData.insurance_nominee,
-          relation: editFormData.relation,
-          age: editFormData.age
+          brand: editFormData.brand || associatedVehicle.brand,
+          model: editFormData.model || associatedVehicle.model,
+          color: editFormData.color || associatedVehicle.color,
+          chassis_no: editFormData.chassis_no || associatedVehicle.chassis_no,
+          engine_no: editFormData.engine_no || associatedVehicle.engine_no
+          // Note: vehicle_no is not a field in Vehicle model
+          // Note: insurance fields belong to customer, not vehicle
         };
         
         await axios.put(`${API}/vehicles/${associatedVehicle.id}`, vehicleUpdateData);
