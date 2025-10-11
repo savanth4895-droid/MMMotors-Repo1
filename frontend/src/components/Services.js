@@ -668,7 +668,7 @@ const NewService = () => {
                 
                 {/* Chassis Number Dropdown Suggestions */}
                 {chassisOptions.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-60 overflow-y-auto">
+                  <div className="chassis-dropdown absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-60 overflow-y-auto">
                     {chassisOptions.map((option, index) => (
                       <div
                         key={index}
