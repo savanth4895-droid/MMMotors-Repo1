@@ -17,7 +17,8 @@ import {
   AlertTriangle,
   Eye,
   Printer,
-  Download
+  Download,
+  Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
