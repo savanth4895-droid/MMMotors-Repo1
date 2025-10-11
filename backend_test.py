@@ -1460,10 +1460,10 @@ Import Test Customer 2,D/O Test Mother,9876543293,,importtest2@example.com,"456 
             actual_final_state = {
                 'name': final_customer.get('name'),
                 'mobile': final_customer.get('mobile'),
-                'vehicle_brand': final_vehicle_info.get('brand'),
-                'vehicle_model': final_vehicle_info.get('model'),
-                'insurance_nominee': final_insurance_info.get('nominee_name'),
-                'insurance_relation': final_insurance_info.get('relation')
+                'vehicle_brand': final_vehicle_info.get('brand') if final_vehicle_info else None,
+                'vehicle_model': final_vehicle_info.get('model') if final_vehicle_info else None,
+                'insurance_nominee': final_insurance_info.get('nominee_name') if final_insurance_info else None,
+                'insurance_relation': final_insurance_info.get('relation') if final_insurance_info else None
             }
             
             print(f"\n   📊 FINAL STATE COMPARISON:")
