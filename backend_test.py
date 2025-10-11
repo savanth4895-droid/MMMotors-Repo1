@@ -106,8 +106,8 @@ class TwoWheelerAPITester:
         """Test getting current user info"""
         return self.run_test("Get Current User", "GET", "auth/me", 200)
 
-    def test_create_customer(self, name, phone, email, address):
-        """Test customer creation"""
+    def test_create_customer(self, name, mobile, email, address):
+        """Test customer creation with mobile field"""
         success, response = self.run_test(
             "Create Customer",
             "POST",
@@ -115,7 +115,7 @@ class TwoWheelerAPITester:
             200,
             data={
                 "name": name,
-                "phone": phone,
+                "mobile": mobile,
                 "email": email,
                 "address": address
             }
