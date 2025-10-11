@@ -329,6 +329,37 @@ const NewService = () => {
     }
   };
 
+  // Search for chassis number suggestions
+  const searchChassisNumbers = async (partialChassisNumber) => {
+    if (!partialChassisNumber || partialChassisNumber.length < 3) {
+      setChassisOptions([]);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const vehiclesResponse = await axios.get(`${API}/vehicles`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // Filter vehicles by partial chassis number match
+      const matchingVehicles = vehiclesResponse.data.filter(vehicle => 
+        vehicle.chassis_no && 
+        vehicle.chassis_no.toLowerCase().includes(partialChassisNumber.toLowerCase())
+      ).slice(0, 10); // Limit to 10 suggestions
+
+      setChassisOptions(matchingVehicles.map(vehicle => ({
+        chassis_no: vehicle.chassis_no,
+        brand: vehicle.brand,
+        model: vehicle.model,
+        vehicle_id: vehicle.id
+      })));
+    } catch (error) {
+      console.error('Error fetching chassis numbers:', error);
+      setChassisOptions([]);
+    }
+  };
+
   // Search for vehicle data by chassis number
   const searchByChassisNumber = async (chassisNumber) => {
     if (!chassisNumber || chassisNumber.length < 4) {
@@ -354,7 +385,7 @@ const NewService = () => {
 
       // Find matching vehicle by chassis number
       const matchingVehicle = vehiclesResponse.data.find(vehicle => 
-        vehicle.chassis_no && vehicle.chassis_no.toLowerCase().includes(chassisNumber.toLowerCase())
+        vehicle.chassis_no && vehicle.chassis_no.toLowerCase() === chassisNumber.toLowerCase()
       );
 
       if (matchingVehicle) {
@@ -378,7 +409,8 @@ const NewService = () => {
           vehicle_brand: matchingVehicle.brand || '',
           vehicle_model: matchingVehicle.model || '',
           vehicle_year: new Date().getFullYear().toString(), // Default to current year if not available
-          vehicle_reg_no: chassisNumber // Use the searched chassis as reg number if no specific vehicle number
+          chassis_no: matchingVehicle.chassis_no || '',
+          vehicle_reg_no: '' // Keep vehicle reg separate from chassis
         }));
 
         toast.success('Vehicle details found and populated!');
