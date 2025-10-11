@@ -2868,6 +2868,8 @@ const ServicesBilling = () => {
           handleJobCardSearch={handleJobCardSearch}
           handleJobCardBlur={handleJobCardBlur}
           clearServiceDetails={clearServiceDetails}
+          jobCardSuggestions={jobCardSuggestions}
+          handleJobCardSelection={handleJobCardSelection}
         />
       ) : (
         <ViewBillsContent 
