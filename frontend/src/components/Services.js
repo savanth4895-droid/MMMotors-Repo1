@@ -2963,6 +2963,26 @@ const CreateBillContent = ({
                         <FileSearch className="w-5 h-5 text-slate-400" />
                       </div>
                     )}
+                    
+                    {/* Job Card Suggestions Dropdown */}
+                    {jobCardSuggestions.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-60 overflow-y-auto mt-1">
+                        <div className="p-2 text-xs text-blue-600 font-medium border-b">
+                          Job Card Suggestions
+                        </div>
+                        {jobCardSuggestions.map((suggestion, index) => (
+                          <div
+                            key={index}
+                            className="p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                            onMouseDown={() => handleJobCardSelection(suggestion)}
+                          >
+                            <div className="font-medium text-sm text-blue-900">{suggestion.job_card_number}</div>
+                            <div className="text-xs text-gray-600">{suggestion.customer_name}</div>
+                            <div className="text-xs text-green-600 capitalize">{suggestion.service_type?.replace('_', ' ')}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <p className="text-xs text-slate-500 mt-1">Enter job card to auto-fill service details</p>
                 </div>
