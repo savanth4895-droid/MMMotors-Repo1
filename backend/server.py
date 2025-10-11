@@ -119,13 +119,13 @@ class Vehicle(BaseModel):
     customer_id: Optional[str] = None
 
 class VehicleCreate(BaseModel):
-    brand: str
-    model: str
-    chassis_no: str
-    engine_no: str
-    color: str
-    key_no: str
-    inbound_location: str
+    brand: Optional[str] = None
+    model: Optional[str] = None
+    chassis_no: Optional[str] = None
+    engine_no: Optional[str] = None
+    color: Optional[str] = None
+    key_no: Optional[str] = None
+    inbound_location: Optional[str] = None
     page_number: Optional[str] = None
 
 class Sale(BaseModel):
