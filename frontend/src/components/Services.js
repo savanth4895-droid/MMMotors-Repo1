@@ -3822,11 +3822,11 @@ const ServiceDue = () => {
       
       // First, populate with purchase dates from sales
       sales.forEach(sale => {
-        if (sale.vehicle_id) {
+        if (sale && sale.vehicle_id && sale.created_at) {
           vehicleServiceMap[sale.vehicle_id] = {
             purchase_date: new Date(sale.created_at),
             latest_service_date: null,
-            customer_name: customers.find(c => c.id === sale.customer_id)?.name || 'Unknown',
+            customer_name: customers.find(c => c && c.id === sale.customer_id)?.name || 'Unknown',
             vehicle_details: sale.vehicle_id
           };
         }
