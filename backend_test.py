@@ -925,12 +925,17 @@ class TwoWheelerAPITester:
         print("\n🔧❌ 5. TEST DELETE SERVICE SUCCESS")
         print("-" * 50)
         
-        success, delete_response = self.run_test(
-            "Delete Service",
-            "DELETE",
-            f"services/{created_ids['services'][0]}",
-            200
-        )
+        if len(created_ids['services']) > 0:
+            success, delete_response = self.run_test(
+                "Delete Service",
+                "DELETE",
+                f"services/{created_ids['services'][0]}",
+                200
+            )
+        else:
+            print("❌ Cannot test service deletion - no services created")
+            success = False
+            delete_response = {}
         
         if success:
             print("✅ DELETE service successful")
