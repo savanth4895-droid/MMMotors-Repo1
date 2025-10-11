@@ -227,6 +227,7 @@ const NewService = () => {
     vehicle_model: '',
     vehicle_year: '',
     vehicle_reg_no: '',
+    chassis_no: '',
     service_type: '',
     description: '',
     estimated_amount: ''
@@ -234,6 +235,7 @@ const NewService = () => {
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
+  const [chassisOptions, setChassisOptions] = useState([]);
 
   const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA'];
   const serviceTypes = [
