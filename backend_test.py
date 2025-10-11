@@ -860,31 +860,35 @@ class TwoWheelerAPITester:
         print("\n🚗❌ 3. TEST DELETE VEHICLE SUCCESS (NO REFERENCES)")
         print("-" * 50)
         
-        success, delete_response = self.run_test(
-            "Delete Vehicle Without References",
-            "DELETE",
-            f"vehicles/{created_ids['vehicles'][0]}",
-            200
-        )
-        
-        if success:
-            print("✅ DELETE vehicle without references successful")
-            test_results['delete_vehicle_success'] = True
-            
-            # Verify vehicle is actually deleted
-            success_verify, _ = self.run_test(
-                "Verify Vehicle Deleted",
-                "GET",
+        if len(created_ids['vehicles']) > 0:
+            success, delete_response = self.run_test(
+                "Delete Vehicle Without References",
+                "DELETE",
                 f"vehicles/{created_ids['vehicles'][0]}",
-                404
+                200
             )
-            if success_verify:
-                print("   ✅ Vehicle successfully removed from database")
+            
+            if success:
+                print("✅ DELETE vehicle without references successful")
+                test_results['delete_vehicle_success'] = True
+                
+                # Verify vehicle is actually deleted
+                success_verify, _ = self.run_test(
+                    "Verify Vehicle Deleted",
+                    "GET",
+                    f"vehicles/{created_ids['vehicles'][0]}",
+                    404
+                )
+                if success_verify:
+                    print("   ✅ Vehicle successfully removed from database")
+                else:
+                    print("   ❌ Vehicle still exists after deletion")
+                    all_tests_passed = False
             else:
-                print("   ❌ Vehicle still exists after deletion")
+                print("❌ DELETE vehicle without references failed")
                 all_tests_passed = False
         else:
-            print("❌ DELETE vehicle without references failed")
+            print("❌ Cannot test vehicle deletion - no vehicles created")
             all_tests_passed = False
         
         # 4. TEST DELETE VEHICLE WITH SALES PROTECTION
