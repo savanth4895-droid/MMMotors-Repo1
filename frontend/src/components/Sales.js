@@ -1208,6 +1208,8 @@ const CreateInvoice = () => {
                   placeholder="Enter engine number"
                   value={invoiceData.engine_no}
                   onChange={(e) => handleInputChange('engine_no', e.target.value)}
+                  disabled={selectedVehicle}
+                  className={selectedVehicle ? 'bg-green-50 border-green-200' : ''}
                 />
               </div>
               <div>
@@ -1217,6 +1219,8 @@ const CreateInvoice = () => {
                   placeholder="Enter vehicle registration number"
                   value={invoiceData.vehicle_no}
                   onChange={(e) => handleInputChange('vehicle_no', e.target.value)}
+                  disabled={selectedVehicle}
+                  className={selectedVehicle ? 'bg-green-50 border-green-200' : ''}
                 />
               </div>
             </div>
