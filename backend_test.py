@@ -841,15 +841,20 @@ class TwoWheelerAPITester:
             created_ids['sales'].append(sale1['id'])
             print(f"✅ Created sale 1: {sale1['id'][:8]}...")
         
-        # Create a spare part bill to test spare part delete protection
-        success, bill1 = self.test_create_spare_part_bill(
-            {"name": "Test Customer", "mobile": "9876543302", "vehicle_name": "Test Vehicle", "vehicle_number": "KA01CD5678"},
-            [{"part_id": created_ids['spare_parts'][1], "description": "Test Item", "quantity": 1, "rate": 100, "gst_percent": 18}],
-            100, 0, 9, 9, 18, 118
-        )
-        if success and 'id' in bill1:
-            created_ids['bills'].append(bill1['id'])
-            print(f"✅ Created spare part bill 1: {bill1['id'][:8]}...")
+        # Create a spare part bill to test spare part delete protection (only if we have spare parts)
+        if len(created_ids['spare_parts']) > 1:
+            success, bill1 = self.test_create_spare_part_bill(
+                {"name": "Test Customer", "mobile": "9876543302", "vehicle_name": "Test Vehicle", "vehicle_number": "KA01CD5678"},
+                [{"part_id": created_ids['spare_parts'][1], "description": "Test Item", "quantity": 1, "rate": 100, "gst_percent": 18}],
+                100, 0, 9, 9, 18, 118
+            )
+            if success and 'id' in bill1:
+                created_ids['bills'].append(bill1['id'])
+                print(f"✅ Created spare part bill 1: {bill1['id'][:8]}...")
+        else:
+            print("❌ Cannot create spare part bill - insufficient spare parts")
+            success = False
+            bill1 = {}
         
         # 3. TEST DELETE VEHICLE SUCCESS (NO REFERENCES)
         print("\n🚗❌ 3. TEST DELETE VEHICLE SUCCESS (NO REFERENCES)")
