@@ -1348,7 +1348,7 @@ const ViewInvoices = () => {
             <h3 style="margin: 0 0 8px 0; font-size: 12px; color: #2563eb; border-bottom: 1px solid #ccc; padding-bottom: 3px;">Customer Details</h3>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
               <div style="font-size: 10px; margin-bottom: 4px;"><strong>Name:</strong> ${invoice.customer?.name || 'N/A'}</div>
-              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Mobile:</strong> ${invoice.customer?.phone || 'N/A'}</div>
+              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Mobile:</strong> ${invoice.customer?.mobile || invoice.customer?.phone || 'N/A'}</div>
               <div style="font-size: 10px; margin-bottom: 4px;"><strong>Address:</strong> ${invoice.customer?.address || 'N/A'}</div>
             </div>
           </div>
