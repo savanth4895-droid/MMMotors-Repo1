@@ -1076,9 +1076,9 @@ const CreateInvoice = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="brand">Brand</Label>
-                <Select value={invoiceData.brand} onValueChange={(value) => handleInputChange('brand', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select brand" />
+                <Select value={invoiceData.brand} onValueChange={(value) => handleInputChange('brand', value)} disabled={selectedVehicle}>
+                  <SelectTrigger className={selectedVehicle ? 'bg-green-50 border-green-200' : ''}>
+                    <SelectValue placeholder={selectedVehicle ? "Selected from inventory" : "Select brand"} />
                   </SelectTrigger>
                   <SelectContent>
                     {brands.map((brand) => (
