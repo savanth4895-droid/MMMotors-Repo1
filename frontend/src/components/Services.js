@@ -490,7 +490,10 @@ const NewService = () => {
       let customerId = null;
       
       try {
-        const customersResponse = await axios.get(`${API}/customers`);
+        const token = localStorage.getItem('token');
+        const customersResponse = await axios.get(`${API}/customers`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         const existingCustomer = customersResponse.data.find(
           customer => customer.mobile === serviceData.phone_number
         );
