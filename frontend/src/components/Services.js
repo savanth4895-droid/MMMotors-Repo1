@@ -2131,6 +2131,36 @@ const ServicesBilling = () => {
     setFilteredBills(filtered);
   };
 
+  const fetchJobCardSuggestions = async (partialJobCard) => {
+    if (!partialJobCard || partialJobCard.length < 3) {
+      setJobCardSuggestions([]);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/services`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // Filter services by partial job card number match
+      const matchingServices = response.data.filter(service => 
+        service.job_card_number && 
+        service.job_card_number.toLowerCase().includes(partialJobCard.toLowerCase())
+      ).slice(0, 10); // Limit to 10 suggestions
+
+      setJobCardSuggestions(matchingServices.map(service => ({
+        job_card_number: service.job_card_number,
+        customer_name: service.customer_name || 'Unknown Customer',
+        service_type: service.service_type,
+        service_id: service.id
+      })));
+    } catch (error) {
+      console.error('Error fetching job card suggestions:', error);
+      setJobCardSuggestions([]);
+    }
+  };
+
   const fetchServiceByJobCard = async (jobCard) => {
     if (!jobCard.trim()) {
       setServiceDetails(null);
