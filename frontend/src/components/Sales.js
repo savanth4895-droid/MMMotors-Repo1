@@ -1361,7 +1361,7 @@ const ViewInvoices = () => {
               <div style="font-size: 10px; margin-bottom: 4px;"><strong>Color:</strong> ${invoice.vehicle?.color || 'N/A'}</div>
               <div style="font-size: 10px; margin-bottom: 4px;"><strong>Chassis No:</strong> ${invoice.vehicle?.chassis_no || 'N/A'}</div>
               <div style="font-size: 10px; margin-bottom: 4px;"><strong>Engine No:</strong> ${invoice.vehicle?.engine_no || 'N/A'}</div>
-              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Vehicle No:</strong> ${invoice.vehicle?.vehicle_no || 'N/A'}</div>
+              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Vehicle No:</strong> ${invoice.customer?.vehicle_info?.vehicle_number || invoice.vehicle?.vehicle_no || 'N/A'}</div>
             </div>
           </div>
           
