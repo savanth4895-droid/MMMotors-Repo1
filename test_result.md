@@ -103,7 +103,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Test the phone to mobile field replacement in the backend. I have replaced all phone fields with mobile fields in the Customer models and related functions. Need to verify that customer creation, updates, retrieval, and import functionality all work correctly with the mobile field instead of phone field."
+user_problem_statement: "Test vehicle field validation after making all fields optional. The user was getting 'Field required' errors in the Edit Customer Details page, which I traced to the Vehicle model still having required fields that were being updated during customer edits. Need to verify that vehicle updates work without 'Field required' errors and that all vehicle fields are properly optional."
 
 backend:
   - task: "Data Import CSV Field Mapping Fix"
