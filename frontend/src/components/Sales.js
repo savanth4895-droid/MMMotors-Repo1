@@ -2727,17 +2727,17 @@ const ViewInvoices = () => {
                             <div className="grid grid-cols-2 gap-2">
                               <div className="border-b border-emerald-200 pb-0.5">
                                 <span className="text-emerald-700 font-medium text-xs">Brand</span>
-                                <div className="text-slate-900 font-bold text-xs">{selectedInvoice.vehicle?.brand || 'N/A'}</div>
+                                <div className="text-slate-900 font-bold text-xs">{selectedInvoice.customer?.vehicle_info?.brand || selectedInvoice.vehicle?.brand || 'N/A'}</div>
                               </div>
                               <div className="border-b border-emerald-200 pb-0.5">
                                 <span className="text-emerald-700 font-medium text-xs">Model</span>
-                                <div className="text-slate-900 font-semibold text-xs">{selectedInvoice.vehicle?.model || 'N/A'}</div>
+                                <div className="text-slate-900 font-semibold text-xs">{selectedInvoice.customer?.vehicle_info?.model || selectedInvoice.vehicle?.model || 'N/A'}</div>
                               </div>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                               <div className="border-b border-emerald-200 pb-0.5">
                                 <span className="text-emerald-700 font-medium text-xs">Color</span>
-                                <div className="text-slate-900 text-xs">{selectedInvoice.vehicle?.color || 'N/A'}</div>
+                                <div className="text-slate-900 text-xs">{selectedInvoice.customer?.vehicle_info?.color || selectedInvoice.vehicle?.color || 'N/A'}</div>
                               </div>
                               <div className="border-b border-emerald-200 pb-0.5">
                                 <span className="text-emerald-700 font-medium text-xs">Vehicle No</span>
