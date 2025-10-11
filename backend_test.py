@@ -2988,25 +2988,6 @@ KTM,,KTM_CHASSIS_001,KTM_ENGINE_001,,KTM_KEY_001,,
         self.token = original_token  # Restore token
         return success, response
 
-    def test_create_service(self, customer_id, vehicle_number, service_type, description, amount):
-        """Test service creation"""
-        success, response = self.run_test(
-            "Create Service",
-            "POST",
-            "services",
-            200,
-            data={
-                "customer_id": customer_id,
-                "vehicle_number": vehicle_number,
-                "service_type": service_type,
-                "description": description,
-                "amount": amount
-            }
-        )
-        if success and 'id' in response:
-            self.created_ids['services'].append(response['id'])
-        return success, response
-
     def test_get_services(self):
         """Test getting all services"""
         return self.run_test("Get Services", "GET", "services", 200)
