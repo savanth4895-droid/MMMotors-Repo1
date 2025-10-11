@@ -2943,7 +2943,7 @@ const ViewInvoices = () => {
                         <SelectContent>
                           {customers.map((customer) => (
                             <SelectItem key={customer.id} value={customer.id}>
-                              {customer.name} - {customer.phone || customer.mobile}
+                              {customer.name} - {customer.mobile || customer.phone}
                             </SelectItem>
                           ))}
                         </SelectContent>
