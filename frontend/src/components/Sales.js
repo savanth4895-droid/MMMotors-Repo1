@@ -447,21 +447,41 @@ const CreateInvoice = () => {
       // Create customer first
       const customerResponse = await axios.post(`${API}/customers`, {
         name: invoiceData.name,
-        phone: invoiceData.mobile,
+        mobile: invoiceData.mobile,
+        care_of: invoiceData.care_of,
         email: null,
         address: invoiceData.address
       });
 
-      // Create vehicle
-      const vehicleResponse = await axios.post(`${API}/vehicles`, {
-        brand: invoiceData.brand,
-        model: invoiceData.model,
-        chassis_no: invoiceData.chassis_no,
-        engine_no: invoiceData.engine_no,
-        color: invoiceData.color,
-        key_no: 'N/A',
-        inbound_location: 'Showroom'
-      });
+      let vehicleResponse;
+      
+      if (selectedVehicle) {
+        // Use selected vehicle from inventory
+        vehicleResponse = { data: selectedVehicle };
+        
+        // Update the vehicle to associate it with this customer
+        await axios.put(`${API}/vehicles/${selectedVehicle.id}`, {
+          ...selectedVehicle,
+          customer_id: customerResponse.data.id,
+          status: 'sold',
+          date_sold: new Date().toISOString()
+        });
+      } else {
+        // Create new vehicle entry
+        vehicleResponse = await axios.post(`${API}/vehicles`, {
+          brand: invoiceData.brand,
+          model: invoiceData.model,
+          chassis_no: invoiceData.chassis_no,
+          engine_no: invoiceData.engine_no,
+          color: invoiceData.color,
+          vehicle_no: invoiceData.vehicle_no,
+          key_no: 'N/A',
+          inbound_location: 'Showroom',
+          customer_id: customerResponse.data.id,
+          status: 'sold',
+          date_sold: new Date().toISOString()
+        });
+      }
 
       // Create sale
       const saleResponse = await axios.post(`${API}/sales`, {
