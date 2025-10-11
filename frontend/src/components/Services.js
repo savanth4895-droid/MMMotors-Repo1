@@ -2018,6 +2018,7 @@ const ServicesBilling = () => {
   const [jobCardNumber, setJobCardNumber] = useState('');
   const [serviceDetails, setServiceDetails] = useState(null);
   const [fetchingService, setFetchingService] = useState(false);
+  const [jobCardSuggestions, setJobCardSuggestions] = useState([]);
   const [billItems, setBillItems] = useState([{
     sl_no: 1,
     description: '',
