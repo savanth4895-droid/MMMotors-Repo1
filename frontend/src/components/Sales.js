@@ -5235,7 +5235,7 @@ const ViewCustomerDetails = () => {
               <tbody>
                 {filteredDetails.length === 0 ? (
                   <tr>
-                    <td colSpan="11" className="p-8 text-center text-gray-500">
+                    <td colSpan="14" className="p-8 text-center text-gray-500">
                       {searchTerm ? 'No customer details found matching your search' : 'No customer details found'}
                     </td>
                   </tr>
