@@ -6019,7 +6019,7 @@ const InsuranceManagement = () => {
                   <h3 className="text-lg font-semibold mb-3 text-blue-600">Customer Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><strong>Name:</strong> {selectedInsurance.customer_name}</div>
-                    <div><strong>Phone:</strong> {selectedInsurance.phone_number}</div>
+                    <div><strong>Mobile:</strong> {selectedInsurance.phone_number}</div>
                     <div className="md:col-span-2"><strong>Address:</strong> {selectedInsurance.customer_address}</div>
                   </div>
                 </div>
