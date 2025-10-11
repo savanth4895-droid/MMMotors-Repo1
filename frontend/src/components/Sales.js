@@ -357,11 +357,81 @@ const CreateInvoice = () => {
 
   const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA'];
 
+  // Vehicle search functionality
+  const searchVehiclesByChassisNo = async (chassisQuery) => {
+    if (chassisQuery.length < 3) {
+      setVehicleSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    try {
+      const response = await axios.get(`${API}/vehicles`);
+      const availableVehicles = response.data.filter(vehicle => 
+        vehicle.status === 'in_stock' && 
+        vehicle.chassis_no?.toLowerCase().includes(chassisQuery.toLowerCase())
+      );
+      
+      setVehicleSuggestions(availableVehicles.slice(0, 10)); // Limit to 10 suggestions
+      setShowSuggestions(availableVehicles.length > 0);
+    } catch (error) {
+      console.error('Error searching vehicles:', error);
+      toast.error('Failed to search vehicles');
+    }
+  };
+
+  // Debounced search to avoid excessive API calls
+  const debounce = (func, delay) => {
+    let timeoutId;
+    return (...args) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => func.apply(null, args), delay);
+    };
+  };
+
+  const debouncedVehicleSearch = debounce(searchVehiclesByChassisNo, 300);
+
   const handleInputChange = (field, value) => {
     setInvoiceData(prev => ({
       ...prev,
       [field]: value
     }));
+
+    // Trigger vehicle search when chassis number changes
+    if (field === 'chassis_no') {
+      debouncedVehicleSearch(value);
+    }
+  };
+
+  // Select vehicle from suggestions
+  const selectVehicle = async (vehicle) => {
+    setSelectedVehicle(vehicle);
+    setInvoiceData(prev => ({
+      ...prev,
+      brand: vehicle.brand,
+      model: vehicle.model,
+      color: vehicle.color,
+      chassis_no: vehicle.chassis_no,
+      engine_no: vehicle.engine_no,
+      vehicle_no: vehicle.vehicle_no || ''
+    }));
+    
+    setShowSuggestions(false);
+    setVehicleSuggestions([]);
+
+    // Update vehicle status to sold
+    try {
+      await axios.put(`${API}/vehicles/${vehicle.id}`, {
+        ...vehicle,
+        status: 'sold',
+        date_sold: new Date().toISOString()
+      });
+      
+      toast.success(`Vehicle ${vehicle.chassis_no} marked as sold`);
+    } catch (error) {
+      console.error('Error updating vehicle status:', error);
+      toast.error('Vehicle details loaded, but failed to update status');
+    }
   };
 
   const generateInvoiceNumber = () => {
