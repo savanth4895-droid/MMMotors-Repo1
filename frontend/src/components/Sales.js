@@ -1087,14 +1087,65 @@ const CreateInvoice = () => {
                   onChange={(e) => handleInputChange('color', e.target.value)}
                 />
               </div>
-              <div>
+              <div className="relative">
                 <Label htmlFor="chassis_no">Chassis No</Label>
                 <Input
                   id="chassis_no"
-                  placeholder="Enter chassis number"
+                  placeholder="Enter chassis number (min 3 chars for suggestions)"
                   value={invoiceData.chassis_no}
                   onChange={(e) => handleInputChange('chassis_no', e.target.value)}
+                  onFocus={() => {
+                    if (invoiceData.chassis_no.length >= 3) {
+                      setShowSuggestions(true);
+                    }
+                  }}
+                  onBlur={() => {
+                    // Delay hiding suggestions to allow clicking on them
+                    setTimeout(() => setShowSuggestions(false), 150);
+                  }}
                 />
+                
+                {/* Vehicle Suggestions Dropdown */}
+                {showSuggestions && vehicleSuggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 z-50 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    <div className="p-2 bg-blue-50 border-b">
+                      <span className="text-sm font-medium text-blue-700">
+                        {vehicleSuggestions.length} vehicle(s) found - Click to select
+                      </span>
+                    </div>
+                    {vehicleSuggestions.map((vehicle) => (
+                      <div
+                        key={vehicle.id}
+                        className="p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 transition-colors"
+                        onClick={() => selectVehicle(vehicle)}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900">
+                              {vehicle.brand} {vehicle.model}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              <span className="font-mono">{vehicle.chassis_no}</span>
+                              <span className="mx-2">•</span>
+                              <span>{vehicle.color}</span>
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Engine: {vehicle.engine_no}
+                              {vehicle.vehicle_no && (
+                                <span> • Vehicle No: {vehicle.vehicle_no}</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="ml-2">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              Available
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <div>
                 <Label htmlFor="engine_no">Engine No</Label>
