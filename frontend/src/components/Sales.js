@@ -3986,7 +3986,7 @@ const CustomersManagement = () => {
                           )}
                         </div>
                       </td>
-                      <td className="p-3 text-gray-600">{customer.phone}</td>
+                      <td className="p-3 text-gray-600">{customer.mobile}</td>
                       <td className="p-3 text-gray-600">{customer.address}</td>
                       <td className="p-3 text-gray-600">{getCustomerVehicle(customer.id)}</td>
                       <td className="p-3 text-gray-600">
