@@ -6949,7 +6949,11 @@ def test_customer_update_field_mapping_fix():
     
     return success
 
-    def test_customer_update_with_vehicle_insurance_preservation(self):
+if __name__ == "__main__":
+    # Run the customer update field mapping fix test
+    test_customer_update_field_mapping_fix()
+
+def main():
         """
         COMPREHENSIVE CUSTOMER UPDATE WITH VEHICLE AND INSURANCE INFORMATION PRESERVATION TESTING
         Testing customer update functionality with vehicle and insurance information preservation.
