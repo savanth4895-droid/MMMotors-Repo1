@@ -476,6 +476,19 @@ const NewService = () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSave} className="space-y-6">
+          {/* Auto-fill Information */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center gap-2">
+              <FileSearch className="w-5 h-5 text-blue-600" />
+              <div>
+                <h4 className="text-sm font-medium text-blue-800">Auto-fill Feature</h4>
+                <p className="text-xs text-blue-600">
+                  Enter phone number or chassis/registration number to automatically fill customer and vehicle details from existing sales records.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Customer Information Section */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-blue-600 border-b pb-2">Customer Information</h3>
