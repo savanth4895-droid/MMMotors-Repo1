@@ -433,6 +433,11 @@ const NewService = () => {
     []
   );
 
+  const debouncedSearchChassisNumbers = useCallback(
+    debounce((partialChassisNumber) => searchChassisNumbers(partialChassisNumber), 300),
+    []
+  );
+
   const resetForm = () => {
     setServiceData({
       customer_name: '',
