@@ -2703,8 +2703,8 @@ const ViewInvoices = () => {
                               <span className="text-slate-900 font-semibold text-xs">{selectedInvoice.customer?.name || 'N/A'}</span>
                             </div>
                             <div className="flex items-center border-b border-slate-200 pb-0.5">
-                              <span className="text-slate-600 font-medium w-12 text-xs">Phone:</span>
-                              <span className="text-slate-900 font-mono font-semibold text-xs">{selectedInvoice.customer?.phone || 'N/A'}</span>
+                              <span className="text-slate-600 font-medium w-12 text-xs">Mobile:</span>
+                              <span className="text-slate-900 font-mono font-semibold text-xs">{selectedInvoice.customer?.mobile || selectedInvoice.customer?.phone || 'N/A'}</span>
                             </div>
                             <div className="flex items-start">
                               <span className="text-slate-600 font-medium w-12 text-xs">Address:</span>
