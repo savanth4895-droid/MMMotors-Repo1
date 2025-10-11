@@ -97,7 +97,7 @@ class Customer(BaseModel):
 class CustomerCreate(BaseModel):
     name: Optional[str] = None
     care_of: Optional[str] = None
-    phone: Optional[str] = None
+    mobile: Optional[str] = None
     email: Optional[EmailStr] = None
     address: Optional[str] = None
 
