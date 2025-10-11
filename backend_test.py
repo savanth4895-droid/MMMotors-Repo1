@@ -1424,7 +1424,8 @@ Import Test Customer 2,D/O Test Mother,9876543293,,importtest2@example.com,"456 
                 test_results['partial_update_preservation'] = True
             else:
                 print("   ❌ insurance_info lost during partial update")
-                print(f"   Expected nominee: 'John Smith', Got: '{insurance_info.get('nominee_name', 'MISSING')}'")
+                nominee_name = insurance_info.get('nominee_name', 'MISSING') if insurance_info else 'MISSING'
+                print(f"   Expected nominee: 'John Smith', Got: '{nominee_name}'")
                 all_tests_passed = False
         else:
             print("❌ Partial update failed")
