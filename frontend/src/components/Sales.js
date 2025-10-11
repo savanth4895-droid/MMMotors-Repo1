@@ -3501,7 +3501,7 @@ const CustomersManagement = () => {
           new Date().toISOString().split('T')[0],
           customer.name || '',
           '', // C/O not stored separately
-          customer.phone || '',
+          customer.mobile || '',
           customer.address || '',
           customer.email || '',
           new Date(customer.created_at).toLocaleDateString()
