@@ -3867,7 +3867,7 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
                 <div className="border rounded-lg p-4">
                   <h4 className="font-semibold text-blue-600 mb-3">Service Details</h4>
                   <div className="space-y-2">
-                    <p><strong>Service Type:</strong> {selectedBill.service_type?.replace('_', ' ').toUpperCase() || 'N/A'}</p>
+                    <p><strong>Service Type:</strong> {selectedBill.service_type ? selectedBill.service_type.replace('_', ' ').toUpperCase() : 'N/A'}</p>
                     <p><strong>Description:</strong></p>
                     <div className="bg-gray-50 p-3 rounded text-gray-700">
                       {selectedBill.description || 'No description provided'}
