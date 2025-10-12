@@ -496,11 +496,12 @@ const BrandDetails = () => {
     let filtered = vehicles;
     if (searchTerm) {
       filtered = vehicles.filter(vehicle =>
-        vehicle.chassis_no.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        vehicle.engine_no.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        vehicle.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        vehicle.color.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        vehicle.key_no.toLowerCase().includes(searchTerm.toLowerCase())
+        vehicle.chassis_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vehicle.engine_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vehicle.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vehicle.color?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vehicle.key_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vehicle.vehicle_number?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     setFilteredVehicles(filtered);
