@@ -3758,7 +3758,7 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
                           bill.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
                           'bg-gray-100 text-gray-800'
                         }`}>
-                          {bill.status?.replace('_', ' ').toUpperCase() || 'PENDING'}
+                          {bill.status ? bill.status.replace('_', ' ').toUpperCase() : 'PENDING'}
                         </span>
                       </td>
                       <td className="p-3 text-sm text-gray-600">
