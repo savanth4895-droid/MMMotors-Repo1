@@ -1126,6 +1126,15 @@ const ViewRegistration = () => {
                             <FileText className="w-4 h-4" />
                             Edit
                           </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDeleteRegistration(registration)}
+                            className="flex items-center gap-1 text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete
+                          </Button>
                         </div>
                       </td>
                     </tr>
