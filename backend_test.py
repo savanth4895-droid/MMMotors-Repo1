@@ -10600,11 +10600,11 @@ if __name__ == "__main__":
             print(f"   Success Rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
             sys.exit(0 if success else 1)
     
-    # Default to service registration testing
-    print("🚀 SERVICE REGISTRATION API ENDPOINTS TESTING (DEFAULT)")
+    # Default to CSV import functionality testing
+    print("🚀 CSV IMPORT FUNCTIONALITY TESTING - CUSTOMERS WITH VEHICLE & INSURANCE DETAILS (DEFAULT)")
     print("=" * 60)
     tester = TwoWheelerAPITester()
-    success, results = tester.test_service_registration_api_endpoints()
+    success, results = tester.test_customer_import_with_vehicle_insurance_details()
     print("\n" + "=" * 60)
     print(f"📊 Final Test Results:")
     print(f"   Tests Run: {tester.tests_run}")
