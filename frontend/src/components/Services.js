@@ -3594,7 +3594,7 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
                   <span class="info-label">Status:</span>
                   <span class="info-value">
                     <span class="status-badge status-${bill.status || 'pending'}">
-                      ${bill.status?.replace('_', ' ').toUpperCase() || 'PENDING'}
+                      ${bill.status ? bill.status.replace('_', ' ').toUpperCase() : 'PENDING'}
                     </span>
                   </span>
                 </div>
