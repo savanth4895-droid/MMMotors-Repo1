@@ -3746,7 +3746,7 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
                       </td>
                       <td className="p-3 text-sm text-gray-600">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {bill.service_type?.replace('_', ' ').toUpperCase() || 'N/A'}
+                          {bill.service_type ? bill.service_type.replace('_', ' ').toUpperCase() : 'N/A'}
                         </span>
                       </td>
                       <td className="p-3 text-sm font-medium text-green-600">
