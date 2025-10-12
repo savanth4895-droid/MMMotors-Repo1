@@ -111,10 +111,11 @@ class Vehicle(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     brand: Optional[str] = None  # TVS, BAJAJ, HERO, HONDA, TRIUMPH, KTM, SUZUKI, APRILIA
     model: Optional[str] = None
-    chassis_no: Optional[str] = None
-    engine_no: Optional[str] = None
+    chassis_number: Optional[str] = None  # Standardized from chassis_no
+    engine_number: Optional[str] = None  # Standardized from engine_no
     color: Optional[str] = None
-    key_no: Optional[str] = None
+    vehicle_number: Optional[str] = None  # Registration number
+    key_number: Optional[str] = None  # Standardized from key_no
     inbound_location: Optional[str] = None
     outbound_location: Optional[str] = None
     status: VehicleStatus = VehicleStatus.IN_STOCK
@@ -127,10 +128,11 @@ class Vehicle(BaseModel):
 class VehicleCreate(BaseModel):
     brand: Optional[str] = None
     model: Optional[str] = None
-    chassis_no: Optional[str] = None
-    engine_no: Optional[str] = None
+    chassis_number: Optional[str] = None  # Standardized from chassis_no
+    engine_number: Optional[str] = None  # Standardized from engine_no
     color: Optional[str] = None
-    key_no: Optional[str] = None
+    vehicle_number: Optional[str] = None  # Registration number
+    key_number: Optional[str] = None  # Standardized from key_no
     inbound_location: Optional[str] = None
     page_number: Optional[str] = None
 
