@@ -160,7 +160,7 @@ class Service(BaseModel):
     job_card_number: str
     customer_id: str
     vehicle_id: Optional[str] = None
-    vehicle_number: str
+    vehicle_number: str  # Registration number (standardized)
     service_type: str
     description: str
     status: ServiceStatus = ServiceStatus.PENDING
@@ -173,7 +173,7 @@ class Service(BaseModel):
 class ServiceCreate(BaseModel):
     customer_id: str
     vehicle_id: Optional[str] = None
-    vehicle_number: str
+    vehicle_number: str  # Registration number (standardized)
     service_type: str
     description: str
     amount: float
