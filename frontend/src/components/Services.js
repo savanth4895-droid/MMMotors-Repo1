@@ -2205,7 +2205,7 @@ const ServicesBilling = () => {
       // Auto-populate first bill item with service details
       const serviceItem = {
         sl_no: 1,
-        description: `${service.service_type.replace('_', ' ').toUpperCase()} - ${service.description}`,
+        description: `${service.service_type ? service.service_type.replace('_', ' ').toUpperCase() : 'SERVICE'} - ${service.description}`,
         hsn_sac: service.service_type === 'repair' ? '99800' : '99820', // Service HSN codes
         qty: 1,
         unit: 'Nos',
