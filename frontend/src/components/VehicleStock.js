@@ -982,9 +982,10 @@ const StockView = () => {
 
     if (searchTerm) {
       filtered = filtered.filter(vehicle => 
-        vehicle.chassis_no.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        vehicle.engine_no.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        vehicle.model.toLowerCase().includes(searchTerm.toLowerCase())
+        vehicle.chassis_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vehicle.engine_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vehicle.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vehicle.vehicle_number?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
