@@ -353,8 +353,8 @@ const EditVehicleModal = ({ vehicle, isOpen, onClose, onUpdate }) => {
               <Input
                 id="edit-engine"
                 placeholder="Enter engine number"
-                value={editData.engine_no}
-                onChange={(e) => setEditData({...editData, engine_no: e.target.value})}
+                value={editData.engine_number}
+                onChange={(e) => setEditData({...editData, engine_number: e.target.value})}
                 required
               />
             </div>
