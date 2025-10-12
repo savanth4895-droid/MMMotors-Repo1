@@ -1485,6 +1485,27 @@ const ViewInvoices = () => {
     setShowEditModal(true);
   };
 
+  const handleDeleteInvoice = async (invoice) => {
+    if (!window.confirm(`Are you sure you want to delete invoice "${invoice.invoice_number}"? This action cannot be undone and will reset the associated vehicle status to available.`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/sales/${invoice.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Remove from local state
+      const updatedInvoices = invoices.filter(inv => inv.id !== invoice.id);
+      setInvoices(updatedInvoices);
+      
+      toast.success('Invoice deleted successfully!');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to delete invoice');
+    }
+  };
+
   const handleSaveEdit = async () => {
     if (!editingInvoice) return;
     
