@@ -1131,10 +1131,10 @@ const StockView = () => {
                     <td className="p-2">{new Date(vehicle.date_received).toLocaleDateString()}</td>
                     <td className="p-2 font-medium">{vehicle.brand}</td>
                     <td className="p-2">{vehicle.model}</td>
-                    <td className="p-2">{vehicle.chassis_no}</td>
-                    <td className="p-2">{vehicle.engine_no}</td>
+                    <td className="p-2">{vehicle.chassis_number}</td>
+                    <td className="p-2">{vehicle.engine_number}</td>
                     <td className="p-2">{vehicle.color}</td>
-                    <td className="p-2">{vehicle.key_no}</td>
+                    <td className="p-2">{vehicle.key_number}</td>
                     <td className="p-2">{vehicle.inbound_location}</td>
                     <td className="p-2">{getStatusBadge(vehicle.status)}</td>
                     <td className="p-2">
