@@ -873,9 +873,9 @@ const AddVehicle = () => {
             </div>
 
             <div>
-              <Label htmlFor="engine_no">Engine Number</Label>
+              <Label htmlFor="engine_number">Engine Number</Label>
               <Input
-                id="engine_no"
+                id="engine_number"
                 placeholder="Enter engine number"
                 value={vehicleData.engine_number}
                 onChange={(e) => setVehicleData({...vehicleData, engine_number: e.target.value})}
