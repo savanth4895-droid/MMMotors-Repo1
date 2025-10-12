@@ -105,7 +105,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Add delete buttons in action column in vehicle stock, service and Spare parts pages and avoid creating duplicate data and remove already existing duplicate data in the application across all the pages. User confirmed to: 1) Check all pages for duplicates, 2) Use hard delete (permanent removal), 3) Remove duplicates with same chassis number and same customer phone, 4) Work on all three pages simultaneously."
+user_problem_statement: "Test the customer details API endpoints to ensure they work correctly for the View Customer Details page. Focus on authentication, GET endpoints (customers, vehicles, sales), CRUD operations, and identifying any backend issues that could cause 'Network Error' responses."
 
 backend:
   - task: "Delete Endpoints Implementation"
