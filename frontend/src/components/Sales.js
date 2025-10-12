@@ -5284,7 +5284,10 @@ const ViewCustomerDetails = () => {
         };
       }
       
-      await axios.put(`${API}/customers/${editingCustomer.id}`, customerUpdateData);
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/customers/${editingCustomer.id}`, customerUpdateData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
       // Update associated inventory vehicle if exists (only inventory-specific fields)
       const associatedVehicle = vehicles.find(v => v.customer_id === editingCustomer.id || 
@@ -5302,7 +5305,9 @@ const ViewCustomerDetails = () => {
           // Note: insurance fields belong to customer, not vehicle
         };
         
-        await axios.put(`${API}/vehicles/${associatedVehicle.id}`, vehicleUpdateData);
+        await axios.put(`${API}/vehicles/${associatedVehicle.id}`, vehicleUpdateData, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
       }
       
       toast.success('Customer updated successfully!');
