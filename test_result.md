@@ -108,6 +108,18 @@
 user_problem_statement: "Test the customer details API endpoints to ensure they work correctly for the View Customer Details page. Focus on authentication, GET endpoints (customers, vehicles, sales), CRUD operations, and identifying any backend issues that could cause 'Network Error' responses."
 
 backend:
+  - task: "Customer Details API Endpoints Testing"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+      - agent: "testing"
+      - comment: "✅ CUSTOMER DETAILS API ENDPOINTS TESTING COMPLETED WITH CRITICAL ISSUES IDENTIFIED: Conducted comprehensive testing of customer details API endpoints for the View Customer Details page as requested in review. AUTHENTICATION TESTING: Successfully authenticated using admin/admin123 credentials, JWT token working properly with all endpoints. NETWORK CONNECTIVITY: API server connectivity working correctly, base URL accessible. CUSTOMER API TESTING: ✅ GET /api/customers working perfectly - endpoint accessible with authentication, retrieved 12 customers, response structure valid with all expected fields (id, name, mobile, email, address, created_at), extended fields present (vehicle_info, insurance_info, sales_info). SALES API TESTING: ✅ GET /api/sales working perfectly - endpoint accessible with authentication, retrieved 3 sales records, response structure valid with all expected fields (id, invoice_number, customer_id, vehicle_id, amount, payment_method, sale_date). VEHICLES API TESTING: ❌ CRITICAL ISSUE - GET /api/vehicles returning 500 Internal Server Error due to data inconsistency. Root cause identified: Vehicle record in database has status 'available' but Vehicle model enum only accepts 'in_stock', 'sold', 'returned'. Pydantic validation error: 'Input should be 'in_stock', 'sold' or 'returned' [type=enum, input_value='available']'. CRUD OPERATIONS TESTING: ✅ Vehicle update endpoint (PUT /api/vehicles/{id}) working correctly with proper authentication. ❌ Customer update/delete endpoints could not be tested due to duplicate customer creation issue (customer with mobile '9876543298' already exists). ERROR HANDLING: ✅ Authentication error handling working correctly - invalid tokens properly rejected with 401 status, 404 error handling working for non-existent resources. OVERALL RESULTS: Tests Passed: 9/13 (69.2% success rate). KEY FINDINGS: Customer and sales data will load properly in View Customer Details page, but vehicle data loading will fail due to 500 error. CRITICAL ISSUE REQUIRING IMMEDIATE ATTENTION: Vehicle API endpoint failure will cause 'Network Error' responses in frontend when trying to load vehicle data. This is a high-priority backend data consistency issue that needs to be resolved."
+
   - task: "Delete Endpoints Implementation"
     implemented: true
     working: true
