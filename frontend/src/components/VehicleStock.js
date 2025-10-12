@@ -692,6 +692,7 @@ const BrandDetails = () => {
                   <th className="text-left p-3 font-semibold">Engine No</th>
                   <th className="text-left p-3 font-semibold">Model</th>
                   <th className="text-left p-3 font-semibold">Color</th>
+                  <th className="text-left p-3 font-semibold">Vehicle No</th>
                   <th className="text-left p-3 font-semibold">Key no.</th>
                   <th className="text-left p-3 font-semibold">Inbound Location</th>
                   <th className="text-left p-3 font-semibold">Status</th>
