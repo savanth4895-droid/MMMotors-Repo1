@@ -899,6 +899,20 @@ async def get_spare_part_bills(current_user: User = Depends(get_current_user)):
         processed_bills.append(SparePartBill(**bill))
     return processed_bills
 
+@api_router.delete("/spare-parts/bills/{bill_id}")
+async def delete_spare_part_bill(bill_id: str, current_user: User = Depends(get_current_user)):
+    # Check if spare part bill exists
+    existing_bill = await db.spare_part_bills.find_one({"id": bill_id})
+    if not existing_bill:
+        raise HTTPException(status_code=404, detail="Spare part bill not found")
+    
+    # Delete the spare part bill
+    result = await db.spare_part_bills.delete_one({"id": bill_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Spare part bill not found")
+    
+    return {"message": "Spare part bill deleted successfully", "deleted_bill_id": bill_id}
+
 @api_router.get("/spare-parts/{part_id}", response_model=SparePart)
 async def get_spare_part(part_id: str, current_user: User = Depends(get_current_user)):
     part = await db.spare_parts.find_one({"id": part_id})
