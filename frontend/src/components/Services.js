@@ -2146,7 +2146,9 @@ const ServicesBilling = () => {
     if (searchTerm) {
       filtered = filtered.filter(bill => 
         bill.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        bill.customer_phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         bill.vehicle_reg_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        bill.vehicle_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         bill.job_card_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         bill.service_type?.toLowerCase().includes(searchTerm.toLowerCase())
       );
