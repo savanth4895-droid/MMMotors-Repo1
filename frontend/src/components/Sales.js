@@ -5107,17 +5107,25 @@ const ViewCustomerDetails = () => {
 
   const fetchAllData = async () => {
     try {
+      const token = localStorage.getItem('token');
       const [customersRes, vehiclesRes, salesRes] = await Promise.all([
-        axios.get(`${API}/customers`),
-        axios.get(`${API}/vehicles`),
-        axios.get(`${API}/sales`)
+        axios.get(`${API}/customers`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/vehicles`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/sales`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
       ]);
       
       setCustomers(customersRes.data);
       setVehicles(vehiclesRes.data);
       setSales(salesRes.data);
     } catch (error) {
-      toast.error('Failed to fetch customer details');
+      console.error('Error fetching customer details:', error);
+      toast.error('Failed to fetch customer details: ' + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
     }
