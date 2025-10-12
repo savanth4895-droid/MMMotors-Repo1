@@ -228,9 +228,9 @@ class TwoWheelerAPITester:
         )
 
     def test_create_vehicle(self, brand, model, chassis_no, engine_no, color, key_no, inbound_location, page_number=None):
-        """Test vehicle creation"""
+        """Test vehicle creation with old field names for backward compatibility"""
         success, response = self.run_test(
-            "Create Vehicle",
+            "Create Vehicle (Old Field Names)",
             "POST",
             "vehicles",
             200,
@@ -241,6 +241,29 @@ class TwoWheelerAPITester:
                 "engine_no": engine_no,
                 "color": color,
                 "key_no": key_no,
+                "inbound_location": inbound_location,
+                "page_number": page_number
+            }
+        )
+        if success and 'id' in response:
+            self.created_ids['vehicles'].append(response['id'])
+        return success, response
+
+    def test_create_vehicle_standardized(self, brand, model, chassis_number, engine_number, color, key_number, vehicle_number, inbound_location, page_number=None):
+        """Test vehicle creation with new standardized field names"""
+        success, response = self.run_test(
+            "Create Vehicle (Standardized Field Names)",
+            "POST",
+            "vehicles",
+            200,
+            data={
+                "brand": brand,
+                "model": model,
+                "chassis_number": chassis_number,
+                "engine_number": engine_number,
+                "color": color,
+                "key_number": key_number,
+                "vehicle_number": vehicle_number,
                 "inbound_location": inbound_location,
                 "page_number": page_number
             }
