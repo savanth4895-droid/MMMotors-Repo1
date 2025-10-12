@@ -3623,7 +3623,7 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
               </thead>
               <tbody>
                 <tr>
-                  <td><strong>${bill.service_type?.replace('_', ' ').toUpperCase() || 'GENERAL SERVICE'}</strong></td>
+                  <td><strong>${bill.service_type ? bill.service_type.replace('_', ' ').toUpperCase() : 'GENERAL SERVICE'}</strong></td>
                   <td>${bill.description || 'No description provided'}</td>
                 </tr>
               </tbody>
