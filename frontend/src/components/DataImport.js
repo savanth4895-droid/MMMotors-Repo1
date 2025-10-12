@@ -73,7 +73,7 @@ const DataImport = () => {
       label: 'Vehicles', 
       icon: Car, 
       description: 'Import vehicle stock data',
-      fields: ['brand', 'model', 'chassis_no', 'engine_no', 'color', 'key_no', 'inbound_location']
+      fields: ['brand', 'model', 'chassis_number', 'engine_number', 'color', 'key_number', 'inbound_location']
     },
     { 
       value: 'spare_parts', 
