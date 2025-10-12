@@ -2903,6 +2903,7 @@ const ServicesBilling = () => {
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
           loading={loading}
+          onDeleteBill={handleDeleteServiceBill}
         />
       )}
     </div>
