@@ -11125,6 +11125,18 @@ if __name__ == "__main__":
             print(f"   Tests Failed: {tester.tests_run - tester.tests_passed}")
             print(f"   Success Rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
             sys.exit(0 if success else 1)
+        elif sys.argv[1] == "unified_schema":
+            print("🚀 UNIFIED DATA SCHEMA IMPLEMENTATION TESTING")
+            print("=" * 60)
+            tester = TwoWheelerAPITester()
+            success, results = tester.test_unified_data_schema_implementation()
+            print("\n" + "=" * 60)
+            print(f"📊 Final Test Results:")
+            print(f"   Tests Run: {tester.tests_run}")
+            print(f"   Tests Passed: {tester.tests_passed}")
+            print(f"   Tests Failed: {tester.tests_run - tester.tests_passed}")
+            print(f"   Success Rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
+            sys.exit(0 if success else 1)
     
     # Default to CSV import functionality testing
     print("🚀 CSV IMPORT FUNCTIONALITY TESTING - CUSTOMERS WITH VEHICLE & INSURANCE DETAILS (DEFAULT)")
