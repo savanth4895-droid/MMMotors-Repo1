@@ -889,8 +889,8 @@ const AddVehicle = () => {
               <Input
                 id="key_no"
                 placeholder="Enter key number"
-                value={vehicleData.key_no}
-                onChange={(e) => setVehicleData({...vehicleData, key_no: e.target.value})}
+                value={vehicleData.key_number}
+                onChange={(e) => setVehicleData({...vehicleData, key_number: e.target.value})}
                 required
               />
             </div>
