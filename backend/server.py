@@ -688,7 +688,7 @@ async def delete_sale(sale_id: str, current_user: User = Depends(get_current_use
     if existing_sale.get("vehicle_id"):
         await db.vehicles.update_one(
             {"id": existing_sale["vehicle_id"]},
-            {"$set": {"status": "available"}, "$unset": {"customer_id": "", "date_sold": ""}}
+            {"$set": {"status": VehicleStatus.AVAILABLE}, "$unset": {"customer_id": "", "date_sold": ""}}
         )
     
     # Delete the sale
