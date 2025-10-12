@@ -3718,7 +3718,7 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading }) 
                         {bill.customer_name || 'N/A'}
                       </td>
                       <td className="p-3 text-sm text-gray-600">
-                        {bill.vehicle_reg_no || 'N/A'}
+                        {bill.vehicle_reg_no || bill.vehicle_number || 'N/A'}
                       </td>
                       <td className="p-3 text-sm text-gray-600">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
