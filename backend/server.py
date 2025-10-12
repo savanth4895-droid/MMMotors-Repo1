@@ -1122,15 +1122,20 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
             insurance_info = {}
             sales_info = {}
             
-            # Map vehicle fields from CSV template (using actual CSV column names)
-            if row.get('brand') or row.get('model') or row.get('vehicle_no') or row.get('chassis_no'):
+            # Map vehicle fields from CSV template (support both old and new field names)
+            if (row.get('brand') or row.get('model') or 
+                row.get('vehicle_no') or row.get('vehicle_number') or 
+                row.get('chassis_no') or row.get('chassis_number')):
                 vehicle_info = {
                     'brand': row.get('brand', '').strip(),
                     'model': row.get('model', '').strip(), 
                     'color': row.get('color', '').strip(),
-                    'vehicle_number': row.get('vehicle_no', '').strip(),
-                    'chassis_number': row.get('chassis_no', '').strip(),
-                    'engine_number': row.get('engine_no', '').strip()
+                    'vehicle_number': (row.get('vehicle_number', '').strip() or 
+                                     row.get('vehicle_no', '').strip()),
+                    'chassis_number': (row.get('chassis_number', '').strip() or 
+                                     row.get('chassis_no', '').strip()),
+                    'engine_number': (row.get('engine_number', '').strip() or 
+                                    row.get('engine_no', '').strip())
                 }
             
             # Map insurance nominee fields (using actual CSV column names)
