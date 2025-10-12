@@ -825,8 +825,9 @@ backend:
 
 test_plan:
   current_focus:
-    - "Service Due Page Delete Functionality"
-  stuck_tasks: []
+    - "Customer Details API Endpoints Testing"
+  stuck_tasks:
+    - "Customer Details API Endpoints Testing"
   test_all: false
   test_priority: "high_first"
   recently_completed:
