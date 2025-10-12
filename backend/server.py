@@ -1477,11 +1477,11 @@ async def cleanup_duplicates(current_user: User = Depends(get_current_user)):
         "removed_customer_ids": []
     }
     
-    # Clean up duplicate vehicles by chassis_no
+    # Clean up duplicate vehicles by chassis_number
     vehicle_pipeline = [
-        {"$match": {"chassis_no": {"$ne": None, "$ne": ""}}},
+        {"$match": {"chassis_number": {"$ne": None, "$ne": ""}}},
         {"$group": {
-            "_id": "$chassis_no",
+            "_id": "$chassis_number",
             "count": {"$sum": 1},
             "records": {"$push": "$$ROOT"}
         }},
