@@ -53,9 +53,9 @@ const DataImport = () => {
         'brand',
         'model', 
         'color',
-        'vehicle_no',
-        'chassis_no',
-        'engine_no',
+        'vehicle_number',
+        'chassis_number',
+        'engine_number',
         // Insurance details
         'nominee_name',
         'relation',
