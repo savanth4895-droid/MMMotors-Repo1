@@ -1540,11 +1540,11 @@ async def cleanup_duplicates(current_user: User = Depends(get_current_user)):
     return cleanup_results
 
 # Duplicate prevention for new records
-async def check_vehicle_duplicate(chassis_no: str) -> bool:
+async def check_vehicle_duplicate(chassis_number: str) -> bool:
     """Check if a vehicle with the same chassis number already exists"""
-    if not chassis_no or chassis_no.strip() == "":
+    if not chassis_number or chassis_number.strip() == "":
         return False
-    existing = await db.vehicles.find_one({"chassis_no": chassis_no.strip()})
+    existing = await db.vehicles.find_one({"chassis_number": chassis_number.strip()})
     return existing is not None
 
 async def check_customer_duplicate(mobile: str) -> bool:
