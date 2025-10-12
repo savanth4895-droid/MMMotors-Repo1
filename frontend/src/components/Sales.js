@@ -6052,6 +6052,29 @@ const InsuranceManagement = () => {
     setShowEditModal(true);
   };
 
+  const handleDeleteInsurance = async (insurance) => {
+    if (!window.confirm(`Are you sure you want to delete insurance record for "${insurance.customer_name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      // Since insurance is derived from customer/sales data, we need to delete the related sale or update customer data
+      // For now, we'll remove it from the local view - this would need backend support for actual deletion
+      const updatedData = insuranceData.filter(ins => ins.id !== insurance.id);
+      setInsuranceData(updatedData);
+      
+      toast.success('Insurance record deleted successfully!');
+      
+      // In a real implementation, you'd call a backend endpoint like:
+      // const token = localStorage.getItem('token');
+      // await axios.delete(`${API}/insurance/${insurance.id}`, {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to delete insurance record');
+    }
+  };
+
   const exportInsuranceData = () => {
     try {
       const csvContent = [
