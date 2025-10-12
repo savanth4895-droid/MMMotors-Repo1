@@ -852,12 +852,12 @@ const AddVehicle = () => {
             </div>
 
             <div>
-              <Label htmlFor="chassis_no">Chassis Number</Label>
+              <Label htmlFor="chassis_number">Chassis Number</Label>
               <Input
-                id="chassis_no"
+                id="chassis_number"
                 placeholder="Enter chassis number"
-                value={vehicleData.chassis_no}
-                onChange={(e) => setVehicleData({...vehicleData, chassis_no: e.target.value})}
+                value={vehicleData.chassis_number}
+                onChange={(e) => setVehicleData({...vehicleData, chassis_number: e.target.value})}
                 required
               />
             </div>
