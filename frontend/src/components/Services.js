@@ -3662,7 +3662,7 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
       ['Vehicle Reg No: ' + (bill.vehicle_reg_no || 'N/A')],
       [''],
       ['Service Details:'],
-      ['Service Type: ' + (bill.service_type?.replace('_', ' ').toUpperCase() || 'N/A')],
+      ['Service Type: ' + (bill.service_type ? bill.service_type.replace('_', ' ').toUpperCase() : 'N/A')],
       ['Description: ' + (bill.description || 'No description provided')],
       [''],
       ['Service Amount: ₹' + (bill.amount?.toLocaleString() || '0')]
