@@ -58,6 +58,7 @@ class VehicleStatus(str, Enum):
     IN_STOCK = "in_stock"
     SOLD = "sold"
     RETURNED = "returned"
+    AVAILABLE = "available"
 
 class ServiceStatus(str, Enum):
     PENDING = "pending"
