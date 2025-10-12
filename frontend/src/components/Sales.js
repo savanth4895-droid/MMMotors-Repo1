@@ -486,7 +486,7 @@ const CreateInvoice = () => {
           engine_number: invoiceData.engine_number,
           color: invoiceData.color,
           vehicle_no: invoiceData.vehicle_no,
-          key_no: 'N/A',
+          key_number: 'N/A',
           inbound_location: 'Showroom',
           customer_id: customerResponse.data.id,
           status: 'sold',
@@ -3675,7 +3675,7 @@ const CustomersManagement = () => {
           chassis_number: customerData.chassis_number,
           engine_number: customerData.engine_number,
           color: customerData.color,
-          key_no: 'N/A',
+          key_number: 'N/A',
           inbound_location: 'Customer Registration'
         });
       }
