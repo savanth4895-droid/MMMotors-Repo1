@@ -2289,6 +2289,27 @@ const ServicesBilling = () => {
     }]);
   };
 
+  const handleDeleteServiceBill = async (bill) => {
+    if (!window.confirm(`Are you sure you want to delete service bill "${bill.job_card_number}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/services/${bill.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Remove from local state
+      const updatedBills = serviceBills.filter(b => b.id !== bill.id);
+      setServiceBills(updatedBills);
+      
+      toast.success('Service bill deleted successfully!');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to delete service bill');
+    }
+  };
+
   const addPredefinedItem = (item) => {
     const newItem = {
       sl_no: billItems.length + 1,
