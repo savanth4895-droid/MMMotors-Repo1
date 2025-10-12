@@ -779,10 +779,11 @@ const AddVehicle = () => {
   const [vehicleData, setVehicleData] = useState({
     brand: '',
     model: '',
-    chassis_no: '',
-    engine_no: '',
+    chassis_number: '',
+    engine_number: '',
     color: '',
-    key_no: '',
+    vehicle_number: '',
+    key_number: '',
     inbound_location: '',
     page_number: ''
   });
