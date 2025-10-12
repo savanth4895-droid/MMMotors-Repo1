@@ -1509,6 +1509,14 @@ const Bills = () => {
                         >
                           <Download className="w-4 h-4" />
                         </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleDeleteBill(bill)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
                     </td>
                   </tr>
