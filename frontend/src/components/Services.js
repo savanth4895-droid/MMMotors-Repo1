@@ -227,7 +227,7 @@ const NewService = () => {
     vehicle_model: '',
     vehicle_year: '',
     vehicle_reg_no: '',
-    chassis_no: '',
+    chassis_number: '',
     service_type: '',
     description: '',
     estimated_amount: ''
