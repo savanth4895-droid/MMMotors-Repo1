@@ -1407,11 +1407,11 @@ async def detect_duplicates(current_user: User = Depends(get_current_user)):
         "summary": {}
     }
     
-    # Find duplicate vehicles by chassis_no
+    # Find duplicate vehicles by chassis_number
     vehicle_pipeline = [
-        {"$match": {"chassis_no": {"$ne": None, "$ne": ""}}},
+        {"$match": {"chassis_number": {"$ne": None, "$ne": ""}}},
         {"$group": {
-            "_id": "$chassis_no",
+            "_id": "$chassis_number",
             "count": {"$sum": 1},
             "ids": {"$push": "$id"},
             "records": {"$push": "$$ROOT"}
