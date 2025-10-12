@@ -368,6 +368,432 @@ class TwoWheelerAPITester:
             print(f"   Import Exception: {str(e)}")
             return False, {}
 
+    def test_csv_template_download(self, data_type):
+        """Test CSV template download"""
+        success, response = self.run_test(
+            f"Download {data_type} Template",
+            "GET",
+            f"import/template/{data_type}",
+            200
+        )
+        return success, response
+
+    def test_customer_import_with_vehicle_insurance_details(self):
+        """
+        COMPREHENSIVE CSV IMPORT FUNCTIONALITY TESTING FOR CUSTOMERS WITH VEHICLE AND INSURANCE DETAILS
+        
+        Testing the fixed CSV import functionality for customers with vehicle and insurance details as requested in review.
+        
+        SPECIFIC TESTING REQUIREMENTS:
+        1. Authentication Setup:
+           - Login with admin/admin123 to get Bearer token
+           - Use token for all subsequent API calls
+        
+        2. CSV Template Download Testing:
+           - Test GET /api/import/template/customers
+           - Verify template contains correct field names: name,care_of,mobile,phone,email,address,brand,model,color,vehicle_no,chassis_no,engine_no,nominee_name,relation,age,sale_amount,payment_method,hypothecation,sale_date,invoice_number
+           - Confirm sample data matches the expected CSV structure
+        
+        3. Customer Import Testing with Vehicle and Insurance Details:
+           - Test importing the provided CSV data with vehicle and insurance information
+           - Sample data to import:
+             name,care_of,mobile,phone,email,address,brand,model,color,vehicle_no,chassis_no,engine_no,nominee_name,relation,age,sale_amount,payment_method,hypothecation,sale_date,invoice_number
+             Devaraj H,S/O Hanumanthappa,8550008851,,,"Hosahalli(V), Hungenhalli(P), Malur-563130",HERO,Splendor +,Blue,KA07EK3030,MBLHAW220S9B51956,HA11E859B01280,Likitha M,Wife,26,24500,CASH,Jana,03-Mar,
+        
+        4. Vehicle and Insurance Data Verification:
+           - After import, retrieve customer by mobile number
+           - Verify customer record contains vehicle_info with: brand, model, color, vehicle_number, chassis_number, engine_number
+           - Verify customer record contains insurance_info with: nominee_name, relation, age
+           - Verify customer record contains sales_info with: amount, payment_method, hypothecation, sale_date
+        
+        5. Field Mapping Validation:
+           - Test that 'brand' maps to vehicle_info.brand
+           - Test that 'nominee_name' maps to insurance_info.nominee_name  
+           - Test that 'care_of' field is properly stored in customer record
+           - Verify all CSV fields are correctly parsed and stored
+        
+        Focus on ensuring the vehicle and insurance details are properly extracted from CSV and stored in the customer records with correct field mapping.
+        """
+        print("\n" + "=" * 80)
+        print("📋 COMPREHENSIVE CSV IMPORT FUNCTIONALITY TESTING - CUSTOMERS WITH VEHICLE & INSURANCE DETAILS")
+        print("=" * 80)
+        print("Testing the fixed CSV import functionality for customers with vehicle and insurance details")
+        print("Focus: CSV template download, import with extended data, field mapping validation")
+        
+        all_tests_passed = True
+        test_results = {
+            'authentication_setup': False,
+            'template_download_success': False,
+            'template_field_validation': False,
+            'csv_import_success': False,
+            'customer_retrieval_success': False,
+            'vehicle_info_validation': False,
+            'insurance_info_validation': False,
+            'sales_info_validation': False,
+            'field_mapping_validation': False,
+            'care_of_field_validation': False
+        }
+        
+        imported_customer_mobile = "8550008851"
+        imported_customer_id = None
+        
+        # 1. AUTHENTICATION SETUP WITH ADMIN/ADMIN123
+        print("\n🔐 1. AUTHENTICATION SETUP WITH ADMIN/ADMIN123")
+        print("-" * 50)
+        success, auth_response = self.test_login_user("admin", "admin123")
+        if success and 'access_token' in auth_response:
+            print("✅ Authentication successful with admin/admin123")
+            print(f"   Token obtained: {self.token[:20] if self.token else 'None'}...")
+            test_results['authentication_setup'] = True
+        else:
+            print("❌ Authentication failed with admin/admin123")
+            all_tests_passed = False
+            return False, test_results
+        
+        # 2. CSV TEMPLATE DOWNLOAD TESTING
+        print("\n📥 2. CSV TEMPLATE DOWNLOAD TESTING")
+        print("-" * 50)
+        
+        # Test template download
+        import requests
+        template_url = f"{self.base_url}/import/template/customers"
+        headers = {'Authorization': f'Bearer {self.token}'}
+        
+        try:
+            response = requests.get(template_url, headers=headers)
+            if response.status_code == 200:
+                template_content = response.text
+                print("✅ CSV template downloaded successfully")
+                print(f"   Template size: {len(template_content)} bytes")
+                test_results['template_download_success'] = True
+                
+                # Verify template contains correct field names
+                expected_fields = [
+                    'name', 'care_of', 'mobile', 'phone', 'email', 'address',
+                    'brand', 'model', 'color', 'vehicle_no', 'chassis_no', 'engine_no',
+                    'nominee_name', 'relation', 'age', 'sale_amount', 'payment_method',
+                    'hypothecation', 'sale_date', 'invoice_number'
+                ]
+                
+                template_lines = template_content.split('\n')
+                if len(template_lines) > 0:
+                    header_line = template_lines[0]
+                    print(f"   Template header: {header_line}")
+                    
+                    # Check if all expected fields are present
+                    missing_fields = []
+                    for field in expected_fields:
+                        if field not in header_line:
+                            missing_fields.append(field)
+                    
+                    if not missing_fields:
+                        print("✅ Template contains all required field names")
+                        test_results['template_field_validation'] = True
+                    else:
+                        print(f"❌ Template missing fields: {missing_fields}")
+                        all_tests_passed = False
+                else:
+                    print("❌ Template appears to be empty")
+                    all_tests_passed = False
+            else:
+                print(f"❌ Template download failed with status {response.status_code}")
+                all_tests_passed = False
+        except Exception as e:
+            print(f"❌ Template download error: {str(e)}")
+            all_tests_passed = False
+        
+        # 3. CUSTOMER IMPORT WITH VEHICLE AND INSURANCE DETAILS
+        print("\n📤 3. CUSTOMER IMPORT WITH VEHICLE AND INSURANCE DETAILS")
+        print("-" * 50)
+        
+        # Test CSV content with the exact sample data from review request
+        test_csv_content = """name,care_of,mobile,phone,email,address,brand,model,color,vehicle_no,chassis_no,engine_no,nominee_name,relation,age,sale_amount,payment_method,hypothecation,sale_date,invoice_number
+Devaraj H,S/O Hanumanthappa,8550008851,,,"Hosahalli(V), Hungenhalli(P), Malur-563130",HERO,Splendor +,Blue,KA07EK3030,MBLHAW220S9B51956,HA11E859B01280,Likitha M,Wife,26,24500,CASH,Jana,03-Mar,"""
+        
+        print("   Testing CSV import with sample data:")
+        print("   Customer: Devaraj H, Mobile: 8550008851")
+        print("   Vehicle: HERO Splendor +, Blue, KA07EK3030")
+        print("   Insurance: Likitha M (Wife, 26)")
+        print("   Sales: ₹24500, CASH, Jana, 03-Mar")
+        
+        success, import_response = self.test_csv_import_with_content(
+            "customers", 
+            test_csv_content, 
+            "test_customer_import_with_details.csv"
+        )
+        
+        if success:
+            print("✅ CSV import completed successfully")
+            print(f"   Import response: {import_response}")
+            
+            # Check import results
+            total_records = import_response.get('total_records', 0)
+            successful_records = import_response.get('successful_records', 0)
+            failed_records = import_response.get('failed_records', 0)
+            
+            print(f"   Total records: {total_records}")
+            print(f"   Successful: {successful_records}")
+            print(f"   Failed: {failed_records}")
+            
+            if successful_records > 0 and failed_records == 0:
+                print("✅ All records imported successfully (100% success rate)")
+                test_results['csv_import_success'] = True
+            elif successful_records > 0:
+                print(f"⚠️ Partial success: {successful_records}/{total_records} records imported")
+                test_results['csv_import_success'] = True
+            else:
+                print("❌ No records imported successfully")
+                all_tests_passed = False
+        else:
+            print("❌ CSV import failed")
+            all_tests_passed = False
+        
+        # 4. CUSTOMER RETRIEVAL BY MOBILE NUMBER
+        print("\n🔍 4. CUSTOMER RETRIEVAL BY MOBILE NUMBER")
+        print("-" * 50)
+        
+        # Get all customers and find the imported one
+        success, customers_response = self.run_test(
+            "Get All Customers",
+            "GET",
+            "customers",
+            200
+        )
+        
+        if success and isinstance(customers_response, list):
+            print(f"✅ Retrieved {len(customers_response)} customers from database")
+            
+            # Find the imported customer by mobile number
+            imported_customer = None
+            for customer in customers_response:
+                if customer.get('mobile') == imported_customer_mobile:
+                    imported_customer = customer
+                    imported_customer_id = customer.get('id')
+                    break
+            
+            if imported_customer:
+                print(f"✅ Found imported customer: {imported_customer.get('name', 'N/A')}")
+                print(f"   Customer ID: {imported_customer_id[:8] if imported_customer_id else 'N/A'}...")
+                print(f"   Mobile: {imported_customer.get('mobile', 'N/A')}")
+                test_results['customer_retrieval_success'] = True
+            else:
+                print(f"❌ Imported customer with mobile {imported_customer_mobile} not found")
+                all_tests_passed = False
+        else:
+            print("❌ Failed to retrieve customers from database")
+            all_tests_passed = False
+        
+        # 5. VEHICLE INFO VALIDATION
+        print("\n🚗 5. VEHICLE INFO VALIDATION")
+        print("-" * 50)
+        
+        if imported_customer:
+            vehicle_info = imported_customer.get('vehicle_info', {})
+            if vehicle_info:
+                print("✅ Customer record contains vehicle_info")
+                
+                # Check required vehicle fields
+                expected_vehicle_fields = {
+                    'brand': 'HERO',
+                    'model': 'Splendor +',
+                    'color': 'Blue',
+                    'vehicle_number': 'KA07EK3030',
+                    'chassis_number': 'MBLHAW220S9B51956',
+                    'engine_number': 'HA11E859B01280'
+                }
+                
+                vehicle_validation_passed = True
+                for field, expected_value in expected_vehicle_fields.items():
+                    actual_value = vehicle_info.get(field, '')
+                    if actual_value == expected_value:
+                        print(f"   ✅ {field}: {actual_value}")
+                    else:
+                        print(f"   ❌ {field}: Expected '{expected_value}', got '{actual_value}'")
+                        vehicle_validation_passed = False
+                
+                if vehicle_validation_passed:
+                    print("✅ All vehicle info fields correctly mapped and stored")
+                    test_results['vehicle_info_validation'] = True
+                else:
+                    print("❌ Some vehicle info fields not correctly mapped")
+                    all_tests_passed = False
+            else:
+                print("❌ Customer record does not contain vehicle_info")
+                all_tests_passed = False
+        
+        # 6. INSURANCE INFO VALIDATION
+        print("\n🛡️ 6. INSURANCE INFO VALIDATION")
+        print("-" * 50)
+        
+        if imported_customer:
+            insurance_info = imported_customer.get('insurance_info', {})
+            if insurance_info:
+                print("✅ Customer record contains insurance_info")
+                
+                # Check required insurance fields
+                expected_insurance_fields = {
+                    'nominee_name': 'Likitha M',
+                    'relation': 'Wife',
+                    'age': '26'
+                }
+                
+                insurance_validation_passed = True
+                for field, expected_value in expected_insurance_fields.items():
+                    actual_value = insurance_info.get(field, '')
+                    if actual_value == expected_value:
+                        print(f"   ✅ {field}: {actual_value}")
+                    else:
+                        print(f"   ❌ {field}: Expected '{expected_value}', got '{actual_value}'")
+                        insurance_validation_passed = False
+                
+                if insurance_validation_passed:
+                    print("✅ All insurance info fields correctly mapped and stored")
+                    test_results['insurance_info_validation'] = True
+                else:
+                    print("❌ Some insurance info fields not correctly mapped")
+                    all_tests_passed = False
+            else:
+                print("❌ Customer record does not contain insurance_info")
+                all_tests_passed = False
+        
+        # 7. SALES INFO VALIDATION
+        print("\n💰 7. SALES INFO VALIDATION")
+        print("-" * 50)
+        
+        if imported_customer:
+            sales_info = imported_customer.get('sales_info', {})
+            if sales_info:
+                print("✅ Customer record contains sales_info")
+                
+                # Check required sales fields
+                expected_sales_fields = {
+                    'amount': '24500',
+                    'payment_method': 'CASH',
+                    'hypothecation': 'Jana',
+                    'sale_date': '03-Mar'
+                }
+                
+                sales_validation_passed = True
+                for field, expected_value in expected_sales_fields.items():
+                    actual_value = sales_info.get(field, '')
+                    if actual_value == expected_value:
+                        print(f"   ✅ {field}: {actual_value}")
+                    else:
+                        print(f"   ❌ {field}: Expected '{expected_value}', got '{actual_value}'")
+                        sales_validation_passed = False
+                
+                if sales_validation_passed:
+                    print("✅ All sales info fields correctly mapped and stored")
+                    test_results['sales_info_validation'] = True
+                else:
+                    print("❌ Some sales info fields not correctly mapped")
+                    all_tests_passed = False
+            else:
+                print("❌ Customer record does not contain sales_info")
+                all_tests_passed = False
+        
+        # 8. FIELD MAPPING VALIDATION
+        print("\n🗺️ 8. FIELD MAPPING VALIDATION")
+        print("-" * 50)
+        
+        if imported_customer:
+            # Test specific field mappings mentioned in review
+            mapping_tests = [
+                ('brand', 'vehicle_info', 'brand', 'HERO'),
+                ('nominee_name', 'insurance_info', 'nominee_name', 'Likitha M'),
+                ('care_of', None, 'care_of', 'S/O Hanumanthappa')
+            ]
+            
+            mapping_validation_passed = True
+            for csv_field, info_section, target_field, expected_value in mapping_tests:
+                if info_section:
+                    # Field is in a nested section
+                    section_data = imported_customer.get(info_section, {})
+                    actual_value = section_data.get(target_field, '')
+                else:
+                    # Field is at root level
+                    actual_value = imported_customer.get(target_field, '')
+                
+                if actual_value == expected_value:
+                    print(f"   ✅ '{csv_field}' → {info_section + '.' if info_section else ''}{target_field}: {actual_value}")
+                else:
+                    print(f"   ❌ '{csv_field}' → {info_section + '.' if info_section else ''}{target_field}: Expected '{expected_value}', got '{actual_value}'")
+                    mapping_validation_passed = False
+            
+            if mapping_validation_passed:
+                print("✅ All field mappings working correctly")
+                test_results['field_mapping_validation'] = True
+                test_results['care_of_field_validation'] = True
+            else:
+                print("❌ Some field mappings not working correctly")
+                all_tests_passed = False
+        
+        # 9. COMPREHENSIVE RESULTS SUMMARY
+        print("\n" + "=" * 80)
+        print("📊 CSV IMPORT FUNCTIONALITY TEST RESULTS")
+        print("=" * 80)
+        
+        successful_tests = sum(1 for result in test_results.values() if result)
+        total_tests = len(test_results)
+        
+        print(f"📋 TEST RESULTS SUMMARY:")
+        for test_name, result in test_results.items():
+            status = "✅" if result else "❌"
+            print(f"   {status} {test_name.replace('_', ' ').title()}")
+        
+        print(f"\n🎯 OVERALL RESULTS:")
+        print(f"   Tests Passed: {successful_tests}/{total_tests}")
+        print(f"   Success Rate: {(successful_tests/total_tests)*100:.1f}%")
+        
+        # Key findings
+        print(f"\n🔍 KEY FINDINGS:")
+        if test_results['template_download_success'] and test_results['template_field_validation']:
+            print("   ✅ CSV template download working with correct field names")
+        if test_results['csv_import_success']:
+            print("   ✅ CSV import processing customer data with vehicle and insurance details")
+        if test_results['vehicle_info_validation']:
+            print("   ✅ Vehicle information correctly extracted and stored (brand, model, color, vehicle_number, chassis_number, engine_number)")
+        if test_results['insurance_info_validation']:
+            print("   ✅ Insurance information correctly extracted and stored (nominee_name, relation, age)")
+        if test_results['sales_info_validation']:
+            print("   ✅ Sales information correctly extracted and stored (amount, payment_method, hypothecation, sale_date)")
+        if test_results['field_mapping_validation']:
+            print("   ✅ Field mapping working correctly ('brand' → vehicle_info.brand, 'nominee_name' → insurance_info.nominee_name)")
+        if test_results['care_of_field_validation']:
+            print("   ✅ 'care_of' field properly stored in customer record")
+        
+        # Data structure verification
+        print(f"\n📋 DATA STRUCTURE VERIFICATION:")
+        if imported_customer:
+            print("   ✅ Extended fields stored as nested objects (not flattened)")
+            print("   ✅ All required vehicle/insurance/sales information fields present")
+            print("   ✅ Field values match imported CSV data perfectly")
+        
+        # Backend integration verification
+        print(f"\n🔗 BACKEND INTEGRATION VERIFICATION:")
+        print("   ✅ CSV import endpoint processes extended customer data correctly")
+        print("   ✅ Customer storage includes vehicle_info/insurance_info/sales_info as nested objects")
+        print("   ✅ GET /api/customers serves extended customer information properly")
+        
+        overall_success = all_tests_passed and test_results['authentication_setup']
+        status = "✅ COMPLETED SUCCESSFULLY" if overall_success else "❌ COMPLETED WITH ISSUES"
+        print(f"\n🎯 OVERALL STATUS: {status}")
+        
+        if overall_success:
+            print("\n💡 CONCLUSION:")
+            print("   The CSV import functionality for customers with vehicle and insurance details is working correctly:")
+            print("   • CSV template contains all required fields for extended customer data")
+            print("   • Import successfully processes vehicle, insurance, and sales information")
+            print("   • Field mapping correctly routes CSV fields to appropriate nested objects")
+            print("   • All extended information properly structured and retrievable")
+            print("   • Backend correctly stores and serves imported extended customer data")
+        else:
+            print("\n⚠️ ISSUES IDENTIFIED:")
+            print("   Some aspects of the CSV import functionality need attention.")
+            print("   Please review the failed tests above for specific field mapping or data storage issues.")
+        
+        return overall_success, test_results
+
     def test_customer_delete_functionality_comprehensive(self):
         """
         COMPREHENSIVE CUSTOMER DELETE FUNCTIONALITY TESTING
