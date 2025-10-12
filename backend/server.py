@@ -119,7 +119,7 @@ class Vehicle(BaseModel):
     key_number: Optional[str] = None  # Standardized from key_no
     inbound_location: Optional[str] = None
     outbound_location: Optional[str] = None
-    status: VehicleStatus = VehicleStatus.IN_STOCK
+    status: VehicleStatus = VehicleStatus.AVAILABLE
     page_number: Optional[str] = None
     date_received: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     date_sold: Optional[datetime] = None
