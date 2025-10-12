@@ -339,7 +339,7 @@ const CreateInvoice = () => {
     model: '',
     color: '',
     chassis_number: '',
-    engine_no: '',
+    engine_number: '',
     vehicle_no: '',
     insurance_nominee: '',
     relation: '',
@@ -412,7 +412,7 @@ const CreateInvoice = () => {
       model: vehicle.model,
       color: vehicle.color,
       chassis_number: vehicle.chassis_number,
-      engine_no: vehicle.engine_no,
+      engine_number: vehicle.engine_number,
       vehicle_no: vehicle.vehicle_no || ''
     }));
     
@@ -483,7 +483,7 @@ const CreateInvoice = () => {
           brand: invoiceData.brand,
           model: invoiceData.model,
           chassis_number: invoiceData.chassis_number,
-          engine_no: invoiceData.engine_no,
+          engine_number: invoiceData.engine_number,
           color: invoiceData.color,
           vehicle_no: invoiceData.vehicle_no,
           key_no: 'N/A',
@@ -516,7 +516,7 @@ const CreateInvoice = () => {
           model: invoiceData.model,
           color: invoiceData.color,
           chassis_number: invoiceData.chassis_number,
-          engine_no: invoiceData.engine_no,
+          engine_number: invoiceData.engine_number,
           vehicle_no: invoiceData.vehicle_no
         },
         insurance: {
@@ -683,7 +683,7 @@ const CreateInvoice = () => {
       model: '',
       color: '',
       chassis_number: '',
-      engine_no: '',
+      engine_number: '',
       vehicle_no: '',
       insurance_nominee: '',
       relation: '',
@@ -831,7 +831,7 @@ const CreateInvoice = () => {
                       </div>
                       <div className="flex justify-between text-xs">
                         <span className="text-emerald-700 font-medium">Engine No:</span>
-                        <span className="text-slate-900 font-mono text-xs">{generatedInvoice.vehicle.engine_no}</span>
+                        <span className="text-slate-900 font-mono text-xs">{generatedInvoice.vehicle.engine_number}</span>
                       </div>
                     </div>
                   </div>
@@ -1140,7 +1140,7 @@ const CreateInvoice = () => {
                             model: '',
                             color: '',
                             chassis_number: '',
-                            engine_no: '',
+                            engine_number: '',
                             vehicle_no: ''
                           }));
                         }}
@@ -1195,7 +1195,7 @@ const CreateInvoice = () => {
                               <span>{vehicle.color}</span>
                             </div>
                             <div className="text-xs text-gray-500">
-                              Engine: {vehicle.engine_no}
+                              Engine: {vehicle.engine_number}
                               {vehicle.vehicle_no && (
                                 <span> • Vehicle No: {vehicle.vehicle_no}</span>
                               )}
@@ -1213,12 +1213,12 @@ const CreateInvoice = () => {
                 )}
               </div>
               <div>
-                <Label htmlFor="engine_no">Engine No</Label>
+                <Label htmlFor="engine_number">Engine No</Label>
                 <Input
-                  id="engine_no"
+                  id="engine_number"
                   placeholder="Enter engine number"
-                  value={invoiceData.engine_no}
-                  onChange={(e) => handleInputChange('engine_no', e.target.value)}
+                  value={invoiceData.engine_number}
+                  onChange={(e) => handleInputChange('engine_number', e.target.value)}
                   disabled={selectedVehicle}
                   className={selectedVehicle ? 'bg-green-50 border-green-200' : ''}
                 />
@@ -1473,7 +1473,7 @@ const ViewInvoices = () => {
       vehicle_color: vehicle?.color || '',
       vehicle_no: vehicle?.vehicle_no || '',
       chassis_number: vehicle?.chassis_number || '',
-      engine_no: vehicle?.engine_no || '',
+      engine_number: vehicle?.engine_number || '',
       
       // Insurance Details - prioritize customer insurance_info
       insurance_details: {
@@ -1553,7 +1553,7 @@ const ViewInvoices = () => {
               <div style="font-size: 10px; margin-bottom: 4px;"><strong>Model:</strong> ${invoice.customer?.vehicle_info?.model || invoice.vehicle?.model || 'N/A'}</div>
               <div style="font-size: 10px; margin-bottom: 4px;"><strong>Color:</strong> ${invoice.customer?.vehicle_info?.color || invoice.vehicle?.color || 'N/A'}</div>
               <div style="font-size: 10px; margin-bottom: 4px;"><strong>Chassis No:</strong> ${invoice.customer?.vehicle_info?.chassis_number || invoice.vehicle?.chassis_number || 'N/A'}</div>
-              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Engine No:</strong> ${invoice.customer?.vehicle_info?.engine_number || invoice.vehicle?.engine_no || 'N/A'}</div>
+              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Engine No:</strong> ${invoice.customer?.vehicle_info?.engine_number || invoice.vehicle?.engine_number || 'N/A'}</div>
               <div style="font-size: 10px; margin-bottom: 4px;"><strong>Vehicle No:</strong> ${invoice.customer?.vehicle_info?.vehicle_number || invoice.vehicle?.vehicle_no || 'N/A'}</div>
             </div>
           </div>
@@ -2022,7 +2022,7 @@ const ViewInvoices = () => {
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Engine No:</span>
-                    <span class="detail-value">${invoice.customer?.vehicle_info?.engine_number || invoice.vehicle?.engine_no || 'N/A'}</span>
+                    <span class="detail-value">${invoice.customer?.vehicle_info?.engine_number || invoice.vehicle?.engine_number || 'N/A'}</span>
                   </div>
                 </div>
               </div>
@@ -2525,7 +2525,7 @@ const ViewInvoices = () => {
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Engine No:</span>
-                    <span class="detail-value">${invoice.customer?.vehicle_info?.engine_number || invoice.vehicle?.engine_no || 'N/A'}</span>
+                    <span class="detail-value">${invoice.customer?.vehicle_info?.engine_number || invoice.vehicle?.engine_number || 'N/A'}</span>
                   </div>
                 </div>
               </div>
@@ -2944,7 +2944,7 @@ const ViewInvoices = () => {
                               </div>
                               <div className="flex justify-between text-xs">
                                 <span className="text-emerald-700 font-medium">Engine No:</span>
-                                <span className="text-slate-900 font-mono text-xs">{selectedInvoice.customer?.vehicle_info?.engine_number || selectedInvoice.vehicle?.engine_no || 'N/A'}</span>
+                                <span className="text-slate-900 font-mono text-xs">{selectedInvoice.customer?.vehicle_info?.engine_number || selectedInvoice.vehicle?.engine_number || 'N/A'}</span>
                               </div>
                             </div>
                           </div>
@@ -3217,7 +3217,7 @@ const ViewInvoices = () => {
                             vehicle_color: selectedVehicle?.color || '',
                             vehicle_no: selectedVehicle?.vehicle_no || '',
                             chassis_number: selectedVehicle?.chassis_number || '',
-                            engine_no: selectedVehicle?.engine_no || ''
+                            engine_number: selectedVehicle?.engine_number || ''
                           });
                         }}
                       >
@@ -3289,12 +3289,12 @@ const ViewInvoices = () => {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="engine_no">Engine Number</Label>
+                        <Label htmlFor="engine_number">Engine Number</Label>
                         <Input
-                          id="engine_no"
+                          id="engine_number"
                           type="text"
-                          value={editFormData.engine_no || ''}
-                          onChange={(e) => setEditFormData({...editFormData, engine_no: e.target.value})}
+                          value={editFormData.engine_number || ''}
+                          onChange={(e) => setEditFormData({...editFormData, engine_number: e.target.value})}
                           placeholder="Enter engine number"
                         />
                       </div>
@@ -3469,7 +3469,7 @@ const CustomersManagement = () => {
     model: '',
     color: '',
     chassis_number: '',
-    engine_no: '',
+    engine_number: '',
     vehicle_no: '',
     insurance_nominee: '',
     relation: '',
@@ -3552,7 +3552,7 @@ const CustomersManagement = () => {
         }
         break;
       
-      case 'engine_no':
+      case 'engine_number':
         if (value.trim() && value.trim().length < 5) {
           error = 'Engine number must be at least 5 characters';
         } else if (value.trim() && !/^[A-Z0-9]+$/.test(value.trim())) {
@@ -3626,7 +3626,7 @@ const CustomersManagement = () => {
       model: '',
       color: '',
       chassis_number: '',
-      engine_no: '',
+      engine_number: '',
       vehicle_no: '',
       insurance_nominee: '',
       relation: '',
@@ -3673,7 +3673,7 @@ const CustomersManagement = () => {
           brand: customerData.brand,
           model: customerData.model,
           chassis_number: customerData.chassis_number,
-          engine_no: customerData.engine_no,
+          engine_number: customerData.engine_number,
           color: customerData.color,
           key_no: 'N/A',
           inbound_location: 'Customer Registration'
@@ -3795,7 +3795,7 @@ const CustomersManagement = () => {
       model: associatedVehicle?.model || '',
       color: associatedVehicle?.color || '',
       chassis_number: associatedVehicle?.chassis_number || '',
-      engine_no: associatedVehicle?.engine_no || '',
+      engine_number: associatedVehicle?.engine_number || '',
       vehicle_no: associatedVehicle?.vehicle_no || '',
       // Insurance details
       insurance_nominee: associatedVehicle?.insurance_nominee || '',
@@ -3828,14 +3828,14 @@ const CustomersManagement = () => {
       
       // Add vehicle information to customer record
       if (editFormData.brand || editFormData.model || editFormData.color || 
-          editFormData.chassis_number || editFormData.engine_no || editFormData.vehicle_no) {
+          editFormData.chassis_number || editFormData.engine_number || editFormData.vehicle_no) {
         customerUpdateData.vehicle_info = {
           brand: editFormData.brand?.trim() || '',
           model: editFormData.model?.trim() || '',
           color: editFormData.color?.trim() || '',
           vehicle_number: editFormData.vehicle_no?.trim() || '',
           chassis_number: editFormData.chassis_number?.trim() || '',
-          engine_number: editFormData.engine_no?.trim() || ''
+          engine_number: editFormData.engine_number?.trim() || ''
         };
       }
       
@@ -3855,14 +3855,14 @@ const CustomersManagement = () => {
       
       // Update associated inventory vehicle if exists (only inventory-specific fields)
       const associatedVehicle = vehicles.find(v => v.customer_id === editingCustomer.id);
-      if (associatedVehicle && (editFormData.brand || editFormData.model || editFormData.color || editFormData.chassis_number || editFormData.engine_no)) {
+      if (associatedVehicle && (editFormData.brand || editFormData.model || editFormData.color || editFormData.chassis_number || editFormData.engine_number)) {
         // Only update inventory vehicle fields that actually exist in Vehicle model
         const vehicleUpdateData = {
           brand: editFormData.brand?.trim() || associatedVehicle.brand,
           model: editFormData.model?.trim() || associatedVehicle.model,
           color: editFormData.color?.trim() || associatedVehicle.color,
           chassis_number: editFormData.chassis_number?.trim() || associatedVehicle.chassis_number,
-          engine_no: editFormData.engine_no?.trim() || associatedVehicle.engine_no
+          engine_number: editFormData.engine_number?.trim() || associatedVehicle.engine_number
           // Note: vehicle_no is not a field in Vehicle model - stored in customer.vehicle_info
           // Note: insurance fields belong to customer, not vehicle
         };
@@ -4058,16 +4058,16 @@ const CustomersManagement = () => {
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="engine_no">Engine No</Label>
+                    <Label htmlFor="engine_number">Engine No</Label>
                     <Input
-                      id="engine_no"
+                      id="engine_number"
                       placeholder="Enter engine number"
-                      value={customerData.engine_no}
-                      onChange={(e) => handleInputChange('engine_no', e.target.value.toUpperCase())}
-                      className={touched.engine_no && validationErrors.engine_no ? 'border-red-500' : ''}
+                      value={customerData.engine_number}
+                      onChange={(e) => handleInputChange('engine_number', e.target.value.toUpperCase())}
+                      className={touched.engine_number && validationErrors.engine_number ? 'border-red-500' : ''}
                     />
-                    {touched.engine_no && validationErrors.engine_no && (
-                      <p className="text-red-500 text-sm mt-1">{validationErrors.engine_no}</p>
+                    {touched.engine_number && validationErrors.engine_number && (
+                      <p className="text-red-500 text-sm mt-1">{validationErrors.engine_number}</p>
                     )}
                   </div>
                   <div>
@@ -4317,7 +4317,7 @@ const CustomersManagement = () => {
                             <div><strong>Color:</strong> {customerVehicle.color || 'N/A'}</div>
                             <div><strong>Vehicle No:</strong> {customerVehicle.vehicle_no || 'N/A'}</div>
                             <div><strong>Chassis No:</strong> {customerVehicle.chassis_number || 'N/A'}</div>
-                            <div><strong>Engine No:</strong> {customerVehicle.engine_no || 'N/A'}</div>
+                            <div><strong>Engine No:</strong> {customerVehicle.engine_number || 'N/A'}</div>
                           </div>
                         );
                       } else {
@@ -4528,12 +4528,12 @@ const CustomersManagement = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="edit_engine_no">Engine Number</Label>
+                      <Label htmlFor="edit_engine_number">Engine Number</Label>
                       <Input
-                        id="edit_engine_no"
+                        id="edit_engine_number"
                         type="text"
-                        value={editFormData.engine_no || ''}
-                        onChange={(e) => setEditFormData({...editFormData, engine_no: e.target.value.toUpperCase()})}
+                        value={editFormData.engine_number || ''}
+                        onChange={(e) => setEditFormData({...editFormData, engine_number: e.target.value.toUpperCase()})}
                         placeholder="Enter engine number"
                       />
                     </div>
@@ -5121,7 +5121,7 @@ const ViewCustomerDetails = () => {
         model: customer.vehicle_info?.model || customerVehicle?.model || 'N/A',
         color: customer.vehicle_info?.color || customerVehicle?.color || 'N/A',
         chassis_number: customer.vehicle_info?.chassis_number || customerVehicle?.chassis_number || 'N/A',
-        engine_no: customer.vehicle_info?.engine_number || customerVehicle?.engine_no || 'N/A',
+        engine_number: customer.vehicle_info?.engine_number || customerVehicle?.engine_number || 'N/A',
         vehicle_no: customer.vehicle_info?.vehicle_number || customerVehicle?.vehicle_no || 'N/A',
         vehicle_status: customerVehicle?.status || 'N/A',
         sale_amount: customerSale?.amount || null,
@@ -5147,7 +5147,7 @@ const ViewCustomerDetails = () => {
         detail.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         detail.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         detail.chassis_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        detail.engine_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        detail.engine_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         detail.vehicle_no?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -5195,7 +5195,7 @@ const ViewCustomerDetails = () => {
       model: customer.model !== 'N/A' ? customer.model : (associatedVehicle?.model || ''),
       color: customer.color !== 'N/A' ? customer.color : (associatedVehicle?.color || ''),
       chassis_number: customer.chassis_number !== 'N/A' ? customer.chassis_number : (associatedVehicle?.chassis_number || ''),
-      engine_no: customer.engine_no !== 'N/A' ? customer.engine_no : (associatedVehicle?.engine_no || ''),
+      engine_number: customer.engine_number !== 'N/A' ? customer.engine_number : (associatedVehicle?.engine_number || ''),
       vehicle_no: customer.vehicle_no !== 'N/A' ? customer.vehicle_no : (associatedVehicle?.vehicle_no || ''),
       
       // Insurance details
@@ -5223,14 +5223,14 @@ const ViewCustomerDetails = () => {
       
       // Add vehicle information to customer record (as we did with imports)
       if (editFormData.brand || editFormData.model || editFormData.color || 
-          editFormData.chassis_number || editFormData.engine_no || editFormData.vehicle_no) {
+          editFormData.chassis_number || editFormData.engine_number || editFormData.vehicle_no) {
         customerUpdateData.vehicle_info = {
           brand: editFormData.brand || '',
           model: editFormData.model || '',
           color: editFormData.color || '',
           vehicle_number: editFormData.vehicle_no || '',
           chassis_number: editFormData.chassis_number || '',
-          engine_number: editFormData.engine_no || ''
+          engine_number: editFormData.engine_number || ''
         };
       }
       
@@ -5256,7 +5256,7 @@ const ViewCustomerDetails = () => {
           model: editFormData.model || associatedVehicle.model,
           color: editFormData.color || associatedVehicle.color,
           chassis_number: editFormData.chassis_number || associatedVehicle.chassis_number,
-          engine_no: editFormData.engine_no || associatedVehicle.engine_no
+          engine_number: editFormData.engine_number || associatedVehicle.engine_number
           // Note: vehicle_no is not a field in Vehicle model
           // Note: insurance fields belong to customer, not vehicle
         };
@@ -5295,7 +5295,7 @@ const ViewCustomerDetails = () => {
           detail.model || '',
           detail.color || '',
           detail.chassis_number || '',
-          detail.engine_no || '',
+          detail.engine_number || '',
           detail.vehicle_no || ''
         ].map(field => `"${field}"`).join(','))
       ].join('\n');
@@ -5487,7 +5487,7 @@ const ViewCustomerDetails = () => {
                         )}
                       </td>
                       <td className="p-3 text-gray-600 font-mono text-sm">{detail.chassis_number}</td>
-                      <td className="p-3 text-gray-600 font-mono text-sm">{detail.engine_no}</td>
+                      <td className="p-3 text-gray-600 font-mono text-sm">{detail.engine_number}</td>
                       <td className="p-3 text-gray-600">
                         {detail.insurance_info && detail.insurance_info.nominee_name ? (
                           <div className="text-sm">
@@ -5602,7 +5602,7 @@ const ViewCustomerDetails = () => {
                         <div><strong>Color:</strong> {selectedCustomer.color || 'N/A'}</div>
                         <div><strong>Vehicle No:</strong> {selectedCustomer.vehicle_no || 'N/A'}</div>
                         <div><strong>Chassis No:</strong> {selectedCustomer.chassis_number || 'N/A'}</div>
-                        <div><strong>Engine No:</strong> {selectedCustomer.engine_no || 'N/A'}</div>
+                        <div><strong>Engine No:</strong> {selectedCustomer.engine_number || 'N/A'}</div>
                         {selectedCustomer.vehicle_status && (
                           <div><strong>Status:</strong> {selectedCustomer.vehicle_status}</div>
                         )}
@@ -5824,12 +5824,12 @@ const ViewCustomerDetails = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="edit_engine_no">Engine Number</Label>
+                      <Label htmlFor="edit_engine_number">Engine Number</Label>
                       <Input
-                        id="edit_engine_no"
+                        id="edit_engine_number"
                         type="text"
-                        value={editFormData.engine_no || ''}
-                        onChange={(e) => setEditFormData({...editFormData, engine_no: e.target.value.toUpperCase()})}
+                        value={editFormData.engine_number || ''}
+                        onChange={(e) => setEditFormData({...editFormData, engine_number: e.target.value.toUpperCase()})}
                         placeholder="Enter engine number"
                       />
                     </div>
@@ -5960,7 +5960,7 @@ const InsuranceManagement = () => {
           payment_method: sale.payment_method,
           customer_address: customer?.address || 'N/A',
           vehicle_chassis: vehicle?.chassis_number || 'N/A',
-          vehicle_engine: vehicle?.engine_no || 'N/A'
+          vehicle_engine: vehicle?.engine_number || 'N/A'
         };
       });
 
