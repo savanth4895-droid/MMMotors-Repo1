@@ -240,7 +240,7 @@ const NewService = () => {
   // Close chassis options when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (!event.target.closest('#chassis_no') && !event.target.closest('.chassis-dropdown')) {
+      if (!event.target.closest('#chassis_number') && !event.target.closest('.chassis-dropdown')) {
         setChassisOptions([]);
       }
     };
@@ -276,13 +276,13 @@ const NewService = () => {
   const handleChassisSelection = (selectedChassis) => {
     setServiceData(prev => ({
       ...prev,
-      chassis_no: selectedChassis.chassis_no,
+      chassis_number: selectedChassis.chassis_number,
       vehicle_brand: selectedChassis.brand,
       vehicle_model: selectedChassis.model
     }));
     setChassisOptions([]);
     // Auto-fill other details based on selected chassis
-    debouncedSearchByChassisNumber(selectedChassis.chassis_no);
+    debouncedSearchByChassisNumber(selectedChassis.chassis_number);
   };
 
   // Search for customer data by phone number
@@ -344,7 +344,7 @@ const NewService = () => {
           vehicle_model: vehicleInfo?.model || matchingCustomer.vehicle_info?.model || '',
           vehicle_year: new Date().getFullYear().toString(), // Default to current year if not available
           vehicle_reg_no: vehicleInfo?.vehicle_number || matchingCustomer.vehicle_info?.vehicle_number || '',
-          chassis_no: vehicleInfo?.chassis_no || matchingCustomer.vehicle_info?.chassis_no || ''
+          chassis_number: vehicleInfo?.chassis_number || matchingCustomer.vehicle_info?.chassis_number || ''
         }));
 
         toast.success('Customer details found and populated!');
@@ -371,12 +371,12 @@ const NewService = () => {
 
       // Filter vehicles by partial chassis number match
       const matchingVehicles = vehiclesResponse.data.filter(vehicle => 
-        vehicle.chassis_no && 
-        vehicle.chassis_no.toLowerCase().includes(partialChassisNumber.toLowerCase())
+        vehicle.chassis_number && 
+        vehicle.chassis_number.toLowerCase().includes(partialChassisNumber.toLowerCase())
       ).slice(0, 10); // Limit to 10 suggestions
 
       setChassisOptions(matchingVehicles.map(vehicle => ({
-        chassis_no: vehicle.chassis_no,
+        chassis_number: vehicle.chassis_number,
         brand: vehicle.brand,
         model: vehicle.model,
         vehicle_id: vehicle.id
@@ -412,7 +412,7 @@ const NewService = () => {
 
       // Find matching vehicle by chassis number
       const matchingVehicle = vehiclesResponse.data.find(vehicle => 
-        vehicle.chassis_no && vehicle.chassis_no.toLowerCase() === chassisNumber.toLowerCase()
+        vehicle.chassis_number && vehicle.chassis_number.toLowerCase() === chassisNumber.toLowerCase()
       );
 
       if (matchingVehicle) {
@@ -436,7 +436,7 @@ const NewService = () => {
           vehicle_brand: matchingVehicle.brand || '',
           vehicle_model: matchingVehicle.model || '',
           vehicle_year: new Date().getFullYear().toString(), // Default to current year if not available
-          chassis_no: matchingVehicle.chassis_no || '',
+          chassis_number: matchingVehicle.chassis_number || '',
           vehicle_reg_no: '' // Keep vehicle reg separate from chassis
         }));
 
@@ -473,7 +473,7 @@ const NewService = () => {
       vehicle_model: '',
       vehicle_year: '',
       vehicle_reg_no: '',
-      chassis_no: '',
+      chassis_number: '',
       service_type: '',
       description: '',
       estimated_amount: ''
@@ -529,7 +529,7 @@ const NewService = () => {
         customer_id: customerId,
         vehicle_number: serviceData.vehicle_reg_no,
         service_type: serviceData.service_type.toLowerCase().replace(' ', '_'),
-        description: `${serviceData.vehicle_brand} ${serviceData.vehicle_model} (${serviceData.vehicle_year}) - Chassis: ${serviceData.chassis_no} - ${serviceData.description}`,
+        description: `${serviceData.vehicle_brand} ${serviceData.vehicle_model} (${serviceData.vehicle_year}) - Chassis: ${serviceData.chassis_number} - ${serviceData.description}`,
         amount: parseFloat(serviceData.estimated_amount) || 0
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -653,17 +653,17 @@ const NewService = () => {
                 />
               </div>
               <div className="md:col-span-2 relative">
-                <Label htmlFor="chassis_no">
+                <Label htmlFor="chassis_number">
                   Chassis Number
                   {searchLoading && <span className="ml-2 text-blue-600 text-sm">Searching...</span>}
                 </Label>
                 <Input
-                  id="chassis_no"
+                  id="chassis_number"
                   placeholder="Enter chassis number for auto-complete and auto-fill"
-                  value={serviceData.chassis_no}
+                  value={serviceData.chassis_number}
                   onChange={(e) => {
                     const value = e.target.value;
-                    handleInputChange('chassis_no', value);
+                    handleInputChange('chassis_number', value);
                     debouncedSearchChassisNumbers(value);
                     if (value.length >= 4) {
                       debouncedSearchByChassisNumber(value);
@@ -682,7 +682,7 @@ const NewService = () => {
                         className="p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
                         onClick={() => handleChassisSelection(option)}
                       >
-                        <div className="font-medium text-sm">{option.chassis_no}</div>
+                        <div className="font-medium text-sm">{option.chassis_number}</div>
                         <div className="text-xs text-gray-600">{option.brand} {option.model}</div>
                       </div>
                     ))}
