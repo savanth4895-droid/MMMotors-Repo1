@@ -5203,7 +5203,10 @@ const ViewCustomerDetails = () => {
     if (window.confirm(`Are you sure you want to delete customer "${customer.name}"? This action cannot be undone.`)) {
       try {
         setLoading(true);
-        await axios.delete(`${API}/customers/${customer.id}`);
+        const token = localStorage.getItem('token');
+        await axios.delete(`${API}/customers/${customer.id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         toast.success('Customer deleted successfully!');
         fetchAllData(); // Refresh the list
       } catch (error) {
