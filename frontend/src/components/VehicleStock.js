@@ -867,8 +867,8 @@ const AddVehicle = () => {
               <Input
                 id="engine_no"
                 placeholder="Enter engine number"
-                value={vehicleData.engine_no}
-                onChange={(e) => setVehicleData({...vehicleData, engine_no: e.target.value})}
+                value={vehicleData.engine_number}
+                onChange={(e) => setVehicleData({...vehicleData, engine_number: e.target.value})}
                 required
               />
             </div>
