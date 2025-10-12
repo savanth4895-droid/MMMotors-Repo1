@@ -1214,28 +1214,28 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
             if brand != 'UNKNOWN' and brand not in valid_brands:
                 brand = 'UNKNOWN'  # Use fallback instead of error
             
-            chassis_no = row.get('chassis_no', '').strip()
+            chassis_number = row.get('chassis_no', '').strip()
             
             # Check for duplicate chassis number before inserting
-            if chassis_no and chassis_no != 'Unknown Chassis':
-                existing_vehicle = await db.vehicles.find_one({"chassis_no": chassis_no})
+            if chassis_number and chassis_number != 'Unknown Chassis':
+                existing_vehicle = await db.vehicles.find_one({"chassis_number": chassis_number})
                 if existing_vehicle:
                     # Skip duplicate vehicle
                     failed += 1
                     errors.append({
                         "row": idx + 2,
                         "data": row,
-                        "error": f"Duplicate vehicle with chassis number '{chassis_no}' already exists"
+                        "error": f"Duplicate vehicle with chassis number '{chassis_number}' already exists"
                     })
                     continue
             
             vehicle_data = VehicleCreate(
                 brand=brand,
                 model=row.get('model', '').strip() or 'Unknown Model',
-                chassis_no=chassis_no or 'Unknown Chassis',
-                engine_no=row.get('engine_no', '').strip() or 'Unknown Engine',
+                chassis_number=chassis_number or 'Unknown Chassis',
+                engine_number=row.get('engine_no', '').strip() or 'Unknown Engine',
                 color=row.get('color', '').strip() or 'Unknown Color',
-                key_no=row.get('key_no', '').strip() or 'Unknown Key',
+                key_number=row.get('key_no', '').strip() or 'Unknown Key',
                 inbound_location=row.get('inbound_location', '').strip() or 'Unknown Location',
                 page_number=row.get('page_number', '').strip() or None
             )
