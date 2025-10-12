@@ -1157,7 +1157,7 @@ const StockView = () => {
                         <Button 
                           size="sm" 
                           variant="outline"
-                          onClick={() => handleDeleteVehicle(vehicle.id, vehicle.chassis_no)}
+                          onClick={() => handleDeleteVehicle(vehicle.id, vehicle.chassis_number)}
                           className="flex items-center gap-1 text-red-600 hover:text-red-700"
                         >
                           <Trash2 className="w-3 h-3" />
