@@ -714,8 +714,8 @@ const BrandDetails = () => {
                       <td className="p-3 text-gray-600">
                         {new Date(vehicle.date_received).toLocaleDateString('en-IN')}
                       </td>
-                      <td className="p-3 text-gray-900 font-mono font-medium">{vehicle.chassis_no}</td>
-                      <td className="p-3 text-gray-900 font-mono font-medium">{vehicle.engine_no}</td>
+                      <td className="p-3 text-gray-900 font-mono font-medium">{vehicle.chassis_number}</td>
+                      <td className="p-3 text-gray-900 font-mono font-medium">{vehicle.engine_number}</td>
                       <td className="p-3 text-gray-900 font-medium">{vehicle.model}</td>
                       <td className="p-3 text-gray-600">{vehicle.color}</td>
                       <td className="p-3 text-gray-600 font-mono">{vehicle.key_no}</td>
