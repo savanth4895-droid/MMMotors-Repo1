@@ -1214,7 +1214,14 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
             if brand != 'UNKNOWN' and brand not in valid_brands:
                 brand = 'UNKNOWN'  # Use fallback instead of error
             
-            chassis_number = row.get('chassis_no', '').strip()
+            # Support both old and new field names for backward compatibility
+            chassis_number = (row.get('chassis_number', '').strip() or 
+                            row.get('chassis_no', '').strip())
+            engine_number = (row.get('engine_number', '').strip() or 
+                           row.get('engine_no', '').strip())
+            key_number = (row.get('key_number', '').strip() or 
+                        row.get('key_no', '').strip())
+            vehicle_number = row.get('vehicle_number', '').strip()
             
             # Check for duplicate chassis number before inserting
             if chassis_number and chassis_number != 'Unknown Chassis':
@@ -1233,9 +1240,10 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
                 brand=brand,
                 model=row.get('model', '').strip() or 'Unknown Model',
                 chassis_number=chassis_number or 'Unknown Chassis',
-                engine_number=row.get('engine_no', '').strip() or 'Unknown Engine',
+                engine_number=engine_number or 'Unknown Engine',
                 color=row.get('color', '').strip() or 'Unknown Color',
-                key_number=row.get('key_no', '').strip() or 'Unknown Key',
+                vehicle_number=vehicle_number or None,
+                key_number=key_number or 'Unknown Key',
                 inbound_location=row.get('inbound_location', '').strip() or 'Unknown Location',
                 page_number=row.get('page_number', '').strip() or None
             )
