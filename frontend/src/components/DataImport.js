@@ -57,9 +57,9 @@ const DataImport = () => {
         'chassis_no',
         'engine_no',
         // Insurance details
-        'insurance_nominee',
-        'insurance_relation',
-        'insurance_age',
+        'nominee_name',
+        'relation',
+        'age',
         // Sales details
         'sale_amount',
         'payment_method',
