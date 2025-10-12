@@ -2105,10 +2105,34 @@ const ServicesBilling = () => {
   const fetchServiceBills = async () => {
     try {
       setLoading(true);
-      // For now, we'll use service registrations as service bills
-      // In a real application, you'd have a separate service_bills collection
-      const response = await axios.get(`${API}/services`);
-      setServiceBills(response.data);
+      const token = localStorage.getItem('token');
+      
+      // Fetch services and customers data
+      const [servicesResponse, customersResponse] = await Promise.all([
+        axios.get(`${API}/services`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/customers`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+      
+      const services = servicesResponse.data;
+      const customers = customersResponse.data;
+      
+      // Map customer details to services
+      const servicesWithCustomers = services.map(service => {
+        const customer = customers.find(c => c.id === service.customer_id);
+        return {
+          ...service,
+          customer_name: customer?.name || 'Unknown Customer',
+          customer_phone: customer?.mobile || customer?.phone || 'N/A',
+          customer_address: customer?.address || 'N/A',
+          vehicle_reg_no: service.vehicle_number || 'N/A'
+        };
+      });
+      
+      setServiceBills(servicesWithCustomers);
     } catch (error) {
       toast.error('Failed to fetch service bills');
     } finally {
