@@ -1281,6 +1281,27 @@ const Bills = () => {
     setShowViewModal(true);
   };
 
+  const handleDeleteBill = async (bill) => {
+    if (!window.confirm(`Are you sure you want to delete spare parts bill "${bill.bill_number}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/spare-parts/bills/${bill.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Remove from local state
+      const updatedBills = bills.filter(b => b.id !== bill.id);
+      setBills(updatedBills);
+      
+      toast.success('Spare parts bill deleted successfully!');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to delete spare parts bill');
+    }
+  };
+
   const handlePrintBill = (bill) => {
     // Create a new window with the bill details for printing
     const printWindow = window.open('', '_blank', 'width=800,height=600');
