@@ -3655,7 +3655,7 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
       ['Service Bill'],
       ['Job Card Number: ' + (bill.job_card_number || 'N/A')],
       ['Date: ' + (bill.created_at ? new Date(bill.created_at).toLocaleDateString('en-IN') : 'N/A')],
-      ['Status: ' + (bill.status?.replace('_', ' ').toUpperCase() || 'PENDING')],
+      ['Status: ' + (bill.status ? bill.status.replace('_', ' ').toUpperCase() : 'PENDING')],
       [''],
       ['Customer Details:'],
       ['Name: ' + (bill.customer_name || 'N/A')],
