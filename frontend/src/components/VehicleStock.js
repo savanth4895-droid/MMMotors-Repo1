@@ -371,6 +371,16 @@ const EditVehicleModal = ({ vehicle, isOpen, onClose, onUpdate }) => {
             </div>
 
             <div>
+              <Label htmlFor="edit-vehicle-number">Vehicle Number (Registration)</Label>
+              <Input
+                id="edit-vehicle-number"
+                placeholder="Enter vehicle registration number"
+                value={editData.vehicle_number}
+                onChange={(e) => setEditData({...editData, vehicle_number: e.target.value})}
+              />
+            </div>
+
+            <div>
               <Label htmlFor="edit-key">Key Number</Label>
               <Input
                 id="edit-key"
