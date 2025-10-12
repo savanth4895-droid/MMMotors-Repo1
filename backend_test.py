@@ -1643,6 +1643,523 @@ Test Customer,S/O Father,9876543299,Test Address,TVS,Apache RTR 160,Red,KA01TEST
         
         return overall_success, test_results
 
+    def test_customer_details_api_endpoints(self):
+        """
+        COMPREHENSIVE CUSTOMER DETAILS API ENDPOINTS TESTING
+        
+        Testing the customer details API endpoints to ensure they work correctly for the View Customer Details page.
+        
+        SPECIFIC TESTING REQUIREMENTS:
+        1. Authentication Setup:
+           - Login with admin/admin123 to get Bearer token
+           - Use token for all subsequent API calls
+        
+        2. Customer API Testing:
+           - Test GET /api/customers - verify it returns customer data with proper authentication
+           - Test response structure and ensure all expected fields are present
+           - Verify no 401/403 authentication errors
+        
+        3. Vehicles API Testing:
+           - Test GET /api/vehicles - verify it returns vehicle data with proper authentication
+           - Test response structure and ensure all expected fields are present
+        
+        4. Sales API Testing:
+           - Test GET /api/sales - verify it returns sales data with proper authentication
+           - Test response structure and ensure all expected fields are present
+        
+        5. Customer Operations Testing:
+           - Test customer delete endpoint: DELETE /api/customers/{id}
+           - Test customer update endpoint: PUT /api/customers/{id}
+           - Test vehicle update endpoint: PUT /api/vehicles/{id}
+        
+        6. Error Response Analysis:
+           - Check for any network connectivity issues
+           - Verify API endpoints are accessible and responding
+           - Test authentication token validity
+        
+        Focus on identifying any backend issues that could cause "Network Error" responses and verify all endpoints required by the View Customer Details page are working correctly.
+        """
+        print("\n" + "=" * 80)
+        print("🔍 COMPREHENSIVE CUSTOMER DETAILS API ENDPOINTS TESTING")
+        print("=" * 80)
+        print("Testing customer details API endpoints for the View Customer Details page")
+        print("Focus: Authentication, GET endpoints, CRUD operations, error handling")
+        
+        all_tests_passed = True
+        test_results = {
+            'authentication_setup': False,
+            'customers_api_get': False,
+            'customers_api_structure': False,
+            'vehicles_api_get': False,
+            'vehicles_api_structure': False,
+            'sales_api_get': False,
+            'sales_api_structure': False,
+            'customer_delete_endpoint': False,
+            'customer_update_endpoint': False,
+            'vehicle_update_endpoint': False,
+            'network_connectivity': False,
+            'authentication_token_validity': False,
+            'error_response_handling': False
+        }
+        
+        created_test_data = {
+            'customer_id': None,
+            'vehicle_id': None,
+            'sale_id': None
+        }
+        
+        # 1. AUTHENTICATION SETUP WITH ADMIN/ADMIN123
+        print("\n🔐 1. AUTHENTICATION SETUP WITH ADMIN/ADMIN123")
+        print("-" * 50)
+        success, auth_response = self.test_login_user("admin", "admin123")
+        if success and 'access_token' in auth_response:
+            print("✅ Authentication successful with admin/admin123")
+            print(f"   Token obtained: {self.token[:20] if self.token else 'None'}...")
+            print(f"   User: {auth_response.get('user', {}).get('username', 'N/A')}")
+            test_results['authentication_setup'] = True
+            test_results['authentication_token_validity'] = True
+        else:
+            print("❌ Authentication failed with admin/admin123")
+            print("   This could cause 'Network Error' responses in frontend")
+            all_tests_passed = False
+            return False, test_results
+        
+        # 2. NETWORK CONNECTIVITY TESTING
+        print("\n🌐 2. NETWORK CONNECTIVITY TESTING")
+        print("-" * 50)
+        
+        # Test basic connectivity to API root
+        success, root_response = self.test_root_endpoint()
+        if success:
+            print("✅ Network connectivity to API server working")
+            print(f"   Base URL: {self.base_url}")
+            test_results['network_connectivity'] = True
+        else:
+            print("❌ Network connectivity issues detected")
+            print("   This could cause 'Network Error' responses in frontend")
+            all_tests_passed = False
+        
+        # 3. CUSTOMER API TESTING (GET /api/customers)
+        print("\n👥 3. CUSTOMER API TESTING (GET /api/customers)")
+        print("-" * 50)
+        
+        success, customers_response = self.run_test(
+            "Get All Customers",
+            "GET",
+            "customers",
+            200
+        )
+        
+        if success:
+            print("✅ GET /api/customers endpoint accessible with authentication")
+            test_results['customers_api_get'] = True
+            
+            # Verify response structure
+            if isinstance(customers_response, list):
+                print(f"   Retrieved {len(customers_response)} customers")
+                
+                if len(customers_response) > 0:
+                    sample_customer = customers_response[0]
+                    expected_fields = ['id', 'name', 'mobile', 'email', 'address', 'created_at']
+                    
+                    structure_valid = True
+                    for field in expected_fields:
+                        if field in sample_customer:
+                            print(f"   ✅ Customer structure contains: {field}")
+                        else:
+                            print(f"   ⚠️ Customer structure missing: {field}")
+                            structure_valid = False
+                    
+                    # Check for extended fields
+                    extended_fields = ['vehicle_info', 'insurance_info', 'sales_info']
+                    for field in extended_fields:
+                        if field in sample_customer:
+                            print(f"   ✅ Extended field present: {field}")
+                    
+                    if structure_valid:
+                        print("✅ Customer API response structure is valid")
+                        test_results['customers_api_structure'] = True
+                    else:
+                        print("❌ Customer API response structure has issues")
+                        all_tests_passed = False
+                else:
+                    print("   ⚠️ No customers found in database")
+                    test_results['customers_api_structure'] = True  # Structure is valid even if empty
+            else:
+                print("❌ Customer API response is not a list")
+                all_tests_passed = False
+        else:
+            print("❌ GET /api/customers failed - could cause 'Network Error' in frontend")
+            print("   Check authentication token or API endpoint availability")
+            all_tests_passed = False
+        
+        # 4. VEHICLES API TESTING (GET /api/vehicles)
+        print("\n🚗 4. VEHICLES API TESTING (GET /api/vehicles)")
+        print("-" * 50)
+        
+        success, vehicles_response = self.run_test(
+            "Get All Vehicles",
+            "GET",
+            "vehicles",
+            200
+        )
+        
+        if success:
+            print("✅ GET /api/vehicles endpoint accessible with authentication")
+            test_results['vehicles_api_get'] = True
+            
+            # Verify response structure
+            if isinstance(vehicles_response, list):
+                print(f"   Retrieved {len(vehicles_response)} vehicles")
+                
+                if len(vehicles_response) > 0:
+                    sample_vehicle = vehicles_response[0]
+                    expected_fields = ['id', 'brand', 'model', 'chassis_number', 'engine_number', 'color', 'status']
+                    
+                    structure_valid = True
+                    for field in expected_fields:
+                        if field in sample_vehicle:
+                            print(f"   ✅ Vehicle structure contains: {field}")
+                        else:
+                            print(f"   ⚠️ Vehicle structure missing: {field}")
+                            structure_valid = False
+                    
+                    if structure_valid:
+                        print("✅ Vehicle API response structure is valid")
+                        test_results['vehicles_api_structure'] = True
+                    else:
+                        print("❌ Vehicle API response structure has issues")
+                        all_tests_passed = False
+                    
+                    # Store a vehicle ID for update testing
+                    created_test_data['vehicle_id'] = sample_vehicle.get('id')
+                else:
+                    print("   ⚠️ No vehicles found in database")
+                    test_results['vehicles_api_structure'] = True  # Structure is valid even if empty
+            else:
+                print("❌ Vehicle API response is not a list")
+                all_tests_passed = False
+        else:
+            print("❌ GET /api/vehicles failed - could cause 'Network Error' in frontend")
+            print("   Check authentication token or API endpoint availability")
+            all_tests_passed = False
+        
+        # 5. SALES API TESTING (GET /api/sales)
+        print("\n💰 5. SALES API TESTING (GET /api/sales)")
+        print("-" * 50)
+        
+        success, sales_response = self.run_test(
+            "Get All Sales",
+            "GET",
+            "sales",
+            200
+        )
+        
+        if success:
+            print("✅ GET /api/sales endpoint accessible with authentication")
+            test_results['sales_api_get'] = True
+            
+            # Verify response structure
+            if isinstance(sales_response, list):
+                print(f"   Retrieved {len(sales_response)} sales records")
+                
+                if len(sales_response) > 0:
+                    sample_sale = sales_response[0]
+                    expected_fields = ['id', 'invoice_number', 'customer_id', 'vehicle_id', 'amount', 'payment_method', 'sale_date']
+                    
+                    structure_valid = True
+                    for field in expected_fields:
+                        if field in sample_sale:
+                            print(f"   ✅ Sales structure contains: {field}")
+                        else:
+                            print(f"   ⚠️ Sales structure missing: {field}")
+                            structure_valid = False
+                    
+                    if structure_valid:
+                        print("✅ Sales API response structure is valid")
+                        test_results['sales_api_structure'] = True
+                    else:
+                        print("❌ Sales API response structure has issues")
+                        all_tests_passed = False
+                else:
+                    print("   ⚠️ No sales records found in database")
+                    test_results['sales_api_structure'] = True  # Structure is valid even if empty
+            else:
+                print("❌ Sales API response is not a list")
+                all_tests_passed = False
+        else:
+            print("❌ GET /api/sales failed - could cause 'Network Error' in frontend")
+            print("   Check authentication token or API endpoint availability")
+            all_tests_passed = False
+        
+        # 6. CREATE TEST DATA FOR CRUD OPERATIONS
+        print("\n🔧 6. CREATING TEST DATA FOR CRUD OPERATIONS")
+        print("-" * 50)
+        
+        # Create a test customer for update/delete operations
+        success, customer_response = self.test_create_customer(
+            "API Test Customer",
+            "9876543298",
+            "apitest@example.com",
+            "123 API Test Street, Test City"
+        )
+        
+        if success and 'id' in customer_response:
+            created_test_data['customer_id'] = customer_response['id']
+            print(f"✅ Created test customer: {created_test_data['customer_id'][:8]}...")
+        else:
+            print("❌ Failed to create test customer for CRUD operations")
+            all_tests_passed = False
+        
+        # Create a test vehicle if none exists
+        if not created_test_data['vehicle_id']:
+            success, vehicle_response = self.test_create_vehicle(
+                "TVS",
+                "API Test Model",
+                "APITEST123456789",
+                "APIENGINE123456",
+                "Red",
+                "APIKEY123",
+                "API Test Warehouse"
+            )
+            
+            if success and 'id' in vehicle_response:
+                created_test_data['vehicle_id'] = vehicle_response['id']
+                print(f"✅ Created test vehicle: {created_test_data['vehicle_id'][:8]}...")
+            else:
+                print("❌ Failed to create test vehicle for CRUD operations")
+                all_tests_passed = False
+        
+        # 7. CUSTOMER UPDATE ENDPOINT TESTING (PUT /api/customers/{id})
+        print("\n✏️ 7. CUSTOMER UPDATE ENDPOINT TESTING (PUT /api/customers/{id})")
+        print("-" * 50)
+        
+        if created_test_data['customer_id']:
+            success, update_response = self.test_update_customer(
+                created_test_data['customer_id'],
+                "API Test Customer Updated",
+                "9876543298",
+                "apitest.updated@example.com",
+                "456 Updated API Test Street, Updated City"
+            )
+            
+            if success:
+                print("✅ PUT /api/customers/{id} endpoint working correctly")
+                print("   Customer update successful with proper authentication")
+                test_results['customer_update_endpoint'] = True
+            else:
+                print("❌ PUT /api/customers/{id} failed - could cause save issues in frontend")
+                all_tests_passed = False
+        else:
+            print("❌ Cannot test customer update - no test customer available")
+            all_tests_passed = False
+        
+        # 8. VEHICLE UPDATE ENDPOINT TESTING (PUT /api/vehicles/{id})
+        print("\n🚗 8. VEHICLE UPDATE ENDPOINT TESTING (PUT /api/vehicles/{id})")
+        print("-" * 50)
+        
+        if created_test_data['vehicle_id']:
+            # Test vehicle update
+            success, vehicle_update_response = self.run_test(
+                f"Update Vehicle {created_test_data['vehicle_id'][:8]}...",
+                "PUT",
+                f"vehicles/{created_test_data['vehicle_id']}",
+                200,
+                data={
+                    "brand": "TVS",
+                    "model": "API Test Model Updated",
+                    "chassis_number": "APITEST123456789",
+                    "engine_number": "APIENGINE123456",
+                    "color": "Blue",
+                    "key_number": "APIKEY123",
+                    "vehicle_number": "KA01API123",
+                    "inbound_location": "Updated API Test Warehouse"
+                }
+            )
+            
+            if success:
+                print("✅ PUT /api/vehicles/{id} endpoint working correctly")
+                print("   Vehicle update successful with proper authentication")
+                test_results['vehicle_update_endpoint'] = True
+            else:
+                print("❌ PUT /api/vehicles/{id} failed - could cause save issues in frontend")
+                all_tests_passed = False
+        else:
+            print("❌ Cannot test vehicle update - no test vehicle available")
+            all_tests_passed = False
+        
+        # 9. CUSTOMER DELETE ENDPOINT TESTING (DELETE /api/customers/{id})
+        print("\n🗑️ 9. CUSTOMER DELETE ENDPOINT TESTING (DELETE /api/customers/{id})")
+        print("-" * 50)
+        
+        if created_test_data['customer_id']:
+            success, delete_response = self.test_delete_customer(created_test_data['customer_id'])
+            
+            if success:
+                print("✅ DELETE /api/customers/{id} endpoint working correctly")
+                print("   Customer deletion successful with proper authentication")
+                test_results['customer_delete_endpoint'] = True
+            else:
+                print("❌ DELETE /api/customers/{id} failed - could cause delete issues in frontend")
+                all_tests_passed = False
+        else:
+            print("❌ Cannot test customer delete - no test customer available")
+            all_tests_passed = False
+        
+        # 10. ERROR RESPONSE ANALYSIS
+        print("\n🚨 10. ERROR RESPONSE ANALYSIS")
+        print("-" * 50)
+        
+        # Test authentication error handling
+        original_token = self.token
+        self.token = "invalid_token_12345"
+        
+        success, auth_error_response = self.run_test(
+            "Test Invalid Authentication",
+            "GET",
+            "customers",
+            401  # Expecting 401 Unauthorized
+        )
+        
+        self.token = original_token  # Restore valid token
+        
+        if success:
+            print("✅ Authentication error handling working correctly")
+            print("   Invalid tokens properly rejected with 401 status")
+            test_results['error_response_handling'] = True
+        else:
+            print("❌ Authentication error handling not working properly")
+            all_tests_passed = False
+        
+        # Test 404 error handling
+        success, not_found_response = self.run_test(
+            "Test Non-existent Customer",
+            "GET",
+            "customers/non-existent-id-12345",
+            404  # Expecting 404 Not Found
+        )
+        
+        if success:
+            print("✅ 404 error handling working correctly")
+            print("   Non-existent resources properly return 404 status")
+        else:
+            print("❌ 404 error handling not working properly")
+            all_tests_passed = False
+        
+        # 11. COMPREHENSIVE RESULTS SUMMARY
+        print("\n" + "=" * 80)
+        print("📊 CUSTOMER DETAILS API ENDPOINTS TEST RESULTS")
+        print("=" * 80)
+        
+        successful_tests = sum(1 for result in test_results.values() if result)
+        total_tests = len(test_results)
+        
+        print(f"📋 TEST RESULTS SUMMARY:")
+        for test_name, result in test_results.items():
+            status = "✅" if result else "❌"
+            print(f"   {status} {test_name.replace('_', ' ').title()}")
+        
+        print(f"\n🎯 OVERALL RESULTS:")
+        print(f"   Tests Passed: {successful_tests}/{total_tests}")
+        print(f"   Success Rate: {(successful_tests/total_tests)*100:.1f}%")
+        
+        # Key findings for View Customer Details page
+        print(f"\n🔍 KEY FINDINGS FOR VIEW CUSTOMER DETAILS PAGE:")
+        if test_results['customers_api_get'] and test_results['customers_api_structure']:
+            print("   ✅ GET /api/customers working - customer data will load properly")
+        else:
+            print("   ❌ GET /api/customers issues - customer data may not load")
+        
+        if test_results['vehicles_api_get'] and test_results['vehicles_api_structure']:
+            print("   ✅ GET /api/vehicles working - vehicle data will load properly")
+        else:
+            print("   ❌ GET /api/vehicles issues - vehicle data may not load")
+        
+        if test_results['sales_api_get'] and test_results['sales_api_structure']:
+            print("   ✅ GET /api/sales working - sales data will load properly")
+        else:
+            print("   ❌ GET /api/sales issues - sales data may not load")
+        
+        if test_results['customer_update_endpoint']:
+            print("   ✅ Customer update functionality working - edit operations will succeed")
+        else:
+            print("   ❌ Customer update issues - edit operations may fail")
+        
+        if test_results['vehicle_update_endpoint']:
+            print("   ✅ Vehicle update functionality working - vehicle edit operations will succeed")
+        else:
+            print("   ❌ Vehicle update issues - vehicle edit operations may fail")
+        
+        if test_results['customer_delete_endpoint']:
+            print("   ✅ Customer delete functionality working - delete operations will succeed")
+        else:
+            print("   ❌ Customer delete issues - delete operations may fail")
+        
+        # Network and authentication analysis
+        print(f"\n🌐 NETWORK & AUTHENTICATION ANALYSIS:")
+        if test_results['network_connectivity']:
+            print("   ✅ Network connectivity to API server working")
+        else:
+            print("   ❌ Network connectivity issues detected - will cause 'Network Error' responses")
+        
+        if test_results['authentication_setup'] and test_results['authentication_token_validity']:
+            print("   ✅ Authentication working properly with admin/admin123")
+        else:
+            print("   ❌ Authentication issues - will cause 401/403 errors in frontend")
+        
+        if test_results['error_response_handling']:
+            print("   ✅ Error response handling working correctly")
+        else:
+            print("   ❌ Error response handling issues detected")
+        
+        # Root cause analysis for potential "Network Error" issues
+        print(f"\n🔧 ROOT CAUSE ANALYSIS FOR 'NETWORK ERROR' ISSUES:")
+        potential_issues = []
+        
+        if not test_results['network_connectivity']:
+            potential_issues.append("API server connectivity problems")
+        if not test_results['authentication_setup']:
+            potential_issues.append("Authentication credential issues")
+        if not test_results['customers_api_get']:
+            potential_issues.append("Customer API endpoint not responding")
+        if not test_results['vehicles_api_get']:
+            potential_issues.append("Vehicle API endpoint not responding")
+        if not test_results['sales_api_get']:
+            potential_issues.append("Sales API endpoint not responding")
+        
+        if potential_issues:
+            print("   ❌ Potential causes of 'Network Error' responses:")
+            for issue in potential_issues:
+                print(f"      • {issue}")
+        else:
+            print("   ✅ No obvious causes for 'Network Error' responses detected")
+            print("   ✅ All API endpoints accessible and responding correctly")
+        
+        overall_success = all_tests_passed and test_results['authentication_setup']
+        status = "✅ COMPLETED SUCCESSFULLY" if overall_success else "❌ COMPLETED WITH ISSUES"
+        print(f"\n🎯 OVERALL STATUS: {status}")
+        
+        if overall_success:
+            print("\n💡 CONCLUSION:")
+            print("   All customer details API endpoints are working correctly:")
+            print("   • Authentication with admin/admin123 successful")
+            print("   • GET /api/customers, /api/vehicles, /api/sales all accessible")
+            print("   • Customer and vehicle update operations functional")
+            print("   • Customer delete operations working with proper validation")
+            print("   • No network connectivity issues detected")
+            print("   • Error handling working properly")
+            print("   • View Customer Details page should work without 'Network Error' issues")
+        else:
+            print("\n⚠️ ISSUES IDENTIFIED:")
+            print("   Some customer details API endpoints have issues that could cause:")
+            print("   • 'Network Error' responses in the View Customer Details page")
+            print("   • Authentication failures (401/403 errors)")
+            print("   • Data loading failures")
+            print("   • Save/update operation failures")
+            print("   Please review the failed tests above for specific endpoint issues.")
+        
+        return overall_success, test_results
+
     def test_delete_functionality_and_duplicate_management(self):
         """
         COMPREHENSIVE DELETE FUNCTIONALITY AND DUPLICATE MANAGEMENT TESTING
