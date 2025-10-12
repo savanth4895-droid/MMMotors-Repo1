@@ -1119,23 +1119,23 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
             insurance_info = {}
             sales_info = {}
             
-            # Map vehicle fields from form to CSV template
-            if row.get('vehicle_brand') or row.get('vehicle_model'):
+            # Map vehicle fields from CSV template (using actual CSV column names)
+            if row.get('brand') or row.get('model') or row.get('vehicle_no') or row.get('chassis_no'):
                 vehicle_info = {
-                    'brand': row.get('vehicle_brand', '').strip(),
-                    'model': row.get('vehicle_model', '').strip(), 
-                    'color': row.get('vehicle_color', '').strip(),
+                    'brand': row.get('brand', '').strip(),
+                    'model': row.get('model', '').strip(), 
+                    'color': row.get('color', '').strip(),
                     'vehicle_number': row.get('vehicle_no', '').strip(),
                     'chassis_number': row.get('chassis_no', '').strip(),
                     'engine_number': row.get('engine_no', '').strip()
                 }
             
-            # Map insurance nominee fields
-            if row.get('insurance_nominee') or row.get('insurance_relation'):
+            # Map insurance nominee fields (using actual CSV column names)
+            if row.get('nominee_name') or row.get('relation') or row.get('age'):
                 insurance_info = {
-                    'nominee_name': row.get('insurance_nominee', '').strip(),
-                    'relation': row.get('insurance_relation', '').strip(),
-                    'age': row.get('insurance_age', '').strip()
+                    'nominee_name': row.get('nominee_name', '').strip(),
+                    'relation': row.get('relation', '').strip(),
+                    'age': row.get('age', '').strip()
                 }
             
             # Map sales information if available
