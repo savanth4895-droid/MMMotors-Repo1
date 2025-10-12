@@ -1109,7 +1109,8 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                 name=name,
                 mobile=phone_number,
                 email=row.get('email', '').strip() or None,
-                address=address
+                address=address,
+                care_of=row.get('care_of', '').strip() or None
             )
             
             customer = Customer(**customer_data.dict())
