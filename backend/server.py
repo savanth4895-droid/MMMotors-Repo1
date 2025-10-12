@@ -676,6 +676,27 @@ async def update_sale(sale_id: str, sale_data: SaleCreate, current_user: User = 
     await db.sales.replace_one({"id": sale_id}, updated_sale.dict())
     return updated_sale
 
+@api_router.delete("/sales/{sale_id}")
+async def delete_sale(sale_id: str, current_user: User = Depends(get_current_user)):
+    # Check if sale exists
+    existing_sale = await db.sales.find_one({"id": sale_id})
+    if not existing_sale:
+        raise HTTPException(status_code=404, detail="Sale not found")
+    
+    # If vehicle is associated, reset its status to available
+    if existing_sale.get("vehicle_id"):
+        await db.vehicles.update_one(
+            {"id": existing_sale["vehicle_id"]},
+            {"$set": {"status": "available"}, "$unset": {"customer_id": "", "date_sold": ""}}
+        )
+    
+    # Delete the sale
+    result = await db.sales.delete_one({"id": sale_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Sale not found")
+    
+    return {"message": "Sale deleted successfully", "deleted_sale_id": sale_id}
+
 # Service endpoints
 @api_router.post("/services", response_model=Service)
 async def create_service(service_data: ServiceCreate, current_user: User = Depends(get_current_user)):
