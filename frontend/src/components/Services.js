@@ -3787,6 +3787,16 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
                           >
                             <Download className="w-4 h-4" />
                           </Button>
+                          {onDeleteBill && (
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => onDeleteBill(bill)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
