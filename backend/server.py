@@ -164,10 +164,11 @@ class Sale(BaseModel):
 
 class SaleCreate(BaseModel):
     customer_id: str
-    vehicle_id: str
+    vehicle_id: Optional[str] = None  # Made optional for imported sales
     amount: float
     payment_method: str
     insurance_details: Optional[Dict[str, Any]] = None
+    source: str = "direct"  # Default to direct sales
 
 class Service(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
