@@ -1264,6 +1264,12 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
                         row.get('key_no', '').strip())
             vehicle_number = row.get('vehicle_number', '').strip()
             
+            # Handle status field with validation
+            status = row.get('status', '').strip().lower()
+            valid_statuses = ['available', 'in_stock', 'sold', 'returned']
+            if status not in valid_statuses:
+                status = 'available'  # Default status
+            
             # Check for duplicate chassis number before inserting
             if chassis_number and chassis_number != 'Unknown Chassis':
                 existing_vehicle = await db.vehicles.find_one({"chassis_number": chassis_number})
@@ -1288,6 +1294,12 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
                 inbound_location=row.get('inbound_location', '').strip() or 'Unknown Location',
                 page_number=row.get('page_number', '').strip() or None
             )
+            
+            # Create vehicle with proper status
+            vehicle_dict = vehicle_data.dict()
+            vehicle_dict['status'] = status  # Add status after creation since it's not in VehicleCreate
+            vehicle = Vehicle(**vehicle_dict)
+            await db.vehicles.insert_one(vehicle.dict())
             
             vehicle = Vehicle(**vehicle_data.dict())
             await db.vehicles.insert_one(vehicle.dict())
