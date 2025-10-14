@@ -599,6 +599,78 @@ const DataImport = () => {
                   </div>
                 </div>
 
+                {/* Cross-Reference Statistics */}
+                {selectedJob.cross_reference_stats && Object.keys(selectedJob.cross_reference_stats).length > 0 && (
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <h4 className="font-semibold text-purple-800 mb-3 flex items-center gap-2">
+                      <RefreshCw className="w-5 h-5" />
+                      Cross-Reference Statistics
+                    </h4>
+                    <div className="grid grid-cols-3 gap-3">
+                      {selectedJob.cross_reference_stats.customers_linked > 0 && (
+                        <div className="text-center p-3 bg-white rounded">
+                          <div className="text-lg font-bold text-purple-600">{selectedJob.cross_reference_stats.customers_linked}</div>
+                          <div className="text-xs text-purple-800">Customers Linked</div>
+                        </div>
+                      )}
+                      {selectedJob.cross_reference_stats.customers_created > 0 && (
+                        <div className="text-center p-3 bg-white rounded">
+                          <div className="text-lg font-bold text-purple-600">{selectedJob.cross_reference_stats.customers_created}</div>
+                          <div className="text-xs text-purple-800">Customers Created</div>
+                        </div>
+                      )}
+                      {selectedJob.cross_reference_stats.vehicles_linked > 0 && (
+                        <div className="text-center p-3 bg-white rounded">
+                          <div className="text-lg font-bold text-purple-600">{selectedJob.cross_reference_stats.vehicles_linked}</div>
+                          <div className="text-xs text-purple-800">Vehicles Linked</div>
+                        </div>
+                      )}
+                      {selectedJob.cross_reference_stats.vehicles_created > 0 && (
+                        <div className="text-center p-3 bg-white rounded">
+                          <div className="text-lg font-bold text-purple-600">{selectedJob.cross_reference_stats.vehicles_created}</div>
+                          <div className="text-xs text-purple-800">Vehicles Created</div>
+                        </div>
+                      )}
+                      {selectedJob.cross_reference_stats.sales_created > 0 && (
+                        <div className="text-center p-3 bg-white rounded">
+                          <div className="text-lg font-bold text-purple-600">{selectedJob.cross_reference_stats.sales_created}</div>
+                          <div className="text-xs text-purple-800">Sales Created</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Incomplete Records */}
+                {selectedJob.incomplete_records && selectedJob.incomplete_records.length > 0 && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <h4 className="font-semibold text-yellow-800 mb-3 flex items-center gap-2">
+                      <AlertCircle className="w-5 h-5" />
+                      Incomplete Records ({selectedJob.incomplete_records.length})
+                    </h4>
+                    <p className="text-sm text-yellow-700 mb-3">
+                      These records were imported but are missing some information. You can complete them later in their respective management pages.
+                    </p>
+                    <div className="max-h-48 overflow-y-auto">
+                      {selectedJob.incomplete_records.slice(0, 10).map((record, index) => (
+                        <div key={index} className="bg-white border border-yellow-200 rounded p-3 mb-2">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-medium text-yellow-800">Row {record.row}</p>
+                              <p className="text-yellow-600 text-sm">Missing: {record.missing_fields.join(', ')}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {selectedJob.incomplete_records.length > 10 && (
+                        <div className="text-center text-sm text-yellow-600 mt-2">
+                          And {selectedJob.incomplete_records.length - 10} more...
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Errors */}
                 {selectedJob.errors && selectedJob.errors.length > 0 && (
                   <div>
