@@ -35,7 +35,15 @@ const Dashboard = () => {
     vehicles_in_stock: 0,
     vehicles_sold: 0,
     pending_services: 0,
-    low_stock_parts: 0
+    low_stock_parts: 0,
+    sales_stats: {
+      total_sales: 0,
+      direct_sales: 0,
+      imported_sales: 0,
+      total_revenue: 0,
+      direct_revenue: 0,
+      imported_revenue: 0
+    }
   });
   const [backupStats, setBackupStats] = useState(null);
   const [loading, setLoading] = useState(true);
