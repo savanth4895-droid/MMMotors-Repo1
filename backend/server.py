@@ -977,13 +977,49 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
     pending_services = await db.services.count_documents({"status": ServiceStatus.PENDING})
     low_stock_parts = await db.spare_parts.count_documents({"$expr": {"$lte": ["$quantity", "$low_stock_threshold"]}})
     
+    # Sales statistics including imported data
+    total_sales = await db.sales.count_documents({})
+    direct_sales = await db.sales.count_documents({"$or": [{"source": {"$exists": False}}, {"source": "direct"}]})
+    imported_sales = await db.sales.count_documents({"source": "import"})
+    
+    # Calculate total sales revenue (including imported sales)
+    sales_pipeline = [
+        {"$group": {
+            "_id": None,
+            "total_revenue": {"$sum": "$amount"},
+            "direct_revenue": {"$sum": {"$cond": [
+                {"$or": [{"$not": ["$source"]}, {"$eq": ["$source", "direct"]}]},
+                "$amount", 
+                0
+            ]}},
+            "imported_revenue": {"$sum": {"$cond": [
+                {"$eq": ["$source", "import"]},
+                "$amount", 
+                0
+            ]}}
+        }}
+    ]
+    
+    revenue_stats = await db.sales.aggregate(sales_pipeline).to_list(1)
+    total_revenue = revenue_stats[0]["total_revenue"] if revenue_stats else 0
+    direct_revenue = revenue_stats[0]["direct_revenue"] if revenue_stats else 0
+    imported_revenue = revenue_stats[0]["imported_revenue"] if revenue_stats else 0
+    
     return {
         "total_customers": total_customers,
         "total_vehicles": total_vehicles,
         "vehicles_in_stock": vehicles_in_stock,
         "vehicles_sold": vehicles_sold,
         "pending_services": pending_services,
-        "low_stock_parts": low_stock_parts
+        "low_stock_parts": low_stock_parts,
+        "sales_stats": {
+            "total_sales": total_sales,
+            "direct_sales": direct_sales,
+            "imported_sales": imported_sales,
+            "total_revenue": total_revenue,
+            "direct_revenue": direct_revenue,
+            "imported_revenue": imported_revenue
+        }
     }
 
 # Import/Export endpoints
