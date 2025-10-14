@@ -1215,6 +1215,75 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                 customer_dict['sales_info'] = sales_info
             
             await db.customers.insert_one(customer_dict)
+            
+            # Create a sales record if sales information is provided
+            if sales_info and any(sales_info.values()) and sales_info.get('amount'):
+                try:
+                    # Parse sale date
+                    sale_date = None
+                    if sales_info.get('sale_date'):
+                        try:
+                            # Try to parse various date formats
+                            date_str = sales_info['sale_date']
+                            # Handle common date formats: DD-MMM, DD/MM/YYYY, YYYY-MM-DD, etc.
+                            from datetime import datetime
+                            import re
+                            
+                            if re.match(r'\d{1,2}-[A-Za-z]{3}', date_str):  # Format: 03-Mar
+                                # Add current year if not specified
+                                date_str = f"{date_str}-{datetime.now().year}"
+                                sale_date = datetime.strptime(date_str, "%d-%b-%Y")
+                            elif re.match(r'\d{1,2}/\d{1,2}/\d{4}', date_str):  # Format: DD/MM/YYYY
+                                sale_date = datetime.strptime(date_str, "%d/%m/%Y")
+                            elif re.match(r'\d{4}-\d{1,2}-\d{1,2}', date_str):  # Format: YYYY-MM-DD
+                                sale_date = datetime.strptime(date_str, "%Y-%m-%d")
+                            else:
+                                sale_date = datetime.now()  # Default to current date
+                        except:
+                            sale_date = datetime.now()  # Default if parsing fails
+                    else:
+                        sale_date = datetime.now()
+                    
+                    # Create sales record from imported data
+                    sale_record = Sale(
+                        customer_id=customer.id,
+                        vehicle_id=None,  # Will be set if vehicle exists
+                        amount=float(sales_info['amount']) if sales_info.get('amount') else 0.0,
+                        payment_method=sales_info.get('payment_method', 'CASH').upper(),
+                        hypothecation=sales_info.get('hypothecation', ''),
+                        sale_date=sale_date,
+                        invoice_number=sales_info.get('invoice_number', f"IMP-{customer.id[:8]}"),
+                        vehicle_brand=vehicle_info.get('brand', ''),
+                        vehicle_model=vehicle_info.get('model', ''),
+                        vehicle_color=vehicle_info.get('color', ''),
+                        vehicle_chassis=vehicle_info.get('chassis_number', ''),
+                        vehicle_engine=vehicle_info.get('engine_number', ''),
+                        vehicle_registration=vehicle_info.get('vehicle_number', ''),
+                        insurance_nominee=insurance_info.get('nominee_name', ''),
+                        insurance_relation=insurance_info.get('relation', ''),
+                        insurance_age=insurance_info.get('age', ''),
+                        source="import"  # Mark as imported data
+                    )
+                    
+                    # Try to find matching vehicle in inventory
+                    if vehicle_info.get('chassis_number'):
+                        existing_vehicle = await db.vehicles.find_one({
+                            "chassis_number": vehicle_info['chassis_number']
+                        })
+                        if existing_vehicle:
+                            sale_record.vehicle_id = existing_vehicle['id']
+                            # Update vehicle status to sold
+                            await db.vehicles.update_one(
+                                {"id": existing_vehicle['id']},
+                                {"$set": {"status": "sold", "customer_id": customer.id}}
+                            )
+                    
+                    await db.sales.insert_one(sale_record.dict())
+                    
+                except Exception as sale_error:
+                    # Log the error but don't fail the customer import
+                    print(f"Warning: Could not create sale record for customer {customer.id}: {sale_error}")
+            
             successful += 1
             
         except Exception as e:
