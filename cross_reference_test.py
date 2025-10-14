@@ -309,13 +309,13 @@ class CrossReferenceDataImportTester:
         print("\n👥 4. CUSTOMER IMPORT WITH VEHICLE LINKING (Test cross_reference_stats)")
         print("-" * 50)
         
-        # Import customer CSV with vehicle info matching chassis "CROSS-TEST-001"
-        customer_csv_content = """name,mobile,address,chassis_number,brand,model
-Test Customer,9999999001,Test Address,CROSS-TEST-001,TVS,Apache"""
+        # Import customer CSV with vehicle info matching the created chassis number
+        customer_csv_content = f"""name,mobile,address,chassis_number,brand,model
+Test Customer,9999999001,Test Address,{chassis_number},TVS,Apache"""
         
         print("   Testing customer import with vehicle linking:")
         print("   Customer: Test Customer, Mobile: 9999999001")
-        print("   Vehicle chassis: CROSS-TEST-001 (should link to existing vehicle)")
+        print(f"   Vehicle chassis: {chassis_number} (should link to existing vehicle)")
         
         success, import_response = self.test_csv_import_with_content(
             "customers",
