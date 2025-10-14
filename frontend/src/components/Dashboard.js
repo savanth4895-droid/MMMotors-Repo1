@@ -118,8 +118,8 @@ const Dashboard = () => {
   const quickStats = [
     {
       title: 'Total Revenue',
-      value: '₹2,45,000',
-      change: '+12%',
+      value: `₹${stats.sales_stats?.total_revenue?.toLocaleString() || '0'}`,
+      change: stats.sales_stats?.imported_sales > 0 ? `${stats.sales_stats.imported_sales} imported` : 'No imports',
       changeType: 'positive',
       icon: TrendingUp
     },
