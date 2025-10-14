@@ -125,9 +125,17 @@ TVS,Test Vehicle,TEST123CHASSIS,TESTENG123,Red,KA01TEST123,TESTKEY001,Test Locat
                     return True
                 else:
                     print("❌ No vehicles imported successfully")
+                    errors = result.get('errors', [])
+                    if errors:
+                        print(f"   Errors: {errors[:2]}")  # Show first 2 errors
                     return False
             else:
                 print(f"❌ Import failed: {response.status_code}")
+                try:
+                    error_detail = response.json()
+                    print(f"   Error details: {error_detail}")
+                except:
+                    print(f"   Error text: {response.text}")
                 return False
         except Exception as e:
             print(f"❌ Import error: {str(e)}")
