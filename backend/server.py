@@ -1312,7 +1312,8 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                         insurance_nominee=insurance_info.get('nominee_name', ''),
                         insurance_relation=insurance_info.get('relation', ''),
                         insurance_age=insurance_info.get('age', ''),
-                        source="import"  # Mark as imported data
+                        source="import",  # Mark as imported data
+                        created_by="import_system"  # Add required created_by field
                     )
                     
                     # Try to find matching vehicle in inventory
