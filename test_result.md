@@ -108,6 +108,19 @@
 user_problem_statement: "Implement cross-referencing system for data import templates where CSV templates can extract data from each other based on common identifiers (vehicle_number, chassis_number, mobile)."
 
 backend:
+  - task: "Cross-Reference Data Import System Implementation"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+      - agent: "main"
+      - comment: "CROSS-REFERENCE DATA IMPORT SYSTEM IMPLEMENTED: Created comprehensive cross-referencing system for unified data import across all templates. UTILITY FUNCTIONS: Added find_customer_by_mobile, find_vehicle_by_identifiers, find_or_create_customer, find_or_create_vehicle functions for smart data linking. ENHANCED IMPORT FUNCTIONS: Updated all import functions (customers, vehicles, services) to support cross-referencing. Customer Import: Auto-links to existing vehicles by chassis_number, tracks vehicles_linked and sales_created stats, identifies incomplete records. Vehicle Import: Auto-links to customers by mobile, creates sales records when sale_amount provided, tracks customers_linked, customers_created, sales_created stats. Service Import: Supports linking via vehicle_number OR chassis_number, auto-links to existing customers and vehicles, creates placeholder customers for incomplete data. ENHANCED TEMPLATES: Updated CSV templates to include cross-reference fields - vehicles template now includes customer_mobile, customer_name, sale_amount, payment_method; services template includes chassis_number alternative. ENHANCED MODELS: Added cross_reference_stats and incomplete_records fields to ImportJob and ImportResult models. FRONTEND ENHANCEMENTS: Updated DataImport component to display cross-reference statistics (customers/vehicles linked, customers/vehicles created, sales created) and incomplete records section with missing field details. Ready for comprehensive backend testing of new cross-referencing functionality."
+
+backend:
   - task: "Sales Import Integration Testing"
     implemented: true
     working: false
