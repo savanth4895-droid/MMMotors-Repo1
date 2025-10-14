@@ -1446,19 +1446,25 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
     )
 
 async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id: str) -> ImportResult:
-    """Import vehicles data"""
+    """Import vehicles data with cross-referencing support"""
     successful = 0
     failed = 0
     errors = []
+    incomplete_records = []
+    import_stats = {
+        'customers_linked': 0,
+        'customers_created': 0,
+        'sales_created': 0
+    }
     
     valid_brands = ["TVS", "BAJAJ", "HERO", "HONDA", "TRIUMPH", "KTM", "SUZUKI", "APRILIA"]
     
     for idx, row in enumerate(data):
         try:
-            # Get fields with fallback values (no longer required)
+            # Get fields with fallback values
             brand = row.get('brand', '').upper().strip() or 'UNKNOWN'
             if brand != 'UNKNOWN' and brand not in valid_brands:
-                brand = 'UNKNOWN'  # Use fallback instead of error
+                brand = 'UNKNOWN'
             
             # Support both old and new field names for backward compatibility
             chassis_number = (row.get('chassis_number', '').strip() or 
@@ -1473,7 +1479,7 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
             status = row.get('status', '').strip().lower()
             valid_statuses = ['available', 'in_stock', 'sold', 'returned']
             if status not in valid_statuses:
-                status = 'available'  # Default status
+                status = 'available'
             
             # Check for duplicate chassis number before inserting
             if chassis_number and chassis_number != 'Unknown Chassis':
@@ -1502,12 +1508,67 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
             
             # Create vehicle with proper status
             vehicle_dict = vehicle_data.dict()
-            vehicle_dict['status'] = status  # Add status after creation since it's not in VehicleCreate
+            vehicle_dict['status'] = status
             vehicle = Vehicle(**vehicle_dict)
-            await db.vehicles.insert_one(vehicle.dict())
             
-            vehicle = Vehicle(**vehicle_data.dict())
-            await db.vehicles.insert_one(vehicle.dict())
+            # CROSS-REFERENCE: Check if customer mobile is provided
+            customer_mobile = row.get('customer_mobile', '').strip()
+            customer_name = row.get('customer_name', '').strip()
+            customer_id = None
+            
+            if customer_mobile:
+                # Find or create customer
+                customer_id = await find_or_create_customer(
+                    customer_mobile, 
+                    {'name': customer_name or 'Unknown Customer'}, 
+                    import_stats
+                )
+                vehicle_dict['customer_id'] = customer_id
+            
+            await db.vehicles.insert_one(vehicle_dict)
+            
+            # CROSS-REFERENCE: Create sales record if sale data is provided
+            sale_amount = row.get('sale_amount', '').strip()
+            payment_method = row.get('payment_method', '').strip()
+            
+            if sale_amount and customer_id:
+                try:
+                    sale_record = Sale(
+                        customer_id=customer_id,
+                        vehicle_id=vehicle.id,
+                        amount=float(sale_amount),
+                        payment_method=payment_method.upper() or 'CASH',
+                        sale_date=datetime.now(timezone.utc),
+                        invoice_number=f"IMP-VEH-{vehicle.id[:8]}",
+                        vehicle_brand=brand,
+                        vehicle_model=vehicle_data.model,
+                        vehicle_color=vehicle_data.color,
+                        vehicle_chassis=chassis_number,
+                        vehicle_engine=engine_number,
+                        vehicle_registration=vehicle_number,
+                        source="import",
+                        created_by=user_id
+                    )
+                    await db.sales.insert_one(sale_record.dict())
+                    import_stats['sales_created'] += 1
+                    
+                    # Update vehicle status to sold if sale is created
+                    await db.vehicles.update_one(
+                        {"id": vehicle.id},
+                        {"$set": {"status": "sold"}}
+                    )
+                except Exception as sale_error:
+                    print(f"Warning: Could not create sale record for vehicle {vehicle.id}: {sale_error}")
+            
+            # Track incomplete records (vehicles without customer linkage)
+            if not customer_id and customer_mobile:
+                incomplete_records.append({
+                    "record_id": vehicle.id,
+                    "row": idx + 2,
+                    "missing_fields": ["customer_details"],
+                    "data": row
+                })
+            
             successful += 1
             
         except Exception as e:
@@ -1522,15 +1583,19 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
     import_job.failed_records = failed
     import_job.processed_records = successful + failed
     import_job.errors = errors
+    import_job.cross_reference_stats = import_stats
+    import_job.incomplete_records = incomplete_records
     
     return ImportResult(
         job_id=import_job.id,
         status="completed",
-        message=f"Import completed: {successful} successful, {failed} failed",
+        message=f"Import completed: {successful} successful, {failed} failed. Cross-referenced: {import_stats['customers_linked']} customers linked, {import_stats['customers_created']} customers created, {import_stats['sales_created']} sales created.",
         total_records=len(data),
         successful_records=successful,
         failed_records=failed,
-        errors=errors
+        errors=errors,
+        cross_reference_stats=import_stats,
+        incomplete_records=incomplete_records
     )
 
 async def import_spare_parts_data(data: List[Dict], import_job: ImportJob, user_id: str) -> ImportResult:
