@@ -1654,43 +1654,71 @@ async def import_spare_parts_data(data: List[Dict], import_job: ImportJob, user_
     )
 
 async def import_services_data(data: List[Dict], import_job: ImportJob, user_id: str) -> ImportResult:
-    """Import services data"""
+    """Import services data with cross-referencing support"""
     successful = 0
     failed = 0
     errors = []
+    incomplete_records = []
+    import_stats = {
+        'customers_linked': 0,
+        'customers_created': 0,
+        'vehicles_linked': 0
+    }
     
     for idx, row in enumerate(data):
         try:
-            # Validate required fields
-            required_fields = ['customer_name', 'customer_mobile', 'vehicle_number', 'service_type', 'amount']
-            for field in required_fields:
-                if not row.get(field):
-                    raise ValueError(f"{field} is required")
+            # Validate required fields (relaxed - only need mobile or vehicle identifier)
+            customer_mobile = row.get('customer_mobile', '').strip()
+            customer_name = row.get('customer_name', '').strip()
+            vehicle_number = row.get('vehicle_number', '').strip()
+            chassis_number = row.get('chassis_number', '').strip()
             
-            # Find or create customer
-            customer_name = row['customer_name'].strip()
-            customer_mobile = row['customer_mobile'].strip()
+            if not customer_mobile and not vehicle_number and not chassis_number:
+                raise ValueError("Either customer_mobile or vehicle identifiers (vehicle_number/chassis_number) must be provided")
             
-            existing_customer = await db.customers.find_one({"mobile": customer_mobile})
-            if existing_customer:
-                customer_id = existing_customer['id']
-            else:
-                # Create new customer
-                customer_data = CustomerCreate(
-                    name=customer_name,
-                    mobile=customer_mobile,
-                    address="Imported via service data"
+            # CROSS-REFERENCE: Find or create customer
+            customer_id = None
+            if customer_mobile:
+                customer_id = await find_or_create_customer(
+                    customer_mobile,
+                    {'name': customer_name or 'Unknown Customer'},
+                    import_stats
                 )
-                customer = Customer(**customer_data.dict())
-                await db.customers.insert_one(customer.dict())
-                customer_id = customer.id
+            
+            # CROSS-REFERENCE: Find vehicle by identifiers
+            vehicle_id = None
+            if vehicle_number or chassis_number:
+                vehicle = await find_vehicle_by_identifiers(vehicle_number, chassis_number)
+                if vehicle:
+                    vehicle_id = vehicle['id']
+                    vehicle_number = vehicle.get('vehicle_number', vehicle_number)
+                    import_stats['vehicles_linked'] += 1
+                    
+                    # If no customer was found by mobile, try to get from vehicle
+                    if not customer_id and vehicle.get('customer_id'):
+                        customer_id = vehicle['customer_id']
+                        import_stats['customers_linked'] += 1
+            
+            # If still no customer, create a placeholder
+            if not customer_id:
+                customer_id = await find_or_create_customer(
+                    f"AUTO-{str(uuid.uuid4())[:8]}",
+                    {'name': customer_name or 'Unknown Customer'},
+                    import_stats
+                )
+                incomplete_records.append({
+                    "row": idx + 2,
+                    "missing_fields": ["customer_mobile"],
+                    "data": row
+                })
             
             service_data = ServiceCreate(
                 customer_id=customer_id,
-                vehicle_number=row['vehicle_number'].strip(),
-                service_type=row['service_type'].strip(),
-                description=row.get('description', '').strip(),
-                amount=float(row['amount'])
+                vehicle_id=vehicle_id,
+                vehicle_number=vehicle_number or chassis_number or 'Unknown',
+                service_type=row.get('service_type', 'general_service').strip(),
+                description=row.get('description', '').strip() or 'Imported service',
+                amount=float(row.get('amount', 0))
             )
             
             # Generate job card number
@@ -1717,15 +1745,19 @@ async def import_services_data(data: List[Dict], import_job: ImportJob, user_id:
     import_job.failed_records = failed
     import_job.processed_records = successful + failed
     import_job.errors = errors
+    import_job.cross_reference_stats = import_stats
+    import_job.incomplete_records = incomplete_records
     
     return ImportResult(
         job_id=import_job.id,
         status="completed",
-        message=f"Import completed: {successful} successful, {failed} failed",
+        message=f"Import completed: {successful} successful, {failed} failed. Cross-referenced: {import_stats['customers_linked']} customers linked, {import_stats['customers_created']} customers created, {import_stats['vehicles_linked']} vehicles linked.",
         total_records=len(data),
         successful_records=successful,
         failed_records=failed,
-        errors=errors
+        errors=errors,
+        cross_reference_stats=import_stats,
+        incomplete_records=incomplete_records
     )
 
 # Duplicate Detection and Cleanup endpoints
