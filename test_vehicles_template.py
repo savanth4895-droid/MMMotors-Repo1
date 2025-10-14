@@ -161,9 +161,9 @@ TVS,Test {status.title()},TEST{status.upper()}CHASSIS,TESTENG{status.upper()},Bl
                 import io
                 csv_file = io.StringIO(csv_content)
                 files = {'file': (f'test_vehicle_{status}.csv', csv_file, 'text/csv')}
-                data = {'data_type': 'vehicles'}
+                params = {'data_type': 'vehicles'}
                 
-                response = requests.post(url, headers=headers, files=files, data=data)
+                response = requests.post(url, headers=headers, files=files, params=params)
                 
                 if response.status_code == 200:
                     result = response.json()
