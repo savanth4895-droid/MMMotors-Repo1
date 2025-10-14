@@ -1801,21 +1801,6 @@ async def cleanup_duplicates(current_user: User = Depends(get_current_user)):
     
     return cleanup_results
 
-# Duplicate prevention for new records
-async def check_vehicle_duplicate(chassis_number: str) -> bool:
-    """Check if a vehicle with the same chassis number already exists"""
-    if not chassis_number or chassis_number.strip() == "":
-        return False
-    existing = await db.vehicles.find_one({"chassis_number": chassis_number.strip()})
-    return existing is not None
-
-async def check_customer_duplicate(mobile: str) -> bool:
-    """Check if a customer with the same mobile number already exists"""
-    if not mobile or mobile.strip() == "":
-        return False
-    existing = await db.customers.find_one({"mobile": mobile.strip()})
-    return existing is not None
-
 # Include the router in the main app
 # Backup Service Class
 class BackupService:
