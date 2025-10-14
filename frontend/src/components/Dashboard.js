@@ -229,6 +229,70 @@ const Dashboard = () => {
         })}
       </div>
 
+      {/* Sales Overview Including Imported Data */}
+      <Card className="border-l-4 border-l-green-500">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Sales Overview</CardTitle>
+                <CardDescription>Revenue including imported sales data</CardDescription>
+              </div>
+            </div>
+            <Link to="/sales">
+              <Button variant="outline" size="sm">
+                View Sales
+              </Button>
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <p className="text-2xl font-bold text-blue-600">
+                ₹{stats.sales_stats?.total_revenue?.toLocaleString() || '0'}
+              </p>
+              <p className="text-xs text-gray-600">Total Revenue</p>
+            </div>
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <p className="text-2xl font-bold text-green-600">
+                ₹{stats.sales_stats?.direct_revenue?.toLocaleString() || '0'}
+              </p>
+              <p className="text-xs text-gray-600">Direct Sales</p>
+            </div>
+            <div className="text-center p-4 bg-orange-50 rounded-lg">
+              <p className="text-2xl font-bold text-orange-600">
+                ₹{stats.sales_stats?.imported_revenue?.toLocaleString() || '0'}
+              </p>
+              <p className="text-xs text-gray-600">Imported Sales</p>
+            </div>
+            <div className="text-center p-4 bg-purple-50 rounded-lg">
+              <p className="text-2xl font-bold text-purple-600">
+                {stats.sales_stats?.total_sales || 0}
+              </p>
+              <p className="text-xs text-gray-600">Total Transactions</p>
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-4">
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <p className="text-lg font-semibold text-gray-900">
+                {stats.sales_stats?.direct_sales || 0}
+              </p>
+              <p className="text-xs text-gray-600">Direct Sales Count</p>
+            </div>
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <p className="text-lg font-semibold text-gray-900">
+                {stats.sales_stats?.imported_sales || 0}
+              </p>
+              <p className="text-xs text-gray-600">Imported Sales Count</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Backup Status */}
       {backupStats && (
         <Card className="border-l-4 border-l-blue-500">
