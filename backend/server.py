@@ -1164,6 +1164,87 @@ async def parse_csv_file(file_content: bytes) -> List[Dict]:
     csv_reader = csv.DictReader(io.StringIO(content))
     return list(csv_reader)
 
+# Cross-reference utility functions for unified data import
+async def find_customer_by_mobile(mobile: str) -> Optional[Dict]:
+    """Find existing customer by mobile number"""
+    if not mobile or mobile == "0000000000":
+        return None
+    return await db.customers.find_one({"mobile": mobile})
+
+async def find_vehicle_by_identifiers(vehicle_number: Optional[str] = None, chassis_number: Optional[str] = None) -> Optional[Dict]:
+    """Find existing vehicle by vehicle_number or chassis_number"""
+    if not vehicle_number and not chassis_number:
+        return None
+    
+    query = []
+    if vehicle_number:
+        query.append({"vehicle_number": vehicle_number})
+    if chassis_number:
+        query.append({"chassis_number": chassis_number})
+    
+    if query:
+        return await db.vehicles.find_one({"$or": query})
+    return None
+
+async def find_or_create_customer(mobile: str, data: Dict, import_stats: Dict) -> str:
+    """Find existing customer by mobile or create new one"""
+    # Try to find existing customer
+    existing_customer = await find_customer_by_mobile(mobile)
+    if existing_customer:
+        import_stats['customers_linked'] = import_stats.get('customers_linked', 0) + 1
+        return existing_customer['id']
+    
+    # Create new customer with available data
+    customer_data = CustomerCreate(
+        name=data.get('name', 'Unknown Customer'),
+        mobile=mobile,
+        email=data.get('email') or None,
+        address=data.get('address', 'Address not provided'),
+        care_of=data.get('care_of') or None
+    )
+    
+    customer = Customer(**customer_data.dict())
+    await db.customers.insert_one(customer.dict())
+    import_stats['customers_created'] = import_stats.get('customers_created', 0) + 1
+    return customer.id
+
+async def find_or_create_vehicle(vehicle_number: Optional[str], chassis_number: Optional[str], data: Dict, import_stats: Dict) -> Optional[str]:
+    """Find existing vehicle or create new one"""
+    # Try to find existing vehicle
+    existing_vehicle = await find_vehicle_by_identifiers(vehicle_number, chassis_number)
+    if existing_vehicle:
+        import_stats['vehicles_linked'] = import_stats.get('vehicles_linked', 0) + 1
+        return existing_vehicle['id']
+    
+    # Create new vehicle if we have enough data
+    if not chassis_number and not vehicle_number:
+        return None
+    
+    vehicle_data = VehicleCreate(
+        brand=data.get('brand', 'UNKNOWN'),
+        model=data.get('model', 'Unknown Model'),
+        chassis_number=chassis_number or f'AUTO-{str(uuid.uuid4())[:8]}',
+        engine_number=data.get('engine_number', 'Unknown Engine'),
+        color=data.get('color', 'Unknown Color'),
+        vehicle_number=vehicle_number,
+        key_number=data.get('key_number')
+    )
+    
+    vehicle = Vehicle(**vehicle_data.dict())
+    await db.vehicles.insert_one(vehicle.dict())
+    import_stats['vehicles_created'] = import_stats.get('vehicles_created', 0) + 1
+    return vehicle.id
+
+async def check_customer_duplicate(mobile: str) -> bool:
+    """Check if customer with mobile number already exists"""
+    existing = await find_customer_by_mobile(mobile)
+    return existing is not None
+
+async def check_vehicle_duplicate(chassis_number: str) -> bool:
+    """Check if vehicle with chassis number already exists"""
+    existing = await db.vehicles.find_one({"chassis_number": chassis_number})
+    return existing is not None
+
 async def parse_excel_file(file_content: bytes) -> List[Dict]:
     """Parse Excel file content"""
     df = pd.read_excel(io.BytesIO(file_content))
