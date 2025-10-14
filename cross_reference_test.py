@@ -278,15 +278,19 @@ class CrossReferenceDataImportTester:
         print("\n🚗 3. CREATE TEST VEHICLE FOR CROSS-REFERENCE TESTING")
         print("-" * 50)
         
-        # Create a test vehicle with chassis_number "CROSS-TEST-001"
+        # Create a test vehicle with unique chassis_number
+        import time
+        unique_id = str(int(time.time()))[-6:]  # Use last 6 digits of timestamp
+        chassis_number = f"CROSS-TEST-{unique_id}"
+        
         success, vehicle_response = self.test_create_vehicle_standardized(
             "TVS",
             "Apache RTR 160",
-            "CROSS-TEST-001",  # chassis_number for cross-reference testing
-            "CROSS-ENG-001",
+            chassis_number,  # chassis_number for cross-reference testing
+            f"CROSS-ENG-{unique_id}",
             "Red",
-            "CROSS-KEY-001",
-            "KA01CROSS001",
+            f"CROSS-KEY-{unique_id}",
+            f"KA01CR{unique_id}",
             "Test Warehouse",
             "Page 1"
         )
