@@ -298,7 +298,7 @@ class CrossReferenceDataImportTester:
         if success and 'id' in vehicle_response:
             test_vehicle_id = vehicle_response['id']
             created_ids['vehicles'].append(test_vehicle_id)
-            print(f"✅ Created test vehicle with chassis_number 'CROSS-TEST-001'")
+            print(f"✅ Created test vehicle with chassis_number '{chassis_number}'")
             print(f"   Vehicle ID: {test_vehicle_id[:8]}...")
         else:
             print("❌ Failed to create test vehicle for cross-reference testing")
