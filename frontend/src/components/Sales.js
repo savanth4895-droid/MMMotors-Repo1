@@ -4880,6 +4880,64 @@ const SalesReports = () => {
         </Card>
       </div>
 
+      {/* Sales Source Breakdown */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="border-l-4 border-l-blue-500">
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <TrendingUp className="h-8 w-8 text-blue-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Direct Sales</p>
+                <p className="text-2xl font-bold text-blue-900">
+                  {sales.filter(sale => !sale.source || sale.source === 'direct').length}
+                </p>
+                <p className="text-sm text-gray-500">
+                  ₹{sales.filter(sale => !sale.source || sale.source === 'direct')
+                    .reduce((sum, sale) => sum + (sale.amount || 0), 0).toLocaleString()}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-l-4 border-l-orange-500">
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <FileText className="h-8 w-8 text-orange-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Imported Sales</p>
+                <p className="text-2xl font-bold text-orange-900">
+                  {sales.filter(sale => sale.source === 'import').length}
+                </p>
+                <p className="text-sm text-gray-500">
+                  ₹{sales.filter(sale => sale.source === 'import')
+                    .reduce((sum, sale) => sum + (sale.amount || 0), 0).toLocaleString()}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-l-4 border-l-green-500">
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <BarChart3 className="h-8 w-8 text-green-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Import Percentage</p>
+                <p className="text-2xl font-bold text-green-900">
+                  {sales.length > 0 ? 
+                    Math.round((sales.filter(sale => sale.source === 'import').length / sales.length) * 100) 
+                    : 0}%
+                </p>
+                <p className="text-sm text-gray-500">
+                  of total sales
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Monthly Sales Chart */}
