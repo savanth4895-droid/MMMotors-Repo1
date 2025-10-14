@@ -297,6 +297,8 @@ class ImportJob(BaseModel):
     successful_records: int = 0
     failed_records: int = 0
     errors: List[Dict[str, Any]] = []
+    cross_reference_stats: Optional[Dict[str, int]] = {}  # Track linking statistics
+    incomplete_records: List[Dict[str, Any]] = []  # Records with missing data
     start_time: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     end_time: Optional[datetime] = None
     created_by: str
@@ -310,6 +312,8 @@ class ImportResult(BaseModel):
     successful_records: int = 0
     failed_records: int = 0
     errors: List[Dict[str, Any]] = []
+    cross_reference_stats: Optional[Dict[str, int]] = {}  # Linking statistics
+    incomplete_records: List[Dict[str, Any]] = []  # Records needing completion
 
 # Utility functions
 def hash_password(password: str) -> str:
