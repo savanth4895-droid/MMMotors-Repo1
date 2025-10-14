@@ -3,7 +3,7 @@
 
 const axios = require('axios');
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://moto-inventory-sys.preview.emergentagent.com';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://moto-business-suite.preview.emergentagent.com';
 const API = `${BACKEND_URL}/api`;
 
 // Simulate the getErrorMessage function from Sales.js

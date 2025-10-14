@@ -1,67 +1,69 @@
 <analysis>
-The AI engineer's work involved extensive feature development and bug fixing for the M M Motors application. Initially, the focus was on enhancing sales and service bill designs, expanding the Edit Invoice modal, and implementing comprehensive customer view/edit functionalities. A major task involved removing all field required validations from customer forms, requiring both frontend (HTML attributes, min/max) and backend (Pydantic models) modifications. Data import was significantly improved, first by resolving a UTF-8 encoding bug, then by fixing / field mapping inconsistencies, and finally by expanding customer import to include vehicle and insurance nominee details. Delete functionality was added for customer records, which introduced a fetchCustomers is not defined bug, swiftly resolved by aligning the frontend function calls. Subsequent work focused on ensuring edited customer data (including vehicle/insurance) reflected correctly in tables, which led to a system-wide  to  field replacement in the backend models and frontend display. Vehicle model fields were made optional to resolve persistent field required errors. Data preservation for vehicle and insurance details during customer edits was fixed by updating backend models to store  and . Invoice display was refined to correctly show vehicle number and use  instead of . Customer table display was enhanced to prioritize imported vehicle data. Finally, an autocomplete feature for vehicle chassis numbers was added to the Create New Invoice form, along with status updates and field disabling. The last major task involved standardizing insurance nominee detail fetching and display across the application. The current task is to add delete buttons and handle duplicates in Vehicle Stock, Service, and Spare Parts pages.
+The AI engineer's work spanned extensive feature development, bug fixing, and architectural improvements. Key achievements include enhancing sales and service bill designs, expanding invoice and customer editing capabilities with flexible validation. Critical data import functionalities were improved, addressing encoding, field mapping, and expanding templates to include vehicle and insurance nominee details. Delete functionalities were robustly integrated across various entities (customers, vehicles, services, spare parts, invoices, insurance). A significant focus was on data consistency, standardizing  to  fields, and implementing a unified schema. Autocomplete features were introduced for vehicle chassis numbers in new invoices and for customer/vehicle details in service registration. Numerous bugs were resolved, including authentication issues, frontend runtime errors, and backend validation failures (e.g.,  enum,  model). Finally, imported sales data was successfully integrated into dashboard overviews and sales reports, necessitating backend model adjustments and frontend display updates. The current task is to implement cross-referencing in data import templates.
 </analysis>
 
 <product_requirements>
-The M M Motors application manages a two-wheeler business. The user's explicit requests and problems addressed so far include:
-1.  **Invoice & Bill Enhancements:** Redesign sales invoices for A4 fit, include specific contact details, remove GSTIN, and apply these design improvements to service bills. Refine sales invoice views and print functionality.
-2.  **Comprehensive Editing:** Expand the Edit Invoice modal to cover all invoice fields.
-3.  **Customer Management:** Implement full view and edit capabilities for customer records across CustomersManagement and ViewCustomerDetails pages, including displaying imported vehicle/insurance details.
-4.  **Flexible Form Validation:** Remove all field required validations (frontend and backend) from customer addition/editing forms, making fields optional, including vehicle details.
-5.  **Data Management:** Clear testing data, provide manual database access, and enhance customer data CSV download template to include all invoice-related fields for comprehensive import.
-6.  **Data Consistency:** Ensure all edited customer details, especially vehicle and insurance nominee information, are preserved, reflected consistently across tables, view modals, invoice displays, and print functions, using mobile instead of phone field consistently.
-7.  **Automated Vehicle Data Entry:** Fetch vehicle details automatically from inventory based on partial chassis number entry in Create New Invoice, auto-populate fields, and mark selected vehicles as sold.
+The M M Motors application aims to streamline two-wheeler business operations. The user's core requests and problems addressed include:
+1.  **UI/UX & Printing**: Redesign sales/service bills for A4, remove GSTIN, add specific contact info, and refine invoice views/print.
+2.  **Comprehensive Editing**: Expand invoice editing to all fields.
+3.  **Customer Management**: Full view/edit customer records (including imported vehicle/insurance details), remove field required validations (frontend/backend).
+4.  **Data Consistency**: Ensure edited customer, vehicle, and insurance data persists, reflects consistently across views, and standardize phone to mobile globally.
+5.  **Data Import/Export**: Enhance CSV import templates to include all fields (vehicle, insurance, sales) for customers, vehicles, and services; resolve encoding and mapping issues.
+6.  **Automated Data Entry**: Implement autocomplete for vehicle chassis numbers in new invoice creation (mark as sold) and for customer/vehicle details in service registration using mobile/chassis numbers.
+7.  **Delete Functionality**: Add hard delete buttons across various tables: Customer records, Vehicle Stock, Services (Job Cards, Service Due, Service Registrations, Service Bills), Spare Parts (Inventory, Spare Parts Bills), All Invoices, and Insurance Management.
+8.  **Duplicate Data Management**: Implement prevention for duplicates in vehicle stock, services, and spare parts.
+9.  **Reporting**: Integrate imported sales data into dashboard overviews and sales reports.
+10. **Application Health**: Clear all testing data and perform health checks for deployment readiness.
 </product_requirements>
 
 <key_technical_concepts>
--   **FastAPI**: Backend APIs, data models (Pydantic), template generation.
--   **React**: Frontend UI, state management (useState, useEffect), component development, form handling.
--   **MongoDB**: NoSQL database,  for access.
--   **Tailwind CSS**: Utility-first CSS for styling and A4 print optimization.
--   **Axios**: HTTP client for API calls.
+-   **FastAPI**: Backend APIs, Pydantic models (data validation, serialization), endpoint creation, JWT authentication.
+-   **React**: Frontend UI, hooks (useState, useEffect, useCallback), component architecture, Axios for API calls, HTML form handling, routing.
+-   **MongoDB**: NoSQL database.
+-   **Tailwind CSS**: Utility-first styling.
 -   **html2pdf.js**: Client-side PDF generation.
--   **Pydantic**: Data validation and serialization in Python.
--   **Debouncing**: For API calls (e.g., search).
+-   **Debouncing**: Optimizing frequent input/search operations.
+-   **Unified Schema**: Custom approach for data consistency.
+-   **Supervisor**: Process control for frontend/backend.
 </key_technical_concepts>
 
 <code_architecture>
-The application uses a MERN-like stack with React (frontend), FastAPI (backend), and MongoDB (database).
+The application uses a MERN-like stack: React (frontend), FastAPI (backend), and MongoDB (database).
 
 **Directory Structure:**
 
 
 **Key Files and Changes:**
 -   :
-    -   **Importance:** Core FastAPI backend for API endpoints, data models, and business logic.
-    -   **Changes:** Improved  to handle various file encodings. Updated customer import logic to correctly map  and import , . Added  endpoint. Modified , , ,  Pydantic models to make fields optional, including , , , and all vehicle-related fields. Added , ,  fields to customer models. Replaced all  field references with  for consistency across models, validation, and API handling. Updated CSV templates.
+    -   **Importance:** Core backend for API endpoints, data models, and business logic.
+    -   **Changes:** Added  endpoints for vehicles, services, spare parts, sales, and spare part bills. Implemented duplicate prevention in create/import. Standardized , , ,  models (optional fields,  to , ,  status enum). Enhanced customer and vehicle import to create sales records from imported data and handle new fields (, ). Updated CSV template generation. Enhanced dashboard stats to include imported sales.
 -   :
-    -   **Importance:** Monolithic component managing sales, invoicing, customer, vehicle, and insurance details.
-    -   **Changes:** Implemented  and added delete buttons to customer management. Fixed  in  to call . Updated customer view modals to display imported , , and . Added visual badges to customer names in tables to indicate imported data. Removed , ,  constraints from customer and vehicle input fields in edit forms. Corrected field mapping in  functions to send  and properly handle vehicle/insurance data. Updated  to include new extended fields. Replaced all  references with  across invoice displays, print functions, and filename generation. Enhanced invoice display/print functions to prioritize  for vehicle details. Remapped table fields in  to prioritize  and display more comprehensive data. Implemented vehicle autocomplete in : added state, debounced search, auto-population, and updating vehicle status to sold. Disabled associated vehicle input fields when an inventory vehicle is selected. Updated   to save insurance nominee details with new customer records. Corrected insurance data source mapping in invoice view modals and print functions. Updated  to prioritize .
+    -   **Importance:** Manages sales, invoicing, customer, and insurance details.
+    -   **Changes:** Added delete buttons/handlers for Sales Invoices and Insurance Management. Fixed authentication in  (, , ). Updated  for direct/imported sales breakdown.
+-   :
+    -   **Importance:** Handles service registration, job cards, service bills, and reminders.
+    -   **Changes:** Added delete buttons/handlers for Job Cards, Service Due, Service Bills, and View Service Registrations. Implemented autocomplete for phone/chassis in  (separated vehicle/chassis fields, year to input, debouncing). Fixed  (mobile consistency, auth). Fixed multiple  runtime errors. Renamed Phone Number to Mobile. Implemented job card autocomplete and enhanced customer display in Service Bills. Fixed  to map customer names.
+-   :
+    -   **Importance:** Manages spare parts inventory and bills.
+    -   **Changes:** Added delete buttons and handlers for Spare Parts Inventory and Spare Parts Bills tables.
 -   :
     -   **Importance:** Provides UI for data import and template downloads.
-    -   **Changes:** Updated  configuration and field descriptions to reflect expanded customer CSV template fields (including vehicle and insurance nominee details).
+    -   **Changes:** Updated field descriptions and mappings for customer and vehicle CSV templates to align with standardized field names.
 -   :
-    -   **Importance:** Handles service management and billing.
-    -   **Changes:** Removed GSTIN references, updated contact details, and applied extensive CSS modifications for A4 optimization.
+    -   **Importance:** Displays key statistics and application overview.
+    -   **Changes:** Updated to display enhanced sales statistics, including direct vs. imported sales breakdown with new cards.
+-   :
+    -   **Importance:** New document defining standardized field names across the application.
 </code_architecture>
 
 <pending_tasks>
--   **Data Import Authentication Issue**: The custom data import interface was implemented, but an authentication redirect issue is preventing access.
--   **Add Delete Functionality**: Implement delete functionality for Vehicle Stock, Service, and Spare Parts pages.
--   **Duplicate Data Management**: Implement functionality to avoid creating duplicate data and remove already existing duplicate data in the application across all pages (Vehicle Stock, Service, Spare Parts, etc.).
+-   **Unified Data Extraction**: Implement a cross-referencing system to allow CSV templates to extract data from each other (customers, vehicles, services, spare parts) based on common identifiers like vehicle number or chassis number.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary, the AI engineer was starting work on a multi-part user request: Add delete button in action column in vehicle stock, service and Spare parts pages and avoid creating duplicate data and remove already existing duplicate data in the application across all the pages.
-
-The engineer initiated this task by:
-1.  Acknowledging the request to add delete functionality and implement duplicate prevention/cleanup across , , and  pages.
-2.  Beginning to examine the current structure of the , , and  components in the frontend.
-3.  Planning to subsequently examine the backend's  to check for existing delete endpoints and consider duplicate prevention mechanisms.
-
-The task is in its initial discovery phase, focusing on understanding the existing codebase for the targeted components and the backend.
+Immediately before this summary request, the AI engineer was tasked with implementing a unified import system where CSV templates can cross-reference and extract data from each other using common linking keys like  or . This functionality aims to enable automatic data linking across different data types such as customers, vehicles, services, and spare parts during the import process. The request was initiated by the user with the instruction: remap these templates to extract data from each other based on vehicle number or chassis number. The AI engineer acknowledged this request and stated the intention to implement this cross-referencing system, indicating that the task is in its initial discovery and planning phase, with no code modifications yet applied specifically for this sub-task.
 </current_work>
 
 <optional_next_step>
-Examine the backend  to check for existing delete endpoints for Vehicle Stock, Services, and Spare Parts.
+Examine existing import functions and data models to plan the cross-referencing logic for templates.
 </optional_next_step>
