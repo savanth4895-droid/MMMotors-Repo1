@@ -40,7 +40,7 @@ const DataImport = () => {
       value: 'customers', 
       label: 'Customers', 
       icon: Users, 
-      description: 'Import comprehensive customer information including personal details, vehicle data, insurance, and sales records',
+      description: 'Import comprehensive customer information including personal details, vehicle data, insurance, and sales records. Auto-links to existing vehicles by chassis number.',
       fields: [
         // Basic customer details
         'name', 
@@ -72,22 +72,22 @@ const DataImport = () => {
       value: 'vehicles', 
       label: 'Vehicles', 
       icon: Car, 
-      description: 'Import vehicle stock data',
-      fields: ['brand', 'model', 'chassis_number', 'engine_number', 'color', 'vehicle_number', 'key_number', 'inbound_location', 'page_number', 'status']
+      description: 'Import vehicle stock data. Auto-links to customers by mobile number and creates sales records.',
+      fields: ['brand', 'model', 'chassis_number', 'engine_number', 'color', 'vehicle_number', 'key_number', 'inbound_location', 'page_number', 'status', 'customer_mobile', 'customer_name', 'sale_amount', 'payment_method']
     },
     { 
       value: 'spare_parts', 
       label: 'Spare Parts', 
       icon: Package, 
-      description: 'Import spare parts inventory',
-      fields: ['name', 'part_number', 'brand', 'quantity', 'unit_price', 'hsn_sac']
+      description: 'Import spare parts inventory with compatible vehicle models',
+      fields: ['name', 'part_number', 'brand', 'quantity', 'unit', 'unit_price', 'hsn_sac', 'gst_percentage', 'supplier', 'compatible_models']
     },
     { 
       value: 'services', 
       label: 'Services', 
       icon: Wrench, 
-      description: 'Import service records',
-      fields: ['customer_name', 'customer_phone', 'vehicle_number', 'service_type', 'amount']
+      description: 'Import service records. Auto-links to customers and vehicles using mobile number or chassis number.',
+      fields: ['customer_name', 'customer_mobile', 'vehicle_number', 'chassis_number', 'service_type', 'description', 'amount']
     }
   ];
 
