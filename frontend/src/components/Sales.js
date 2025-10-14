@@ -4662,10 +4662,17 @@ const SalesReports = () => {
 
   const fetchAllData = async () => {
     try {
+      const token = localStorage.getItem('token');
       const [salesRes, vehiclesRes, customersRes] = await Promise.all([
-        axios.get(`${API}/sales`),
-        axios.get(`${API}/vehicles`),
-        axios.get(`${API}/customers`)
+        axios.get(`${API}/sales`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/vehicles`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/customers`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
       ]);
       
       setSales(salesRes.data);
