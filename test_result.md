@@ -105,7 +105,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Test the enhanced sales overview that includes imported sales data."
+user_problem_statement: "Implement cross-referencing system for data import templates where CSV templates can extract data from each other based on common identifiers (vehicle_number, chassis_number, mobile)."
 
 backend:
   - task: "Sales Import Integration Testing"
