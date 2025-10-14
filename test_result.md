@@ -105,7 +105,20 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Test the updated vehicles CSV template to verify the status column has been added correctly."
+user_problem_statement: "Test the enhanced sales overview that includes imported sales data."
+
+backend:
+  - task: "Sales Import Integration Testing"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+      - agent: "testing"
+      - comment: "✅ COMPREHENSIVE SALES IMPORT INTEGRATION TESTING COMPLETED WITH CRITICAL ISSUES IDENTIFIED: Conducted thorough end-to-end testing of the enhanced sales overview that includes imported sales data as requested in review. AUTHENTICATION TESTING: Successfully authenticated using admin/admin123 credentials, JWT token working properly with all import endpoints. CUSTOMER IMPORT WITH SALES DATA: ✅ Customer import with sales data completed successfully - imported 1/1 records (100% success rate), customer data includes sales_info with amount (85000), payment_method (CASH), and invoice_number (IMP-TEST-001). CUSTOMER LIST INTEGRATION: ✅ Imported customer found in customer list with all sales information properly stored in sales_info nested object. DASHBOARD STATISTICS ENHANCED: ✅ Dashboard contains sales_stats object with all required fields (total_sales, direct_sales, imported_sales, total_revenue, direct_revenue, imported_revenue), sales breakdown calculation working correctly. ❌ CRITICAL ISSUE - SALES RECORDS NOT CREATED: No sales records found in sales collection despite successful customer import with sales data. Root cause identified from backend logs: Sale model validation errors during import - 'vehicle_id' field is required but being set to None, 'created_by' field is missing, and Sale model doesn't support 'source' field needed for import tracking. Backend error: 'Warning: Could not create sale record for customer f29fb62d-d768-4234-90cb-2605689e98aa: 2 validation errors for Sale - vehicle_id Input should be a valid string [type=string_type, input_value=None, input_type=NoneType], created_by Field required [type=missing]'. SALES SOURCE FIELD MISSING: Dashboard stats code expects sales records to have 'source' field to distinguish between direct and imported sales, but Sale model doesn't include this field. OVERALL RESULTS: Tests Passed: 6/10 (60% success rate). KEY FINDINGS: Customer import integration working correctly, dashboard statistics enhanced properly, but sales record creation failing due to Sale model limitations. CRITICAL ISSUE REQUIRING IMMEDIATE ATTENTION: Sale model needs to be updated to support imported sales with optional vehicle_id, required created_by field, and source field for tracking import vs direct sales."
 
 backend:
   - task: "Vehicles CSV Template with Status Column Testing"
