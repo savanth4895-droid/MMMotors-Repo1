@@ -425,13 +425,13 @@ BAJAJ,Pulsar,CROSS-VEH-001,8888888001,Auto Customer,50000,cash"""
         print("-" * 50)
         
         # Import service CSV using only chassis_number (not vehicle_number)
-        service_csv_content = """customer_name,customer_mobile,chassis_number,service_type,amount
-Service Customer,7777777001,CROSS-TEST-001,repair,1500"""
+        service_csv_content = f"""customer_name,customer_mobile,chassis_number,service_type,amount
+Service Customer,7777777001,{chassis_number},repair,1500"""
         
         print("   Testing service import with chassis number lookup:")
         print("   Service: repair, ₹1500")
         print("   Customer: Service Customer, Mobile: 7777777001")
-        print("   Vehicle lookup: chassis_number CROSS-TEST-001 (should find existing vehicle)")
+        print(f"   Vehicle lookup: chassis_number {chassis_number} (should find existing vehicle)")
         
         success, import_response = self.test_csv_import_with_content(
             "services",
