@@ -76,18 +76,17 @@ class SalesImportTester:
 
     def test_csv_import_with_content(self, data_type, csv_content, filename):
         """Test CSV import with provided content"""
-        url = f"{self.base_url}/import/upload"
+        url = f"{self.base_url}/import/upload?data_type={data_type}"
         headers = {}
         if self.token:
             headers['Authorization'] = f'Bearer {self.token}'
         
         # Create a file-like object from the CSV content
-        csv_file = io.StringIO(csv_content)
+        csv_file = io.BytesIO(csv_content.encode('utf-8'))
         files = {'file': (filename, csv_file, 'text/csv')}
-        data = {'data_type': data_type}
         
         try:
-            response = requests.post(url, headers=headers, files=files, data=data)
+            response = requests.post(url, headers=headers, files=files)
             
             success = response.status_code == 200
             if success:
