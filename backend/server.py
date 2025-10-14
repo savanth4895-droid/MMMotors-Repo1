@@ -1255,10 +1255,15 @@ async def parse_excel_file(file_content: bytes) -> List[Dict]:
     return df.to_dict('records')
 
 async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id: str) -> ImportResult:
-    """Import customers data with vehicle and insurance information"""
+    """Import customers data with vehicle and insurance information and cross-referencing"""
     successful = 0
     failed = 0
     errors = []
+    incomplete_records = []
+    import_stats = {
+        'vehicles_linked': 0,
+        'sales_created': 0
+    }
     
     for idx, row in enumerate(data):
         try:
@@ -1351,6 +1356,20 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
             
             await db.customers.insert_one(customer_dict)
             
+            # CROSS-REFERENCE: Try to link to existing vehicle
+            if vehicle_info.get('chassis_number') or vehicle_info.get('vehicle_number'):
+                existing_vehicle = await find_vehicle_by_identifiers(
+                    vehicle_info.get('vehicle_number'),
+                    vehicle_info.get('chassis_number')
+                )
+                if existing_vehicle:
+                    # Link vehicle to customer
+                    await db.vehicles.update_one(
+                        {"id": existing_vehicle['id']},
+                        {"$set": {"customer_id": customer.id}}
+                    )
+                    import_stats['vehicles_linked'] += 1
+            
             # Create a sales record if sales information is provided
             if sales_info and any(sales_info.values()) and sales_info.get('amount'):
                 try:
@@ -1415,10 +1434,28 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                             )
                     
                     await db.sales.insert_one(sale_record.dict())
+                    import_stats['sales_created'] += 1
                     
                 except Exception as sale_error:
                     # Log the error but don't fail the customer import
                     print(f"Warning: Could not create sale record for customer {customer.id}: {sale_error}")
+            
+            # Track incomplete records
+            missing_fields = []
+            if not vehicle_info or not any(vehicle_info.values()):
+                missing_fields.append('vehicle_info')
+            if not insurance_info or not any(insurance_info.values()):
+                missing_fields.append('insurance_info')
+            if not sales_info or not any(sales_info.values()):
+                missing_fields.append('sales_info')
+            
+            if missing_fields:
+                incomplete_records.append({
+                    "record_id": customer.id,
+                    "row": idx + 2,
+                    "missing_fields": missing_fields,
+                    "data": row
+                })
             
             successful += 1
             
@@ -1434,15 +1471,19 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
     import_job.failed_records = failed
     import_job.processed_records = successful + failed
     import_job.errors = errors
+    import_job.cross_reference_stats = import_stats
+    import_job.incomplete_records = incomplete_records
     
     return ImportResult(
         job_id=import_job.id,
         status="completed",
-        message=f"Import completed: {successful} successful, {failed} failed",
+        message=f"Import completed: {successful} successful, {failed} failed. Cross-referenced: {import_stats['vehicles_linked']} vehicles linked, {import_stats['sales_created']} sales created.",
         total_records=len(data),
         successful_records=successful,
         failed_records=failed,
-        errors=errors
+        errors=errors,
+        cross_reference_stats=import_stats,
+        incomplete_records=incomplete_records
     )
 
 async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id: str) -> ImportResult:
