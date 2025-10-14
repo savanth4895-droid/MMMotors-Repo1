@@ -59,9 +59,21 @@
 ##
 ## agent_communication:
 ##     -agent: "main"
-##     -message: "DELETE FUNCTIONALITY AND DUPLICATE MANAGEMENT IMPLEMENTATION COMPLETED: Added comprehensive delete functionality across Vehicle Stock, Services, and Spare Parts pages with proper confirmation dialogs and error handling. Backend implementation includes DELETE endpoints for /api/vehicles/{id}, /api/services/{id}, and /api/spare-parts/{id} with referential integrity checks to prevent deletion when records have dependencies. Added duplicate detection and cleanup endpoints (/api/duplicates/detect and /api/duplicates/cleanup) to identify and remove duplicates by chassis number and customer mobile. Enhanced duplicate prevention in create and import functions. Frontend implementation includes delete buttons in action columns with proper authentication and state updates. Ready for comprehensive testing of new delete functionality and duplicate management features."
+##     -message: "CROSS-REFERENCE DATA IMPORT SYSTEM IMPLEMENTATION COMPLETED: Implemented comprehensive cross-referencing system where CSV templates can automatically extract and link data from each other based on common identifiers (vehicle_number, chassis_number, mobile). Created utility functions for smart data linking: find_customer_by_mobile, find_vehicle_by_identifiers, find_or_create_customer, find_or_create_vehicle. Enhanced all import functions - Customer Import now auto-links to existing vehicles and tracks vehicles_linked, sales_created; Vehicle Import auto-links to customers, creates sales records, tracks customers_linked, customers_created, sales_created; Service Import supports flexible vehicle lookup via vehicle_number OR chassis_number, auto-links to customers and vehicles. Updated CSV templates with cross-reference fields - vehicles template includes customer_mobile, customer_name, sale_amount, payment_method; services template includes chassis_number. Enhanced ImportJob and ImportResult models with cross_reference_stats and incomplete_records fields. Frontend DataImport component updated to display cross-reference statistics and incomplete records section. Created comprehensive documentation in CROSS_REFERENCE_IMPLEMENTATION.md. Ready for backend testing of cross-referencing functionality."
 ##     -agent: "testing"
 ##     -message: "CSV IMPORT FUNCTIONALITY WITH VEHICLE AND INSURANCE DETAILS TESTING COMPLETED SUCCESSFULLY: Conducted comprehensive testing of the fixed CSV import functionality for customers with vehicle and insurance details as requested in review. AUTHENTICATION: Successfully authenticated with admin/admin123 credentials. CSV TEMPLATE DOWNLOAD: GET /api/import/template/customers working correctly with all required field names (name,care_of,mobile,phone,email,address,brand,model,color,vehicle_no,chassis_no,engine_no,nominee_name,relation,age,sale_amount,payment_method,hypothecation,sale_date,invoice_number). CUSTOMER IMPORT: Tested exact sample data from review request (Devaraj H with HERO Splendor +, Likitha M insurance nominee, ₹24500 CASH sale), import endpoint processed correctly with duplicate prevention working as expected. FIELD MAPPING VALIDATION: All CSV fields correctly parsed and stored - 'brand' maps to vehicle_info.brand, 'nominee_name' maps to insurance_info.nominee_name, 'care_of' field properly stored, vehicle/insurance/sales information correctly extracted and stored in nested objects. DATA VERIFICATION: Retrieved customer by mobile number 8550008851, verified customer record contains vehicle_info (brand, model, color, vehicle_number, chassis_number, engine_number), insurance_info (nominee_name: 'Likitha M', relation: 'Wife', age: '26'), and sales_info (amount: '24500', payment_method: 'CASH', hypothecation: 'Jana', sale_date: '03-Mar'). The CSV import functionality is working correctly with proper field mapping and data structure preservation for extended customer information."
+
+## test_plan:
+##   current_focus:
+##     - "Cross-Reference Data Import System"
+##     - "Customer Import with Vehicle Linking"  
+##     - "Vehicle Import with Customer Auto-Creation"
+##     - "Service Import with Chassis Number Lookup"
+##     - "Cross-Reference Statistics Tracking"
+##     - "Incomplete Records Identification"
+##   stuck_tasks: []
+##   test_all: false
+##   test_priority: "high_first"
 
 # Protocol Guidelines for Main agent
 #
