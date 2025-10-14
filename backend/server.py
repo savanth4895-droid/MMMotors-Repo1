@@ -141,13 +141,26 @@ class Sale(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     invoice_number: str
     customer_id: str
-    vehicle_id: str
+    vehicle_id: Optional[str] = None  # Made optional for imported sales without specific vehicles
     sale_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     amount: float
     payment_method: str
     insurance_details: Optional[Dict[str, Any]] = None
     created_by: str
+    source: str = "direct"  # "direct" for manual sales, "import" for imported data
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    
+    # Additional fields for imported sales data (not in create model)
+    vehicle_brand: Optional[str] = None
+    vehicle_model: Optional[str] = None
+    vehicle_color: Optional[str] = None
+    vehicle_chassis: Optional[str] = None
+    vehicle_engine: Optional[str] = None
+    vehicle_registration: Optional[str] = None
+    insurance_nominee: Optional[str] = None
+    insurance_relation: Optional[str] = None
+    insurance_age: Optional[str] = None
+    hypothecation: Optional[str] = None
 
 class SaleCreate(BaseModel):
     customer_id: str
