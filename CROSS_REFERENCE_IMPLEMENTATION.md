@@ -135,11 +135,19 @@ inbound_location,page_number,status,customer_mobile,customer_name,
 sale_amount,payment_method
 ```
 
+**Status Field Values:**
+- `available` - Vehicle is available for sale
+- `in_stock` - Vehicle is in stock
+- `sold` - Vehicle has been sold
+- `returned` - Vehicle has been returned
+
 **Example Row:**
 ```
 TVS,Apache RTR 160,ABC123456789,ENG987654321,Red,KA01AB1234,KEY001,
 Warehouse A,Page 1,available,9876543210,John Doe,75000,cash
 ```
+
+**Note:** The status field allows you to set the vehicle's current status during import. If status is not provided, it defaults to 'available'.
 
 ### Service Template (NEW FIELD)
 ```csv
