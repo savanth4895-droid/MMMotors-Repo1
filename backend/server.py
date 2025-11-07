@@ -1731,13 +1731,13 @@ async def import_services_data(data: List[Dict], import_job: ImportJob, user_id:
             if vehicle_number or chassis_number:
                 vehicle = await find_vehicle_by_identifiers(vehicle_number, chassis_number)
                 if vehicle:
-                    vehicle_id = vehicle['id']
+                    vehicle_id = vehicle.get('id')
                     vehicle_number = vehicle.get('vehicle_number', vehicle_number)
                     import_stats['vehicles_linked'] += 1
                     
                     # If no customer was found by mobile, try to get from vehicle
                     if not customer_id and vehicle.get('customer_id'):
-                        customer_id = vehicle['customer_id']
+                        customer_id = vehicle.get('customer_id')
                         import_stats['customers_linked'] += 1
             
             # If still no customer, create a placeholder
