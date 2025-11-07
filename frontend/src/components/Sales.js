@@ -5045,7 +5045,7 @@ const SalesReports = () => {
               Brand-wise Sales Distribution
             </CardTitle>
             <CardDescription>
-              Revenue breakdown by vehicle brands
+              Sales count by vehicle brands
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -5073,8 +5073,8 @@ const SalesReports = () => {
                         return (
                           <div className="bg-white border border-gray-300 rounded-lg p-3 shadow-lg">
                             <p className="font-semibold text-gray-900 mb-2">{data.brand}</p>
-                            <p className="text-sm text-gray-700">Revenue: ₹{data.revenue?.toLocaleString()}</p>
                             <p className="text-sm text-gray-700">Total Sales: {data.sales}</p>
+                            <p className="text-sm text-gray-700">Revenue: ₹{data.revenue?.toLocaleString()}</p>
                             <div className="mt-2 pt-2 border-t border-gray-200">
                               <p className="text-xs text-blue-600">Direct Sales: {data.directSales || 0}</p>
                               <p className="text-xs text-purple-600">Imported Sales: {data.importedSales || 0}</p>
@@ -5086,7 +5086,7 @@ const SalesReports = () => {
                     }}
                   />
                   <Legend />
-                  <Bar dataKey="revenue" fill="#10b981" name="Revenue (₹)" />
+                  <Bar dataKey="sales" fill="#10b981" name="Sales Count" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
