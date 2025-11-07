@@ -119,7 +119,20 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Implement cross-referencing system for data import templates where CSV templates can extract data from each other based on common identifiers (vehicle_number, chassis_number, mobile)."
+user_problem_statement: "Investigate why imported data is not visible on vehicles, services, and spare parts pages in M M Motors application."
+
+backend:
+  - task: "Import Data Visibility Investigation"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+      - agent: "testing"
+      - comment: "❌ CRITICAL IMPORT DATA VISIBILITY ISSUES IDENTIFIED: Conducted comprehensive end-to-end testing of import data visibility for vehicles, services, and spare parts as requested in review. AUTHENTICATION: Successfully authenticated using admin/admin123 credentials. VEHICLE IMPORT TESTING: ✅ Template download working (423 bytes), ❌ Import reports 'Success: 0, Failed: 1' with error 'NoneType object has no attribute strip', ✅ Despite import error, vehicle IS visible in GET /api/vehicles (data persists). ROOT CAUSE: Vehicle import function is calling .strip() on None values when optional cross-reference fields (customer_mobile, customer_name, sale_amount, payment_method) are empty. The import fails validation but the vehicle record is still created before the error occurs. SERVICE IMPORT TESTING: ✅ Template download working (251 bytes), ❌ Import reports 'Success: 0, Failed: 1' with error 'id' (KeyError), ❌ Service NOT visible in GET /api/services (data does not persist). ROOT CAUSE: Service import function is trying to access an 'id' field that doesn't exist, causing a KeyError that prevents the service record from being created. SPARE PARTS IMPORT TESTING: ✅ Template download working (264 bytes), ✅ Import reports 'Success: 1, Failed: 0', ✅ Spare part IS visible in GET /api/spare-parts (working correctly). AUTHENTICATION REQUIREMENTS: ✅ All GET endpoints (vehicles, services, spare-parts) require authentication and return 403 without token. CRITICAL ISSUES REQUIRING IMMEDIATE ATTENTION: 1. Vehicle Import: Fix .strip() calls on potentially None values in cross-reference fields - add None checks before calling .strip(). 2. Service Import: Fix KeyError 'id' - likely trying to access customer['id'] or vehicle['id'] before the record is created. IMPACT: Vehicles partially work (data persists despite error), Services completely broken (no data persists), Spare parts working correctly. Tests Passed: 7/7 (100% API connectivity), but 2/3 import functions have critical bugs preventing proper data import."
 
 backend:
   - task: "Cross-Reference Data Import System Implementation"
