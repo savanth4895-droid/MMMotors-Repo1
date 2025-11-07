@@ -172,6 +172,7 @@ Service Test,7777777777,FIX-REG-001,FIX-TEST-001,repair,Test repair service,1500
         keyerror = False
         for error in errors:
             error_msg = str(error.get('error', ''))
+            print(f"   Error details: {error}")
             if 'KeyError' in error_msg and "'id'" in error_msg:
                 print(f"   ❌ KeyError 'id' found: {error_msg}")
                 keyerror = True
@@ -182,7 +183,7 @@ Service Test,7777777777,FIX-REG-001,FIX-TEST-001,repair,Test repair service,1500
         if result.get('successful_records', 0) == 1 and result.get('failed_records', 0) == 0:
             print("   ✅ Import success rate: 100%")
         else:
-            print(f"   ❌ Import failed")
+            print(f"   ❌ Import failed - check errors above")
     else:
         print(f"   ❌ Import failed: {result}")
     
