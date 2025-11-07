@@ -4822,8 +4822,14 @@ const SalesReports = () => {
         ...monthlyData.map(item => [item.month, item.sales, item.revenue].join(',')),
         [],
         ['Brand Sales Data:'],
-        ['Brand', 'Sales Count', 'Revenue'].join(','),
-        ...brandData.map(item => [item.brand, item.sales, item.revenue].join(','))
+        ['Brand', 'Total Sales', 'Direct Sales', 'Imported Sales', 'Revenue'].join(','),
+        ...brandData.map(item => [
+          item.brand, 
+          item.sales, 
+          item.directSales || 0, 
+          item.importedSales || 0, 
+          item.revenue
+        ].join(','))
       ].join('\n');
 
       const blob = new Blob([csvContent], { type: 'text/csv' });
