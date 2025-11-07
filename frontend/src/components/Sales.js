@@ -5067,10 +5067,23 @@ const SalesReports = () => {
                       borderRadius: '8px',
                       boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                     }}
-                    formatter={(value, name) => [
-                      name === 'revenue' ? `₹${value.toLocaleString()}` : value,
-                      name === 'revenue' ? 'Revenue' : 'Sales Count'
-                    ]}
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-white border border-gray-300 rounded-lg p-3 shadow-lg">
+                            <p className="font-semibold text-gray-900 mb-2">{data.brand}</p>
+                            <p className="text-sm text-gray-700">Revenue: ₹{data.revenue?.toLocaleString()}</p>
+                            <p className="text-sm text-gray-700">Total Sales: {data.sales}</p>
+                            <div className="mt-2 pt-2 border-t border-gray-200">
+                              <p className="text-xs text-blue-600">Direct Sales: {data.directSales || 0}</p>
+                              <p className="text-xs text-purple-600">Imported Sales: {data.importedSales || 0}</p>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
                   />
                   <Legend />
                   <Bar dataKey="revenue" fill="#10b981" name="Revenue (₹)" />
