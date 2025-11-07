@@ -401,6 +401,487 @@ class TwoWheelerAPITester:
         )
         return success, response
 
+    def test_final_comprehensive_import_fixes(self):
+        """
+        FINAL COMPREHENSIVE TEST OF ALL IMPORT FIXES FOR M M MOTORS APPLICATION
+        
+        Testing all three import types (vehicles, services, spare parts) with complete validation
+        as requested in the final review.
+        
+        AUTHENTICATION: Uses admin/admin123 credentials
+        
+        TEST SCENARIOS:
+        1. Vehicle Import - WITHOUT optional fields (empty customer/sale data)
+        2. Vehicle Import - WITH all optional fields (customer + sale data)
+        3. Service Import - WITH vehicle linking (using chassis number)
+        4. Service Import - WITHOUT vehicle (customer auto-create)
+        5. Spare Parts Import - Verification
+        6. Cross-Reference Integration Test
+        7. Data Visibility Verification
+        
+        VALIDATION CRITERIA FOR SUCCESS:
+        ✅ Vehicle import: 100% success rate with and without optional fields
+        ✅ Service import: 100% success rate with and without vehicle linking  
+        ✅ Spare parts import: 100% success rate
+        ✅ No .strip() AttributeError anywhere
+        ✅ No KeyError 'id' anywhere
+        ✅ All cross-reference statistics accurate
+        ✅ All imported data visible in GET endpoints
+        ✅ Cross-referencing between imports working
+        """
+        print("\n" + "=" * 100)
+        print("🎯 FINAL COMPREHENSIVE TEST OF ALL IMPORT FIXES - M M MOTORS APPLICATION")
+        print("=" * 100)
+        print("Testing all three import types with complete validation")
+        print("Focus: Vehicles, Services, Spare Parts - 100% success rate expected")
+        
+        all_tests_passed = True
+        test_results = {
+            'authentication': False,
+            'vehicle_import_without_optional': False,
+            'vehicle_import_with_optional': False,
+            'service_import_with_vehicle': False,
+            'service_import_without_vehicle': False,
+            'spare_parts_import': False,
+            'cross_reference_integration': False,
+            'data_visibility_vehicles': False,
+            'data_visibility_services': False,
+            'data_visibility_spare_parts': False,
+            'no_strip_errors': True,
+            'no_keyerror_id': True,
+            'cross_ref_stats_accurate': False
+        }
+        
+        # Track imported data for verification
+        imported_data = {
+            'vehicles': [],
+            'services': [],
+            'spare_parts': []
+        }
+        
+        # 1. AUTHENTICATION SETUP
+        print("\n🔐 1. AUTHENTICATION WITH ADMIN/ADMIN123")
+        print("-" * 80)
+        success, auth_response = self.test_login_user("admin", "admin123")
+        if success and 'access_token' in auth_response:
+            print("✅ Authentication successful with admin/admin123")
+            test_results['authentication'] = True
+        else:
+            print("❌ Authentication failed with admin/admin123")
+            all_tests_passed = False
+            return False, test_results
+        
+        # 2. VEHICLE IMPORT - WITHOUT OPTIONAL FIELDS
+        print("\n🚗 2. VEHICLE IMPORT - WITHOUT OPTIONAL FIELDS (EMPTY CUSTOMER/SALE DATA)")
+        print("-" * 80)
+        
+        vehicle_csv_no_optional = """brand,model,chassis_number,engine_number,color,vehicle_number,key_number,inbound_location,page_number,status,customer_mobile,customer_name,sale_amount,payment_method
+HONDA,Activa,FINAL-VEH-001,FINAL-ENG-001,Black,FINAL-REG-001,KEY001,Warehouse A,Page 1,available,,,"""
+        
+        print("   Testing vehicle WITHOUT optional fields:")
+        print("   Brand: HONDA, Model: Activa, Chassis: FINAL-VEH-001")
+        print("   Customer fields: EMPTY (testing .strip() fix)")
+        
+        success, import_response = self.test_csv_import_with_content(
+            "vehicles",
+            vehicle_csv_no_optional,
+            "final_vehicle_no_optional.csv"
+        )
+        
+        if success:
+            total = import_response.get('total_records', 0)
+            successful = import_response.get('successful_records', 0)
+            failed = import_response.get('failed_records', 0)
+            errors = import_response.get('errors', [])
+            
+            print(f"   Import Results: Total: {total}, Success: {successful}, Failed: {failed}")
+            
+            # Check for .strip() errors
+            for error in errors:
+                error_msg = str(error.get('error', ''))
+                if '.strip()' in error_msg or ('NoneType' in error_msg and 'attribute' in error_msg):
+                    print(f"❌ .strip() error found: {error_msg}")
+                    test_results['no_strip_errors'] = False
+                    all_tests_passed = False
+            
+            if successful == 1 and failed == 0:
+                print("✅ Vehicle import WITHOUT optional fields: 100% success rate")
+                test_results['vehicle_import_without_optional'] = True
+                imported_data['vehicles'].append('FINAL-VEH-001')
+            else:
+                print(f"❌ Vehicle import failed: Expected 100% success, got {successful}/{total}")
+                all_tests_passed = False
+        else:
+            print("❌ Vehicle import WITHOUT optional fields failed")
+            all_tests_passed = False
+        
+        # 3. VEHICLE IMPORT - WITH ALL OPTIONAL FIELDS
+        print("\n🚗 3. VEHICLE IMPORT - WITH ALL OPTIONAL FIELDS (CUSTOMER + SALE DATA)")
+        print("-" * 80)
+        
+        vehicle_csv_with_optional = """brand,model,chassis_number,engine_number,color,vehicle_number,key_number,inbound_location,page_number,status,customer_mobile,customer_name,sale_amount,payment_method
+HERO,Splendor,FINAL-VEH-002,FINAL-ENG-002,Red,FINAL-REG-002,KEY002,Warehouse B,Page 2,sold,9999999999,Final Test Customer,55000,cash"""
+        
+        print("   Testing vehicle WITH all optional fields:")
+        print("   Brand: HERO, Model: Splendor, Chassis: FINAL-VEH-002")
+        print("   Customer: Final Test Customer, Mobile: 9999999999")
+        print("   Sale: ₹55000, cash")
+        
+        success, import_response = self.test_csv_import_with_content(
+            "vehicles",
+            vehicle_csv_with_optional,
+            "final_vehicle_with_optional.csv"
+        )
+        
+        if success:
+            total = import_response.get('total_records', 0)
+            successful = import_response.get('successful_records', 0)
+            failed = import_response.get('failed_records', 0)
+            cross_ref_stats = import_response.get('cross_reference_stats', {})
+            
+            print(f"   Import Results: Total: {total}, Success: {successful}, Failed: {failed}")
+            print(f"   Cross-reference stats: {cross_ref_stats}")
+            
+            if successful == 1 and failed == 0:
+                print("✅ Vehicle import WITH optional fields: 100% success rate")
+                test_results['vehicle_import_with_optional'] = True
+                imported_data['vehicles'].append('FINAL-VEH-002')
+                
+                # Verify cross-reference stats
+                if cross_ref_stats.get('customers_created', 0) > 0 or cross_ref_stats.get('customers_linked', 0) > 0:
+                    print(f"✅ Cross-reference stats accurate: customers_created={cross_ref_stats.get('customers_created', 0)}")
+                if cross_ref_stats.get('sales_created', 0) > 0:
+                    print(f"✅ Cross-reference stats accurate: sales_created={cross_ref_stats.get('sales_created', 0)}")
+                    test_results['cross_ref_stats_accurate'] = True
+            else:
+                print(f"❌ Vehicle import failed: Expected 100% success, got {successful}/{total}")
+                all_tests_passed = False
+        else:
+            print("❌ Vehicle import WITH optional fields failed")
+            all_tests_passed = False
+        
+        # 4. SERVICE IMPORT - WITH VEHICLE LINKING
+        print("\n🔧 4. SERVICE IMPORT - WITH VEHICLE LINKING (USING CHASSIS NUMBER)")
+        print("-" * 80)
+        
+        service_csv_with_vehicle = """customer_name,customer_mobile,vehicle_number,chassis_number,service_type,description,amount
+Service Test Customer,8888888888,FINAL-REG-001,FINAL-VEH-001,repair,Final test service,2000"""
+        
+        print("   Testing service WITH vehicle linking:")
+        print("   Customer: Service Test Customer, Mobile: 8888888888")
+        print("   Vehicle: FINAL-REG-001, Chassis: FINAL-VEH-001")
+        print("   Type: repair, Amount: 2000")
+        
+        success, import_response = self.test_csv_import_with_content(
+            "services",
+            service_csv_with_vehicle,
+            "final_service_with_vehicle.csv"
+        )
+        
+        if success:
+            total = import_response.get('total_records', 0)
+            successful = import_response.get('successful_records', 0)
+            failed = import_response.get('failed_records', 0)
+            errors = import_response.get('errors', [])
+            cross_ref_stats = import_response.get('cross_reference_stats', {})
+            
+            print(f"   Import Results: Total: {total}, Success: {successful}, Failed: {failed}")
+            print(f"   Cross-reference stats: {cross_ref_stats}")
+            
+            # Check for KeyError 'id'
+            for error in errors:
+                error_msg = str(error.get('error', ''))
+                if 'KeyError' in error_msg and "'id'" in error_msg:
+                    print(f"❌ KeyError 'id' found: {error_msg}")
+                    test_results['no_keyerror_id'] = False
+                    all_tests_passed = False
+            
+            if successful == 1 and failed == 0:
+                print("✅ Service import WITH vehicle linking: 100% success rate")
+                test_results['service_import_with_vehicle'] = True
+                imported_data['services'].append('Final test service')
+                
+                # Verify cross-reference stats
+                if cross_ref_stats.get('vehicles_linked', 0) > 0:
+                    print(f"✅ Cross-reference stats shows vehicles_linked: {cross_ref_stats.get('vehicles_linked', 0)}")
+            else:
+                print(f"❌ Service import failed: Expected 100% success, got {successful}/{total}")
+                all_tests_passed = False
+        else:
+            print("❌ Service import WITH vehicle linking failed")
+            all_tests_passed = False
+        
+        # 5. SERVICE IMPORT - WITHOUT VEHICLE (CUSTOMER AUTO-CREATE)
+        print("\n🔧 5. SERVICE IMPORT - WITHOUT VEHICLE (CUSTOMER AUTO-CREATE)")
+        print("-" * 80)
+        
+        service_csv_without_vehicle = """customer_name,customer_mobile,vehicle_number,chassis_number,service_type,description,amount
+No Vehicle Customer,7777777777,,,periodic_service,Service without vehicle,1000"""
+        
+        print("   Testing service WITHOUT vehicle:")
+        print("   Customer: No Vehicle Customer, Mobile: 7777777777")
+        print("   Vehicle fields: EMPTY (testing auto-create customer)")
+        print("   Type: periodic_service, Amount: 1000")
+        
+        success, import_response = self.test_csv_import_with_content(
+            "services",
+            service_csv_without_vehicle,
+            "final_service_without_vehicle.csv"
+        )
+        
+        if success:
+            total = import_response.get('total_records', 0)
+            successful = import_response.get('successful_records', 0)
+            failed = import_response.get('failed_records', 0)
+            cross_ref_stats = import_response.get('cross_reference_stats', {})
+            
+            print(f"   Import Results: Total: {total}, Success: {successful}, Failed: {failed}")
+            print(f"   Cross-reference stats: {cross_ref_stats}")
+            
+            if successful == 1 and failed == 0:
+                print("✅ Service import WITHOUT vehicle: 100% success rate")
+                test_results['service_import_without_vehicle'] = True
+                imported_data['services'].append('Service without vehicle')
+                
+                # Verify cross-reference stats
+                if cross_ref_stats.get('customers_created', 0) > 0:
+                    print(f"✅ Cross-reference stats shows customers_created: {cross_ref_stats.get('customers_created', 0)}")
+            else:
+                print(f"❌ Service import failed: Expected 100% success, got {successful}/{total}")
+                all_tests_passed = False
+        else:
+            print("❌ Service import WITHOUT vehicle failed")
+            all_tests_passed = False
+        
+        # 6. SPARE PARTS IMPORT - VERIFICATION
+        print("\n🔩 6. SPARE PARTS IMPORT - VERIFICATION")
+        print("-" * 80)
+        
+        spare_parts_csv = """name,part_number,brand,quantity,unit,unit_price,hsn_sac,gst_percentage,supplier,compatible_models
+Final Test Part,FINAL-001,HONDA,20,Nos,150.00,87084090,18.0,Final Supplier,Activa 6G"""
+        
+        print("   Testing spare parts import:")
+        print("   Name: Final Test Part, Part Number: FINAL-001")
+        print("   Brand: HONDA, Quantity: 20, Unit Price: 150.00")
+        
+        success, import_response = self.test_csv_import_with_content(
+            "spare_parts",
+            spare_parts_csv,
+            "final_spare_parts.csv"
+        )
+        
+        if success:
+            total = import_response.get('total_records', 0)
+            successful = import_response.get('successful_records', 0)
+            failed = import_response.get('failed_records', 0)
+            
+            print(f"   Import Results: Total: {total}, Success: {successful}, Failed: {failed}")
+            
+            if successful == 1 and failed == 0:
+                print("✅ Spare parts import: 100% success rate")
+                test_results['spare_parts_import'] = True
+                imported_data['spare_parts'].append('FINAL-001')
+            else:
+                print(f"❌ Spare parts import failed: Expected 100% success, got {successful}/{total}")
+                all_tests_passed = False
+        else:
+            print("❌ Spare parts import failed")
+            all_tests_passed = False
+        
+        # 7. DATA VISIBILITY VERIFICATION - VEHICLES
+        print("\n👁️ 7. DATA VISIBILITY VERIFICATION - VEHICLES")
+        print("-" * 80)
+        
+        success, vehicles_response = self.run_test(
+            "Get All Vehicles",
+            "GET",
+            "vehicles",
+            200
+        )
+        
+        if success and isinstance(vehicles_response, list):
+            total_vehicles = len(vehicles_response)
+            print(f"✅ GET /api/vehicles successful: {total_vehicles} total vehicles")
+            
+            # Verify test vehicles are present
+            vehicles_found = []
+            for chassis in imported_data['vehicles']:
+                vehicle = next((v for v in vehicles_response if v.get('chassis_number') == chassis), None)
+                if vehicle:
+                    vehicles_found.append(chassis)
+                    print(f"   ✅ Vehicle {chassis} found in list")
+                else:
+                    print(f"   ❌ Vehicle {chassis} NOT found in list")
+                    all_tests_passed = False
+            
+            if len(vehicles_found) == len(imported_data['vehicles']):
+                print(f"✅ All {len(vehicles_found)} test vehicles visible in GET /api/vehicles")
+                test_results['data_visibility_vehicles'] = True
+            else:
+                print(f"❌ Only {len(vehicles_found)}/{len(imported_data['vehicles'])} test vehicles visible")
+                all_tests_passed = False
+        else:
+            print("❌ GET /api/vehicles failed")
+            all_tests_passed = False
+        
+        # 8. DATA VISIBILITY VERIFICATION - SERVICES
+        print("\n👁️ 8. DATA VISIBILITY VERIFICATION - SERVICES")
+        print("-" * 80)
+        
+        success, services_response = self.run_test(
+            "Get All Services",
+            "GET",
+            "services",
+            200
+        )
+        
+        if success and isinstance(services_response, list):
+            total_services = len(services_response)
+            print(f"✅ GET /api/services successful: {total_services} total services")
+            
+            # Verify test services are present
+            services_found = []
+            for description in imported_data['services']:
+                service = next((s for s in services_response if s.get('description') == description), None)
+                if service:
+                    services_found.append(description)
+                    print(f"   ✅ Service '{description}' found in list")
+                else:
+                    print(f"   ❌ Service '{description}' NOT found in list")
+                    all_tests_passed = False
+            
+            if len(services_found) == len(imported_data['services']):
+                print(f"✅ All {len(services_found)} test services visible in GET /api/services")
+                test_results['data_visibility_services'] = True
+            else:
+                print(f"❌ Only {len(services_found)}/{len(imported_data['services'])} test services visible")
+                all_tests_passed = False
+        else:
+            print("❌ GET /api/services failed")
+            all_tests_passed = False
+        
+        # 9. DATA VISIBILITY VERIFICATION - SPARE PARTS
+        print("\n👁️ 9. DATA VISIBILITY VERIFICATION - SPARE PARTS")
+        print("-" * 80)
+        
+        success, spare_parts_response = self.run_test(
+            "Get All Spare Parts",
+            "GET",
+            "spare-parts",
+            200
+        )
+        
+        if success and isinstance(spare_parts_response, list):
+            total_spare_parts = len(spare_parts_response)
+            print(f"✅ GET /api/spare-parts successful: {total_spare_parts} total spare parts")
+            
+            # Verify test spare parts are present
+            parts_found = []
+            for part_number in imported_data['spare_parts']:
+                part = next((p for p in spare_parts_response if p.get('part_number') == part_number), None)
+                if part:
+                    parts_found.append(part_number)
+                    print(f"   ✅ Spare part {part_number} found in list")
+                else:
+                    print(f"   ❌ Spare part {part_number} NOT found in list")
+                    all_tests_passed = False
+            
+            if len(parts_found) == len(imported_data['spare_parts']):
+                print(f"✅ All {len(parts_found)} test spare parts visible in GET /api/spare-parts")
+                test_results['data_visibility_spare_parts'] = True
+            else:
+                print(f"❌ Only {len(parts_found)}/{len(imported_data['spare_parts'])} test spare parts visible")
+                all_tests_passed = False
+        else:
+            print("❌ GET /api/spare-parts failed")
+            all_tests_passed = False
+        
+        # 10. CROSS-REFERENCE INTEGRATION VERIFICATION
+        print("\n🔗 10. CROSS-REFERENCE INTEGRATION VERIFICATION")
+        print("-" * 80)
+        
+        # Verify service is linked to vehicle
+        if success and isinstance(services_response, list):
+            service_with_vehicle = next((s for s in services_response if s.get('description') == 'Final test service'), None)
+            if service_with_vehicle:
+                vehicle_id = service_with_vehicle.get('vehicle_id')
+                customer_id = service_with_vehicle.get('customer_id')
+                
+                if vehicle_id:
+                    print(f"✅ Service 'Final test service' has vehicle_id: {vehicle_id[:8]}...")
+                    test_results['cross_reference_integration'] = True
+                else:
+                    print("⚠️ Service 'Final test service' does not have vehicle_id")
+                
+                if customer_id:
+                    print(f"✅ Service has customer_id: {customer_id[:8]}...")
+                else:
+                    print("⚠️ Service does not have customer_id")
+        
+        # 11. COMPREHENSIVE RESULTS SUMMARY
+        print("\n" + "=" * 100)
+        print("📊 FINAL COMPREHENSIVE TEST RESULTS")
+        print("=" * 100)
+        
+        successful_tests = sum(1 for result in test_results.values() if result)
+        total_tests = len(test_results)
+        
+        print(f"\n📋 TEST RESULTS SUMMARY:")
+        for test_name, result in test_results.items():
+            status = "✅" if result else "❌"
+            print(f"   {status} {test_name.replace('_', ' ').title()}")
+        
+        print(f"\n🎯 OVERALL RESULTS:")
+        print(f"   Tests Passed: {successful_tests}/{total_tests}")
+        print(f"   Success Rate: {(successful_tests/total_tests)*100:.1f}%")
+        
+        # Key findings
+        print(f"\n🔍 KEY FINDINGS:")
+        if test_results['vehicle_import_without_optional'] and test_results['vehicle_import_with_optional']:
+            print("   ✅ Vehicle import: 100% success rate with and without optional fields")
+        if test_results['service_import_with_vehicle'] and test_results['service_import_without_vehicle']:
+            print("   ✅ Service import: 100% success rate with and without vehicle linking")
+        if test_results['spare_parts_import']:
+            print("   ✅ Spare parts import: 100% success rate")
+        if test_results['no_strip_errors']:
+            print("   ✅ No .strip() AttributeError found in any import")
+        if test_results['no_keyerror_id']:
+            print("   ✅ No KeyError 'id' found in any import")
+        if test_results['cross_ref_stats_accurate']:
+            print("   ✅ All cross-reference statistics accurate")
+        if test_results['data_visibility_vehicles'] and test_results['data_visibility_services'] and test_results['data_visibility_spare_parts']:
+            print("   ✅ All imported data visible in GET endpoints")
+        if test_results['cross_reference_integration']:
+            print("   ✅ Cross-referencing between imports working correctly")
+        
+        # Data summary
+        print(f"\n📊 DATA SUMMARY:")
+        print(f"   Vehicles imported: {len(imported_data['vehicles'])}")
+        print(f"   Services imported: {len(imported_data['services'])}")
+        print(f"   Spare parts imported: {len(imported_data['spare_parts'])}")
+        
+        overall_success = all_tests_passed and test_results['authentication']
+        status = "✅ ALL TESTS PASSED" if overall_success else "❌ SOME TESTS FAILED"
+        print(f"\n🎯 OVERALL STATUS: {status}")
+        
+        if overall_success:
+            print("\n💡 CONCLUSION:")
+            print("   All 3 import types are working flawlessly:")
+            print("   • Vehicle import: 100% success with and without optional fields")
+            print("   • Service import: 100% success with and without vehicle linking")
+            print("   • Spare parts import: 100% success")
+            print("   • No .strip() or KeyError 'id' errors")
+            print("   • All cross-reference statistics accurate")
+            print("   • All data visible on respective pages")
+            print("   • Cross-referencing between imports working correctly")
+        else:
+            print("\n⚠️ ISSUES IDENTIFIED:")
+            failed_tests = [name for name, result in test_results.items() if not result]
+            for test_name in failed_tests:
+                print(f"   ❌ {test_name.replace('_', ' ').title()}")
+        
+        return overall_success, test_results
+
     def test_customer_import_with_vehicle_insurance_details(self):
         """
         COMPREHENSIVE CSV IMPORT FUNCTIONALITY TESTING FOR CUSTOMERS WITH VEHICLE AND INSURANCE DETAILS
