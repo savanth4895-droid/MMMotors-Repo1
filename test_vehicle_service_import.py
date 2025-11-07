@@ -30,13 +30,11 @@ def import_csv(data_type, csv_content, filename):
     import io
     headers = {'Authorization': f'Bearer {token}'}
     files = {'file': (filename, io.StringIO(csv_content), 'text/csv')}
-    data = {'data_type': data_type}
     
     response = requests.post(
-        f"{BASE_URL}/import/upload",
+        f"{BASE_URL}/import/upload?data_type={data_type}",
         headers=headers,
-        files=files,
-        data=data
+        files=files
     )
     
     if response.status_code == 200:
