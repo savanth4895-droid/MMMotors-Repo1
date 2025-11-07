@@ -4770,17 +4770,32 @@ const SalesReports = () => {
     const totalRevenue = sales.reduce((sum, sale) => sum + (sale.amount || 0), 0);
     const averageOrderValue = totalSales > 0 ? totalRevenue / totalSales : 0;
     
-    // Find top brand by revenue
+    // Find top brand by revenue (including both direct and imported sales)
     const brandRevenue = {};
     sales.forEach(sale => {
-      const vehicle = vehicles.find(v => v.id === sale.vehicle_id);
-      if (vehicle) {
-        brandRevenue[vehicle.brand] = (brandRevenue[vehicle.brand] || 0) + (sale.amount || 0);
+      let brand = null;
+      
+      // For direct sales with vehicle_id
+      if (sale.vehicle_id) {
+        const vehicle = vehicles.find(v => v.id === sale.vehicle_id);
+        if (vehicle) {
+          brand = vehicle.brand;
+        }
+      } 
+      // For imported sales with vehicle_brand
+      else if (sale.vehicle_brand) {
+        brand = sale.vehicle_brand;
+      }
+      
+      if (brand) {
+        brandRevenue[brand] = (brandRevenue[brand] || 0) + (sale.amount || 0);
       }
     });
     
-    const topBrand = Object.keys(brandRevenue).reduce((a, b) => 
-      brandRevenue[a] > brandRevenue[b] ? a : b, '');
+    const topBrand = Object.keys(brandRevenue).length > 0 
+      ? Object.keys(brandRevenue).reduce((a, b) => 
+          brandRevenue[a] > brandRevenue[b] ? a : b, '')
+      : 'N/A';
 
     setTotalStats({
       totalSales,
