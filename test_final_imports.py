@@ -26,14 +26,13 @@ class ImportTester:
     
     def import_csv(self, data_type, csv_content, filename):
         """Import CSV data"""
-        url = f"{self.base_url}/import/upload"
+        url = f"{self.base_url}/import/upload?data_type={data_type}"
         headers = {'Authorization': f'Bearer {self.token}'}
         
         csv_file = io.StringIO(csv_content)
         files = {'file': (filename, csv_file, 'text/csv')}
-        data = {'data_type': data_type}
         
-        response = requests.post(url, headers=headers, files=files, data=data)
+        response = requests.post(url, headers=headers, files=files)
         if response.status_code == 200:
             return True, response.json()
         return False, response.text
