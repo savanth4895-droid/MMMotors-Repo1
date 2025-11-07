@@ -4719,21 +4719,43 @@ const SalesReports = () => {
     const brandMap = {};
     
     sales.forEach(sale => {
-      const vehicle = vehicles.find(v => v.id === sale.vehicle_id);
-      if (vehicle) {
-        const brand = vehicle.brand;
+      let brand = null;
+      
+      // For direct sales with vehicle_id, get brand from vehicles collection
+      if (sale.vehicle_id) {
+        const vehicle = vehicles.find(v => v.id === sale.vehicle_id);
+        if (vehicle) {
+          brand = vehicle.brand;
+        }
+      } 
+      // For imported sales without vehicle_id, use vehicle_brand field
+      else if (sale.vehicle_brand) {
+        brand = sale.vehicle_brand;
+      }
+      
+      // If we have a brand, add to the map
+      if (brand) {
         if (!brandMap[brand]) {
           brandMap[brand] = {
             brand: brand,
             sales: 0,
             revenue: 0,
-            count: 0
+            count: 0,
+            directSales: 0,
+            importedSales: 0
           };
         }
         
         brandMap[brand].sales += 1;
         brandMap[brand].revenue += sale.amount || 0;
         brandMap[brand].count += 1;
+        
+        // Track source of sale
+        if (sale.source === 'import') {
+          brandMap[brand].importedSales += 1;
+        } else {
+          brandMap[brand].directSales += 1;
+        }
       }
     });
 
