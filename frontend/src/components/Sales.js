@@ -6104,6 +6104,27 @@ const InsuranceManagement = () => {
         const customer = customers.find(c => c.id === sale.customer_id);
         const vehicle = vehicles.find(v => v.id === sale.vehicle_id);
         
+        // For direct sales, get vehicle details from vehicles collection
+        // For imported sales, get vehicle details from sale record itself
+        let vehicleModel = 'Unknown Vehicle';
+        let vehicleRegNo = 'N/A';
+        let vehicleChassis = 'N/A';
+        let vehicleEngine = 'N/A';
+        
+        if (vehicle) {
+          // Direct sale with vehicle_id
+          vehicleModel = `${vehicle.brand} ${vehicle.model}`;
+          vehicleRegNo = vehicle.vehicle_number || 'N/A';
+          vehicleChassis = vehicle.chassis_number || 'N/A';
+          vehicleEngine = vehicle.engine_number || 'N/A';
+        } else if (sale.vehicle_brand || sale.vehicle_model) {
+          // Imported sale with vehicle details in sale record
+          vehicleModel = `${sale.vehicle_brand || ''} ${sale.vehicle_model || ''}`.trim() || 'Unknown Vehicle';
+          vehicleRegNo = sale.vehicle_registration || 'N/A';
+          vehicleChassis = sale.vehicle_chassis || 'N/A';
+          vehicleEngine = sale.vehicle_engine || 'N/A';
+        }
+        
         // Calculate insurance expiry date (364 days from purchase date)
         const purchaseDate = new Date(sale.sale_date);
         const expiryDate = new Date(purchaseDate);
@@ -6126,8 +6147,8 @@ const InsuranceManagement = () => {
           id: sale.id,
           customer_name: customer?.name || 'Unknown',
           phone_number: customer?.mobile || customer?.phone || 'N/A',
-          vehicle_model: vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Unknown Vehicle',
-          vehicle_reg_no: vehicle?.vehicle_no || 'N/A',
+          vehicle_model: vehicleModel,
+          vehicle_reg_no: vehicleRegNo,
           purchase_date: sale.sale_date,
           expiry_date: expiryDate.toISOString(),
           status: status,
@@ -6137,8 +6158,9 @@ const InsuranceManagement = () => {
           sale_amount: sale.amount,
           payment_method: sale.payment_method,
           customer_address: customer?.address || 'N/A',
-          vehicle_chassis: vehicle?.chassis_number || 'N/A',
-          vehicle_engine: vehicle?.engine_number || 'N/A'
+          vehicle_chassis: vehicleChassis,
+          vehicle_engine: vehicleEngine,
+          source: sale.source || 'direct'
         };
       });
 
