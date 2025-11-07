@@ -1553,8 +1553,8 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
             vehicle = Vehicle(**vehicle_dict)
             
             # CROSS-REFERENCE: Check if customer mobile is provided
-            customer_mobile = row.get('customer_mobile', '').strip()
-            customer_name = row.get('customer_name', '').strip()
+            customer_mobile = (row.get('customer_mobile') or '').strip()
+            customer_name = (row.get('customer_name') or '').strip()
             customer_id = None
             
             if customer_mobile:
@@ -1569,8 +1569,8 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
             await db.vehicles.insert_one(vehicle_dict)
             
             # CROSS-REFERENCE: Create sales record if sale data is provided
-            sale_amount = row.get('sale_amount', '').strip()
-            payment_method = row.get('payment_method', '').strip()
+            sale_amount = (row.get('sale_amount') or '').strip()
+            payment_method = (row.get('payment_method') or '').strip()
             
             if sale_amount and customer_id:
                 try:
