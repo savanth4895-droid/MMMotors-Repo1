@@ -530,8 +530,8 @@ class TwoWheelerAPITester:
         print("-" * 50)
         
         # Test CSV content with the exact sample data from review request
-        test_csv_content = """name,care_of,mobile,phone,email,address,brand,model,color,vehicle_no,chassis_no,engine_no,nominee_name,relation,age,sale_amount,payment_method,hypothecation,sale_date,invoice_number
-Devaraj H,S/O Hanumanthappa,8550008851,,,"Hosahalli(V), Hungenhalli(P), Malur-563130",HERO,Splendor +,Blue,KA07EK3030,MBLHAW220S9B51956,HA11E859B01280,Likitha M,Wife,26,24500,CASH,Jana,03-Mar,"""
+        test_csv_content = "name,care_of,mobile,phone,email,address,brand,model,color,vehicle_no,chassis_no,engine_no,nominee_name,relation,age,sale_amount,payment_method,hypothecation,sale_date,invoice_number\n"
+        test_csv_content += "Devaraj H,S/O Hanumanthappa,8550008851,,,\"Hosahalli(V), Hungenhalli(P), Malur-563130\",HERO,Splendor +,Blue,KA07EK3030,MBLHAW220S9B51956,HA11E859B01280,Likitha M,Wife,26,24500,CASH,Jana,03-Mar,"
         
         print("   Testing CSV import with sample data:")
         print("   Customer: Devaraj H, Mobile: 8550008851")
