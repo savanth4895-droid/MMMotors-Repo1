@@ -5131,6 +5131,9 @@ const SalesReports = () => {
         <Card>
           <CardHeader>
             <CardTitle>Brand Performance Summary</CardTitle>
+            <CardDescription>
+              Sales breakdown by source (Direct vs Imported)
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -5138,7 +5141,9 @@ const SalesReports = () => {
                 <thead>
                   <tr className="border-b bg-gray-50">
                     <th className="text-left p-3 font-semibold">Brand</th>
-                    <th className="text-right p-3 font-semibold">Sales</th>
+                    <th className="text-right p-3 font-semibold">Total Sales</th>
+                    <th className="text-right p-3 font-semibold text-blue-600">Direct</th>
+                    <th className="text-right p-3 font-semibold text-purple-600">Imported</th>
                     <th className="text-right p-3 font-semibold">Revenue</th>
                   </tr>
                 </thead>
@@ -5146,7 +5151,9 @@ const SalesReports = () => {
                   {brandData.map((item, index) => (
                     <tr key={index} className="border-b hover:bg-gray-50">
                       <td className="p-3 font-medium">{item.brand}</td>
-                      <td className="p-3 text-right">{item.sales}</td>
+                      <td className="p-3 text-right font-semibold">{item.sales}</td>
+                      <td className="p-3 text-right text-blue-600">{item.directSales || 0}</td>
+                      <td className="p-3 text-right text-purple-600">{item.importedSales || 0}</td>
                       <td className="p-3 text-right font-medium text-green-600">
                         ₹{item.revenue.toLocaleString()}
                       </td>
