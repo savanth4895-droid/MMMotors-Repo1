@@ -1709,10 +1709,10 @@ async def import_services_data(data: List[Dict], import_job: ImportJob, user_id:
     for idx, row in enumerate(data):
         try:
             # Validate required fields (relaxed - only need mobile or vehicle identifier)
-            customer_mobile = row.get('customer_mobile', '').strip()
-            customer_name = row.get('customer_name', '').strip()
-            vehicle_number = row.get('vehicle_number', '').strip()
-            chassis_number = row.get('chassis_number', '').strip()
+            customer_mobile = (row.get('customer_mobile') or '').strip()
+            customer_name = (row.get('customer_name') or '').strip()
+            vehicle_number = (row.get('vehicle_number') or '').strip()
+            chassis_number = (row.get('chassis_number') or '').strip()
             
             if not customer_mobile and not vehicle_number and not chassis_number:
                 raise ValueError("Either customer_mobile or vehicle identifiers (vehicle_number/chassis_number) must be provided")
@@ -1757,9 +1757,9 @@ async def import_services_data(data: List[Dict], import_job: ImportJob, user_id:
                 customer_id=customer_id,
                 vehicle_id=vehicle_id,
                 vehicle_number=vehicle_number or chassis_number or 'Unknown',
-                service_type=row.get('service_type', 'general_service').strip(),
-                description=row.get('description', '').strip() or 'Imported service',
-                amount=float(row.get('amount', 0))
+                service_type=(row.get('service_type') or 'general_service').strip(),
+                description=(row.get('description') or '').strip() or 'Imported service',
+                amount=float(row.get('amount', 0) or 0)
             )
             
             # Generate job card number
