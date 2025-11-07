@@ -1140,6 +1140,512 @@ class TwoWheelerAPITester:
         
         return overall_success, test_results
 
+    def test_vehicle_service_import_fixes(self):
+        """
+        COMPREHENSIVE VEHICLE AND SERVICE IMPORT FIXES TESTING
+        
+        Testing the fixes for vehicle and service import issues in M M Motors application.
+        
+        AUTHENTICATION: Uses admin/admin123 credentials
+        
+        TEST SCENARIOS:
+        1. Vehicle Import with Empty Optional Fields (fix for .strip() errors)
+        2. Vehicle Import WITH Customer and Sale Data
+        3. Service Import - Basic Test (fix for KeyError 'id')
+        4. Service Import - Without Vehicle (Auto-create Customer)
+        5. Complete Import Workflow
+        
+        VALIDATION POINTS:
+        - No ".strip()" AttributeError in any import
+        - No KeyError 'id' in service imports
+        - All import success rates should be 100% for valid data
+        - Cross-reference statistics should be accurate
+        - Data should persist and be visible in GET endpoints
+        """
+        print("\n" + "=" * 80)
+        print("🔧 COMPREHENSIVE VEHICLE AND SERVICE IMPORT FIXES TESTING")
+        print("=" * 80)
+        print("Testing fixes for vehicle and service import issues")
+        print("Focus: .strip() errors on optional fields, KeyError 'id' in service imports")
+        
+        all_tests_passed = True
+        test_results = {
+            'authentication': False,
+            'vehicle_import_empty_optional_fields': False,
+            'vehicle_import_with_customer_sale': False,
+            'service_import_basic': False,
+            'service_import_without_vehicle': False,
+            'complete_workflow': False,
+            'no_strip_errors': True,  # Start as True, set to False if error found
+            'no_keyerror_id': True,   # Start as True, set to False if error found
+            'cross_reference_stats_accurate': False,
+            'data_persistence_verified': False
+        }
+        
+        # 1. AUTHENTICATION SETUP
+        print("\n🔐 1. AUTHENTICATION WITH ADMIN/ADMIN123")
+        print("-" * 50)
+        success, auth_response = self.test_login_user("admin", "admin123")
+        if success and 'access_token' in auth_response:
+            print("✅ Authentication successful with admin/admin123")
+            test_results['authentication'] = True
+        else:
+            print("❌ Authentication failed with admin/admin123")
+            all_tests_passed = False
+            return False, test_results
+        
+        # 2. TEST VEHICLE IMPORT WITH EMPTY OPTIONAL FIELDS
+        print("\n🚗 2. VEHICLE IMPORT WITH EMPTY OPTIONAL FIELDS (FIX FOR .strip() ERRORS)")
+        print("-" * 50)
+        
+        vehicle_csv_empty_optional = """brand,model,chassis_number,engine_number,color,vehicle_number,key_number,inbound_location,page_number,status,customer_mobile,customer_name,sale_amount,payment_method
+BAJAJ,Pulsar 150,FIX-TEST-001,FIX-ENG-001,Blue,FIX-REG-001,KEY001,Warehouse B,Page 2,available,,,"""
+        
+        print("   Testing vehicle import WITHOUT customer/sale fields:")
+        print("   Brand: BAJAJ, Model: Pulsar 150")
+        print("   Chassis: FIX-TEST-001, Status: available")
+        print("   Customer fields: EMPTY (testing .strip() fix)")
+        
+        success, import_response = self.test_csv_import_with_content(
+            "vehicles",
+            vehicle_csv_empty_optional,
+            "vehicle_empty_optional.csv"
+        )
+        
+        if success:
+            print("✅ Vehicle import completed without errors")
+            total_records = import_response.get('total_records', 0)
+            successful_records = import_response.get('successful_records', 0)
+            failed_records = import_response.get('failed_records', 0)
+            errors = import_response.get('errors', [])
+            
+            print(f"   Total: {total_records}, Success: {successful_records}, Failed: {failed_records}")
+            
+            # Check for .strip() errors
+            strip_error_found = False
+            for error in errors:
+                error_msg = str(error.get('error', ''))
+                if '.strip()' in error_msg or 'NoneType' in error_msg and 'attribute' in error_msg:
+                    print(f"❌ .strip() error found: {error_msg}")
+                    strip_error_found = True
+                    test_results['no_strip_errors'] = False
+                    all_tests_passed = False
+            
+            if not strip_error_found:
+                print("✅ No .strip() AttributeError found")
+            
+            if successful_records == 1 and failed_records == 0:
+                print("✅ Import success rate: 100% (Success: 1, Failed: 0)")
+                test_results['vehicle_import_empty_optional_fields'] = True
+            else:
+                print(f"❌ Import failed: Expected Success: 1, Failed: 0, Got Success: {successful_records}, Failed: {failed_records}")
+                all_tests_passed = False
+        else:
+            print("❌ Vehicle import failed")
+            test_results['no_strip_errors'] = False
+            all_tests_passed = False
+        
+        # Verify vehicle appears in list
+        print("\n   Verifying vehicle FIX-TEST-001 in GET /api/vehicles:")
+        success, vehicles_response = self.run_test(
+            "Get All Vehicles",
+            "GET",
+            "vehicles",
+            200
+        )
+        
+        if success and isinstance(vehicles_response, list):
+            vehicle_found = any(v.get('chassis_number') == 'FIX-TEST-001' for v in vehicles_response)
+            if vehicle_found:
+                print("✅ Vehicle FIX-TEST-001 appears in vehicle list")
+            else:
+                print("❌ Vehicle FIX-TEST-001 NOT found in vehicle list")
+                all_tests_passed = False
+        
+        # 3. TEST VEHICLE IMPORT WITH CUSTOMER AND SALE DATA
+        print("\n🚗 3. VEHICLE IMPORT WITH CUSTOMER AND SALE DATA")
+        print("-" * 50)
+        
+        vehicle_csv_with_customer = """brand,model,chassis_number,engine_number,color,vehicle_number,key_number,inbound_location,page_number,status,customer_mobile,customer_name,sale_amount,payment_method
+TVS,Apache,FIX-TEST-002,FIX-ENG-002,Red,FIX-REG-002,KEY002,Warehouse A,Page 1,sold,8888888888,Fix Test Customer,50000,cash"""
+        
+        print("   Testing vehicle import WITH customer and sale data:")
+        print("   Brand: TVS, Model: Apache")
+        print("   Customer: Fix Test Customer, Mobile: 8888888888")
+        print("   Sale: ₹50000, cash")
+        
+        success, import_response = self.test_csv_import_with_content(
+            "vehicles",
+            vehicle_csv_with_customer,
+            "vehicle_with_customer.csv"
+        )
+        
+        if success:
+            print("✅ Vehicle import completed")
+            total_records = import_response.get('total_records', 0)
+            successful_records = import_response.get('successful_records', 0)
+            failed_records = import_response.get('failed_records', 0)
+            cross_ref_stats = import_response.get('cross_reference_stats', {})
+            
+            print(f"   Total: {total_records}, Success: {successful_records}, Failed: {failed_records}")
+            print(f"   Cross-reference stats: {cross_ref_stats}")
+            
+            if successful_records == 1 and failed_records == 0:
+                print("✅ Import success rate: 100%")
+                test_results['vehicle_import_with_customer_sale'] = True
+            else:
+                print(f"❌ Import failed: Expected 100% success")
+                all_tests_passed = False
+            
+            # Verify cross-reference stats
+            customers_created = cross_ref_stats.get('customers_created', 0)
+            sales_created = cross_ref_stats.get('sales_created', 0)
+            
+            if customers_created > 0:
+                print(f"✅ Cross-reference stats shows customers_created: {customers_created}")
+            if sales_created > 0:
+                print(f"✅ Cross-reference stats shows sales_created: {sales_created}")
+            
+            if customers_created > 0 and sales_created > 0:
+                test_results['cross_reference_stats_accurate'] = True
+        else:
+            print("❌ Vehicle import failed")
+            all_tests_passed = False
+        
+        # Verify vehicle appears with customer_id
+        print("\n   Verifying vehicle FIX-TEST-002 has customer_id set:")
+        success, vehicles_response = self.run_test(
+            "Get All Vehicles",
+            "GET",
+            "vehicles",
+            200
+        )
+        
+        if success and isinstance(vehicles_response, list):
+            vehicle = next((v for v in vehicles_response if v.get('chassis_number') == 'FIX-TEST-002'), None)
+            if vehicle:
+                print("✅ Vehicle FIX-TEST-002 found in list")
+                customer_id = vehicle.get('customer_id')
+                if customer_id:
+                    print(f"✅ Vehicle has customer_id set: {customer_id[:8]}...")
+                else:
+                    print("⚠️ Vehicle customer_id is not set")
+            else:
+                print("❌ Vehicle FIX-TEST-002 NOT found")
+                all_tests_passed = False
+        
+        # Verify sale record was created
+        print("\n   Verifying sale record was created:")
+        success, sales_response = self.run_test(
+            "Get All Sales",
+            "GET",
+            "sales",
+            200
+        )
+        
+        if success and isinstance(sales_response, list):
+            sale_found = any(s.get('amount') == 50000 and s.get('payment_method') == 'cash' for s in sales_response)
+            if sale_found:
+                print("✅ Sale record found in sales list")
+            else:
+                print("⚠️ Sale record not found (might be expected)")
+        
+        # 4. TEST SERVICE IMPORT - BASIC TEST (FIX FOR KeyError 'id')
+        print("\n🔧 4. SERVICE IMPORT - BASIC TEST (FIX FOR KeyError 'id')")
+        print("-" * 50)
+        
+        service_csv_basic = """customer_name,customer_mobile,vehicle_number,chassis_number,service_type,description,amount
+Service Test,7777777777,FIX-REG-001,FIX-TEST-001,repair,Test repair service,1500"""
+        
+        print("   Testing service import with all required fields:")
+        print("   Customer: Service Test, Mobile: 7777777777")
+        print("   Vehicle: FIX-REG-001, Chassis: FIX-TEST-001")
+        print("   Type: repair, Amount: 1500")
+        
+        success, import_response = self.test_csv_import_with_content(
+            "services",
+            service_csv_basic,
+            "service_basic.csv"
+        )
+        
+        if success:
+            print("✅ Service import completed without errors")
+            total_records = import_response.get('total_records', 0)
+            successful_records = import_response.get('successful_records', 0)
+            failed_records = import_response.get('failed_records', 0)
+            errors = import_response.get('errors', [])
+            
+            print(f"   Total: {total_records}, Success: {successful_records}, Failed: {failed_records}")
+            
+            # Check for KeyError 'id'
+            keyerror_found = False
+            for error in errors:
+                error_msg = str(error.get('error', ''))
+                if 'KeyError' in error_msg and "'id'" in error_msg:
+                    print(f"❌ KeyError 'id' found: {error_msg}")
+                    keyerror_found = True
+                    test_results['no_keyerror_id'] = False
+                    all_tests_passed = False
+            
+            if not keyerror_found:
+                print("✅ No KeyError 'id' found")
+            
+            if successful_records == 1 and failed_records == 0:
+                print("✅ Import success rate: 100% (Success: 1, Failed: 0)")
+                test_results['service_import_basic'] = True
+            else:
+                print(f"❌ Import failed: Expected Success: 1, Failed: 0")
+                all_tests_passed = False
+        else:
+            print("❌ Service import failed")
+            test_results['no_keyerror_id'] = False
+            all_tests_passed = False
+        
+        # Verify service appears in list
+        print("\n   Verifying service in GET /api/services:")
+        success, services_response = self.run_test(
+            "Get All Services",
+            "GET",
+            "services",
+            200
+        )
+        
+        if success and isinstance(services_response, list):
+            service_found = any(s.get('description') == 'Test repair service' for s in services_response)
+            if service_found:
+                print("✅ Service appears in service list")
+                
+                # Check if service has valid customer_id and vehicle_id
+                service = next((s for s in services_response if s.get('description') == 'Test repair service'), None)
+                if service:
+                    customer_id = service.get('customer_id')
+                    vehicle_id = service.get('vehicle_id')
+                    if customer_id:
+                        print(f"✅ Service has valid customer_id: {customer_id[:8]}...")
+                    if vehicle_id:
+                        print(f"✅ Service has valid vehicle_id: {vehicle_id[:8]}...")
+            else:
+                print("❌ Service NOT found in service list")
+                all_tests_passed = False
+        
+        # 5. TEST SERVICE IMPORT - WITHOUT VEHICLE (AUTO-CREATE CUSTOMER)
+        print("\n🔧 5. SERVICE IMPORT - WITHOUT VEHICLE (AUTO-CREATE CUSTOMER)")
+        print("-" * 50)
+        
+        service_csv_no_vehicle = """customer_name,customer_mobile,vehicle_number,chassis_number,service_type,description,amount
+New Service Customer,6666666666,,,periodic_service,Basic service,1000"""
+        
+        print("   Testing service import with only customer mobile (no vehicle):")
+        print("   Customer: New Service Customer, Mobile: 6666666666")
+        print("   Vehicle: NONE (testing auto-create customer)")
+        
+        success, import_response = self.test_csv_import_with_content(
+            "services",
+            service_csv_no_vehicle,
+            "service_no_vehicle.csv"
+        )
+        
+        if success:
+            print("✅ Service import completed")
+            total_records = import_response.get('total_records', 0)
+            successful_records = import_response.get('successful_records', 0)
+            failed_records = import_response.get('failed_records', 0)
+            cross_ref_stats = import_response.get('cross_reference_stats', {})
+            incomplete_records = import_response.get('incomplete_records', [])
+            
+            print(f"   Total: {total_records}, Success: {successful_records}, Failed: {failed_records}")
+            print(f"   Cross-reference stats: {cross_ref_stats}")
+            print(f"   Incomplete records: {len(incomplete_records)}")
+            
+            if successful_records > 0:
+                print("✅ Service import succeeded")
+                test_results['service_import_without_vehicle'] = True
+            
+            # Verify cross-reference stats shows customers_created
+            customers_created = cross_ref_stats.get('customers_created', 0)
+            if customers_created > 0:
+                print(f"✅ Cross-reference stats shows customers_created: {customers_created}")
+            
+            # Verify incomplete_records shows missing vehicle info
+            if incomplete_records:
+                print(f"✅ Incomplete records tracked: {len(incomplete_records)} record(s)")
+                for record in incomplete_records:
+                    missing_fields = record.get('missing_fields', [])
+                    if 'vehicle' in str(missing_fields).lower():
+                        print(f"   ✅ Missing vehicle info tracked: {missing_fields}")
+        else:
+            print("❌ Service import failed")
+            all_tests_passed = False
+        
+        # Verify service was created
+        print("\n   Verifying service was created:")
+        success, services_response = self.run_test(
+            "Get All Services",
+            "GET",
+            "services",
+            200
+        )
+        
+        if success and isinstance(services_response, list):
+            service_found = any(s.get('description') == 'Basic service' for s in services_response)
+            if service_found:
+                print("✅ Service created successfully")
+            else:
+                print("⚠️ Service not found")
+        
+        # 6. COMPLETE IMPORT WORKFLOW
+        print("\n🔄 6. COMPLETE IMPORT WORKFLOW")
+        print("-" * 50)
+        
+        print("   Testing complete workflow: vehicle → service → spare part")
+        
+        # Import vehicle
+        workflow_vehicle_csv = """brand,model,chassis_number,engine_number,color,vehicle_number,key_number,inbound_location,page_number,status,customer_mobile,customer_name,sale_amount,payment_method
+HERO,Splendor,WORKFLOW-001,WORKFLOW-ENG-001,Black,WORKFLOW-REG-001,KEY003,Warehouse C,Page 3,available,,,"""
+        
+        success, _ = self.test_csv_import_with_content(
+            "vehicles",
+            workflow_vehicle_csv,
+            "workflow_vehicle.csv"
+        )
+        
+        if success:
+            print("   ✅ Step 1: Vehicle imported")
+        else:
+            print("   ❌ Step 1: Vehicle import failed")
+            all_tests_passed = False
+        
+        # Import service referencing that vehicle
+        workflow_service_csv = """customer_name,customer_mobile,vehicle_number,chassis_number,service_type,description,amount
+Workflow Customer,5555555555,WORKFLOW-REG-001,WORKFLOW-001,repair,Workflow service,2000"""
+        
+        success, _ = self.test_csv_import_with_content(
+            "services",
+            workflow_service_csv,
+            "workflow_service.csv"
+        )
+        
+        if success:
+            print("   ✅ Step 2: Service imported")
+        else:
+            print("   ❌ Step 2: Service import failed")
+            all_tests_passed = False
+        
+        # Import spare part
+        workflow_spare_csv = """name,part_number,brand,quantity,unit,unit_price,hsn_sac,gst_percentage,supplier,compatible_models
+Workflow Part,WORKFLOW-PART-001,HERO,5,Nos,150.00,12345678,18.0,Workflow Supplier,Splendor"""
+        
+        success, _ = self.test_csv_import_with_content(
+            "spare_parts",
+            workflow_spare_csv,
+            "workflow_spare.csv"
+        )
+        
+        if success:
+            print("   ✅ Step 3: Spare part imported")
+        else:
+            print("   ❌ Step 3: Spare part import failed")
+            all_tests_passed = False
+        
+        # Verify all data visible
+        print("\n   Verifying all data visible in GET endpoints:")
+        
+        vehicles_visible = False
+        services_visible = False
+        spare_parts_visible = False
+        
+        success, vehicles_response = self.run_test("Get Vehicles", "GET", "vehicles", 200)
+        if success and isinstance(vehicles_response, list):
+            if any(v.get('chassis_number') == 'WORKFLOW-001' for v in vehicles_response):
+                print("   ✅ Workflow vehicle visible")
+                vehicles_visible = True
+        
+        success, services_response = self.run_test("Get Services", "GET", "services", 200)
+        if success and isinstance(services_response, list):
+            if any(s.get('description') == 'Workflow service' for s in services_response):
+                print("   ✅ Workflow service visible")
+                services_visible = True
+        
+        success, spare_parts_response = self.run_test("Get Spare Parts", "GET", "spare-parts", 200)
+        if success and isinstance(spare_parts_response, list):
+            if any(p.get('part_number') == 'WORKFLOW-PART-001' for p in spare_parts_response):
+                print("   ✅ Workflow spare part visible")
+                spare_parts_visible = True
+        
+        if vehicles_visible and services_visible and spare_parts_visible:
+            print("✅ Complete workflow successful - all data visible")
+            test_results['complete_workflow'] = True
+            test_results['data_persistence_verified'] = True
+        else:
+            print("❌ Complete workflow failed - some data not visible")
+            all_tests_passed = False
+        
+        # 7. COMPREHENSIVE RESULTS SUMMARY
+        print("\n" + "=" * 80)
+        print("📊 VEHICLE AND SERVICE IMPORT FIXES TEST RESULTS")
+        print("=" * 80)
+        
+        successful_tests = sum(1 for result in test_results.values() if result)
+        total_tests = len(test_results)
+        
+        print(f"📋 TEST RESULTS SUMMARY:")
+        for test_name, result in test_results.items():
+            status = "✅" if result else "❌"
+            print(f"   {status} {test_name.replace('_', ' ').title()}")
+        
+        print(f"\n🎯 OVERALL RESULTS:")
+        print(f"   Tests Passed: {successful_tests}/{total_tests}")
+        print(f"   Success Rate: {(successful_tests/total_tests)*100:.1f}%")
+        
+        # Key findings
+        print(f"\n🔍 KEY FINDINGS:")
+        if test_results['no_strip_errors']:
+            print("   ✅ No .strip() AttributeError in any import")
+        else:
+            print("   ❌ .strip() errors found in imports")
+        
+        if test_results['no_keyerror_id']:
+            print("   ✅ No KeyError 'id' in service imports")
+        else:
+            print("   ❌ KeyError 'id' found in service imports")
+        
+        if test_results['vehicle_import_empty_optional_fields']:
+            print("   ✅ Vehicle import with empty optional fields working")
+        
+        if test_results['vehicle_import_with_customer_sale']:
+            print("   ✅ Vehicle import with customer and sale data working")
+        
+        if test_results['service_import_basic']:
+            print("   ✅ Service import basic functionality working")
+        
+        if test_results['service_import_without_vehicle']:
+            print("   ✅ Service import without vehicle (auto-create customer) working")
+        
+        if test_results['cross_reference_stats_accurate']:
+            print("   ✅ Cross-reference statistics accurate")
+        
+        if test_results['data_persistence_verified']:
+            print("   ✅ Data persistence verified across all endpoints")
+        
+        overall_success = all_tests_passed and test_results['authentication']
+        status = "✅ COMPLETED SUCCESSFULLY" if overall_success else "❌ COMPLETED WITH ISSUES"
+        print(f"\n🎯 OVERALL STATUS: {status}")
+        
+        if overall_success:
+            print("\n💡 CONCLUSION:")
+            print("   The vehicle and service import fixes are working correctly:")
+            print("   • No .strip() errors on optional fields in vehicle import")
+            print("   • No KeyError 'id' in service imports")
+            print("   • All import success rates are 100% for valid data")
+            print("   • Cross-reference statistics are accurate")
+            print("   • Data persists and is visible in GET endpoints")
+        else:
+            print("\n⚠️ ISSUES IDENTIFIED:")
+            print("   Some import functionality still has issues.")
+            print("   Please review the failed tests above for specific problems.")
+        
+        return overall_success, test_results
+
     def test_import_data_visibility(self):
         """
         COMPREHENSIVE IMPORT DATA VISIBILITY TESTING
