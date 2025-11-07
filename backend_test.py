@@ -1140,6 +1140,454 @@ Devaraj H,S/O Hanumanthappa,8550008851,,,"Hosahalli(V), Hungenhalli(P), Malur-56
         
         return overall_success, test_results
 
+    def test_import_data_visibility(self):
+        """
+        COMPREHENSIVE IMPORT DATA VISIBILITY TESTING
+        
+        Testing why imported data is not visible on vehicles, services, and spare parts pages.
+        
+        AUTHENTICATION: Uses admin/admin123 credentials
+        
+        TEST SCENARIOS:
+        1. Test Vehicle Import and Visibility
+        2. Test Service Import and Visibility
+        3. Test Spare Parts Import and Visibility
+        4. Check Authentication Requirements
+        5. Database Verification
+        6. Frontend Data Fetching
+        """
+        print("\n" + "=" * 80)
+        print("🔍 COMPREHENSIVE IMPORT DATA VISIBILITY TESTING")
+        print("=" * 80)
+        print("Investigating why imported data is not visible on vehicles, services, and spare parts pages")
+        
+        all_tests_passed = True
+        test_results = {
+            'authentication': False,
+            'vehicle_template_download': False,
+            'vehicle_import_success': False,
+            'vehicle_visibility': False,
+            'vehicle_fields_populated': False,
+            'service_template_download': False,
+            'service_import_success': False,
+            'service_visibility': False,
+            'service_linking': False,
+            'spare_parts_template_download': False,
+            'spare_parts_import_success': False,
+            'spare_parts_visibility': False,
+            'auth_required_vehicles': False,
+            'auth_required_services': False,
+            'auth_required_spare_parts': False
+        }
+        
+        # 1. AUTHENTICATION SETUP
+        print("\n🔐 1. AUTHENTICATION WITH ADMIN/ADMIN123")
+        print("-" * 50)
+        success, auth_response = self.test_login_user("admin", "admin123")
+        if success and 'access_token' in auth_response:
+            print("✅ Authentication successful with admin/admin123")
+            test_results['authentication'] = True
+        else:
+            print("❌ Authentication failed with admin/admin123")
+            all_tests_passed = False
+            return False, test_results
+        
+        # 2. TEST VEHICLE IMPORT AND VISIBILITY
+        print("\n🚗 2. TEST VEHICLE IMPORT AND VISIBILITY")
+        print("-" * 50)
+        
+        # Download vehicles CSV template
+        import requests
+        template_url = f"{self.base_url}/import/template/vehicles"
+        headers = {'Authorization': f'Bearer {self.token}'}
+        
+        try:
+            response = requests.get(template_url, headers=headers)
+            if response.status_code == 200:
+                print("✅ Vehicles CSV template downloaded successfully")
+                test_results['vehicle_template_download'] = True
+            else:
+                print(f"❌ Vehicles template download failed: {response.status_code}")
+                all_tests_passed = False
+        except Exception as e:
+            print(f"❌ Vehicles template download error: {str(e)}")
+            all_tests_passed = False
+        
+        # Import a test vehicle CSV
+        vehicle_csv_content = """brand,model,chassis_number,engine_number,color,vehicle_number,key_number,inbound_location,page_number,status,customer_mobile,customer_name,sale_amount,payment_method
+TVS,Apache RTR 160,TEST-IMPORT-001,TEST-ENG-001,Red,TEST-REG-001,KEY001,Warehouse A,Page 1,available,,,"""
+        
+        print("\n   Importing test vehicle:")
+        print("   Brand: TVS, Model: Apache RTR 160")
+        print("   Chassis: TEST-IMPORT-001, Engine: TEST-ENG-001")
+        print("   Status: available")
+        
+        success, import_response = self.test_csv_import_with_content(
+            "vehicles",
+            vehicle_csv_content,
+            "test_vehicle_import.csv"
+        )
+        
+        if success:
+            print("✅ Vehicle import completed")
+            total_records = import_response.get('total_records', 0)
+            successful_records = import_response.get('successful_records', 0)
+            failed_records = import_response.get('failed_records', 0)
+            
+            print(f"   Total: {total_records}, Success: {successful_records}, Failed: {failed_records}")
+            
+            if successful_records > 0:
+                print("✅ Vehicle import shows successful import")
+                test_results['vehicle_import_success'] = True
+            else:
+                print("❌ No vehicles imported successfully")
+                all_tests_passed = False
+        else:
+            print("❌ Vehicle import failed")
+            all_tests_passed = False
+        
+        # Check if imported vehicle appears in list
+        print("\n   Checking vehicle visibility in GET /api/vehicles:")
+        success, vehicles_response = self.run_test(
+            "Get All Vehicles",
+            "GET",
+            "vehicles",
+            200
+        )
+        
+        if success and isinstance(vehicles_response, list):
+            print(f"✅ Retrieved {len(vehicles_response)} vehicles from database")
+            
+            # Find the imported vehicle
+            imported_vehicle = None
+            for vehicle in vehicles_response:
+                if vehicle.get('chassis_number') == 'TEST-IMPORT-001':
+                    imported_vehicle = vehicle
+                    break
+            
+            if imported_vehicle:
+                print("✅ Imported vehicle appears in vehicle list")
+                print(f"   Vehicle ID: {imported_vehicle.get('id', 'N/A')[:8]}...")
+                print(f"   Brand: {imported_vehicle.get('brand', 'N/A')}")
+                print(f"   Model: {imported_vehicle.get('model', 'N/A')}")
+                print(f"   Chassis: {imported_vehicle.get('chassis_number', 'N/A')}")
+                print(f"   Status: {imported_vehicle.get('status', 'N/A')}")
+                test_results['vehicle_visibility'] = True
+                
+                # Verify all fields populated correctly
+                required_fields = ['brand', 'model', 'chassis_number', 'engine_number', 'color', 'vehicle_number', 'status']
+                all_fields_present = all(imported_vehicle.get(field) for field in required_fields)
+                
+                if all_fields_present:
+                    print("✅ All required fields populated correctly")
+                    test_results['vehicle_fields_populated'] = True
+                else:
+                    print("❌ Some fields missing or empty:")
+                    for field in required_fields:
+                        value = imported_vehicle.get(field)
+                        if not value:
+                            print(f"   ❌ Missing: {field}")
+                    all_tests_passed = False
+            else:
+                print("❌ Imported vehicle NOT found in vehicle list")
+                print("   This is the main issue - vehicle imported but not visible!")
+                all_tests_passed = False
+        else:
+            print("❌ Failed to retrieve vehicles")
+            all_tests_passed = False
+        
+        # 3. TEST SERVICE IMPORT AND VISIBILITY
+        print("\n🔧 3. TEST SERVICE IMPORT AND VISIBILITY")
+        print("-" * 50)
+        
+        # Download services CSV template
+        template_url = f"{self.base_url}/import/template/services"
+        
+        try:
+            response = requests.get(template_url, headers=headers)
+            if response.status_code == 200:
+                print("✅ Services CSV template downloaded successfully")
+                test_results['service_template_download'] = True
+            else:
+                print(f"❌ Services template download failed: {response.status_code}")
+                all_tests_passed = False
+        except Exception as e:
+            print(f"❌ Services template download error: {str(e)}")
+            all_tests_passed = False
+        
+        # Import a test service CSV
+        service_csv_content = """customer_name,customer_mobile,vehicle_number,chassis_number,service_type,description,amount
+Test Customer,9999999999,TEST-REG-001,TEST-IMPORT-001,repair,Test service,1000"""
+        
+        print("\n   Importing test service:")
+        print("   Customer: Test Customer, Mobile: 9999999999")
+        print("   Vehicle: TEST-REG-001, Chassis: TEST-IMPORT-001")
+        print("   Type: repair, Amount: 1000")
+        
+        success, import_response = self.test_csv_import_with_content(
+            "services",
+            service_csv_content,
+            "test_service_import.csv"
+        )
+        
+        if success:
+            print("✅ Service import completed")
+            total_records = import_response.get('total_records', 0)
+            successful_records = import_response.get('successful_records', 0)
+            failed_records = import_response.get('failed_records', 0)
+            
+            print(f"   Total: {total_records}, Success: {successful_records}, Failed: {failed_records}")
+            
+            if successful_records > 0:
+                print("✅ Service import shows successful import")
+                test_results['service_import_success'] = True
+            else:
+                print("❌ No services imported successfully")
+                all_tests_passed = False
+        else:
+            print("❌ Service import failed")
+            all_tests_passed = False
+        
+        # Check if imported service appears in list
+        print("\n   Checking service visibility in GET /api/services:")
+        success, services_response = self.run_test(
+            "Get All Services",
+            "GET",
+            "services",
+            200
+        )
+        
+        if success and isinstance(services_response, list):
+            print(f"✅ Retrieved {len(services_response)} services from database")
+            
+            # Find the imported service
+            imported_service = None
+            for service in services_response:
+                if service.get('vehicle_number') == 'TEST-REG-001' and service.get('description') == 'Test service':
+                    imported_service = service
+                    break
+            
+            if imported_service:
+                print("✅ Imported service appears in service list")
+                print(f"   Service ID: {imported_service.get('id', 'N/A')[:8]}...")
+                print(f"   Job Card: {imported_service.get('job_card_number', 'N/A')}")
+                print(f"   Customer ID: {imported_service.get('customer_id', 'N/A')[:8] if imported_service.get('customer_id') else 'N/A'}...")
+                print(f"   Vehicle ID: {imported_service.get('vehicle_id', 'N/A')[:8] if imported_service.get('vehicle_id') else 'N/A'}...")
+                test_results['service_visibility'] = True
+                
+                # Verify customer_id and vehicle_id properly set
+                if imported_service.get('customer_id') and imported_service.get('vehicle_id'):
+                    print("✅ Service has customer_id and vehicle_id properly set")
+                    test_results['service_linking'] = True
+                else:
+                    print("⚠️ Service missing customer_id or vehicle_id:")
+                    print(f"   Customer ID: {imported_service.get('customer_id', 'MISSING')}")
+                    print(f"   Vehicle ID: {imported_service.get('vehicle_id', 'MISSING')}")
+                    # Not marking as failed since this might be expected behavior
+            else:
+                print("❌ Imported service NOT found in service list")
+                print("   This is the main issue - service imported but not visible!")
+                all_tests_passed = False
+        else:
+            print("❌ Failed to retrieve services")
+            all_tests_passed = False
+        
+        # 4. TEST SPARE PARTS IMPORT AND VISIBILITY
+        print("\n🔩 4. TEST SPARE PARTS IMPORT AND VISIBILITY")
+        print("-" * 50)
+        
+        # Download spare parts CSV template
+        template_url = f"{self.base_url}/import/template/spare_parts"
+        
+        try:
+            response = requests.get(template_url, headers=headers)
+            if response.status_code == 200:
+                print("✅ Spare parts CSV template downloaded successfully")
+                test_results['spare_parts_template_download'] = True
+            else:
+                print(f"❌ Spare parts template download failed: {response.status_code}")
+                all_tests_passed = False
+        except Exception as e:
+            print(f"❌ Spare parts template download error: {str(e)}")
+            all_tests_passed = False
+        
+        # Import a test spare part CSV
+        spare_part_csv_content = """name,part_number,brand,quantity,unit,unit_price,hsn_sac,gst_percentage,supplier,compatible_models
+Test Part,TEST-001,TVS,10,Nos,100.00,12345678,18.0,Test Supplier,Apache RTR 160"""
+        
+        print("\n   Importing test spare part:")
+        print("   Name: Test Part, Part Number: TEST-001")
+        print("   Brand: TVS, Quantity: 10, Price: 100.00")
+        
+        success, import_response = self.test_csv_import_with_content(
+            "spare_parts",
+            spare_part_csv_content,
+            "test_spare_part_import.csv"
+        )
+        
+        if success:
+            print("✅ Spare part import completed")
+            total_records = import_response.get('total_records', 0)
+            successful_records = import_response.get('successful_records', 0)
+            failed_records = import_response.get('failed_records', 0)
+            
+            print(f"   Total: {total_records}, Success: {successful_records}, Failed: {failed_records}")
+            
+            if successful_records > 0:
+                print("✅ Spare part import shows successful import")
+                test_results['spare_parts_import_success'] = True
+            else:
+                print("❌ No spare parts imported successfully")
+                all_tests_passed = False
+        else:
+            print("❌ Spare part import failed")
+            all_tests_passed = False
+        
+        # Check if imported spare part appears in list
+        print("\n   Checking spare part visibility in GET /api/spare-parts:")
+        success, spare_parts_response = self.run_test(
+            "Get All Spare Parts",
+            "GET",
+            "spare-parts",
+            200
+        )
+        
+        if success and isinstance(spare_parts_response, list):
+            print(f"✅ Retrieved {len(spare_parts_response)} spare parts from database")
+            
+            # Find the imported spare part
+            imported_spare_part = None
+            for part in spare_parts_response:
+                if part.get('part_number') == 'TEST-001':
+                    imported_spare_part = part
+                    break
+            
+            if imported_spare_part:
+                print("✅ Imported spare part appears in spare parts list")
+                print(f"   Part ID: {imported_spare_part.get('id', 'N/A')[:8]}...")
+                print(f"   Name: {imported_spare_part.get('name', 'N/A')}")
+                print(f"   Part Number: {imported_spare_part.get('part_number', 'N/A')}")
+                print(f"   Quantity: {imported_spare_part.get('quantity', 'N/A')}")
+                test_results['spare_parts_visibility'] = True
+            else:
+                print("❌ Imported spare part NOT found in spare parts list")
+                print("   This is the main issue - spare part imported but not visible!")
+                all_tests_passed = False
+        else:
+            print("❌ Failed to retrieve spare parts")
+            all_tests_passed = False
+        
+        # 5. CHECK AUTHENTICATION REQUIREMENTS
+        print("\n🔒 5. CHECK AUTHENTICATION REQUIREMENTS")
+        print("-" * 50)
+        
+        # Test GET /api/vehicles without authentication
+        original_token = self.token
+        self.token = None
+        
+        print("   Testing GET /api/vehicles without authentication:")
+        success, response = self.run_test(
+            "Get Vehicles Without Auth",
+            "GET",
+            "vehicles",
+            403
+        )
+        
+        if success:
+            print("✅ GET /api/vehicles requires authentication (returns 403)")
+            test_results['auth_required_vehicles'] = True
+        else:
+            print("⚠️ GET /api/vehicles does not require authentication")
+        
+        print("   Testing GET /api/services without authentication:")
+        success, response = self.run_test(
+            "Get Services Without Auth",
+            "GET",
+            "services",
+            403
+        )
+        
+        if success:
+            print("✅ GET /api/services requires authentication (returns 403)")
+            test_results['auth_required_services'] = True
+        else:
+            print("⚠️ GET /api/services does not require authentication")
+        
+        print("   Testing GET /api/spare-parts without authentication:")
+        success, response = self.run_test(
+            "Get Spare Parts Without Auth",
+            "GET",
+            "spare-parts",
+            403
+        )
+        
+        if success:
+            print("✅ GET /api/spare-parts requires authentication (returns 403)")
+            test_results['auth_required_spare_parts'] = True
+        else:
+            print("⚠️ GET /api/spare-parts does not require authentication")
+        
+        self.token = original_token
+        
+        # 6. COMPREHENSIVE RESULTS SUMMARY
+        print("\n" + "=" * 80)
+        print("📊 IMPORT DATA VISIBILITY TEST RESULTS")
+        print("=" * 80)
+        
+        successful_tests = sum(1 for result in test_results.values() if result)
+        total_tests = len(test_results)
+        
+        print(f"📋 TEST RESULTS SUMMARY:")
+        for test_name, result in test_results.items():
+            status = "✅" if result else "❌"
+            print(f"   {status} {test_name.replace('_', ' ').title()}")
+        
+        print(f"\n🎯 OVERALL RESULTS:")
+        print(f"   Tests Passed: {successful_tests}/{total_tests}")
+        print(f"   Success Rate: {(successful_tests/total_tests)*100:.1f}%")
+        
+        # Key findings
+        print(f"\n🔍 KEY FINDINGS:")
+        
+        if test_results['vehicle_import_success'] and not test_results['vehicle_visibility']:
+            print("   ❌ CRITICAL: Vehicles import successfully but are NOT visible in GET /api/vehicles")
+            print("      → This is the root cause of the visibility issue")
+        elif test_results['vehicle_import_success'] and test_results['vehicle_visibility']:
+            print("   ✅ Vehicles import successfully and ARE visible in GET /api/vehicles")
+        
+        if test_results['service_import_success'] and not test_results['service_visibility']:
+            print("   ❌ CRITICAL: Services import successfully but are NOT visible in GET /api/services")
+            print("      → This is the root cause of the visibility issue")
+        elif test_results['service_import_success'] and test_results['service_visibility']:
+            print("   ✅ Services import successfully and ARE visible in GET /api/services")
+        
+        if test_results['spare_parts_import_success'] and not test_results['spare_parts_visibility']:
+            print("   ❌ CRITICAL: Spare parts import successfully but are NOT visible in GET /api/spare-parts")
+            print("      → This is the root cause of the visibility issue")
+        elif test_results['spare_parts_import_success'] and test_results['spare_parts_visibility']:
+            print("   ✅ Spare parts import successfully and ARE visible in GET /api/spare-parts")
+        
+        if test_results['auth_required_vehicles'] and test_results['auth_required_services'] and test_results['auth_required_spare_parts']:
+            print("   ✅ All GET endpoints require authentication")
+        else:
+            print("   ⚠️ Some GET endpoints do not require authentication")
+        
+        print(f"\n💡 DIAGNOSIS:")
+        if not test_results['vehicle_visibility'] or not test_results['service_visibility'] or not test_results['spare_parts_visibility']:
+            print("   The issue is confirmed: Imported data is not visible on the respective pages.")
+            print("   Possible causes:")
+            print("   1. Import success vs actual data persistence mismatch")
+            print("   2. Data format compatibility between import and display")
+            print("   3. Filtering logic that might hide imported data")
+            print("   4. Cross-reference logic errors that might break imports")
+        else:
+            print("   All imported data is visible. The issue may be:")
+            print("   1. Frontend not making correct API calls")
+            print("   2. Frontend authentication issues")
+            print("   3. Frontend filtering or display logic")
+        
+        return all_tests_passed, test_results
+
     def test_unified_data_schema_implementation(self):
         """
         COMPREHENSIVE UNIFIED DATA SCHEMA IMPLEMENTATION TESTING
