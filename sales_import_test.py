@@ -8,7 +8,7 @@ import uuid
 import io
 
 class SalesImportTester:
-    def __init__(self, base_url="https://moto-business-suite.preview.emergentagent.com/api"):
+    def __init__(self, base_url="https://mmbike-integrate.preview.emergentagent.com/api"):
         self.base_url = base_url
         self.token = None
         self.tests_run = 0

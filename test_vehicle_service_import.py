@@ -6,7 +6,7 @@ Standalone test for vehicle and service import fixes
 import requests
 import json
 
-BASE_URL = "https://moto-business-suite.preview.emergentagent.com/api"
+BASE_URL = "https://mmbike-integrate.preview.emergentagent.com/api"
 token = None
 
 def login():
