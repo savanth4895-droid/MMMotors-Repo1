@@ -176,6 +176,9 @@ class Service(BaseModel):
     customer_id: str
     vehicle_id: Optional[str] = None
     vehicle_number: str  # Registration number (standardized)
+    vehicle_brand: Optional[str] = None  # For imported services without vehicle_id
+    vehicle_model: Optional[str] = None  # For imported services without vehicle_id
+    vehicle_year: Optional[str] = None  # For imported services without vehicle_id
     service_type: str
     description: str
     status: ServiceStatus = ServiceStatus.PENDING
