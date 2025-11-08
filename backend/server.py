@@ -1655,6 +1655,7 @@ async def import_spare_parts_data(data: List[Dict], import_job: ImportJob, user_
     """Import spare parts data"""
     successful = 0
     failed = 0
+    skipped = 0
     errors = []
     
     for idx, row in enumerate(data):
@@ -1665,9 +1666,18 @@ async def import_spare_parts_data(data: List[Dict], import_job: ImportJob, user_
                 if not row.get(field):
                     raise ValueError(f"{field} is required")
             
+            part_number = row['part_number'].strip()
+            
+            # Check for duplicate spare part by part_number
+            existing_part = await db.spare_parts.find_one({"part_number": part_number})
+            if existing_part:
+                # Skip duplicate spare part
+                skipped += 1
+                continue
+            
             spare_part_data = SparePartCreate(
                 name=row['name'].strip(),
-                part_number=row['part_number'].strip(),
+                part_number=part_number,
                 brand=row['brand'].strip(),
                 quantity=int(row['quantity']),
                 unit=row.get('unit', 'Nos').strip(),
