@@ -462,8 +462,8 @@ const DataImport = () => {
                       id="file-upload"
                     />
                     <label htmlFor="file-upload">
-                      <Button variant="outline" className="cursor-pointer">
-                        Choose File
+                      <Button variant="outline" className="cursor-pointer" asChild>
+                        <span>Choose File</span>
                       </Button>
                     </label>
                   </div>
