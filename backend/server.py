@@ -1703,16 +1703,18 @@ async def import_spare_parts_data(data: List[Dict], import_job: ImportJob, user_
     
     import_job.successful_records = successful
     import_job.failed_records = failed
-    import_job.processed_records = successful + failed
+    import_job.skipped_records = skipped
+    import_job.processed_records = successful + failed + skipped
     import_job.errors = errors
     
     return ImportResult(
         job_id=import_job.id,
         status="completed",
-        message=f"Import completed: {successful} successful, {failed} failed",
+        message=f"Import completed: {successful} successful, {failed} failed, {skipped} skipped (duplicates)",
         total_records=len(data),
         successful_records=successful,
         failed_records=failed,
+        skipped_records=skipped,
         errors=errors
     )
 
