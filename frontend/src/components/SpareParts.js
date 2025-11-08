@@ -1579,7 +1579,7 @@ const Bills = () => {
                 <div style="font-size: 18px; font-weight: bold; margin-bottom: 3px;">M M MOTORS</div>
                 <div style="font-size: 9px; color: #666;">Two Wheeler Sales & Service Center</div>
                 <div style="font-size: 9px; color: #666;">Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130</div>
-                <div style="font-size: 9px; color: #666;">Phone: +91 XXXXXXXXXX</div>
+                <div style="font-size: 9px; color: #666;">Phone: +91 7026263123</div>
               </td>
             </tr>
           </table>
