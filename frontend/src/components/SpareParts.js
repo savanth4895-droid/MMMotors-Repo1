@@ -1557,151 +1557,190 @@ const Bills = () => {
       // Import html2pdf dynamically
       const { default: html2pdf } = await import('html2pdf.js');
       
-      // Create the same professional template as print
+      // Create a simple, PDF-compatible template using tables
       const billHTML = `
-        <div style="font-family: Arial, sans-serif; padding: 30px; max-width: 800px; margin: 0 auto; background: white; color: #333;">
-          <div style="text-align: center; border-bottom: 3px solid #333; padding-bottom: 15px; margin-bottom: 25px;">
-            <h1 style="font-size: 28px; font-weight: bold; margin: 0 0 5px 0; color: #333;">M M MOTORS</h1>
-            <p style="font-size: 12px; color: #666; margin: 3px 0; line-height: 1.6;">Two Wheeler Sales & Service Center</p>
-            <p style="font-size: 12px; color: #666; margin: 3px 0;">Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130</p>
-            <p style="font-size: 12px; color: #666; margin: 3px 0;">Phone: +91 XXXXXXXXXX | Email: info@mmmotors.com</p>
-          </div>
+        <div style="font-family: Arial, sans-serif; padding: 20px; width: 750px;">
+          <!-- Header -->
+          <table style="width: 100%; margin-bottom: 20px; border-bottom: 3px solid #333;">
+            <tr>
+              <td style="text-align: center; padding-bottom: 15px;">
+                <div style="font-size: 24px; font-weight: bold; margin-bottom: 5px;">M M MOTORS</div>
+                <div style="font-size: 11px; color: #666;">Two Wheeler Sales & Service Center</div>
+                <div style="font-size: 11px; color: #666;">Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130</div>
+                <div style="font-size: 11px; color: #666;">Phone: +91 XXXXXXXXXX | Email: info@mmmotors.com</div>
+              </td>
+            </tr>
+          </table>
           
-          <div style="background: #f8f9fa; padding: 12px; margin-bottom: 20px; border-left: 4px solid #333;">
-            <h2 style="margin: 0; font-size: 20px; color: #333;">SPARE PARTS BILL</h2>
-          </div>
+          <!-- Bill Title -->
+          <table style="width: 100%; margin-bottom: 15px;">
+            <tr>
+              <td style="background: #f0f0f0; padding: 10px; border-left: 4px solid #333;">
+                <div style="font-size: 18px; font-weight: bold;">SPARE PARTS BILL</div>
+              </td>
+            </tr>
+          </table>
           
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
-            <div>
-              <div style="margin-bottom: 10px;">
-                <p style="margin: 0; font-size: 10px; color: #666; font-weight: 600;">BILL NUMBER</p>
-                <p style="margin: 3px 0 0 0; font-size: 13px; color: #333; font-weight: 500;">${bill.bill_number}</p>
-              </div>
-              <div style="margin-bottom: 10px;">
-                <p style="margin: 0; font-size: 10px; color: #666; font-weight: 600;">CUSTOMER NAME</p>
-                <p style="margin: 3px 0 0 0; font-size: 13px; color: #333; font-weight: 500;">${bill.customer_data?.name || 'N/A'}</p>
-              </div>
-              <div style="margin-bottom: 10px;">
-                <p style="margin: 0; font-size: 10px; color: #666; font-weight: 600;">MOBILE</p>
-                <p style="margin: 3px 0 0 0; font-size: 13px; color: #333; font-weight: 500;">${bill.customer_data?.mobile || 'N/A'}</p>
-              </div>
-            </div>
-            <div>
-              <div style="margin-bottom: 10px;">
-                <p style="margin: 0; font-size: 10px; color: #666; font-weight: 600;">DATE</p>
-                <p style="margin: 3px 0 0 0; font-size: 13px; color: #333; font-weight: 500;">${new Date(bill.bill_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
-              </div>
-              ${bill.customer_data?.vehicle_name ? `
-              <div style="margin-bottom: 10px;">
-                <p style="margin: 0; font-size: 10px; color: #666; font-weight: 600;">VEHICLE</p>
-                <p style="margin: 3px 0 0 0; font-size: 13px; color: #333; font-weight: 500;">${bill.customer_data.vehicle_name}</p>
-              </div>
-              ` : ''}
-              ${bill.customer_data?.vehicle_number ? `
-              <div style="margin-bottom: 10px;">
-                <p style="margin: 0; font-size: 10px; color: #666; font-weight: 600;">VEHICLE NUMBER</p>
-                <p style="margin: 3px 0 0 0; font-size: 13px; color: #333; font-weight: 500;">${bill.customer_data.vehicle_number}</p>
-              </div>
-              ` : ''}
-            </div>
-          </div>
+          <!-- Bill Details -->
+          <table style="width: 100%; margin-bottom: 20px;">
+            <tr>
+              <td style="width: 50%; vertical-align: top; padding-right: 10px;">
+                <table style="width: 100%;">
+                  <tr>
+                    <td style="font-size: 9px; color: #666; padding: 3px 0;">BILL NUMBER</td>
+                  </tr>
+                  <tr>
+                    <td style="font-size: 12px; font-weight: bold; padding-bottom: 8px;">${bill.bill_number}</td>
+                  </tr>
+                  <tr>
+                    <td style="font-size: 9px; color: #666; padding: 3px 0;">CUSTOMER NAME</td>
+                  </tr>
+                  <tr>
+                    <td style="font-size: 12px; padding-bottom: 8px;">${bill.customer_data?.name || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td style="font-size: 9px; color: #666; padding: 3px 0;">MOBILE</td>
+                  </tr>
+                  <tr>
+                    <td style="font-size: 12px; padding-bottom: 8px;">${bill.customer_data?.mobile || 'N/A'}</td>
+                  </tr>
+                </table>
+              </td>
+              <td style="width: 50%; vertical-align: top; padding-left: 10px;">
+                <table style="width: 100%;">
+                  <tr>
+                    <td style="font-size: 9px; color: #666; padding: 3px 0;">DATE</td>
+                  </tr>
+                  <tr>
+                    <td style="font-size: 12px; padding-bottom: 8px;">${new Date(bill.bill_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                  </tr>
+                  ${bill.customer_data?.vehicle_name ? `
+                  <tr>
+                    <td style="font-size: 9px; color: #666; padding: 3px 0;">VEHICLE</td>
+                  </tr>
+                  <tr>
+                    <td style="font-size: 12px; padding-bottom: 8px;">${bill.customer_data.vehicle_name}</td>
+                  </tr>
+                  ` : ''}
+                  ${bill.customer_data?.vehicle_number ? `
+                  <tr>
+                    <td style="font-size: 9px; color: #666; padding: 3px 0;">VEHICLE NUMBER</td>
+                  </tr>
+                  <tr>
+                    <td style="font-size: 12px; padding-bottom: 8px;">${bill.customer_data.vehicle_number}</td>
+                  </tr>
+                  ` : ''}
+                </table>
+              </td>
+            </tr>
+          </table>
           
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 11px;">
+          <!-- Items Table -->
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 10px;">
             <thead>
               <tr style="background: #333; color: white;">
-                <th style="padding: 10px 6px; text-align: left;">SL</th>
-                <th style="padding: 10px 6px; text-align: left;">DESCRIPTION</th>
-                <th style="padding: 10px 6px; text-align: center;">HSN/SAC</th>
-                <th style="padding: 10px 6px; text-align: center;">QTY</th>
-                <th style="padding: 10px 6px; text-align: center;">UNIT</th>
-                <th style="padding: 10px 6px; text-align: right;">RATE</th>
-                <th style="padding: 10px 6px; text-align: right;">DISC%</th>
-                <th style="padding: 10px 6px; text-align: right;">GST%</th>
-                <th style="padding: 10px 6px; text-align: right;">CGST</th>
-                <th style="padding: 10px 6px; text-align: right;">SGST</th>
-                <th style="padding: 10px 6px; text-align: right;">AMOUNT</th>
+                <th style="padding: 8px 4px; text-align: left; border: 1px solid #333;">SL</th>
+                <th style="padding: 8px 4px; text-align: left; border: 1px solid #333;">DESCRIPTION</th>
+                <th style="padding: 8px 4px; text-align: center; border: 1px solid #333;">HSN</th>
+                <th style="padding: 8px 4px; text-align: center; border: 1px solid #333;">QTY</th>
+                <th style="padding: 8px 4px; text-align: center; border: 1px solid #333;">UNIT</th>
+                <th style="padding: 8px 4px; text-align: right; border: 1px solid #333;">RATE</th>
+                <th style="padding: 8px 4px; text-align: right; border: 1px solid #333;">DISC%</th>
+                <th style="padding: 8px 4px; text-align: right; border: 1px solid #333;">GST%</th>
+                <th style="padding: 8px 4px; text-align: right; border: 1px solid #333;">CGST</th>
+                <th style="padding: 8px 4px; text-align: right; border: 1px solid #333;">SGST</th>
+                <th style="padding: 8px 4px; text-align: right; border: 1px solid #333;">AMOUNT</th>
               </tr>
             </thead>
             <tbody>
               ${bill.items.map((item, index) => `
-                <tr style="border-bottom: 1px solid #ddd; ${index % 2 === 0 ? 'background: #f8f9fa;' : ''}">
-                  <td style="padding: 8px 6px;">${index + 1}</td>
-                  <td style="padding: 8px 6px;">${item.description}</td>
-                  <td style="padding: 8px 6px; text-align: center;">${item.hsn_sac}</td>
-                  <td style="padding: 8px 6px; text-align: center;">${item.quantity}</td>
-                  <td style="padding: 8px 6px; text-align: center;">${item.unit}</td>
-                  <td style="padding: 8px 6px; text-align: right;">₹${item.rate.toFixed(2)}</td>
-                  <td style="padding: 8px 6px; text-align: right;">${item.discount_percent}%</td>
-                  <td style="padding: 8px 6px; text-align: right;">${item.gst_percent}%</td>
-                  <td style="padding: 8px 6px; text-align: right;">₹${item.cgstAmount.toFixed(2)}</td>
-                  <td style="padding: 8px 6px; text-align: right;">₹${item.sgstAmount.toFixed(2)}</td>
-                  <td style="padding: 8px 6px; text-align: right; font-weight: bold;">₹${item.finalAmount.toFixed(2)}</td>
+                <tr style="${index % 2 === 0 ? 'background: #f8f8f8;' : ''}">
+                  <td style="padding: 6px 4px; border: 1px solid #ddd;">${index + 1}</td>
+                  <td style="padding: 6px 4px; border: 1px solid #ddd;">${item.description}</td>
+                  <td style="padding: 6px 4px; text-align: center; border: 1px solid #ddd;">${item.hsn_sac}</td>
+                  <td style="padding: 6px 4px; text-align: center; border: 1px solid #ddd;">${item.quantity}</td>
+                  <td style="padding: 6px 4px; text-align: center; border: 1px solid #ddd;">${item.unit}</td>
+                  <td style="padding: 6px 4px; text-align: right; border: 1px solid #ddd;">₹${item.rate.toFixed(2)}</td>
+                  <td style="padding: 6px 4px; text-align: right; border: 1px solid #ddd;">${item.discount_percent}%</td>
+                  <td style="padding: 6px 4px; text-align: right; border: 1px solid #ddd;">${item.gst_percent}%</td>
+                  <td style="padding: 6px 4px; text-align: right; border: 1px solid #ddd;">₹${item.cgstAmount.toFixed(2)}</td>
+                  <td style="padding: 6px 4px; text-align: right; border: 1px solid #ddd;">₹${item.sgstAmount.toFixed(2)}</td>
+                  <td style="padding: 6px 4px; text-align: right; font-weight: bold; border: 1px solid #ddd;">₹${item.finalAmount.toFixed(2)}</td>
                 </tr>
               `).join('')}
             </tbody>
           </table>
           
-          <div style="margin-top: 25px; border-top: 2px solid #333; padding-top: 15px;">
-            <div style="max-width: 350px; margin-left: auto;">
-              <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 12px;">
-                <div style="color: #666;">Subtotal:</div>
-                <div style="font-weight: 600;">₹${bill.subtotal.toFixed(2)}</div>
-              </div>
-              <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 12px;">
-                <div style="color: #666;">Total Discount:</div>
-                <div style="color: #dc3545; font-weight: 600;">- ₹${bill.total_discount.toFixed(2)}</div>
-              </div>
-              <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 12px;">
-                <div style="color: #666;">Total CGST:</div>
-                <div style="font-weight: 600;">₹${bill.total_cgst.toFixed(2)}</div>
-              </div>
-              <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 12px;">
-                <div style="color: #666;">Total SGST:</div>
-                <div style="font-weight: 600;">₹${bill.total_sgst.toFixed(2)}</div>
-              </div>
-              <div style="display: flex; justify-content: space-between; padding: 6px 0 8px 0; font-size: 12px; border-top: 1px solid #ddd; margin-top: 2px;">
-                <div style="color: #666;">Total Tax:</div>
-                <div style="font-weight: 600;">₹${bill.total_tax.toFixed(2)}</div>
-              </div>
-              <div style="display: flex; justify-content: space-between; background: #333; color: white; padding: 12px 10px; border-radius: 4px; margin-top: 8px; font-size: 14px; font-weight: bold;">
-                <div>TOTAL AMOUNT:</div>
-                <div>₹${bill.total_amount.toFixed(2)}</div>
-              </div>
-            </div>
-          </div>
+          <!-- Totals -->
+          <table style="width: 100%; margin-top: 20px; border-top: 2px solid #333; padding-top: 15px;">
+            <tr>
+              <td style="width: 50%;"></td>
+              <td style="width: 50%;">
+                <table style="width: 100%; font-size: 11px;">
+                  <tr>
+                    <td style="padding: 4px 0; color: #666;">Subtotal:</td>
+                    <td style="padding: 4px 0; text-align: right; font-weight: bold;">₹${bill.subtotal.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 4px 0; color: #666;">Total Discount:</td>
+                    <td style="padding: 4px 0; text-align: right; font-weight: bold; color: #dc3545;">- ₹${bill.total_discount.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 4px 0; color: #666;">Total CGST:</td>
+                    <td style="padding: 4px 0; text-align: right; font-weight: bold;">₹${bill.total_cgst.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 4px 0; color: #666;">Total SGST:</td>
+                    <td style="padding: 4px 0; text-align: right; font-weight: bold;">₹${bill.total_sgst.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 4px 0; color: #666; border-top: 1px solid #ddd;">Total Tax:</td>
+                    <td style="padding: 4px 0; text-align: right; font-weight: bold; border-top: 1px solid #ddd;">₹${bill.total_tax.toFixed(2)}</td>
+                  </tr>
+                  <tr style="background: #333; color: white;">
+                    <td style="padding: 10px; font-weight: bold; font-size: 13px;">TOTAL AMOUNT:</td>
+                    <td style="padding: 10px; text-align: right; font-weight: bold; font-size: 13px;">₹${bill.total_amount.toFixed(2)}</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
           
-          <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; font-size: 10px; color: #666; text-align: center;">
-            <p style="margin: 5px 0;">Thank you for your business!</p>
-            <p style="margin: 5px 0;">This is a computer-generated bill and does not require a signature.</p>
-          </div>
+          <!-- Footer -->
+          <table style="width: 100%; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 15px;">
+            <tr>
+              <td style="text-align: center; font-size: 10px; color: #666;">
+                <div style="margin: 5px 0;">Thank you for your business!</div>
+                <div style="margin: 5px 0;">This is a computer-generated bill and does not require a signature.</div>
+              </td>
+            </tr>
+          </table>
         </div>
       `;
       
-      // Create temporary container
-      const container = document.createElement('div');
-      container.innerHTML = billHTML;
-      container.style.position = 'absolute';
-      container.style.left = '-9999px';
-      container.style.width = '800px';
-      document.body.appendChild(container);
+      // Create element
+      const element = document.createElement('div');
+      element.innerHTML = billHTML;
       
-      // Wait a bit for rendering
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // PDF options
+      // PDF options - simpler settings
       const opt = {
         margin: 10,
         filename: `${bill.bill_number}_${bill.customer_data?.name || 'Customer'}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        image: { type: 'jpeg', quality: 0.95 },
+        html2canvas: { 
+          scale: 2,
+          logging: false,
+          useCORS: true
+        },
+        jsPDF: { 
+          unit: 'mm', 
+          format: 'a4', 
+          orientation: 'portrait' 
+        }
       };
       
-      // Generate PDF
-      await html2pdf().set(opt).from(container).save();
-      
-      // Cleanup
-      document.body.removeChild(container);
+      // Generate PDF directly without adding to DOM
+      await html2pdf().set(opt).from(element).save();
       
       toast.success('Bill PDF downloaded successfully!');
     } catch (error) {
