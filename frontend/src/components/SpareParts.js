@@ -1311,123 +1311,139 @@ const Bills = () => {
           <title>Spare Parts Bill - ${bill.bill_number}</title>
           <style>
             @media print {
-              @page { margin: 0.5cm; }
+              @page { 
+                size: A4;
+                margin: 10mm;
+              }
               body { margin: 0; }
             }
             body { 
               font-family: Arial, sans-serif; 
-              padding: 30px; 
-              max-width: 800px; 
+              padding: 15px; 
+              max-width: 190mm;
               margin: 0 auto; 
               background: white;
               color: #333;
+              font-size: 10px;
             }
             .header { 
               text-align: center; 
-              border-bottom: 3px solid #333; 
-              padding-bottom: 15px; 
-              margin-bottom: 25px; 
+              border-bottom: 2px solid #333; 
+              padding-bottom: 10px; 
+              margin-bottom: 15px; 
             }
             .company-name { 
-              font-size: 28px; 
+              font-size: 20px; 
               font-weight: bold; 
-              margin-bottom: 5px;
+              margin-bottom: 3px;
               color: #333;
             }
             .company-info {
-              font-size: 12px;
+              font-size: 9px;
               color: #666;
-              line-height: 1.6;
+              line-height: 1.4;
             }
             .bill-title {
-              background: #f8f9fa;
-              padding: 12px;
-              margin-bottom: 20px;
-              border-left: 4px solid #333;
+              background: #f0f0f0;
+              padding: 8px;
+              margin-bottom: 12px;
+              border-left: 3px solid #333;
             }
             .bill-title h2 {
               margin: 0;
-              font-size: 20px;
+              font-size: 14px;
               color: #333;
             }
             .details-grid {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 15px;
-              margin-bottom: 25px;
+              display: table;
+              width: 100%;
+              margin-bottom: 12px;
+            }
+            .details-col {
+              display: table-cell;
+              width: 50%;
+              vertical-align: top;
+              padding: 0 5px;
             }
             .detail-item {
-              margin-bottom: 10px;
+              margin-bottom: 6px;
             }
             .detail-label {
-              font-size: 10px;
+              font-size: 8px;
               color: #666;
               font-weight: 600;
-              margin-bottom: 3px;
+              margin-bottom: 2px;
             }
             .detail-value {
-              font-size: 13px;
+              font-size: 10px;
               color: #333;
               font-weight: 500;
             }
-            table { 
+            table.items { 
               width: 100%; 
               border-collapse: collapse; 
-              margin-bottom: 25px; 
-              font-size: 11px;
+              margin-bottom: 15px; 
+              font-size: 8px;
             }
-            thead {
+            table.items thead {
               background: #333;
               color: white;
             }
-            th { 
-              padding: 10px 6px; 
+            table.items th { 
+              padding: 5px 2px;
               text-align: left; 
               font-weight: 600;
+              font-size: 7px;
             }
-            td { 
-              padding: 8px 6px; 
+            table.items td { 
+              padding: 4px 2px;
               border-bottom: 1px solid #ddd;
+              font-size: 8px;
             }
-            tbody tr:nth-child(even) {
-              background: #f8f9fa;
+            table.items tbody tr:nth-child(even) {
+              background: #f8f8f8;
             }
             .text-right { text-align: right; }
             .text-center { text-align: center; }
             .totals-section {
-              margin-top: 25px;
+              margin-top: 15px;
               border-top: 2px solid #333;
-              padding-top: 15px;
+              padding-top: 10px;
             }
-            .totals-grid {
-              max-width: 350px;
+            .totals-table {
+              width: 200px;
               margin-left: auto;
+              font-size: 9px;
             }
-            .total-row {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              padding: 6px 0;
-              font-size: 12px;
+            .totals-table td {
+              padding: 3px 5px;
             }
-            .total-row.final {
+            .total-row-final {
               background: #333;
               color: white;
-              padding: 12px 10px;
-              border-radius: 4px;
-              margin-top: 8px;
-              font-size: 14px;
               font-weight: bold;
+              font-size: 11px;
             }
-            .total-label { color: #666; }
-            .total-value { text-align: right; font-weight: 600; }
             .footer {
-              margin-top: 30px;
-              padding-top: 15px;
+              margin-top: 15px;
+              padding-top: 10px;
               border-top: 1px solid #ddd;
-              font-size: 10px;
+              font-size: 8px;
               color: #666;
               text-align: center;
             }
+            /* Column width optimization for A4 */
+            .col-sl { width: 4%; }
+            .col-desc { width: 20%; }
+            .col-hsn { width: 10%; }
+            .col-qty { width: 5%; }
+            .col-unit { width: 6%; }
+            .col-rate { width: 10%; }
+            .col-disc { width: 7%; }
+            .col-gst { width: 7%; }
+            .col-cgst { width: 10%; }
+            .col-sgst { width: 10%; }
+            .col-amt { width: 11%; }
           </style>
         </head>
         <body>
@@ -1435,7 +1451,7 @@ const Bills = () => {
             <div class="company-name">M M MOTORS</div>
             <div class="company-info">Two Wheeler Sales & Service Center</div>
             <div class="company-info">Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130</div>
-            <div class="company-info">Phone: +91 XXXXXXXXXX | Email: info@mmmotors.com</div>
+            <div class="company-info">Phone: +91 XXXXXXXXXX</div>
           </div>
           
           <div class="bill-title">
@@ -1443,13 +1459,13 @@ const Bills = () => {
           </div>
           
           <div class="details-grid">
-            <div>
+            <div class="details-col">
               <div class="detail-item">
-                <div class="detail-label">BILL NUMBER</div>
+                <div class="detail-label">BILL NO.</div>
                 <div class="detail-value">${bill.bill_number}</div>
               </div>
               <div class="detail-item">
-                <div class="detail-label">CUSTOMER NAME</div>
+                <div class="detail-label">CUSTOMER</div>
                 <div class="detail-value">${bill.customer_data?.name || 'N/A'}</div>
               </div>
               <div class="detail-item">
@@ -1457,7 +1473,7 @@ const Bills = () => {
                 <div class="detail-value">${bill.customer_data?.mobile || 'N/A'}</div>
               </div>
             </div>
-            <div>
+            <div class="details-col">
               <div class="detail-item">
                 <div class="detail-label">DATE</div>
                 <div class="detail-value">${new Date(bill.bill_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
@@ -1470,80 +1486,80 @@ const Bills = () => {
               ` : ''}
               ${bill.customer_data?.vehicle_number ? `
               <div class="detail-item">
-                <div class="detail-label">VEHICLE NUMBER</div>
+                <div class="detail-label">REG. NO.</div>
                 <div class="detail-value">${bill.customer_data.vehicle_number}</div>
               </div>
               ` : ''}
             </div>
           </div>
           
-          <table>
+          <table class="items">
             <thead>
               <tr>
-                <th>SL</th>
-                <th>DESCRIPTION</th>
-                <th class="text-center">HSN/SAC</th>
-                <th class="text-center">QTY</th>
-                <th class="text-center">UNIT</th>
-                <th class="text-right">RATE</th>
-                <th class="text-right">DISC%</th>
-                <th class="text-right">GST%</th>
-                <th class="text-right">CGST</th>
-                <th class="text-right">SGST</th>
-                <th class="text-right">AMOUNT</th>
+                <th class="col-sl">SL</th>
+                <th class="col-desc">DESCRIPTION</th>
+                <th class="col-hsn text-center">HSN</th>
+                <th class="col-qty text-center">QTY</th>
+                <th class="col-unit text-center">UNIT</th>
+                <th class="col-rate text-right">RATE</th>
+                <th class="col-disc text-right">DISC%</th>
+                <th class="col-gst text-right">GST%</th>
+                <th class="col-cgst text-right">CGST</th>
+                <th class="col-sgst text-right">SGST</th>
+                <th class="col-amt text-right">AMOUNT</th>
               </tr>
             </thead>
             <tbody>
               ${bill.items.map((item, index) => `
                 <tr>
-                  <td>${index + 1}</td>
-                  <td>${item.description}</td>
-                  <td class="text-center">${item.hsn_sac}</td>
-                  <td class="text-center">${item.quantity}</td>
-                  <td class="text-center">${item.unit}</td>
-                  <td class="text-right">₹${item.rate.toFixed(2)}</td>
-                  <td class="text-right">${item.discount_percent}%</td>
-                  <td class="text-right">${item.gst_percent}%</td>
-                  <td class="text-right">₹${item.cgstAmount.toFixed(2)}</td>
-                  <td class="text-right">₹${item.sgstAmount.toFixed(2)}</td>
-                  <td class="text-right"><strong>₹${item.finalAmount.toFixed(2)}</strong></td>
+                  <td class="col-sl">${index + 1}</td>
+                  <td class="col-desc">${item.description}</td>
+                  <td class="col-hsn text-center">${item.hsn_sac}</td>
+                  <td class="col-qty text-center">${item.quantity}</td>
+                  <td class="col-unit text-center">${item.unit}</td>
+                  <td class="col-rate text-right">₹${item.rate.toFixed(2)}</td>
+                  <td class="col-disc text-right">${item.discount_percent}%</td>
+                  <td class="col-gst text-right">${item.gst_percent}%</td>
+                  <td class="col-cgst text-right">₹${item.cgstAmount.toFixed(2)}</td>
+                  <td class="col-sgst text-right">₹${item.sgstAmount.toFixed(2)}</td>
+                  <td class="col-amt text-right"><strong>₹${item.finalAmount.toFixed(2)}</strong></td>
                 </tr>
               `).join('')}
             </tbody>
           </table>
           
           <div class="totals-section">
-            <div class="totals-grid">
-              <div class="total-row">
-                <div class="total-label">Subtotal:</div>
-                <div class="total-value">₹${bill.subtotal.toFixed(2)}</div>
-              </div>
-              <div class="total-row">
-                <div class="total-label">Total Discount:</div>
-                <div class="total-value" style="color: #dc3545;">- ₹${bill.total_discount.toFixed(2)}</div>
-              </div>
-              <div class="total-row">
-                <div class="total-label">Total CGST:</div>
-                <div class="total-value">₹${bill.total_cgst.toFixed(2)}</div>
-              </div>
-              <div class="total-row">
-                <div class="total-label">Total SGST:</div>
-                <div class="total-value">₹${bill.total_sgst.toFixed(2)}</div>
-              </div>
-              <div class="total-row" style="border-top: 1px solid #ddd; padding-top: 8px;">
-                <div class="total-label">Total Tax:</div>
-                <div class="total-value">₹${bill.total_tax.toFixed(2)}</div>
-              </div>
-              <div class="total-row final">
-                <div>TOTAL AMOUNT:</div>
-                <div style="text-align: right;">₹${bill.total_amount.toFixed(2)}</div>
-              </div>
-            </div>
+            <table class="totals-table">
+              <tr>
+                <td style="color: #666;">Subtotal:</td>
+                <td class="text-right" style="font-weight: bold;">₹${bill.subtotal.toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td style="color: #666;">Discount:</td>
+                <td class="text-right" style="font-weight: bold; color: #dc3545;">-₹${bill.total_discount.toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td style="color: #666;">CGST:</td>
+                <td class="text-right" style="font-weight: bold;">₹${bill.total_cgst.toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td style="color: #666;">SGST:</td>
+                <td class="text-right" style="font-weight: bold;">₹${bill.total_sgst.toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td style="color: #666; border-top: 1px solid #ddd; padding-top: 5px;">Total Tax:</td>
+                <td class="text-right" style="font-weight: bold; border-top: 1px solid #ddd; padding-top: 5px;">₹${bill.total_tax.toFixed(2)}</td>
+              </tr>
+              <tr class="total-row-final">
+                <td style="padding: 8px 5px;">TOTAL:</td>
+                <td class="text-right" style="padding: 8px 5px;">₹${bill.total_amount.toFixed(2)}</td>
+              </tr>
+            </table>
           </div>
           
           <div class="footer">
-            <p style="margin: 5px 0;">Thank you for your business!</p>
-            <p style="margin: 5px 0;">This is a computer-generated bill and does not require a signature.</p>
+            <p style="margin: 3px 0;">Thank you for your business!</p>
+            <p style="margin: 3px 0;">This is a computer-generated bill.</p>
           </div>
         </body>
       </html>
