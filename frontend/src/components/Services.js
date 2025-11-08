@@ -823,38 +823,6 @@ const ViewRegistration = () => {
     }
   };
 
-  const extractVehicleInfo = (description, vehicleNumber) => {
-    // Try to extract vehicle info from description
-    const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA'];
-    let brand = 'N/A';
-    let model = 'N/A';
-    let year = 'N/A';
-
-    if (description) {
-      // Find brand in description
-      const foundBrand = brands.find(b => description.toUpperCase().includes(b));
-      if (foundBrand) {
-        brand = foundBrand;
-        
-        // Try to extract model (text after brand)
-        const brandIndex = description.toUpperCase().indexOf(foundBrand);
-        const afterBrand = description.substring(brandIndex + foundBrand.length).trim();
-        const modelMatch = afterBrand.match(/^([A-Za-z0-9\s+\-]+)/);
-        if (modelMatch) {
-          model = modelMatch[1].trim();
-        }
-        
-        // Try to extract year (4 digits in parentheses)
-        const yearMatch = description.match(/\((\d{4})\)/);
-        if (yearMatch) {
-          year = yearMatch[1];
-        }
-      }
-    }
-
-    return { brand, model, year };
-  };
-
   const filterRegistrations = () => {
     let filtered = registrations;
 
