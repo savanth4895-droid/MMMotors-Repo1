@@ -1447,7 +1447,7 @@ const Bills = () => {
             <div class="company-name">M M MOTORS</div>
             <div class="company-info">Two Wheeler Sales & Service Center</div>
             <div class="company-info">Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130</div>
-            <div class="company-info">Phone: +91 XXXXXXXXXX</div>
+            <div class="company-info">Phone: +91 7026263123</div>
           </div>
           
           <div class="bill-title">
