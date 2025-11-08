@@ -1103,7 +1103,6 @@ const CreateBill = () => {
                       placeholder="Enter rate"
                       value={itemForm.rate}
                       onChange={(e) => setItemForm({...itemForm, rate: e.target.value})}
-                      required
                     />
                   </div>
 
