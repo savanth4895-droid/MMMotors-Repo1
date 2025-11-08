@@ -1573,149 +1573,125 @@ const Bills = () => {
       // Import html2pdf dynamically
       const { default: html2pdf } = await import('html2pdf.js');
       
-      // Create a simple, PDF-compatible template using tables
+      // Create A4-optimized template using tables
       const billHTML = `
-        <div style="font-family: Arial, sans-serif; padding: 20px; width: 750px;">
+        <div style="font-family: Arial, sans-serif; padding: 15px; width: 190mm; font-size: 10px;">
           <!-- Header -->
-          <table style="width: 100%; margin-bottom: 20px; border-bottom: 3px solid #333;">
+          <table style="width: 100%; margin-bottom: 12px; border-bottom: 2px solid #333;">
             <tr>
-              <td style="text-align: center; padding-bottom: 15px;">
-                <div style="font-size: 24px; font-weight: bold; margin-bottom: 5px;">M M MOTORS</div>
-                <div style="font-size: 11px; color: #666;">Two Wheeler Sales & Service Center</div>
-                <div style="font-size: 11px; color: #666;">Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130</div>
-                <div style="font-size: 11px; color: #666;">Phone: +91 XXXXXXXXXX | Email: info@mmmotors.com</div>
+              <td style="text-align: center; padding-bottom: 8px;">
+                <div style="font-size: 18px; font-weight: bold; margin-bottom: 3px;">M M MOTORS</div>
+                <div style="font-size: 9px; color: #666;">Two Wheeler Sales & Service Center</div>
+                <div style="font-size: 9px; color: #666;">Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130</div>
+                <div style="font-size: 9px; color: #666;">Phone: +91 XXXXXXXXXX</div>
               </td>
             </tr>
           </table>
           
           <!-- Bill Title -->
-          <table style="width: 100%; margin-bottom: 15px;">
+          <table style="width: 100%; margin-bottom: 10px;">
             <tr>
-              <td style="background: #f0f0f0; padding: 10px; border-left: 4px solid #333;">
-                <div style="font-size: 18px; font-weight: bold;">SPARE PARTS BILL</div>
+              <td style="background: #f0f0f0; padding: 6px; border-left: 3px solid #333;">
+                <div style="font-size: 13px; font-weight: bold;">SPARE PARTS BILL</div>
               </td>
             </tr>
           </table>
           
           <!-- Bill Details -->
-          <table style="width: 100%; margin-bottom: 20px;">
+          <table style="width: 100%; margin-bottom: 12px;">
             <tr>
-              <td style="width: 50%; vertical-align: top; padding-right: 10px;">
+              <td style="width: 50%; vertical-align: top; padding-right: 5px;">
                 <table style="width: 100%;">
-                  <tr>
-                    <td style="font-size: 9px; color: #666; padding: 3px 0;">BILL NUMBER</td>
-                  </tr>
-                  <tr>
-                    <td style="font-size: 12px; font-weight: bold; padding-bottom: 8px;">${bill.bill_number}</td>
-                  </tr>
-                  <tr>
-                    <td style="font-size: 9px; color: #666; padding: 3px 0;">CUSTOMER NAME</td>
-                  </tr>
-                  <tr>
-                    <td style="font-size: 12px; padding-bottom: 8px;">${bill.customer_data?.name || 'N/A'}</td>
-                  </tr>
-                  <tr>
-                    <td style="font-size: 9px; color: #666; padding: 3px 0;">MOBILE</td>
-                  </tr>
-                  <tr>
-                    <td style="font-size: 12px; padding-bottom: 8px;">${bill.customer_data?.mobile || 'N/A'}</td>
-                  </tr>
+                  <tr><td style="font-size: 7px; color: #666; padding: 2px 0;">BILL NO.</td></tr>
+                  <tr><td style="font-size: 9px; font-weight: bold; padding-bottom: 5px;">${bill.bill_number}</td></tr>
+                  <tr><td style="font-size: 7px; color: #666; padding: 2px 0;">CUSTOMER</td></tr>
+                  <tr><td style="font-size: 9px; padding-bottom: 5px;">${bill.customer_data?.name || 'N/A'}</td></tr>
+                  <tr><td style="font-size: 7px; color: #666; padding: 2px 0;">MOBILE</td></tr>
+                  <tr><td style="font-size: 9px; padding-bottom: 5px;">${bill.customer_data?.mobile || 'N/A'}</td></tr>
                 </table>
               </td>
-              <td style="width: 50%; vertical-align: top; padding-left: 10px;">
+              <td style="width: 50%; vertical-align: top; padding-left: 5px;">
                 <table style="width: 100%;">
-                  <tr>
-                    <td style="font-size: 9px; color: #666; padding: 3px 0;">DATE</td>
-                  </tr>
-                  <tr>
-                    <td style="font-size: 12px; padding-bottom: 8px;">${new Date(bill.bill_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                  </tr>
+                  <tr><td style="font-size: 7px; color: #666; padding: 2px 0;">DATE</td></tr>
+                  <tr><td style="font-size: 9px; padding-bottom: 5px;">${new Date(bill.bill_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td></tr>
                   ${bill.customer_data?.vehicle_name ? `
-                  <tr>
-                    <td style="font-size: 9px; color: #666; padding: 3px 0;">VEHICLE</td>
-                  </tr>
-                  <tr>
-                    <td style="font-size: 12px; padding-bottom: 8px;">${bill.customer_data.vehicle_name}</td>
-                  </tr>
+                  <tr><td style="font-size: 7px; color: #666; padding: 2px 0;">VEHICLE</td></tr>
+                  <tr><td style="font-size: 9px; padding-bottom: 5px;">${bill.customer_data.vehicle_name}</td></tr>
                   ` : ''}
                   ${bill.customer_data?.vehicle_number ? `
-                  <tr>
-                    <td style="font-size: 9px; color: #666; padding: 3px 0;">VEHICLE NUMBER</td>
-                  </tr>
-                  <tr>
-                    <td style="font-size: 12px; padding-bottom: 8px;">${bill.customer_data.vehicle_number}</td>
-                  </tr>
+                  <tr><td style="font-size: 7px; color: #666; padding: 2px 0;">REG. NO.</td></tr>
+                  <tr><td style="font-size: 9px; padding-bottom: 5px;">${bill.customer_data.vehicle_number}</td></tr>
                   ` : ''}
                 </table>
               </td>
             </tr>
           </table>
           
-          <!-- Items Table -->
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 10px;">
+          <!-- Items Table - Optimized for A4 -->
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 7px;">
             <thead>
               <tr style="background: #333; color: white;">
-                <th style="padding: 8px 4px; text-align: left; border: 1px solid #333;">SL</th>
-                <th style="padding: 8px 4px; text-align: left; border: 1px solid #333;">DESCRIPTION</th>
-                <th style="padding: 8px 4px; text-align: center; border: 1px solid #333;">HSN</th>
-                <th style="padding: 8px 4px; text-align: center; border: 1px solid #333;">QTY</th>
-                <th style="padding: 8px 4px; text-align: center; border: 1px solid #333;">UNIT</th>
-                <th style="padding: 8px 4px; text-align: right; border: 1px solid #333;">RATE</th>
-                <th style="padding: 8px 4px; text-align: right; border: 1px solid #333;">DISC%</th>
-                <th style="padding: 8px 4px; text-align: right; border: 1px solid #333;">GST%</th>
-                <th style="padding: 8px 4px; text-align: right; border: 1px solid #333;">CGST</th>
-                <th style="padding: 8px 4px; text-align: right; border: 1px solid #333;">SGST</th>
-                <th style="padding: 8px 4px; text-align: right; border: 1px solid #333;">AMOUNT</th>
+                <th style="padding: 5px 2px; text-align: left; border: 1px solid #333; width: 4%;">SL</th>
+                <th style="padding: 5px 2px; text-align: left; border: 1px solid #333; width: 20%;">DESCRIPTION</th>
+                <th style="padding: 5px 2px; text-align: center; border: 1px solid #333; width: 10%;">HSN</th>
+                <th style="padding: 5px 2px; text-align: center; border: 1px solid #333; width: 5%;">QTY</th>
+                <th style="padding: 5px 2px; text-align: center; border: 1px solid #333; width: 6%;">UNIT</th>
+                <th style="padding: 5px 2px; text-align: right; border: 1px solid #333; width: 10%;">RATE</th>
+                <th style="padding: 5px 2px; text-align: right; border: 1px solid #333; width: 7%;">DISC%</th>
+                <th style="padding: 5px 2px; text-align: right; border: 1px solid #333; width: 7%;">GST%</th>
+                <th style="padding: 5px 2px; text-align: right; border: 1px solid #333; width: 10%;">CGST</th>
+                <th style="padding: 5px 2px; text-align: right; border: 1px solid #333; width: 10%;">SGST</th>
+                <th style="padding: 5px 2px; text-align: right; border: 1px solid #333; width: 11%;">AMOUNT</th>
               </tr>
             </thead>
             <tbody>
               ${bill.items.map((item, index) => `
                 <tr style="${index % 2 === 0 ? 'background: #f8f8f8;' : ''}">
-                  <td style="padding: 6px 4px; border: 1px solid #ddd;">${index + 1}</td>
-                  <td style="padding: 6px 4px; border: 1px solid #ddd;">${item.description}</td>
-                  <td style="padding: 6px 4px; text-align: center; border: 1px solid #ddd;">${item.hsn_sac}</td>
-                  <td style="padding: 6px 4px; text-align: center; border: 1px solid #ddd;">${item.quantity}</td>
-                  <td style="padding: 6px 4px; text-align: center; border: 1px solid #ddd;">${item.unit}</td>
-                  <td style="padding: 6px 4px; text-align: right; border: 1px solid #ddd;">₹${item.rate.toFixed(2)}</td>
-                  <td style="padding: 6px 4px; text-align: right; border: 1px solid #ddd;">${item.discount_percent}%</td>
-                  <td style="padding: 6px 4px; text-align: right; border: 1px solid #ddd;">${item.gst_percent}%</td>
-                  <td style="padding: 6px 4px; text-align: right; border: 1px solid #ddd;">₹${item.cgstAmount.toFixed(2)}</td>
-                  <td style="padding: 6px 4px; text-align: right; border: 1px solid #ddd;">₹${item.sgstAmount.toFixed(2)}</td>
-                  <td style="padding: 6px 4px; text-align: right; font-weight: bold; border: 1px solid #ddd;">₹${item.finalAmount.toFixed(2)}</td>
+                  <td style="padding: 4px 2px; border: 1px solid #ddd;">${index + 1}</td>
+                  <td style="padding: 4px 2px; border: 1px solid #ddd; font-size: 7px;">${item.description}</td>
+                  <td style="padding: 4px 2px; text-align: center; border: 1px solid #ddd;">${item.hsn_sac}</td>
+                  <td style="padding: 4px 2px; text-align: center; border: 1px solid #ddd;">${item.quantity}</td>
+                  <td style="padding: 4px 2px; text-align: center; border: 1px solid #ddd;">${item.unit}</td>
+                  <td style="padding: 4px 2px; text-align: right; border: 1px solid #ddd;">₹${item.rate.toFixed(2)}</td>
+                  <td style="padding: 4px 2px; text-align: right; border: 1px solid #ddd;">${item.discount_percent}%</td>
+                  <td style="padding: 4px 2px; text-align: right; border: 1px solid #ddd;">${item.gst_percent}%</td>
+                  <td style="padding: 4px 2px; text-align: right; border: 1px solid #ddd;">₹${item.cgstAmount.toFixed(2)}</td>
+                  <td style="padding: 4px 2px; text-align: right; border: 1px solid #ddd;">₹${item.sgstAmount.toFixed(2)}</td>
+                  <td style="padding: 4px 2px; text-align: right; font-weight: bold; border: 1px solid #ddd;">₹${item.finalAmount.toFixed(2)}</td>
                 </tr>
               `).join('')}
             </tbody>
           </table>
           
           <!-- Totals -->
-          <table style="width: 100%; margin-top: 20px; border-top: 2px solid #333; padding-top: 15px;">
+          <table style="width: 100%; margin-top: 12px; border-top: 2px solid #333; padding-top: 8px;">
             <tr>
               <td style="width: 50%;"></td>
               <td style="width: 50%;">
-                <table style="width: 100%; font-size: 11px;">
+                <table style="width: 100%; font-size: 8px;">
                   <tr>
-                    <td style="padding: 4px 0; color: #666;">Subtotal:</td>
-                    <td style="padding: 4px 0; text-align: right; font-weight: bold;">₹${bill.subtotal.toFixed(2)}</td>
+                    <td style="padding: 2px 0; color: #666;">Subtotal:</td>
+                    <td style="padding: 2px 0; text-align: right; font-weight: bold;">₹${bill.subtotal.toFixed(2)}</td>
                   </tr>
                   <tr>
-                    <td style="padding: 4px 0; color: #666;">Total Discount:</td>
-                    <td style="padding: 4px 0; text-align: right; font-weight: bold; color: #dc3545;">- ₹${bill.total_discount.toFixed(2)}</td>
+                    <td style="padding: 2px 0; color: #666;">Discount:</td>
+                    <td style="padding: 2px 0; text-align: right; font-weight: bold; color: #dc3545;">-₹${bill.total_discount.toFixed(2)}</td>
                   </tr>
                   <tr>
-                    <td style="padding: 4px 0; color: #666;">Total CGST:</td>
-                    <td style="padding: 4px 0; text-align: right; font-weight: bold;">₹${bill.total_cgst.toFixed(2)}</td>
+                    <td style="padding: 2px 0; color: #666;">CGST:</td>
+                    <td style="padding: 2px 0; text-align: right; font-weight: bold;">₹${bill.total_cgst.toFixed(2)}</td>
                   </tr>
                   <tr>
-                    <td style="padding: 4px 0; color: #666;">Total SGST:</td>
-                    <td style="padding: 4px 0; text-align: right; font-weight: bold;">₹${bill.total_sgst.toFixed(2)}</td>
+                    <td style="padding: 2px 0; color: #666;">SGST:</td>
+                    <td style="padding: 2px 0; text-align: right; font-weight: bold;">₹${bill.total_sgst.toFixed(2)}</td>
                   </tr>
                   <tr>
-                    <td style="padding: 4px 0; color: #666; border-top: 1px solid #ddd;">Total Tax:</td>
-                    <td style="padding: 4px 0; text-align: right; font-weight: bold; border-top: 1px solid #ddd;">₹${bill.total_tax.toFixed(2)}</td>
+                    <td style="padding: 2px 0; color: #666; border-top: 1px solid #ddd; padding-top: 3px;">Total Tax:</td>
+                    <td style="padding: 2px 0; text-align: right; font-weight: bold; border-top: 1px solid #ddd; padding-top: 3px;">₹${bill.total_tax.toFixed(2)}</td>
                   </tr>
                   <tr style="background: #333; color: white;">
-                    <td style="padding: 10px; font-weight: bold; font-size: 13px;">TOTAL AMOUNT:</td>
-                    <td style="padding: 10px; text-align: right; font-weight: bold; font-size: 13px;">₹${bill.total_amount.toFixed(2)}</td>
+                    <td style="padding: 6px 3px; font-weight: bold; font-size: 10px;">TOTAL:</td>
+                    <td style="padding: 6px 3px; text-align: right; font-weight: bold; font-size: 10px;">₹${bill.total_amount.toFixed(2)}</td>
                   </tr>
                 </table>
               </td>
@@ -1723,11 +1699,11 @@ const Bills = () => {
           </table>
           
           <!-- Footer -->
-          <table style="width: 100%; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 15px;">
+          <table style="width: 100%; margin-top: 15px; border-top: 1px solid #ddd; padding-top: 8px;">
             <tr>
-              <td style="text-align: center; font-size: 10px; color: #666;">
-                <div style="margin: 5px 0;">Thank you for your business!</div>
-                <div style="margin: 5px 0;">This is a computer-generated bill and does not require a signature.</div>
+              <td style="text-align: center; font-size: 8px; color: #666;">
+                <div style="margin: 2px 0;">Thank you for your business!</div>
+                <div style="margin: 2px 0;">This is a computer-generated bill.</div>
               </td>
             </tr>
           </table>
@@ -1738,7 +1714,7 @@ const Bills = () => {
       const element = document.createElement('div');
       element.innerHTML = billHTML;
       
-      // PDF options - simpler settings
+      // PDF options optimized for A4
       const opt = {
         margin: 10,
         filename: `${bill.bill_number}_${bill.customer_data?.name || 'Customer'}.pdf`,
@@ -1746,7 +1722,8 @@ const Bills = () => {
         html2canvas: { 
           scale: 2,
           logging: false,
-          useCORS: true
+          useCORS: true,
+          width: 720  // Approximately A4 width
         },
         jsPDF: { 
           unit: 'mm', 
