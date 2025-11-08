@@ -1710,6 +1710,7 @@ async def import_services_data(data: List[Dict], import_job: ImportJob, user_id:
     """Import services data with cross-referencing support"""
     successful = 0
     failed = 0
+    skipped = 0
     errors = []
     incomplete_records = []
     import_stats = {
@@ -1725,6 +1726,8 @@ async def import_services_data(data: List[Dict], import_job: ImportJob, user_id:
             customer_name = (row.get('customer_name') or '').strip()
             vehicle_number = (row.get('vehicle_number') or '').strip()
             chassis_number = (row.get('chassis_number') or '').strip()
+            service_type = (row.get('service_type') or 'general_service').strip()
+            amount = float(row.get('amount', 0) or 0)
             
             if not customer_mobile and not vehicle_number and not chassis_number:
                 raise ValueError("Either customer_mobile or vehicle identifiers (vehicle_number/chassis_number) must be provided")
