@@ -1504,6 +1504,7 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
     """Import vehicles data with cross-referencing support"""
     successful = 0
     failed = 0
+    skipped = 0
     errors = []
     incomplete_records = []
     import_stats = {
@@ -1540,13 +1541,8 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
             if chassis_number and chassis_number != 'Unknown Chassis':
                 existing_vehicle = await db.vehicles.find_one({"chassis_number": chassis_number})
                 if existing_vehicle:
-                    # Skip duplicate vehicle
-                    failed += 1
-                    errors.append({
-                        "row": idx + 2,
-                        "data": row,
-                        "error": f"Duplicate vehicle with chassis number '{chassis_number}' already exists"
-                    })
+                    # Skip duplicate vehicle (don't count as error)
+                    skipped += 1
                     continue
             
             vehicle_data = VehicleCreate(
