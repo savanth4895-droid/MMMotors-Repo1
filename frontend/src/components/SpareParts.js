@@ -1392,49 +1392,164 @@ const Bills = () => {
     printWindow.print();
   };
 
-  const handleDownloadBill = (bill) => {
-    // Generate CSV content for the bill
-    const csvContent = [
-      ['Spare Parts Bill - ' + bill.bill_number],
-      ['Date: ' + new Date(bill.bill_date).toLocaleDateString('en-IN')],
-      ['Customer: ' + (bill.customer_data?.name || 'N/A')],
-      ['Mobile: ' + (bill.customer_data?.mobile || 'N/A')],
-      bill.customer_data?.vehicle_name ? ['Vehicle: ' + bill.customer_data.vehicle_name + ' ' + (bill.customer_data.vehicle_number || '')] : [],
-      [''],
-      ['Sl. No.', 'Description', 'HSN/SAC', 'Qty', 'Unit', 'Rate', 'Disc%', 'GST%', 'CGST', 'SGST', 'Amount'],
-      ...bill.items.map((item, index) => [
-        index + 1,
-        item.description,
-        item.hsn_sac,
-        item.quantity,
-        item.unit,
-        '₹' + item.rate.toFixed(2),
-        item.discount_percent + '%',
-        item.gst_percent + '%',
-        '₹' + item.cgstAmount.toFixed(2),
-        '₹' + item.sgstAmount.toFixed(2),
-        '₹' + item.finalAmount.toFixed(2)
-      ]),
-      [''],
-      ['Subtotal', '', '', '', '', '', '', '', '', '', '₹' + bill.subtotal.toFixed(2)],
-      ['Total Discount', '', '', '', '', '', '', '', '', '', '₹' + bill.total_discount.toFixed(2)],
-      ['Total CGST', '', '', '', '', '', '', '', '', '', '₹' + bill.total_cgst.toFixed(2)],
-      ['Total SGST', '', '', '', '', '', '', '', '', '', '₹' + bill.total_sgst.toFixed(2)],
-      ['Total Tax', '', '', '', '', '', '', '', '', '', '₹' + bill.total_tax.toFixed(2)],
-      ['Final Amount', '', '', '', '', '', '', '', '', '', '₹' + bill.total_amount.toFixed(2)]
-    ].filter(row => row.length > 0).map(row => row.join(',')).join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${bill.bill_number}_${bill.customer_data?.name || 'Customer'}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-    
-    toast.success('Bill downloaded successfully!');
+  const handleDownloadBill = async (bill) => {
+    try {
+      // Import html2pdf dynamically
+      const { default: html2pdf } = await import('html2pdf.js');
+      
+      // Create a professional bill template
+      const billTemplate = `
+        <div style="font-family: 'Arial', sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; background: white;">
+          <!-- Header Section -->
+          <div style="text-align: center; border-bottom: 3px solid #333; padding-bottom: 20px; margin-bottom: 30px;">
+            <h1 style="color: #333; font-size: 32px; margin: 0 0 5px 0; font-weight: bold;">M M MOTORS</h1>
+            <p style="color: #666; margin: 5px 0; font-size: 14px;">Two Wheeler Sales & Service Center</p>
+            <p style="color: #666; margin: 5px 0; font-size: 12px;">Phone: +91 XXXXXXXXXX | Email: info@mmmotors.com</p>
+            <p style="color: #666; margin: 5px 0; font-size: 12px;">Address: Your Address Here</p>
+          </div>
+          
+          <!-- Bill Title -->
+          <div style="background: #f8f9fa; padding: 15px; margin-bottom: 25px; border-left: 4px solid #333;">
+            <h2 style="margin: 0; color: #333; font-size: 24px;">SPARE PARTS BILL</h2>
+          </div>
+          
+          <!-- Bill Details Grid -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+            <div>
+              <div style="margin-bottom: 15px;">
+                <p style="margin: 0; font-size: 11px; color: #666; font-weight: 600;">BILL NUMBER</p>
+                <p style="margin: 5px 0 0 0; font-size: 14px; color: #333; font-weight: bold;">${bill.bill_number}</p>
+              </div>
+              <div style="margin-bottom: 15px;">
+                <p style="margin: 0; font-size: 11px; color: #666; font-weight: 600;">CUSTOMER NAME</p>
+                <p style="margin: 5px 0 0 0; font-size: 14px; color: #333;">${bill.customer_data?.name || 'N/A'}</p>
+              </div>
+              <div style="margin-bottom: 15px;">
+                <p style="margin: 0; font-size: 11px; color: #666; font-weight: 600;">MOBILE</p>
+                <p style="margin: 5px 0 0 0; font-size: 14px; color: #333;">${bill.customer_data?.mobile || 'N/A'}</p>
+              </div>
+            </div>
+            <div>
+              <div style="margin-bottom: 15px;">
+                <p style="margin: 0; font-size: 11px; color: #666; font-weight: 600;">DATE</p>
+                <p style="margin: 5px 0 0 0; font-size: 14px; color: #333;">${new Date(bill.bill_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+              </div>
+              ${bill.customer_data?.vehicle_name ? `
+              <div style="margin-bottom: 15px;">
+                <p style="margin: 0; font-size: 11px; color: #666; font-weight: 600;">VEHICLE</p>
+                <p style="margin: 5px 0 0 0; font-size: 14px; color: #333;">${bill.customer_data.vehicle_name}</p>
+              </div>
+              ` : ''}
+              ${bill.customer_data?.vehicle_number ? `
+              <div style="margin-bottom: 15px;">
+                <p style="margin: 0; font-size: 11px; color: #666; font-weight: 600;">VEHICLE NUMBER</p>
+                <p style="margin: 5px 0 0 0; font-size: 14px; color: #333;">${bill.customer_data.vehicle_number}</p>
+              </div>
+              ` : ''}
+            </div>
+          </div>
+          
+          <!-- Items Table -->
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 11px;">
+            <thead>
+              <tr style="background: #333; color: white;">
+                <th style="padding: 12px 8px; text-align: left; font-weight: 600;">SL</th>
+                <th style="padding: 12px 8px; text-align: left; font-weight: 600;">DESCRIPTION</th>
+                <th style="padding: 12px 8px; text-align: center; font-weight: 600;">HSN/SAC</th>
+                <th style="padding: 12px 8px; text-align: center; font-weight: 600;">QTY</th>
+                <th style="padding: 12px 8px; text-align: center; font-weight: 600;">UNIT</th>
+                <th style="padding: 12px 8px; text-align: right; font-weight: 600;">RATE</th>
+                <th style="padding: 12px 8px; text-align: right; font-weight: 600;">DISC%</th>
+                <th style="padding: 12px 8px; text-align: right; font-weight: 600;">GST%</th>
+                <th style="padding: 12px 8px; text-align: right; font-weight: 600;">CGST</th>
+                <th style="padding: 12px 8px; text-align: right; font-weight: 600;">SGST</th>
+                <th style="padding: 12px 8px; text-align: right; font-weight: 600;">AMOUNT</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${bill.items.map((item, index) => `
+                <tr style="border-bottom: 1px solid #ddd; ${index % 2 === 0 ? 'background: #f8f9fa;' : ''}">
+                  <td style="padding: 10px 8px;">${index + 1}</td>
+                  <td style="padding: 10px 8px;">${item.description}</td>
+                  <td style="padding: 10px 8px; text-align: center;">${item.hsn_sac}</td>
+                  <td style="padding: 10px 8px; text-align: center;">${item.quantity}</td>
+                  <td style="padding: 10px 8px; text-align: center;">${item.unit}</td>
+                  <td style="padding: 10px 8px; text-align: right;">₹${item.rate.toFixed(2)}</td>
+                  <td style="padding: 10px 8px; text-align: right;">${item.discount_percent}%</td>
+                  <td style="padding: 10px 8px; text-align: right;">${item.gst_percent}%</td>
+                  <td style="padding: 10px 8px; text-align: right;">₹${item.cgstAmount.toFixed(2)}</td>
+                  <td style="padding: 10px 8px; text-align: right;">₹${item.sgstAmount.toFixed(2)}</td>
+                  <td style="padding: 10px 8px; text-align: right; font-weight: bold;">₹${item.finalAmount.toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          
+          <!-- Totals Section -->
+          <div style="margin-top: 30px; border-top: 2px solid #333; padding-top: 20px;">
+            <div style="text-align: right; max-width: 400px; margin-left: auto;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; padding: 8px 0; font-size: 12px;">
+                <div style="text-align: left; color: #666;">Subtotal:</div>
+                <div style="text-align: right; font-weight: 600;">₹${bill.subtotal.toFixed(2)}</div>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; padding: 8px 0; font-size: 12px;">
+                <div style="text-align: left; color: #666;">Total Discount:</div>
+                <div style="text-align: right; color: #dc3545; font-weight: 600;">- ₹${bill.total_discount.toFixed(2)}</div>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; padding: 8px 0; font-size: 12px;">
+                <div style="text-align: left; color: #666;">Total CGST:</div>
+                <div style="text-align: right; font-weight: 600;">₹${bill.total_cgst.toFixed(2)}</div>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; padding: 8px 0; font-size: 12px;">
+                <div style="text-align: left; color: #666;">Total SGST:</div>
+                <div style="text-align: right; font-weight: 600;">₹${bill.total_sgst.toFixed(2)}</div>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; padding: 8px 0; border-top: 1px solid #ddd; font-size: 12px;">
+                <div style="text-align: left; color: #666;">Total Tax:</div>
+                <div style="text-align: right; font-weight: 600;">₹${bill.total_tax.toFixed(2)}</div>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; background: #333; color: white; border-radius: 5px; font-size: 16px; margin-top: 10px;">
+                <div style="text-align: left; font-weight: bold;">TOTAL AMOUNT:</div>
+                <div style="text-align: right; font-weight: bold;">₹${bill.total_amount.toFixed(2)}</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Footer -->
+          <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 11px; color: #666; text-align: center;">
+            <p style="margin: 5px 0;">Thank you for your business!</p>
+            <p style="margin: 5px 0;">This is a computer-generated bill and does not require a signature.</p>
+          </div>
+        </div>
+      `;
+      
+      // Create a temporary div to render the template
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = billTemplate;
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      document.body.appendChild(tempDiv);
+      
+      // PDF generation options
+      const opt = {
+        margin: [10, 10, 10, 10],
+        filename: `${bill.bill_number}_${bill.customer_data?.name || 'Customer'}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      
+      // Generate and download PDF
+      await html2pdf().set(opt).from(tempDiv).save();
+      
+      // Clean up
+      document.body.removeChild(tempDiv);
+      
+      toast.success('Bill PDF downloaded successfully!');
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast.error('Failed to generate PDF');
+    }
   };
 
   if (loading) {
