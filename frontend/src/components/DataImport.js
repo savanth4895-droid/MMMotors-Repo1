@@ -580,7 +580,7 @@ const DataImport = () => {
                 </div>
 
                 {/* Statistics */}
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-5 gap-4">
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <div className="text-2xl font-bold text-blue-600">{selectedJob.total_records}</div>
                     <div className="text-sm text-blue-800">Total Records</div>
@@ -588,6 +588,10 @@ const DataImport = () => {
                   <div className="text-center p-4 bg-green-50 rounded-lg">
                     <div className="text-2xl font-bold text-green-600">{selectedJob.successful_records}</div>
                     <div className="text-sm text-green-800">Successful</div>
+                  </div>
+                  <div className="text-center p-4 bg-orange-50 rounded-lg">
+                    <div className="text-2xl font-bold text-orange-600">{selectedJob.skipped_records || 0}</div>
+                    <div className="text-sm text-orange-800">Skipped</div>
                   </div>
                   <div className="text-center p-4 bg-red-50 rounded-lg">
                     <div className="text-2xl font-bold text-red-600">{selectedJob.failed_records}</div>
@@ -598,6 +602,20 @@ const DataImport = () => {
                     <div className="text-sm text-gray-800">Processed</div>
                   </div>
                 </div>
+
+                {/* Skipped Records Info */}
+                {selectedJob.skipped_records > 0 && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                    <h4 className="font-semibold text-orange-800 mb-2 flex items-center gap-2">
+                      <AlertCircle className="w-5 h-5" />
+                      Duplicate Records Skipped ({selectedJob.skipped_records})
+                    </h4>
+                    <p className="text-sm text-orange-700">
+                      {selectedJob.skipped_records} record(s) were skipped because they already exist in the database. 
+                      Duplicates are detected by unique identifiers (mobile for customers, chassis_number for vehicles, part_number for spare parts).
+                    </p>
+                  </div>
+                )}
 
                 {/* Cross-Reference Statistics */}
                 {selectedJob.cross_reference_stats && Object.keys(selectedJob.cross_reference_stats).length > 0 && (
