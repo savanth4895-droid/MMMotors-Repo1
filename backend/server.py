@@ -1731,11 +1731,18 @@ async def import_services_data(data: List[Dict], import_job: ImportJob, user_id:
             
             # CROSS-REFERENCE: Find vehicle by identifiers
             vehicle_id = None
+            vehicle_brand = None
+            vehicle_model = None
+            vehicle_year = None
+            
             if vehicle_number or chassis_number:
                 vehicle = await find_vehicle_by_identifiers(vehicle_number, chassis_number)
                 if vehicle:
                     vehicle_id = vehicle.get('id')
                     vehicle_number = vehicle.get('vehicle_number', vehicle_number)
+                    vehicle_brand = vehicle.get('brand')
+                    vehicle_model = vehicle.get('model')
+                    vehicle_year = vehicle.get('year')
                     import_stats['vehicles_linked'] += 1
                     
                     # If no customer was found by mobile, try to get from vehicle
@@ -1772,6 +1779,15 @@ async def import_services_data(data: List[Dict], import_job: ImportJob, user_id:
             service_dict = service_data.dict()
             service_dict['job_card_number'] = job_card_number
             service_dict['created_by'] = user_id
+            
+            # Add vehicle details for imported services (so they can be displayed even if vehicle is deleted)
+            if vehicle_brand:
+                service_dict['vehicle_brand'] = vehicle_brand
+            if vehicle_model:
+                service_dict['vehicle_model'] = vehicle_model
+            if vehicle_year:
+                service_dict['vehicle_year'] = vehicle_year
+            
             service = Service(**service_dict)
             
             await db.services.insert_one(service.dict())
