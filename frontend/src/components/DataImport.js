@@ -86,8 +86,8 @@ const DataImport = () => {
       value: 'services', 
       label: 'Services', 
       icon: Wrench, 
-      description: 'Import service records. Auto-links to customers and vehicles using mobile number or chassis number.',
-      fields: ['customer_name', 'customer_mobile', 'vehicle_number', 'chassis_number', 'service_type', 'description', 'amount']
+      description: 'Import service records. Auto-links to customers and vehicles using mobile number or chassis number. Manually specify vehicle details if not in inventory.',
+      fields: ['customer_name', 'customer_mobile', 'vehicle_number', 'chassis_number', 'vehicle_brand', 'vehicle_model', 'vehicle_year', 'service_type', 'description', 'amount']
     }
   ];
 
