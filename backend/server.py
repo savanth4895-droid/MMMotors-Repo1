@@ -1836,7 +1836,8 @@ async def import_services_data(data: List[Dict], import_job: ImportJob, user_id:
     
     import_job.successful_records = successful
     import_job.failed_records = failed
-    import_job.processed_records = successful + failed
+    import_job.skipped_records = skipped
+    import_job.processed_records = successful + failed + skipped
     import_job.errors = errors
     import_job.cross_reference_stats = import_stats
     import_job.incomplete_records = incomplete_records
@@ -1844,10 +1845,11 @@ async def import_services_data(data: List[Dict], import_job: ImportJob, user_id:
     return ImportResult(
         job_id=import_job.id,
         status="completed",
-        message=f"Import completed: {successful} successful, {failed} failed. Cross-referenced: {import_stats['customers_linked']} customers linked, {import_stats['customers_created']} customers created, {import_stats['vehicles_linked']} vehicles linked.",
+        message=f"Import completed: {successful} successful, {failed} failed, {skipped} skipped (duplicates). Cross-referenced: {import_stats['customers_linked']} customers linked, {import_stats['customers_created']} customers created, {import_stats['vehicles_linked']} vehicles linked.",
         total_records=len(data),
         successful_records=successful,
         failed_records=failed,
+        skipped_records=skipped,
         errors=errors,
         cross_reference_stats=import_stats,
         incomplete_records=incomplete_records
