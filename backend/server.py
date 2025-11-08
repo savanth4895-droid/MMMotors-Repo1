@@ -1263,6 +1263,7 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
     """Import customers data with vehicle and insurance information and cross-referencing"""
     successful = 0
     failed = 0
+    skipped = 0
     errors = []
     incomplete_records = []
     import_stats = {
@@ -1286,6 +1287,14 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
             address = row.get('address', '').strip()
             if not address:
                 address = "Address not provided"
+            
+            # Check for duplicate customer before processing
+            if phone_number and phone_number != "0000000000":
+                existing_customer = await db.customers.find_one({"mobile": phone_number})
+                if existing_customer:
+                    # Skip duplicate customer (don't count as error)
+                    skipped += 1
+                    continue
             
             # Create basic customer record
             customer_data = CustomerCreate(
