@@ -781,31 +781,30 @@ const ViewRegistration = () => {
 
   const fetchAllData = async () => {
     try {
-      const [servicesRes, customersRes] = await Promise.all([
+      const [servicesRes, customersRes, vehiclesRes] = await Promise.all([
         axios.get(`${API}/services`),
-        axios.get(`${API}/customers`)
+        axios.get(`${API}/customers`),
+        axios.get(`${API}/vehicles`)
       ]);
 
       const services = servicesRes.data;
       const customers = customersRes.data;
+      const vehicles = vehiclesRes.data;
 
-      // Combine service and customer data to create registration records
+      // Combine service, customer, and vehicle data to create registration records
       const combined = services.map(service => {
         const customer = customers.find(c => c.id === service.customer_id);
-        
-        // Extract vehicle information from service description
-        const description = service.description || '';
-        const vehicleInfo = extractVehicleInfo(description, service.vehicle_number);
+        const vehicle = vehicles.find(v => v.id === service.vehicle_id);
 
         return {
           id: service.id,
           registration_date: service.service_date,
           customer_name: customer?.name || 'Unknown',
-          phone_number: customer?.phone || 'N/A',
-          vehicle_brand: vehicleInfo.brand,
-          vehicle_model: vehicleInfo.model,
-          vehicle_year: vehicleInfo.year,
-          vehicle_reg_no: service.vehicle_number || 'N/A',
+          phone_number: customer?.mobile || customer?.phone || 'N/A',
+          vehicle_brand: vehicle?.brand || 'N/A',
+          vehicle_model: vehicle?.model || 'N/A',
+          vehicle_year: vehicle?.year || 'N/A',
+          vehicle_reg_no: service.vehicle_number || vehicle?.vehicle_number || 'N/A',
           service_type: service.service_type,
           amount: service.amount,
           status: service.status,
