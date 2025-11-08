@@ -1783,13 +1783,26 @@ async def import_services_data(data: List[Dict], import_job: ImportJob, user_id:
                     "data": row
                 })
             
+            # Check for duplicate service (same customer, vehicle, service_type, and similar amount)
+            duplicate_check = {
+                "customer_id": customer_id,
+                "vehicle_number": vehicle_number or chassis_number or 'Unknown',
+                "service_type": service_type,
+                "amount": amount
+            }
+            existing_service = await db.services.find_one(duplicate_check)
+            if existing_service:
+                # Skip duplicate service
+                skipped += 1
+                continue
+            
             service_data = ServiceCreate(
                 customer_id=customer_id,
                 vehicle_id=vehicle_id,
                 vehicle_number=vehicle_number or chassis_number or 'Unknown',
-                service_type=(row.get('service_type') or 'general_service').strip(),
+                service_type=service_type,
                 description=(row.get('description') or '').strip() or 'Imported service',
-                amount=float(row.get('amount', 0) or 0)
+                amount=amount
             )
             
             # Generate job card number
