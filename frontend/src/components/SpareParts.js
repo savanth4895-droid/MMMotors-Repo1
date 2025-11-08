@@ -1052,7 +1052,6 @@ const CreateBill = () => {
                       placeholder="Enter description"
                       value={itemForm.description}
                       onChange={(e) => setItemForm({...itemForm, description: e.target.value})}
-                      required
                     />
                   </div>
 
@@ -1063,7 +1062,6 @@ const CreateBill = () => {
                       placeholder="Enter HSN/SAC code"
                       value={itemForm.hsn_sac}
                       onChange={(e) => setItemForm({...itemForm, hsn_sac: e.target.value})}
-                      required
                     />
                   </div>
 
@@ -1076,7 +1074,6 @@ const CreateBill = () => {
                       placeholder="Enter quantity"
                       value={itemForm.quantity}
                       onChange={(e) => setItemForm({...itemForm, quantity: e.target.value})}
-                      required
                     />
                   </div>
 
