@@ -796,14 +796,31 @@ const ViewRegistration = () => {
         const customer = customers.find(c => c.id === service.customer_id);
         const vehicle = vehicles.find(v => v.id === service.vehicle_id);
 
+        // Get vehicle details from linked vehicle OR from service record (for imported services)
+        let vehicleBrand = 'N/A';
+        let vehicleModel = 'N/A';
+        let vehicleYear = 'N/A';
+        
+        if (vehicle) {
+          // Direct service with vehicle_id - get from vehicle record
+          vehicleBrand = vehicle.brand || 'N/A';
+          vehicleModel = vehicle.model || 'N/A';
+          vehicleYear = vehicle.year || 'N/A';
+        } else if (service.vehicle_brand || service.vehicle_model) {
+          // Imported service without vehicle_id - get from service record
+          vehicleBrand = service.vehicle_brand || 'N/A';
+          vehicleModel = service.vehicle_model || 'N/A';
+          vehicleYear = service.vehicle_year || 'N/A';
+        }
+
         return {
           id: service.id,
           registration_date: service.service_date,
           customer_name: customer?.name || 'Unknown',
           phone_number: customer?.mobile || customer?.phone || 'N/A',
-          vehicle_brand: vehicle?.brand || 'N/A',
-          vehicle_model: vehicle?.model || 'N/A',
-          vehicle_year: vehicle?.year || 'N/A',
+          vehicle_brand: vehicleBrand,
+          vehicle_model: vehicleModel,
+          vehicle_year: vehicleYear,
           vehicle_reg_no: service.vehicle_number || vehicle?.vehicle_number || 'N/A',
           service_type: service.service_type,
           amount: service.amount,
