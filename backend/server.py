@@ -1750,6 +1750,14 @@ async def import_services_data(data: List[Dict], import_job: ImportJob, user_id:
                         customer_id = vehicle.get('customer_id')
                         import_stats['customers_linked'] += 1
             
+            # If vehicle not found in database, use CSV-provided vehicle details
+            if not vehicle_brand:
+                vehicle_brand = (row.get('vehicle_brand') or '').strip() or None
+            if not vehicle_model:
+                vehicle_model = (row.get('vehicle_model') or '').strip() or None
+            if not vehicle_year:
+                vehicle_year = (row.get('vehicle_year') or '').strip() or None
+            
             # If still no customer, create a placeholder
             if not customer_id:
                 customer_id = await find_or_create_customer(
