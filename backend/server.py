@@ -299,6 +299,7 @@ class ImportJob(BaseModel):
     processed_records: int = 0
     successful_records: int = 0
     failed_records: int = 0
+    skipped_records: int = 0  # Records skipped due to duplicates
     errors: List[Dict[str, Any]] = []
     cross_reference_stats: Optional[Dict[str, int]] = {}  # Track linking statistics
     incomplete_records: List[Dict[str, Any]] = []  # Records with missing data
@@ -314,6 +315,7 @@ class ImportResult(BaseModel):
     total_records: int = 0
     successful_records: int = 0
     failed_records: int = 0
+    skipped_records: int = 0  # Records skipped due to duplicates
     errors: List[Dict[str, Any]] = []
     cross_reference_stats: Optional[Dict[str, int]] = {}  # Linking statistics
     incomplete_records: List[Dict[str, Any]] = []  # Records needing completion
