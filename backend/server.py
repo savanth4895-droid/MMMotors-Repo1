@@ -703,13 +703,20 @@ async def update_sale(sale_id: str, sale_data: SaleCreate, current_user: User = 
         raise HTTPException(status_code=404, detail="Sale not found")
     
     # Update sale data
-    update_data = sale_data.dict()
+    update_data = sale_data.dict(exclude_unset=True)
     update_data["id"] = sale_id  # Keep the original ID
     update_data["invoice_number"] = existing_sale["invoice_number"]  # Keep original invoice number
     update_data["created_by"] = existing_sale["created_by"]  # Keep original creator
     update_data["created_at"] = existing_sale["created_at"]  # Keep original creation date
     
-    updated_sale = Sale(**update_data)
+    # If sale_date is provided, use it; otherwise keep existing
+    if "sale_date" not in update_data or update_data["sale_date"] is None:
+        update_data["sale_date"] = existing_sale["sale_date"]
+    
+    # Merge with existing data to preserve all fields
+    merged_data = {**existing_sale, **update_data}
+    
+    updated_sale = Sale(**merged_data)
     await db.sales.replace_one({"id": sale_id}, updated_sale.dict())
     return updated_sale
 
