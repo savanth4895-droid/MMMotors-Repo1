@@ -127,6 +127,31 @@ const ViewCustomerDetailsPage = () => {
     }
   };
 
+  const handleViewCustomer = (customer) => {
+    setSelectedCustomer(customer);
+    setShowViewModal(true);
+  };
+
+  const handleViewInvoices = async (customer) => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/sales`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Filter invoices for this customer
+      const customerSales = response.data.filter(sale => sale.customer_id === customer.id);
+      setCustomerInvoices(customerSales);
+      setSelectedCustomer(customer);
+      setShowInvoicesModal(true);
+    } catch (error) {
+      toast.error('Failed to fetch customer invoices');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredCustomers = customers.filter(customer =>
     customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.mobile?.includes(searchTerm)
