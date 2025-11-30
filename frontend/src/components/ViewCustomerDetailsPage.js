@@ -504,6 +504,14 @@ const ViewCustomerDetailsPage = () => {
                         >
                           <FileText className="w-4 h-4" />
                         </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleDownloadInvoice(customer)}
+                          title="Download Invoice Statement"
+                        >
+                          <Download className="w-4 h-4" />
+                        </Button>
                       </div>
                     </td>
                   </tr>
