@@ -1909,6 +1909,20 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
             # Create vehicle with proper status
             vehicle_dict = vehicle_data.dict()
             vehicle_dict['status'] = status
+            
+            # Handle date_received field
+            date_received_str = row.get('date_received', '').strip()
+            if date_received_str:
+                try:
+                    # Try to parse the date in various formats
+                    date_received = parse_date_flexible(date_received_str)
+                    vehicle_dict['date_received'] = date_received
+                except Exception as e:
+                    # If date parsing fails, use current date
+                    vehicle_dict['date_received'] = datetime.now(timezone.utc)
+            else:
+                vehicle_dict['date_received'] = datetime.now(timezone.utc)
+            
             vehicle = Vehicle(**vehicle_dict)
             
             # CROSS-REFERENCE: Check if customer mobile is provided
