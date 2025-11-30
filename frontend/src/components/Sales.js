@@ -1622,6 +1622,49 @@ const ViewInvoices = () => {
     setEditFormData({});
   };
 
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedInvoices(filteredInvoices.map(inv => inv.id));
+    } else {
+      setSelectedInvoices([]);
+    }
+  };
+
+  const handleSelectInvoice = (invoiceId) => {
+    setSelectedInvoices(prev =>
+      prev.includes(invoiceId)
+        ? prev.filter(id => id !== invoiceId)
+        : [...prev, invoiceId]
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.delete(`${API}/sales`, {
+        data: { ids: selectedInvoices },
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.deleted > 0) {
+        toast.success(`Successfully deleted ${response.data.deleted} invoice(s)`);
+      }
+
+      if (response.data.failed && response.data.failed.length > 0) {
+        toast.error(`Failed to delete ${response.data.failed.length} invoice(s)`);
+      }
+
+      setSelectedInvoices([]);
+      setShowBulkDeleteModal(false);
+      fetchInvoices(); // Refresh the list
+    } catch (error) {
+      toast.error('Failed to delete invoices');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDownloadInvoicePDF = async (invoice) => {
     if (!invoice) return;
 
