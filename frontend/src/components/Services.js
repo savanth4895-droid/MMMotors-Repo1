@@ -299,6 +299,12 @@ const NewService = () => {
       // Search customers and sales data
       const [customersResponse, salesResponse] = await Promise.all([
         axios.get(`${API}/customers`, {
+          params: {
+            page: 1,
+            limit: 10000,
+            sort: 'created_at',
+            order: 'desc'
+          },
           headers: { Authorization: `Bearer ${token}` }
         }),
         axios.get(`${API}/sales`, {
@@ -307,7 +313,8 @@ const NewService = () => {
       ]);
 
       // Find matching customer by mobile phone
-      const matchingCustomer = customersResponse.data.find(customer => 
+      const customers = customersResponse.data.data || customersResponse.data;
+      const matchingCustomer = customers.find(customer => 
         customer.mobile && customer.mobile.includes(phoneNumber)
       );
 
