@@ -1070,25 +1070,20 @@ const StockView = () => {
       }
 
       if (response.data.failed && response.data.failed.length > 0) {
-        // Show detailed error for first few failed vehicles
+        // Prepare detailed error information
         const failedCount = response.data.failed.length;
-        const sampleErrors = response.data.failed.slice(0, 3);
-        
-        let errorMessage = `Failed to delete ${failedCount} vehicle(s):\n\n`;
-        sampleErrors.forEach((failed, index) => {
-          // Find vehicle info
+        const errorDetails = response.data.failed.map((failed) => {
           const vehicle = vehicles.find(v => v.id === failed.id);
-          const vehicleInfo = vehicle ? `${vehicle.brand} ${vehicle.model} (${vehicle.chassis_number})` : failed.id;
-          errorMessage += `${index + 1}. ${vehicleInfo}\n   Reason: ${failed.error}\n`;
+          return {
+            vehicleInfo: vehicle ? `${vehicle.brand} ${vehicle.model} (${vehicle.chassis_number})` : failed.id,
+            error: failed.error,
+            vehicle: vehicle
+          };
         });
         
-        if (failedCount > 3) {
-          errorMessage += `\n...and ${failedCount - 3} more vehicles`;
-        }
-        
-        // Show error in a more detailed way
-        alert(errorMessage);
-        toast.error(`Could not delete ${failedCount} vehicle(s). See details.`);
+        setDeleteErrors(errorDetails);
+        setShowErrorModal(true);
+        toast.error(`Could not delete ${failedCount} vehicle(s). See details below.`);
       }
 
       setSelectedVehicles([]);
