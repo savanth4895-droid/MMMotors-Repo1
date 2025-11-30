@@ -1352,6 +1352,83 @@ const StockView = () => {
           </div>
         </div>
       )}
+
+      {/* Error Details Modal */}
+      {showErrorModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="p-6 border-b">
+              <h2 className="text-xl font-bold text-red-600">⚠️ Deletion Failed</h2>
+              <p className="text-gray-600 mt-2">
+                {deleteErrors.length} vehicle(s) could not be deleted due to the following reasons:
+              </p>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="space-y-4">
+                {deleteErrors.map((errorItem, index) => (
+                  <div key={index} className="border-l-4 border-red-500 bg-red-50 p-4 rounded">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center font-bold">
+                        {index + 1}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900">{errorItem.vehicleInfo}</p>
+                        <p className="text-red-700 mt-1">{errorItem.error}</p>
+                        {errorItem.vehicle && (
+                          <div className="mt-2 text-sm text-gray-600">
+                            <span className="font-medium">Details:</span> {errorItem.vehicle.brand} {errorItem.vehicle.model} • 
+                            Status: <span className={errorItem.vehicle.status === 'sold' ? 'text-orange-600' : 'text-green-600'}>
+                              {errorItem.vehicle.status === 'in_stock' ? 'In Stock' : errorItem.vehicle.status === 'sold' ? 'Sold' : 'Returned'}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded">
+                <h3 className="font-bold text-yellow-800 mb-2">💡 How to Delete These Vehicles:</h3>
+                <ul className="text-sm text-yellow-700 space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold">Option 1:</span>
+                    <span>Delete associated sales/service records first, then delete the vehicles.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold">Option 2:</span>
+                    <span>Use the <strong>"Force Delete"</strong> option in the delete confirmation to remove vehicles along with all their associated records (⚠️ This cannot be undone!).</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="p-6 border-t bg-gray-50 flex justify-end gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowErrorModal(false);
+                  setDeleteErrors([]);
+                }}
+              >
+                Close
+              </Button>
+              <Button 
+                onClick={() => {
+                  setShowErrorModal(false);
+                  setDeleteErrors([]);
+                  setForceDelete(true);
+                  setShowBulkDeleteModal(true);
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                Try Force Delete Instead
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
