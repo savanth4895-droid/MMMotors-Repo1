@@ -438,7 +438,7 @@ const NewService = () => {
 
         let customerInfo = null;
         if (vehicleSale) {
-          customerInfo = customersResponse.data.find(customer => 
+          customerInfo = customers.find(customer => 
             customer.id === vehicleSale.customer_id
           );
         }
