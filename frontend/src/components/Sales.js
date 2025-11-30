@@ -4762,13 +4762,19 @@ const SalesReports = () => {
           headers: { Authorization: `Bearer ${token}` }
         }),
         axios.get(`${API}/customers`, {
+          params: {
+            page: 1,
+            limit: 10000,
+            sort: 'created_at',
+            order: 'desc'
+          },
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
       
       setSales(salesRes.data);
       setVehicles(vehiclesRes.data);
-      setCustomers(customersRes.data);
+      setCustomers(customersRes.data.data || customersRes.data);
     } catch (error) {
       toast.error('Failed to fetch sales data');
     } finally {
