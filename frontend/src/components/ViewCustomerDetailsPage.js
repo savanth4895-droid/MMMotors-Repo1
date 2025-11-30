@@ -244,10 +244,20 @@ const ViewCustomerDetailsPage = () => {
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-2">
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleViewCustomer(customer)}
+                          title="View Customer Details"
+                        >
                           <Eye className="w-4 h-4" />
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleViewInvoices(customer)}
+                          title="View Customer Invoices"
+                        >
                           <FileText className="w-4 h-4" />
                         </Button>
                       </div>
