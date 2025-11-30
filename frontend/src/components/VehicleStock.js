@@ -1034,6 +1034,48 @@ const StockView = () => {
       toast.error(error.response?.data?.detail || 'Failed to delete vehicle');
     }
   };
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedVehicles(filteredVehicles.map(v => v.id));
+    } else {
+      setSelectedVehicles([]);
+    }
+  };
+
+  const handleSelectVehicle = (vehicleId) => {
+    setSelectedVehicles(prev =>
+      prev.includes(vehicleId)
+        ? prev.filter(id => id !== vehicleId)
+        : [...prev, vehicleId]
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.delete(`${API}/vehicles`, {
+        data: { ids: selectedVehicles },
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.deleted > 0) {
+        toast.success(`Successfully deleted ${response.data.deleted} vehicle(s)`);
+      }
+
+      if (response.data.failed && response.data.failed.length > 0) {
+        toast.error(`Failed to delete ${response.data.failed.length} vehicle(s)`);
+      }
+
+      setSelectedVehicles([]);
+      setShowBulkDeleteModal(false);
+      fetchVehicles(); // Refresh the list
+    } catch (error) {
+      toast.error('Failed to delete vehicles');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusBadge = (status) => {
     const statusMap = {
