@@ -1511,7 +1511,34 @@ const ViewInvoices = () => {
     
     try {
       setLoading(true);
-      await axios.put(`${API}/sales/${editingInvoice.id}`, editFormData);
+      
+      // Prepare the update payload with all fields
+      const updatePayload = {
+        customer_id: editFormData.customer_id,
+        vehicle_id: editFormData.vehicle_id,
+        sale_date: editFormData.sale_date,
+        amount: parseFloat(editFormData.amount),
+        payment_method: editFormData.payment_method,
+        hypothecation: editFormData.hypothecation,
+        
+        // Vehicle details (for imported sales or direct entry)
+        vehicle_brand: editFormData.vehicle_brand,
+        vehicle_model: editFormData.vehicle_model,
+        vehicle_color: editFormData.vehicle_color,
+        vehicle_registration: editFormData.vehicle_no,
+        vehicle_chassis: editFormData.chassis_number,
+        vehicle_engine: editFormData.engine_number,
+        
+        // Insurance details - send both nested and flat structure
+        insurance_details: editFormData.insurance_details,
+        insurance_nominee: editFormData.insurance_details?.nominee,
+        insurance_relation: editFormData.insurance_details?.relation,
+        insurance_age: editFormData.insurance_details?.age,
+        
+        source: editingInvoice.source || 'direct'
+      };
+      
+      await axios.put(`${API}/sales/${editingInvoice.id}`, updatePayload);
       toast.success('Invoice updated successfully!');
       setShowEditModal(false);
       setEditingInvoice(null);
