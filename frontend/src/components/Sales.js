@@ -1466,20 +1466,20 @@ const ViewInvoices = () => {
       customer_mobile: customer?.mobile || customer?.phone || '',
       customer_address: customer?.address || '',
       
-      // Vehicle Details
+      // Vehicle Details - prioritize invoice data over vehicle lookup
       vehicle_id: invoice.vehicle_id,
-      vehicle_brand: vehicle?.brand || '',
-      vehicle_model: vehicle?.model || '',
-      vehicle_color: vehicle?.color || '',
-      vehicle_no: vehicle?.vehicle_no || '',
-      chassis_number: vehicle?.chassis_number || '',
-      engine_number: vehicle?.engine_number || '',
+      vehicle_brand: invoice.vehicle_brand || vehicle?.brand || '',
+      vehicle_model: invoice.vehicle_model || vehicle?.model || '',
+      vehicle_color: invoice.vehicle_color || vehicle?.color || '',
+      vehicle_no: invoice.vehicle_registration || vehicle?.vehicle_no || '',
+      chassis_number: invoice.vehicle_chassis || vehicle?.chassis_number || '',
+      engine_number: invoice.vehicle_engine || vehicle?.engine_number || '',
       
-      // Insurance Details - prioritize customer insurance_info
+      // Insurance Details - check multiple sources
       insurance_details: {
-        nominee: customer?.insurance_info?.nominee_name || invoice.insurance_details?.nominee || '',
-        relation: customer?.insurance_info?.relation || invoice.insurance_details?.relation || '',
-        age: customer?.insurance_info?.age || invoice.insurance_details?.age || ''
+        nominee: invoice.insurance_nominee || invoice.insurance_details?.nominee || customer?.insurance_info?.nominee_name || '',
+        relation: invoice.insurance_relation || invoice.insurance_details?.relation || customer?.insurance_info?.relation || '',
+        age: invoice.insurance_age || invoice.insurance_details?.age || customer?.insurance_info?.age || ''
       }
     });
     setShowEditModal(true);
