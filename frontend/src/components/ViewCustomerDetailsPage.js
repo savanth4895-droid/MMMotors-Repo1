@@ -152,6 +152,250 @@ const ViewCustomerDetailsPage = () => {
     }
   };
 
+  const handleDownloadInvoice = async (customer) => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      // Fetch customer's invoices
+      const response = await axios.get(`${API}/sales`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const customerSales = response.data.filter(sale => sale.customer_id === customer.id);
+      
+      if (customerSales.length === 0) {
+        toast.error('No invoices found for this customer');
+        return;
+      }
+
+      // Import html2pdf dynamically
+      const { default: html2pdf } = await import('html2pdf.js');
+
+      // Generate professional invoice HTML
+      const invoiceHTML = generateCustomerInvoiceHTML(customer, customerSales);
+
+      // PDF options
+      const options = {
+        margin: 10,
+        filename: `${customer.name.replace(/[^a-zA-Z0-9]/g, '_')}_Invoices.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      // Generate and download PDF
+      await html2pdf().set(options).from(invoiceHTML).save();
+      toast.success('Invoice downloaded successfully!');
+    } catch (error) {
+      console.error('Error generating invoice:', error);
+      toast.error('Failed to generate invoice');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateCustomerInvoiceHTML = (customer, invoices) => {
+    const totalAmount = invoices.reduce((sum, inv) => sum + (inv.amount || 0), 0);
+    
+    const invoiceRows = invoices.map(invoice => `
+      <tr>
+        <td style="padding: 10px; border: 1px solid #dee2e6;">${invoice.invoice_number}</td>
+        <td style="padding: 10px; border: 1px solid #dee2e6;">${new Date(invoice.sale_date).toLocaleDateString('en-IN')}</td>
+        <td style="padding: 10px; border: 1px solid #dee2e6;">₹${invoice.amount?.toLocaleString('en-IN')}</td>
+        <td style="padding: 10px; border: 1px solid #dee2e6;">${invoice.payment_method}</td>
+      </tr>
+    `).join('');
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: white;
+          }
+          .header {
+            text-align: center;
+            border-bottom: 3px solid #0066cc;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+          }
+          .company-name {
+            font-size: 32px;
+            font-weight: bold;
+            color: #0066cc;
+            margin-bottom: 5px;
+          }
+          .company-details {
+            font-size: 12px;
+            color: #666;
+            margin: 5px 0;
+          }
+          .document-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin: 20px 0;
+            text-transform: uppercase;
+          }
+          .customer-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+          }
+          .customer-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #0066cc;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #0066cc;
+            padding-bottom: 5px;
+          }
+          .customer-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+          }
+          .info-row {
+            display: flex;
+            padding: 5px 0;
+          }
+          .info-label {
+            font-weight: bold;
+            color: #555;
+            min-width: 120px;
+          }
+          .info-value {
+            color: #333;
+          }
+          .invoices-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+          }
+          .invoices-table th {
+            background: #0066cc;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+          }
+          .invoices-table td {
+            padding: 10px;
+            border: 1px solid #dee2e6;
+          }
+          .invoices-table tr:nth-child(even) {
+            background: #f8f9fa;
+          }
+          .summary-section {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+          }
+          .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 16px;
+          }
+          .summary-row.total {
+            font-size: 20px;
+            font-weight: bold;
+            color: #0066cc;
+            border-top: 2px solid #0066cc;
+            padding-top: 15px;
+            margin-top: 10px;
+          }
+          .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #dee2e6;
+            color: #666;
+            font-size: 12px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="company-name">M M MOTORS</div>
+          <div class="company-details">Two Wheeler Sales & Service Center</div>
+          <div class="company-details">Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130</div>
+          <div class="company-details">Phone: +91 7026263123 | Email: mmmotors3123@gmail.com</div>
+        </div>
+
+        <div class="document-title">Customer Invoice Statement</div>
+
+        <div class="customer-section">
+          <div class="customer-title">Customer Details</div>
+          <div class="customer-info">
+            <div class="info-row">
+              <span class="info-label">Name:</span>
+              <span class="info-value">${customer.name}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Mobile:</span>
+              <span class="info-value">${customer.mobile}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Care Of:</span>
+              <span class="info-value">${customer.care_of || 'N/A'}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Email:</span>
+              <span class="info-value">${customer.email || 'N/A'}</span>
+            </div>
+            <div class="info-row" style="grid-column: 1 / -1;">
+              <span class="info-label">Address:</span>
+              <span class="info-value">${customer.address || 'N/A'}</span>
+            </div>
+          </div>
+        </div>
+
+        <h3 style="color: #0066cc; margin-bottom: 15px;">Invoice History</h3>
+        <table class="invoices-table">
+          <thead>
+            <tr>
+              <th>Invoice No.</th>
+              <th>Date</th>
+              <th>Amount</th>
+              <th>Payment Method</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${invoiceRows}
+          </tbody>
+        </table>
+
+        <div class="summary-section">
+          <div class="summary-row">
+            <span>Total Invoices:</span>
+            <span>${invoices.length}</span>
+          </div>
+          <div class="summary-row total">
+            <span>Total Amount:</span>
+            <span>₹${totalAmount.toLocaleString('en-IN')}</span>
+          </div>
+        </div>
+
+        <div class="footer">
+          <p><strong>Thank you for your business!</strong></p>
+          <p>This is a computer-generated statement and does not require a signature.</p>
+          <p>Generated on: ${new Date().toLocaleDateString('en-IN')} at ${new Date().toLocaleTimeString('en-IN')}</p>
+        </div>
+      </body>
+      </html>
+    `;
+  };
+
   const filteredCustomers = customers.filter(customer =>
     customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.mobile?.includes(searchTerm)
