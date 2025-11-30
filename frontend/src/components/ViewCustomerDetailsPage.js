@@ -23,6 +23,10 @@ const ViewCustomerDetailsPage = () => {
   const [order, setOrder] = useState('desc');
   const [selectedCustomers, setSelectedCustomers] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [customerInvoices, setCustomerInvoices] = useState([]);
+  const [showInvoicesModal, setShowInvoicesModal] = useState(false);
 
   useEffect(() => {
     fetchCustomers();
