@@ -221,7 +221,7 @@ const Sales = () => {
         <Route path="/create-invoice" element={<CreateInvoice />} />
         <Route path="/invoices" element={<ViewInvoices />} />
         <Route path="/customers" element={<CustomersManagement />} />
-        <Route path="/customer-details" element={<ViewCustomerDetails />} />
+        <Route path="/customer-details" element={<ViewCustomerDetailsPage />} />
         <Route path="/reports" element={<SalesReports />} />
         <Route path="/insurance" element={<InsuranceManagement />} />
       </Routes>
