@@ -442,6 +442,53 @@ const CreateInvoice = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Comprehensive validation
+    const errors = [];
+    
+    // Required field validations
+    if (!invoiceData.name.trim()) errors.push('Customer name is required');
+    if (!invoiceData.mobile.trim()) errors.push('Mobile number is required');
+    if (!invoiceData.brand.trim()) errors.push('Vehicle brand is required');
+    if (!invoiceData.model.trim()) errors.push('Vehicle model is required');
+    if (!invoiceData.chassis_number.trim()) errors.push('Chassis number is required');
+    if (!invoiceData.engine_number.trim()) errors.push('Engine number is required');
+    if (!invoiceData.amount) errors.push('Amount is required');
+    if (!invoiceData.payment_method) errors.push('Payment method is required');
+    
+    // Format validations
+    if (invoiceData.mobile && !/^\d{10}$/.test(invoiceData.mobile)) {
+      errors.push('Mobile number must be 10 digits');
+    }
+    
+    // Amount validation
+    if (invoiceData.amount && parseFloat(invoiceData.amount) <= 0) {
+      errors.push('Amount must be greater than zero');
+    }
+    
+    // Chassis/Engine number length validation
+    if (invoiceData.chassis_number && invoiceData.chassis_number.length < 5) {
+      errors.push('Chassis number must be at least 5 characters');
+    }
+    
+    if (invoiceData.engine_number && invoiceData.engine_number.length < 5) {
+      errors.push('Engine number must be at least 5 characters');
+    }
+    
+    // Insurance nominee validation (if any one field is filled, all should be filled)
+    const hasInsuranceInfo = invoiceData.insurance_nominee || invoiceData.relation || invoiceData.age;
+    if (hasInsuranceInfo) {
+      if (!invoiceData.insurance_nominee) errors.push('Insurance nominee name is required');
+      if (!invoiceData.relation) errors.push('Insurance nominee relation is required');
+      if (!invoiceData.age) errors.push('Insurance nominee age is required');
+    }
+    
+    // Show all validation errors
+    if (errors.length > 0) {
+      errors.forEach(error => toast.error(error));
+      return;
+    }
+    
     setLoading(true);
 
     try {
