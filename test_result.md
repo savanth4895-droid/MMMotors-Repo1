@@ -977,7 +977,7 @@ backend:
 
 test_plan:
   current_focus:
-    - "Vehicles CSV Template with Status Column Testing"
+    - "Vehicles Import Template Date Received Column Testing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
