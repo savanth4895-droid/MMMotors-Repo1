@@ -422,6 +422,22 @@ def parse_date_flexible(date_str: str) -> datetime:
         except:
             return datetime.now(timezone.utc)
 
+# Health check endpoints for Kubernetes
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Kubernetes liveness probe"""
+    return {"status": "healthy"}
+
+@app.get("/ready")
+async def readiness_check():
+    """Readiness check endpoint for Kubernetes readiness probe"""
+    try:
+        # Test database connection
+        await db.command("ping")
+        return {"status": "ready", "database": "connected"}
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Database not ready: {str(e)}")
+
 # Test endpoint
 @api_router.get("/")
 async def root():
