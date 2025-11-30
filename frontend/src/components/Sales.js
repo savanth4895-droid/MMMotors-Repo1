@@ -4714,33 +4714,63 @@ const SalesReports = () => {
   };
 
   const processMonthlyData = () => {
-    const monthlyMap = {};
-    
-    sales.forEach(sale => {
-      const date = new Date(sale.sale_date);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      const monthName = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    if (chartGranularity === 'monthly') {
+      const monthlyMap = {};
       
-      if (!monthlyMap[monthKey]) {
-        monthlyMap[monthKey] = {
-          month: monthName,
-          sales: 0,
-          revenue: 0,
-          count: 0
-        };
-      }
-      
-      monthlyMap[monthKey].sales += 1;
-      monthlyMap[monthKey].revenue += sale.amount || 0;
-      monthlyMap[monthKey].count += 1;
-    });
+      sales.forEach(sale => {
+        const date = new Date(sale.sale_date);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        const monthName = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        
+        if (!monthlyMap[monthKey]) {
+          monthlyMap[monthKey] = {
+            month: monthName,
+            sales: 0,
+            revenue: 0,
+            count: 0
+          };
+        }
+        
+        monthlyMap[monthKey].sales += 1;
+        monthlyMap[monthKey].revenue += sale.amount || 0;
+        monthlyMap[monthKey].count += 1;
+      });
 
-    // Sort by month and get last 12 months or available data
-    const sortedData = Object.values(monthlyMap)
-      .sort((a, b) => new Date(a.month + ' 01') - new Date(b.month + ' 01'))
-      .slice(-12);
-    
-    setMonthlyData(sortedData);
+      // Sort by month and get last 12 months or available data
+      const sortedData = Object.values(monthlyMap)
+        .sort((a, b) => new Date(a.month + ' 01') - new Date(b.month + ' 01'))
+        .slice(-12);
+      
+      setMonthlyData(sortedData);
+    } else {
+      // Yearly aggregation
+      const yearlyMap = {};
+      
+      sales.forEach(sale => {
+        const date = new Date(sale.sale_date);
+        const year = date.getFullYear();
+        
+        if (!yearlyMap[year]) {
+          yearlyMap[year] = {
+            month: year.toString(),
+            sales: 0,
+            revenue: 0,
+            count: 0
+          };
+        }
+        
+        yearlyMap[year].sales += 1;
+        yearlyMap[year].revenue += sale.amount || 0;
+        yearlyMap[year].count += 1;
+      });
+
+      // Sort by year and get last 5 years
+      const sortedData = Object.values(yearlyMap)
+        .sort((a, b) => parseInt(a.month) - parseInt(b.month))
+        .slice(-5);
+      
+      setMonthlyData(sortedData);
+    }
   };
 
   const processBrandData = () => {
