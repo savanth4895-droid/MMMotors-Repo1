@@ -378,6 +378,50 @@ async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(secur
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid authentication credentials")
 
+def parse_date_flexible(date_str: str) -> datetime:
+    """Parse date from various formats"""
+    date_str = date_str.strip()
+    
+    # Try to parse as Excel serial date number
+    try:
+        excel_date = float(date_str)
+        if excel_date > 59:
+            excel_date -= 1
+        return datetime(1900, 1, 1, tzinfo=timezone.utc) + timedelta(days=excel_date - 2)
+    except (ValueError, TypeError):
+        pass
+    
+    # Try various string date formats
+    # Format: DD-MMM (03-Mar) - add current year
+    if re.match(r'\d{1,2}-[A-Za-z]{3}', date_str):
+        date_str = f"{date_str}-{datetime.now().year}"
+        return datetime.strptime(date_str, "%d-%b-%Y").replace(tzinfo=timezone.utc)
+    # Format: DD/MM/YYYY (15/01/2024)
+    elif re.match(r'\d{1,2}/\d{1,2}/\d{4}', date_str):
+        return datetime.strptime(date_str, "%d/%m/%Y").replace(tzinfo=timezone.utc)
+    # Format: DD-MM-YYYY (15-01-2024)
+    elif re.match(r'\d{1,2}-\d{1,2}-\d{4}', date_str):
+        return datetime.strptime(date_str, "%d-%m-%Y").replace(tzinfo=timezone.utc)
+    # Format: YYYY-MM-DD (2024-01-15) - ISO format
+    elif re.match(r'\d{4}-\d{1,2}-\d{1,2}', date_str):
+        return datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    # Format: YYYY/MM/DD (2024/01/15)
+    elif re.match(r'\d{4}/\d{1,2}/\d{1,2}', date_str):
+        return datetime.strptime(date_str, "%Y/%m/%d").replace(tzinfo=timezone.utc)
+    # Format: DD MMM YYYY (15 Jan 2024)
+    elif re.match(r'\d{1,2}\s+[A-Za-z]{3}\s+\d{4}', date_str):
+        return datetime.strptime(date_str, "%d %b %Y").replace(tzinfo=timezone.utc)
+    # Format: MMM DD, YYYY (Jan 15, 2024)
+    elif re.match(r'[A-Za-z]{3}\s+\d{1,2},?\s+\d{4}', date_str):
+        return datetime.strptime(date_str.replace(',', ''), "%b %d %Y").replace(tzinfo=timezone.utc)
+    else:
+        # Try generic parser as last resort
+        try:
+            from dateutil import parser
+            return parser.parse(date_str).replace(tzinfo=timezone.utc)
+        except:
+            return datetime.now(timezone.utc)
+
 # Test endpoint
 @api_router.get("/")
 async def root():
