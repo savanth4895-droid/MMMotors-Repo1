@@ -73,7 +73,7 @@ const DataImport = () => {
       label: 'Vehicles', 
       icon: Car, 
       description: 'Import vehicle stock data. Auto-links to customers by mobile number and creates sales records.',
-      fields: ['brand', 'model', 'chassis_number', 'engine_number', 'color', 'vehicle_number', 'key_number', 'inbound_location', 'page_number', 'status', 'customer_mobile', 'customer_name', 'sale_amount', 'payment_method']
+      fields: ['date_received', 'brand', 'model', 'chassis_number', 'engine_number', 'color', 'vehicle_number', 'key_number', 'inbound_location', 'page_number', 'status', 'customer_mobile', 'customer_name', 'sale_amount', 'payment_method']
     },
     { 
       value: 'spare_parts', 
