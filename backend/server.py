@@ -120,7 +120,7 @@ class Vehicle(BaseModel):
     outbound_location: Optional[str] = None
     status: VehicleStatus = VehicleStatus.IN_STOCK
     page_number: Optional[str] = None
-    date_received: datetime = Field(default_factory=lambda: str(uuid.uuid4()))
+    date_received: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     date_sold: Optional[datetime] = None
     date_returned: Optional[datetime] = None
     customer_id: Optional[str] = None
