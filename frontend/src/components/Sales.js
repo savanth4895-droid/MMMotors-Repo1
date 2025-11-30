@@ -1420,8 +1420,16 @@ const ViewInvoices = () => {
 
   const fetchCustomers = async () => {
     try {
-      const response = await axios.get(`${API}/customers`);
-      setCustomers(response.data);
+      const response = await axios.get(`${API}/customers`, {
+        params: {
+          page: 1,
+          limit: 10000, // Fetch all customers for lookups
+          sort: 'created_at',
+          order: 'desc'
+        }
+      });
+      // Extract the data array from paginated response
+      setCustomers(response.data.data || response.data);
     } catch (error) {
       console.error('Failed to fetch customers');
     }
