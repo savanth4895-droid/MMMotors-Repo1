@@ -592,6 +592,7 @@ async def delete_customer(customer_id: str, current_user: User = Depends(get_cur
 
 class BulkDeleteRequest(BaseModel):
     ids: List[str]
+    force_delete: bool = False
 
 @api_router.delete("/customers")
 async def bulk_delete_customers(request: BulkDeleteRequest, current_user: User = Depends(get_current_user)):
