@@ -6244,12 +6244,19 @@ const InsuranceManagement = () => {
     try {
       const [salesRes, customersRes, vehiclesRes] = await Promise.all([
         axios.get(`${API}/sales`),
-        axios.get(`${API}/customers`),
+        axios.get(`${API}/customers`, {
+          params: {
+            page: 1,
+            limit: 10000,
+            sort: 'created_at',
+            order: 'desc'
+          }
+        }),
         axios.get(`${API}/vehicles`)
       ]);
 
       const sales = salesRes.data;
-      const customers = customersRes.data;
+      const customers = customersRes.data.data || customersRes.data;
       const vehicles = vehiclesRes.data;
 
       // Combine data to create insurance records
