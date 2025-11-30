@@ -1056,12 +1056,15 @@ const StockView = () => {
       setLoading(true);
       const token = localStorage.getItem('token');
       const response = await axios.delete(`${API}/vehicles`, {
-        data: { ids: selectedVehicles },
+        data: { ids: selectedVehicles, force_delete: forceDelete },
         headers: { Authorization: `Bearer ${token}` }
       });
 
       if (response.data.deleted > 0) {
         toast.success(`Successfully deleted ${response.data.deleted} vehicle(s)`);
+        if (forceDelete && response.data.cascade_deleted) {
+          toast.info(`Also deleted: ${response.data.cascade_deleted.sales || 0} sales, ${response.data.cascade_deleted.services || 0} services`);
+        }
       }
 
       if (response.data.failed && response.data.failed.length > 0) {
@@ -1088,6 +1091,7 @@ const StockView = () => {
 
       setSelectedVehicles([]);
       setShowBulkDeleteModal(false);
+      setForceDelete(false); // Reset force delete
       fetchVehicles(); // Refresh the list
     } catch (error) {
       toast.error('Failed to delete vehicles: ' + (error.response?.data?.detail || error.message));
