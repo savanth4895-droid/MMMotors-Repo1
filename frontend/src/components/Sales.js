@@ -2872,9 +2872,21 @@ const ViewInvoices = () => {
       {/* Invoices Table */}
       <Card>
         <CardHeader>
-          <CardTitle>
-            Invoice List ({filteredInvoices.length} {filteredInvoices.length === 1 ? 'invoice' : 'invoices'})
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>
+              Invoice List ({filteredInvoices.length} {filteredInvoices.length === 1 ? 'invoice' : 'invoices'})
+            </CardTitle>
+            {selectedInvoices.length > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setShowBulkDeleteModal(true)}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Selected ({selectedInvoices.length})
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
