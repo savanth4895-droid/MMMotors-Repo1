@@ -301,6 +301,206 @@ const ViewCustomerDetailsPage = () => {
           </div>
         </div>
       )}
+
+      {/* View Customer Details Modal */}
+      {showViewModal && selectedCustomer && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start mb-4">
+              <h2 className="text-2xl font-bold">Customer Details</h2>
+              <button
+                onClick={() => setShowViewModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Basic Information */}
+              <div className="border-b pb-4">
+                <h3 className="text-lg font-semibold mb-3 text-blue-600">Basic Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Name</p>
+                    <p className="font-medium">{selectedCustomer.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Mobile</p>
+                    <p className="font-medium">{selectedCustomer.mobile}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Care Of</p>
+                    <p className="font-medium">{selectedCustomer.care_of || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Email</p>
+                    <p className="font-medium">{selectedCustomer.email || 'N/A'}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-sm text-gray-600">Address</p>
+                    <p className="font-medium">{selectedCustomer.address || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Vehicle Information */}
+              {selectedCustomer.vehicle_info && (
+                <div className="border-b pb-4">
+                  <h3 className="text-lg font-semibold mb-3 text-blue-600">Vehicle Information</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600">Brand</p>
+                      <p className="font-medium">{selectedCustomer.vehicle_info.brand || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Model</p>
+                      <p className="font-medium">{selectedCustomer.vehicle_info.model || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Color</p>
+                      <p className="font-medium">{selectedCustomer.vehicle_info.color || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Vehicle Number</p>
+                      <p className="font-medium">{selectedCustomer.vehicle_info.vehicle_number || 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Insurance Information */}
+              {selectedCustomer.insurance_info && (
+                <div className="border-b pb-4">
+                  <h3 className="text-lg font-semibold mb-3 text-blue-600">Insurance Information</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600">Nominee Name</p>
+                      <p className="font-medium">{selectedCustomer.insurance_info.nominee_name || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Relation</p>
+                      <p className="font-medium">{selectedCustomer.insurance_info.relation || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Age</p>
+                      <p className="font-medium">{selectedCustomer.insurance_info.age || 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Sales Information */}
+              {selectedCustomer.sales_info && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 text-blue-600">Sales Information</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600">Total Purchases</p>
+                      <p className="font-medium">{selectedCustomer.sales_info.total_purchases || 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Total Amount</p>
+                      <p className="font-medium">₹{selectedCustomer.sales_info.total_amount?.toLocaleString('en-IN') || 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Last Purchase Date</p>
+                      <p className="font-medium">
+                        {selectedCustomer.sales_info.last_purchase_date 
+                          ? new Date(selectedCustomer.sales_info.last_purchase_date).toLocaleDateString('en-IN')
+                          : 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <Button onClick={() => setShowViewModal(false)}>Close</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Customer Invoices Modal */}
+      {showInvoicesModal && selectedCustomer && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h2 className="text-2xl font-bold">Customer Invoices</h2>
+                <p className="text-gray-600">{selectedCustomer.name} - {selectedCustomer.mobile}</p>
+              </div>
+              <button
+                onClick={() => setShowInvoicesModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            {customerInvoices.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No invoices found for this customer
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b bg-gray-50">
+                      <th className="text-left p-3 font-semibold">Invoice No.</th>
+                      <th className="text-left p-3 font-semibold">Date</th>
+                      <th className="text-left p-3 font-semibold">Amount</th>
+                      <th className="text-left p-3 font-semibold">Payment Method</th>
+                      <th className="text-left p-3 font-semibold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {customerInvoices.map((invoice) => (
+                      <tr key={invoice.id} className="border-b hover:bg-gray-50">
+                        <td className="p-3 font-medium text-blue-600">
+                          {invoice.invoice_number}
+                        </td>
+                        <td className="p-3">
+                          {new Date(invoice.sale_date).toLocaleDateString('en-IN')}
+                        </td>
+                        <td className="p-3 font-medium">
+                          ₹{invoice.amount?.toLocaleString('en-IN')}
+                        </td>
+                        <td className="p-3">{invoice.payment_method}</td>
+                        <td className="p-3">
+                          <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">
+                            Completed
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {/* Summary */}
+                <div className="mt-4 p-4 bg-gray-50 rounded">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold">Total Invoices:</span>
+                    <span>{customerInvoices.length}</span>
+                  </div>
+                  <div className="flex justify-between items-center mt-2">
+                    <span className="font-semibold">Total Amount:</span>
+                    <span className="text-lg font-bold text-blue-600">
+                      ₹{customerInvoices.reduce((sum, inv) => sum + (inv.amount || 0), 0).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-6 flex justify-end">
+              <Button onClick={() => setShowInvoicesModal(false)}>Close</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
