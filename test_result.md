@@ -313,15 +313,18 @@ backend:
 
   - task: "Vehicle Stock TVS Page Fix Testing"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/components/VehicleStock.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
       - agent: "main"
       - comment: "USER REPORTED BUG: Vehicle Stock TVS page showing 'Vehicle not found' error notification and 'In Stock: 0' count discrepancy. Root cause identified: Backend was using status 'available' but frontend was filtering for 'in_stock'. FIXED: Updated backend to use 'in_stock' as default status and migrated 6 existing vehicles from 'available' to 'in_stock' status. Need to test TVS brand page to verify fix is working correctly."
+      - working: true
+      - agent: "testing"
+      - comment: "✅ COMPREHENSIVE TVS VEHICLE STOCK FIX TESTING COMPLETED SUCCESSFULLY: Conducted thorough end-to-end testing of the Vehicle Stock TVS page to verify the fix for 'Vehicle not found' error notification and 'In Stock: 0' count discrepancy as requested in review. AUTHENTICATION TESTING: Successfully authenticated using admin/admin123 credentials, JWT token working properly with all vehicle endpoints. VEHICLE STOCK OVERVIEW PAGE TESTING: ✅ Successfully navigated to /vehicles page, ✅ Vehicle Stock by Brand page loading correctly, ✅ No error notifications found on overview page, ✅ TVS brand card displaying correct stats (Total: 3, In Stock: 2, Sold: 1). TVS BRAND DETAILS PAGE TESTING: ✅ Successfully clicked on TVS brand card and navigated to /vehicles/brand/TVS, ✅ TVS Vehicle Stock details page loading correctly, ✅ No 'Vehicle not found' error notifications found, ✅ No error messages or alerts detected on the page. CRITICAL FIX VERIFICATION: ✅ FIXED - 'In Stock: 0' count discrepancy RESOLVED: TVS overview shows 'In Stock: 2' (not 0), ✅ FIXED - 'Vehicle not found' error notification RESOLVED: No error notifications found on any page, ✅ Summary cards showing correct counts (Total TVS: 3, In Stock: 2, Sold: 1), ✅ Vehicle table displaying 3 TVS vehicles correctly. VEHICLE TABLE VALIDATION: ✅ Found 3 vehicles in the TVS vehicle table, ✅ Status badges working correctly (2 'In Stock', 1 'Sold'), ✅ No 'No TVS vehicles found' message, ✅ Table data matches summary card counts perfectly. COMPREHENSIVE RESULTS: Tests Passed: 8/8 (100% success rate), all test scenarios completed successfully. ALL EXPECTED RESULTS ACHIEVED: ✅ Login with admin/admin123 working correctly, ✅ Navigation to /vehicles working, ✅ Navigation to /vehicles/brand/TVS working, ✅ NO 'Vehicle not found' error notification appears, ✅ In Stock count shows 2 (greater than 0), ✅ All status counts match vehicles displayed in table, ✅ Status badges show 'In Stock', 'Sold' correctly, ✅ Screenshots captured showing correct stock counts and no errors. ISSUE RESOLUTION VERIFICATION: ✅ 'Vehicle not found' error completely eliminated, ✅ 'In Stock: 0' count discrepancy completely resolved, ✅ TVS brand functionality working perfectly, ✅ Backend status migration from 'available' to 'in_stock' successful. The Vehicle Stock TVS page fix is working perfectly and both reported issues have been completely resolved."
 
   - task: "Spare Parts Create Bill API endpoint"
     implemented: true
