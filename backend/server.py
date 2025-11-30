@@ -1015,11 +1015,11 @@ async def bulk_delete_sales(request: BulkDeleteRequest, current_user: User = Dep
                 failed.append({"id": sale_id, "error": "Sale not found"})
                 continue
             
-            # If vehicle is associated, reset its status to available
+            # If vehicle is associated, reset its status to in_stock
             if existing_sale.get("vehicle_id"):
                 await db.vehicles.update_one(
                     {"id": existing_sale["vehicle_id"]},
-                    {"$set": {"status": VehicleStatus.AVAILABLE}, "$unset": {"customer_id": "", "date_sold": ""}}
+                    {"$set": {"status": VehicleStatus.IN_STOCK}, "$unset": {"customer_id": "", "date_sold": ""}}
                 )
             
             # Delete the sale
