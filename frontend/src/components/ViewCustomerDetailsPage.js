@@ -707,16 +707,41 @@ const ViewCustomerDetailsPage = () => {
                 </table>
 
                 {/* Summary */}
-                <div className="mt-4 p-4 bg-gray-50 rounded">
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold">Total Invoices:</span>
-                    <span>{customerInvoices.length}</span>
-                  </div>
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="font-semibold">Total Amount:</span>
-                    <span className="text-lg font-bold text-blue-600">
-                      ₹{customerInvoices.reduce((sum, inv) => sum + (inv.amount || 0), 0).toLocaleString('en-IN')}
-                    </span>
+                <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h4 className="text-lg font-semibold text-blue-700 mb-3">Sales Summary</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center py-2 border-b border-blue-200">
+                      <span className="font-semibold text-gray-700">Total Invoices:</span>
+                      <span className="font-bold text-blue-600">{customerInvoices.length}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b border-blue-200">
+                      <span className="font-semibold text-gray-700">Total Amount:</span>
+                      <span className="text-xl font-bold text-blue-600">
+                        ₹{customerInvoices.reduce((sum, inv) => sum + (inv.amount || 0), 0).toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                    {customerInvoices.length > 0 && (
+                      <>
+                        <div className="flex justify-between items-center py-2 border-b border-blue-200">
+                          <span className="font-semibold text-gray-700">First Purchase:</span>
+                          <span className="font-medium text-gray-700">
+                            {new Date(Math.min(...customerInvoices.map(inv => new Date(inv.sale_date)))).toLocaleDateString('en-IN')}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center py-2">
+                          <span className="font-semibold text-gray-700">Last Purchase:</span>
+                          <span className="font-medium text-gray-700">
+                            {new Date(Math.max(...customerInvoices.map(inv => new Date(inv.sale_date)))).toLocaleDateString('en-IN')}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center py-2 bg-white rounded px-3 mt-2">
+                          <span className="font-semibold text-gray-700">Average Invoice Amount:</span>
+                          <span className="font-bold text-green-600">
+                            ₹{(customerInvoices.reduce((sum, inv) => sum + (inv.amount || 0), 0) / customerInvoices.length).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
