@@ -316,6 +316,18 @@ backend:
       - agent: "testing"
       - comment: "✅ COMPREHENSIVE VEHICLE FIELD VALIDATION TESTING COMPLETED SUCCESSFULLY: Conducted thorough end-to-end testing of vehicle field validation after making all fields optional as requested in review. The user was getting 'Field required' errors in the Edit Customer Details page, which was traced to the Vehicle model still having required fields during customer edits. AUTHENTICATION TESTING: Successfully authenticated using admin/admin123 credentials, JWT token obtained and working properly with all vehicle endpoints. VEHICLE CREATION WITH OPTIONAL FIELDS: ✅ Created test vehicle successfully with all fields populated, ✅ Created vehicle with partial fields (only brand and color) successful, both vehicles created without validation errors demonstrating optional field support. MINIMAL DATA UPDATE TESTING: ✅ PUT /api/vehicles/{vehicle_id} with only brand field successful (200 status), updated from 'TVS' to 'BAJAJ' without any 'Field required' errors, other fields handled correctly with None/empty values. ALL FIELDS EMPTY UPDATE TESTING: ✅ PUT /api/vehicles/{vehicle_id} with all fields set to empty strings successful (200 status), demonstrates all vehicle fields are truly optional, no Pydantic validation errors occurred. VEHICLE IMPORT WITH MISSING FIELDS: ✅ Vehicle import with missing fields successful (100% success rate), imported 3 vehicles with various missing field combinations, missing fields handled correctly during import process. OPTIONAL FIELD VALIDATION TESTING: ✅ Conducted 5 validation tests with different field combinations, all tests passed (100% success rate), confirmed all vehicle fields work independently as optional. FIELD PERSISTENCE VERIFICATION: ✅ Vehicle updates properly persisted in database, field retrieval working correctly, empty fields stored and retrieved appropriately. COMPREHENSIVE RESULTS: Tests Passed: 9/9, Success Rate: 100.0%, all test scenarios completed successfully. ALL EXPECTED RESULTS ACHIEVED: ✅ PUT /api/vehicles/{vehicle_id} works with minimal data (some fields empty), ✅ PUT /api/vehicles/{vehicle_id} works with all fields empty, ✅ Vehicle creation works with only some fields filled, ✅ Vehicle import functionality works with missing fields, ✅ No 'Field required' validation errors occur during vehicle updates, ✅ All vehicle fields are confirmed optional in both Vehicle and VehicleCreate models, ✅ PUT requests return 200 status codes for all field combinations, ✅ No Pydantic validation errors occur for missing vehicle fields. ISSUE RESOLUTION VERIFICATION: ✅ 'Field required' errors resolved in vehicle updates, ✅ Edit Customer Details page should no longer show field validation errors, ✅ Vehicle field validation fix is working correctly. The vehicle field validation fix is working perfectly and resolves the reported 'Field required' issue in the Edit Customer Details page completely."
 
+  - task: "Vehicle Stock TVS Page Fix Testing"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/VehicleStock.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+      - agent: "main"
+      - comment: "USER REPORTED BUG: Vehicle Stock TVS page showing 'Vehicle not found' error notification and 'In Stock: 0' count discrepancy. Root cause identified: Backend was using status 'available' but frontend was filtering for 'in_stock'. FIXED: Updated backend to use 'in_stock' as default status and migrated 6 existing vehicles from 'available' to 'in_stock' status. Need to test TVS brand page to verify fix is working correctly."
+
   - task: "Spare Parts Create Bill API endpoint"
     implemented: true
     working: true
