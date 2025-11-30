@@ -328,6 +328,19 @@ backend:
       - agent: "testing"
       - comment: "✅ COMPREHENSIVE TVS VEHICLE STOCK FIX TESTING COMPLETED SUCCESSFULLY: Conducted thorough end-to-end testing of the Vehicle Stock TVS page to verify the fix for 'Vehicle not found' error notification and 'In Stock: 0' count discrepancy as requested in review. AUTHENTICATION TESTING: Successfully authenticated using admin/admin123 credentials, JWT token working properly with all vehicle endpoints. VEHICLE STOCK OVERVIEW PAGE TESTING: ✅ Successfully navigated to /vehicles page, ✅ Vehicle Stock by Brand page loading correctly, ✅ No error notifications found on overview page, ✅ TVS brand card displaying correct stats (Total: 3, In Stock: 2, Sold: 1). TVS BRAND DETAILS PAGE TESTING: ✅ Successfully clicked on TVS brand card and navigated to /vehicles/brand/TVS, ✅ TVS Vehicle Stock details page loading correctly, ✅ No 'Vehicle not found' error notifications found, ✅ No error messages or alerts detected on the page. CRITICAL FIX VERIFICATION: ✅ FIXED - 'In Stock: 0' count discrepancy RESOLVED: TVS overview shows 'In Stock: 2' (not 0), ✅ FIXED - 'Vehicle not found' error notification RESOLVED: No error notifications found on any page, ✅ Summary cards showing correct counts (Total TVS: 3, In Stock: 2, Sold: 1), ✅ Vehicle table displaying 3 TVS vehicles correctly. VEHICLE TABLE VALIDATION: ✅ Found 3 vehicles in the TVS vehicle table, ✅ Status badges working correctly (2 'In Stock', 1 'Sold'), ✅ No 'No TVS vehicles found' message, ✅ Table data matches summary card counts perfectly. COMPREHENSIVE RESULTS: Tests Passed: 8/8 (100% success rate), all test scenarios completed successfully. ALL EXPECTED RESULTS ACHIEVED: ✅ Login with admin/admin123 working correctly, ✅ Navigation to /vehicles working, ✅ Navigation to /vehicles/brand/TVS working, ✅ NO 'Vehicle not found' error notification appears, ✅ In Stock count shows 2 (greater than 0), ✅ All status counts match vehicles displayed in table, ✅ Status badges show 'In Stock', 'Sold' correctly, ✅ Screenshots captured showing correct stock counts and no errors. ISSUE RESOLUTION VERIFICATION: ✅ 'Vehicle not found' error completely eliminated, ✅ 'In Stock: 0' count discrepancy completely resolved, ✅ TVS brand functionality working perfectly, ✅ Backend status migration from 'available' to 'in_stock' successful. The Vehicle Stock TVS page fix is working perfectly and both reported issues have been completely resolved."
 
+frontend:
+  - task: "Vehicle Stock Bulk Delete Error Handling Improvement"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/VehicleStock.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+      - agent: "main"
+      - comment: "USER REPORTED ISSUE: User tried to delete 8 vehicles and got error 'Could not delete 8 vehicle(s). See details.' The error details were shown in a browser alert() which users might miss. FIXED: Replaced alert() with a detailed modal showing specific reasons for each failed deletion. The modal shows vehicle names, specific error reasons, helpful guidance on resolution options, and includes 'Try Force Delete Instead' button that pre-selects Force Delete option when reopening confirmation modal. Need comprehensive testing of the improved bulk delete error handling."
+
   - task: "Spare Parts Create Bill API endpoint"
     implemented: true
     working: true
