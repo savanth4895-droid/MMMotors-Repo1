@@ -788,6 +788,78 @@ async def get_sales(current_user: User = Depends(get_current_user)):
     sales = await db.sales.find().to_list(1000)
     return [Sale(**sale) for sale in sales]
 
+@api_router.get("/sales/summary/chart")
+async def get_sales_summary(
+    granularity: str = "monthly",
+    years: int = 5,
+    current_user: User = Depends(get_current_user)
+):
+    """Get sales summary for chart - monthly or yearly"""
+    if granularity not in ["monthly", "yearly"]:
+        raise HTTPException(status_code=400, detail="Granularity must be 'monthly' or 'yearly'")
+    
+    from datetime import datetime, timezone
+    
+    if granularity == "monthly":
+        # Get last 12 months of data
+        pipeline = [
+            {
+                "$addFields": {
+                    "month": {"$month": "$sale_date"},
+                    "year": {"$year": "$sale_date"}
+                }
+            },
+            {
+                "$group": {
+                    "_id": {
+                        "year": "$year",
+                        "month": "$month"
+                    },
+                    "total_amount": {"$sum": "$amount"},
+                    "count": {"$sum": 1}
+                }
+            },
+            {"$sort": {"_id.year": 1, "_id.month": 1}},
+            {"$limit": 12}
+        ]
+        
+        results = await db.sales.aggregate(pipeline).to_list(None)
+        
+        labels = []
+        values = []
+        for result in results:
+            month_name = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][result["_id"]["month"] - 1]
+            labels.append(f"{month_name} {result['_id']['year']}")
+            values.append(result["total_amount"])
+        
+        return {"labels": labels, "values": values, "granularity": "monthly"}
+    
+    else:  # yearly
+        # Get last N years of data
+        pipeline = [
+            {
+                "$addFields": {
+                    "year": {"$year": "$sale_date"}
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$year",
+                    "total_amount": {"$sum": "$amount"},
+                    "count": {"$sum": 1}
+                }
+            },
+            {"$sort": {"_id": 1}},
+            {"$limit": years}
+        ]
+        
+        results = await db.sales.aggregate(pipeline).to_list(None)
+        
+        labels = [str(result["_id"]) for result in results]
+        values = [result["total_amount"] for result in results]
+        
+        return {"labels": labels, "values": values, "granularity": "yearly"}
+
 @api_router.get("/sales/{sale_id}", response_model=Sale)
 async def get_sale(sale_id: str, current_user: User = Depends(get_current_user)):
     sale = await db.sales.find_one({"id": sale_id})
