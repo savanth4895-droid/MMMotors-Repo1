@@ -1149,13 +1149,33 @@ const StockView = () => {
       {/* Vehicle List */}
       <Card>
         <CardHeader>
-          <CardTitle>Vehicle Stock ({filteredVehicles.length} vehicles)</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Vehicle Stock ({filteredVehicles.length} vehicles)</CardTitle>
+            {selectedVehicles.length > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setShowBulkDeleteModal(true)}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Selected ({selectedVehicles.length})
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b">
+                  <th className="p-2 text-left">
+                    <input
+                      type="checkbox"
+                      checked={selectedVehicles.length === filteredVehicles.length && filteredVehicles.length > 0}
+                      onChange={handleSelectAll}
+                      className="rounded"
+                    />
+                  </th>
                   <th className="text-left p-2">Date</th>
                   <th className="text-left p-2">Brand</th>
                   <th className="text-left p-2">Model</th>
@@ -1172,6 +1192,14 @@ const StockView = () => {
               <tbody>
                 {filteredVehicles.map((vehicle) => (
                   <tr key={vehicle.id} className="border-b hover:bg-gray-50">
+                    <td className="p-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedVehicles.includes(vehicle.id)}
+                        onChange={() => handleSelectVehicle(vehicle.id)}
+                        className="rounded"
+                      />
+                    </td>
                     <td className="p-2">{new Date(vehicle.date_received).toLocaleDateString()}</td>
                     <td className="p-2 font-medium">{vehicle.brand}</td>
                     <td className="p-2">{vehicle.model}</td>
