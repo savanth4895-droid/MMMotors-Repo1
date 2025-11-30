@@ -4007,13 +4007,19 @@ const ServiceDue = () => {
           headers: { Authorization: `Bearer ${token}` }
         }),
         axios.get(`${API}/customers`, {
+          params: {
+            page: 1,
+            limit: 10000,
+            sort: 'created_at',
+            order: 'desc'
+          },
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
       
       const services = servicesResponse.data;
       const sales = salesResponse.data;
-      const customers = customersResponse.data;
+      const customers = customersResponse.data.data || customersResponse.data;
       const today = new Date();
       
       // Create a map of vehicles with their purchase dates and latest service dates
