@@ -934,6 +934,45 @@ async def delete_sale(sale_id: str, current_user: User = Depends(get_current_use
     
     return {"message": "Sale deleted successfully", "deleted_sale_id": sale_id}
 
+@api_router.delete("/sales")
+async def bulk_delete_sales(request: BulkDeleteRequest, current_user: User = Depends(get_current_user)):
+    """Bulk delete sales/invoices"""
+    if not request.ids:
+        raise HTTPException(status_code=400, detail="No sale IDs provided")
+    
+    deleted = []
+    failed = []
+    
+    for sale_id in request.ids:
+        try:
+            # Check if sale exists
+            existing_sale = await db.sales.find_one({"id": sale_id})
+            if not existing_sale:
+                failed.append({"id": sale_id, "error": "Sale not found"})
+                continue
+            
+            # If vehicle is associated, reset its status to available
+            if existing_sale.get("vehicle_id"):
+                await db.vehicles.update_one(
+                    {"id": existing_sale["vehicle_id"]},
+                    {"$set": {"status": VehicleStatus.AVAILABLE}, "$unset": {"customer_id": "", "date_sold": ""}}
+                )
+            
+            # Delete the sale
+            result = await db.sales.delete_one({"id": sale_id})
+            if result.deleted_count > 0:
+                deleted.append(sale_id)
+            else:
+                failed.append({"id": sale_id, "error": "Failed to delete"})
+        except Exception as e:
+            failed.append({"id": sale_id, "error": str(e)})
+    
+    return {
+        "deleted": len(deleted),
+        "deleted_ids": deleted,
+        "failed": failed
+    }
+
 # Service endpoints
 @api_router.post("/services", response_model=Service)
 async def create_service(service_data: ServiceCreate, current_user: User = Depends(get_current_user)):
