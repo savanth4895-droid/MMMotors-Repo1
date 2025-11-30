@@ -1642,22 +1642,55 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                     if sales_info.get('sale_date'):
                         try:
                             # Try to parse various date formats
-                            date_str = sales_info['sale_date']
-                            # Handle common date formats: DD-MMM, DD/MM/YYYY, YYYY-MM-DD, etc.
+                            date_str = str(sales_info['sale_date']).strip()
                             from datetime import datetime
                             import re
                             
-                            if re.match(r'\d{1,2}-[A-Za-z]{3}', date_str):  # Format: 03-Mar
-                                # Add current year if not specified
-                                date_str = f"{date_str}-{datetime.now().year}"
-                                sale_date = datetime.strptime(date_str, "%d-%b-%Y")
-                            elif re.match(r'\d{1,2}/\d{1,2}/\d{4}', date_str):  # Format: DD/MM/YYYY
-                                sale_date = datetime.strptime(date_str, "%d/%m/%Y")
-                            elif re.match(r'\d{4}-\d{1,2}-\d{1,2}', date_str):  # Format: YYYY-MM-DD
-                                sale_date = datetime.strptime(date_str, "%Y-%m-%d")
-                            else:
+                            # Handle Excel numeric date format (days since 1900-01-01)
+                            if date_str.replace('.', '').isdigit():
+                                try:
+                                    # Excel date: number of days since 1900-01-01
+                                    excel_date = float(date_str)
+                                    # Excel incorrectly treats 1900 as a leap year, adjust for dates after Feb 28, 1900
+                                    if excel_date > 60:
+                                        excel_date -= 1
+                                    sale_date = datetime(1900, 1, 1) + timedelta(days=excel_date - 2)
+                                except:
+                                    pass
+                            
+                            # Try various string date formats
+                            if not sale_date:
+                                # Format: DD-MMM (03-Mar) - add current year
+                                if re.match(r'\d{1,2}-[A-Za-z]{3}', date_str):
+                                    date_str = f"{date_str}-{datetime.now().year}"
+                                    sale_date = datetime.strptime(date_str, "%d-%b-%Y")
+                                # Format: DD/MM/YYYY (15/01/2024)
+                                elif re.match(r'\d{1,2}/\d{1,2}/\d{4}', date_str):
+                                    sale_date = datetime.strptime(date_str, "%d/%m/%Y")
+                                # Format: DD-MM-YYYY (15-01-2024)
+                                elif re.match(r'\d{1,2}-\d{1,2}-\d{4}', date_str):
+                                    sale_date = datetime.strptime(date_str, "%d-%m-%Y")
+                                # Format: YYYY-MM-DD (2024-01-15)
+                                elif re.match(r'\d{4}-\d{1,2}-\d{1,2}', date_str):
+                                    sale_date = datetime.strptime(date_str, "%Y-%m-%d")
+                                # Format: YYYY/MM/DD (2024/01/15)
+                                elif re.match(r'\d{4}/\d{1,2}/\d{1,2}', date_str):
+                                    sale_date = datetime.strptime(date_str, "%Y/%m/%d")
+                                # Format: DD MMM YYYY (15 Jan 2024)
+                                elif re.match(r'\d{1,2}\s+[A-Za-z]{3}\s+\d{4}', date_str):
+                                    sale_date = datetime.strptime(date_str, "%d %b %Y")
+                                # Format: MMM DD, YYYY (Jan 15, 2024)
+                                elif re.match(r'[A-Za-z]{3}\s+\d{1,2},?\s+\d{4}', date_str):
+                                    sale_date = datetime.strptime(date_str.replace(',', ''), "%b %d %Y")
+                                else:
+                                    # Try generic parser as last resort
+                                    from dateutil import parser
+                                    sale_date = parser.parse(date_str)
+                            
+                            if not sale_date:
                                 sale_date = datetime.now()  # Default to current date
-                        except:
+                        except Exception as date_error:
+                            print(f"Date parsing error for '{sales_info.get('sale_date')}': {date_error}")
                             sale_date = datetime.now()  # Default if parsing fails
                     else:
                         sale_date = datetime.now()
