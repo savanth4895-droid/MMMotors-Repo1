@@ -5013,13 +5013,33 @@ const SalesReports = () => {
         {/* Monthly Sales Chart */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-blue-600" />
-              Monthly Sales Performance
-            </CardTitle>
-            <CardDescription>
-              Sales count and revenue trends over time
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-blue-600" />
+                  {chartGranularity === 'monthly' ? 'Monthly' : 'Yearly'} Sales Performance
+                </CardTitle>
+                <CardDescription>
+                  Sales count and revenue trends over time
+                </CardDescription>
+              </div>
+              <div className="flex gap-1 bg-gray-100 rounded-md p-1">
+                <Button
+                  variant={chartGranularity === 'monthly' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setChartGranularity('monthly')}
+                >
+                  Month
+                </Button>
+                <Button
+                  variant={chartGranularity === 'yearly' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setChartGranularity('yearly')}
+                >
+                  Year
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="h-80">
