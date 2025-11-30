@@ -288,7 +288,7 @@ class BackupJob(BaseModel):
     error_message: Optional[str] = None
     records_backed_up: Dict[str, int] = {}
     created_by: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class BackupJobCreate(BaseModel):
     backup_type: str = "manual"  # manual or scheduled
