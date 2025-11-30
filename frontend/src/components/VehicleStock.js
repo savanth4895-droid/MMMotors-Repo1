@@ -1252,6 +1252,28 @@ const StockView = () => {
         onClose={() => setIsEditModalOpen(false)}
         onUpdate={handleUpdateVehicle}
       />
+      {/* Bulk Delete Confirmation Modal */}
+      {showBulkDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h2 className="text-xl font-bold mb-4">Confirm Delete</h2>
+            <p className="mb-4">
+              Are you sure you want to delete {selectedVehicles.length} vehicle(s)?
+            </p>
+            <p className="text-sm text-gray-600 mb-4">
+              This action cannot be undone. Vehicles with associated sales or service records cannot be deleted.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowBulkDeleteModal(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleBulkDelete} disabled={loading}>
+                {loading ? 'Deleting...' : 'Confirm Delete'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
