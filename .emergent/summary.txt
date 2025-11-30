@@ -1,57 +1,360 @@
-<analysis>
-The AI engineer completed a wide range of tasks, starting with establishing a unified cross-referencing system for data import, allowing CSV templates to link and create records across customers, vehicles, services, and spare parts based on common identifiers like , , and . This involved significant backend changes in  to create utility functions for finding/creating records, updating import endpoints to handle linking and track incomplete records, and enhancing frontend display in  to show import statistics. The engineer also fixed various bugs related to import processes, including  checks and  exceptions, and ensured imported data visibility in respective frontend components. Subsequent work included refining data display in  for brand-wise sales distribution (showing counts instead of revenue, and adjusting chart axes), ensuring  fetched correct vehicle details for both direct and imported sales, and finally, iteratively fixing and optimizing the Spare Parts Bill PDF generation and print functionality in  to fit A4 paper professionally.
-</analysis>
+<analysis>Here is the handover summary:
 
-<product_requirements>
-The M M Motors application aims to streamline two-wheeler business operations. The explicit requirements addressed by the previous AI engineer include: enhancing UI/UX and printing for sales/service bills (specifically optimizing Spare Parts Bill for A4 PDF download and professional printing); providing comprehensive editing and management for customer records, vehicles, and insurance data; ensuring data consistency (e.g., standardizing 'phone' to 'mobile'); developing a robust data import/export system with cross-referencing capabilities (customers, vehicles, services, spare parts linked by , , ), duplicate prevention across all tables, and improved template generation; implementing automated data entry with autocomplete features; adding hard delete functionalities across various tables; integrating imported sales data into dashboard overviews and sales reports (specifically updating Brand-wise Sales Distribution graph to show counts, then adjusting axes); and fixing issues related to imported data visibility across Vehicle Stock, Services, and Spare Parts pages, as well as ensuring proper display of vehicle details in the Service Registrations and Insurance Management tables.
-</product_requirements>
+**original_problem_statement:** The user initially reported being unable to generate a GST bill. After resolving this, the user made a series of requests, including fixing a file upload button, clearing all database records, and fixing several bugs in the Edit Invoice functionality. The primary focus of this session became a major feature enhancement initiative, which included:
+1.  Adding comprehensive sorting, pagination (100 rows/page), and bulk delete to the View Customer Details page.
+2.  Adding a yearly view toggle to the monthly sales chart.
+3.  Ensuring data consistency between different views after deletions.
+4.  Implementing stricter validation on the Create Invoice form.
+5.  Adding bulk delete functionality to the View Invoices and Vehicle Stock pages.
+6.  Implementing action buttons on the View Customer Details page to show modals with customer and invoice details.
+7.  Fixing the sales data import to correctly parse the  from CSV files.
+8.  Implementing a Force Delete option for vehicles to allow deleting them along with their associated sales and service records.
 
-<key_technical_concepts>
--   **FastAPI**: Backend APIs, Pydantic models, JWT authentication.
--   **React**: Frontend UI, hooks, component architecture, Axios.
--   **MongoDB**: NoSQL database for data storage.
--   **html2pdf.js**: Client-side PDF generation for bills.
--   **Cross-Referencing**: Linking data across different entities during import.
--   **Duplicate Prevention**: Logic to skip existing records during import.
--   **Unified Schema**: Standardized data fields like .
-</key_technical_concepts>
+**PRODUCT REQUIREMENTS**:
+- Implement sorting, pagination, and bulk delete (hard delete) on customer, invoice, and vehicle list pages.
+- Enhance reporting charts with different time granularities (monthly/yearly).
+- Improve data integrity with stricter form validation and consistent data across views.
+- Allow for cascading deletes (Force Delete) for vehicles.
+- Improve usability by adding modals for detailed views and professional invoice downloads.
 
-<code_architecture>
-The application uses a MERN-like stack: React (frontend), FastAPI (backend), and MongoDB (database).
+**User's preferred language**: English
 
-**Directory Structure:**
+**what currently exists?**
+The application is a full-stack solution (React/FastAPI/MongoDB) for managing a two-wheeler business. Key functionalities like customer, vehicle, sales, and service management are in place. The agent has just finished implementing a Force Delete feature on the  page. This feature allows users to perform a cascading delete, removing a vehicle along with all its associated sales and service records, which was a necessary addition as the standard delete was blocked to preserve data integrity.
+
+**Last working item**:
+-   **Last item agent was working**: Implementing a Force Delete option for the bulk delete functionality on the Vehicle Stock page. This was done by adding a Force Delete checkbox to the confirmation modal on the frontend () and updating the backend bulk delete endpoint () to accept a  parameter, which triggers the deletion of associated sales and service records.
+-   **Status**: USER VERIFICATION PENDING
+-   **Agent Testing Done**: N
+-   **Which testing method agent to use?**: Frontend testing agent. The test should verify two scenarios on the  page:
+    1. A standard bulk delete attempt on vehicles with associated sales/services fails, showing an error.
+    2. A Force Delete on the same vehicles succeeds, and the vehicles are removed from the list.
+-   **User Testing Done**: N
+
+**All Pending/In progress Issue list**:
+-   **Issue 1: Verify Force Delete functionality (P0)**
+    -   The Force Delete feature for vehicles was implemented on both the frontend and backend but has not been tested or confirmed by the user.
+
+**Issues Detail**:
+-   **Issue 1: Verify Force Delete functionality**
+    -   **Attempted fixes**: The agent added the  boolean to the  model and the  endpoint in . On the frontend, in , a checkbox was added to the delete confirmation modal, and the  function was updated to send the  parameter to the API.
+    -   **Next debug checklist**:
+        - Use the frontend testing agent to simulate a user selecting vehicles with dependencies.
+        - Test the Delete Selected button *without* the Force Delete checkbox checked. Verify that the deletion fails and an appropriate error message is shown.
+        - Test the Delete Selected button *with* the Force Delete checkbox checked. Verify that the deletion succeeds and the vehicles are removed.
+        - Check backend logs (==> /var/log/supervisor/backend.err.log <==
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [5060]
+INFO:     Stopping reloader process [4786]
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [5751] using WatchFiles
+INFO:     Started server process [5753]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [28] using WatchFiles
+INFO:     Started server process [78]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+2025-11-30 09:52:45,035 - root - INFO - CSV file parsed successfully using encoding: utf-8
+WARNING:  WatchFiles detected changes in 'server.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [78]
+INFO:     Started server process [586]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [586]
+INFO:     Stopping reloader process [28]
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [663] using WatchFiles
+INFO:     Started server process [665]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+2025-11-30 10:06:00,261 - root - INFO - CSV file parsed successfully using encoding: utf-8
+2025-11-30 10:36:12,693 - root - INFO - CSV file parsed successfully using encoding: iso-8859-1
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [28] using WatchFiles
+INFO:     Started server process [71]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+2025-11-30 10:54:18,810 - root - INFO - CSV file parsed successfully using encoding: iso-8859-1
+WARNING:  WatchFiles detected changes in 'server.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [71]
+INFO:     Started server process [865]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [865]
+INFO:     Stopping reloader process [28]
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [872] using WatchFiles
+INFO:     Started server process [874]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'server.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [874]
+INFO:     Started server process [1548]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'server.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [1548]
+INFO:     Started server process [1597]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [1597]
+INFO:     Stopping reloader process [872]
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [1615] using WatchFiles
+INFO:     Started server process [1617]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [34] using WatchFiles
+INFO:     Started server process [72]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [27] using WatchFiles
+
+==> /var/log/supervisor/backend.out.log <==
+INFO:     10.64.130.204:58516 - "GET /api/services?status=pending HTTP/1.1" 200 OK
+INFO:     10.64.130.200:49824 - "GET /api/services?status=in_progress HTTP/1.1" 200 OK
+INFO:     10.64.130.204:58516 - "GET /api/services?status=in_progress HTTP/1.1" 200 OK
+INFO:     10.64.129.11:53604 - "GET /api/services?status=completed HTTP/1.1" 200 OK
+INFO:     10.64.129.10:48468 - "GET /api/services?status=pending HTTP/1.1" 200 OK
+INFO:     10.64.129.10:48468 - "GET /api/customers?page=1&limit=10000&sort=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     10.64.130.204:58516 - "GET /api/sales HTTP/1.1" 200 OK
+INFO:     10.64.130.204:58516 - "GET /api/customers?page=1&limit=10000&sort=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     10.64.129.10:48468 - "GET /api/sales HTTP/1.1" 200 OK
+INFO:     10.64.130.200:38316 - "GET /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.130.204:40024 - "GET /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.129.11:50920 - "GET /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.129.11:50920 - "GET /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.130.204:55222 - "DELETE /api/vehicles/c5d65251-5dff-452e-bb6f-c6015653069b HTTP/1.1" 404 Not Found
+INFO:     10.64.130.204:49374 - "GET /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.131.136:40316 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.64.130.171:50416 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.64.130.136:35276 - "GET /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.131.142:48238 - "GET /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.133.203:59092 - "DELETE /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.130.137:37376 - "GET /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.130.137:40678 - "DELETE /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.131.142:55368 - "GET /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.129.10:37976 - "GET /api/spare-parts?low_stock=true HTTP/1.1" 200 OK
+INFO:     10.64.130.204:43786 - "GET /api/spare-parts HTTP/1.1" 200 OK
+INFO:     10.64.129.11:54336 - "GET /api/spare-parts/bills HTTP/1.1" 200 OK
+INFO:     10.64.130.204:43786 - "GET /api/spare-parts?low_stock=true HTTP/1.1" 200 OK
+INFO:     10.64.129.11:54336 - "GET /api/spare-parts HTTP/1.1" 200 OK
+INFO:     10.64.130.200:35028 - "GET /api/spare-parts/bills HTTP/1.1" 200 OK
+INFO:     10.64.130.200:35028 - "GET /api/spare-parts HTTP/1.1" 200 OK
+INFO:     10.64.129.11:54336 - "GET /api/spare-parts HTTP/1.1" 200 OK
+INFO:     10.64.129.11:53360 - "GET /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.130.200:54044 - "GET /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.129.11:53360 - "GET /api/services?status=pending HTTP/1.1" 200 OK
+INFO:     10.64.129.11:53372 - "GET /api/services?status=in_progress HTTP/1.1" 200 OK
+INFO:     10.64.129.11:53360 - "GET /api/services?status=completed HTTP/1.1" 200 OK
+INFO:     10.64.130.200:54044 - "GET /api/services?status=in_progress HTTP/1.1" 200 OK
+INFO:     10.64.130.204:44324 - "GET /api/services?status=pending HTTP/1.1" 200 OK
+INFO:     10.64.130.200:54044 - "GET /api/services?status=completed HTTP/1.1" 200 OK
+INFO:     10.64.129.11:53372 - "GET /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.129.10:49656 - "GET /api/customers?page=1&limit=10000&sort=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     10.64.129.10:49668 - "GET /api/services HTTP/1.1" 200 OK
+INFO:     10.64.130.204:44324 - "GET /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.130.200:54044 - "GET /api/services HTTP/1.1" 200 OK
+INFO:     10.64.129.10:49668 - "GET /api/customers?page=1&limit=10000&sort=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     10.64.130.204:59408 - "DELETE /api/services/bf5a2a8b-a4d3-48ba-bf9b-f8e8bc8ba7b8 HTTP/1.1" 200 OK
+INFO:     10.64.129.10:50922 - "DELETE /api/services/8a41b8d2-20d2-4581-8691-171f87a80551 HTTP/1.1" 200 OK
+INFO:     10.64.130.200:36530 - "DELETE /api/services/c47bfd4a-5f85-4f05-bde0-e827b595bf11 HTTP/1.1" 200 OK
+INFO:     10.64.130.204:46138 - "DELETE /api/services/cd2b0cc5-494a-4ccb-a7d5-9b13ae035501 HTTP/1.1" 200 OK
+INFO:     10.64.129.10:50922 - "DELETE /api/services/0432488d-6282-4d10-b4a1-a31c144a936d HTTP/1.1" 200 OK
+INFO:     10.64.130.200:57480 - "DELETE /api/services/1590fd30-7929-4e84-a06c-e6759a539e47 HTTP/1.1" 200 OK
+INFO:     10.64.129.11:53376 - "DELETE /api/services/387db344-4837-454b-b0f5-6765b9f3a0d8 HTTP/1.1" 200 OK
+INFO:     10.64.130.200:57480 - "DELETE /api/services/de78d0c3-25db-4aa6-a4ac-5b7b0e896d42 HTTP/1.1" 200 OK
+INFO:     10.64.130.200:57480 - "DELETE /api/services/6284ccfb-88c9-45dc-b712-f889a6ea51ef HTTP/1.1" 200 OK
+INFO:     10.64.130.204:56442 - "DELETE /api/services/526f82e6-e9e4-4a2b-9f37-88c94cf90d15 HTTP/1.1" 200 OK
+INFO:     10.64.130.204:56442 - "DELETE /api/services/1c81c083-77a1-43db-a08e-1acebcf46f89 HTTP/1.1" 200 OK
+INFO:     10.64.129.10:55646 - "DELETE /api/services/0d7b7df6-2e62-4c9c-a15f-114da549737f HTTP/1.1" 200 OK
+INFO:     10.64.130.204:59514 - "DELETE /api/services/c0195c6a-9abc-4011-8b10-f82d0a5fdfa2 HTTP/1.1" 200 OK
+INFO:     10.64.129.11:52510 - "DELETE /api/services/893ed25a-0af2-4160-9ad2-d055364e94cc HTTP/1.1" 200 OK
+INFO:     10.64.129.11:52510 - "DELETE /api/services/64b08b5c-9acf-4ca1-859e-4b03ad086570 HTTP/1.1" 200 OK
+INFO:     10.64.130.200:60726 - "DELETE /api/services/5b79fe6a-3390-4c3e-b845-7b0e81a8bdd8 HTTP/1.1" 200 OK
+INFO:     10.64.130.200:60726 - "GET /api/services HTTP/1.1" 200 OK
+INFO:     10.64.130.204:34566 - "GET /api/customers?page=1&limit=10000&sort=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     10.64.130.204:34566 - "GET /api/services HTTP/1.1" 200 OK
+INFO:     10.64.130.204:34566 - "GET /api/customers?page=1&limit=10000&sort=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     10.64.130.204:34566 - "GET /api/customers?page=1&limit=10000&sort=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     10.64.130.200:60726 - "GET /api/customers?page=1&limit=10000&sort=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     10.64.129.11:58658 - "GET /api/services?status=pending HTTP/1.1" 200 OK
+INFO:     10.64.129.11:58668 - "GET /api/services?status=completed HTTP/1.1" 200 OK
+INFO:     10.64.129.11:58682 - "GET /api/services?status=in_progress HTTP/1.1" 200 OK
+INFO:     10.64.130.200:42206 - "GET /api/services?status=completed HTTP/1.1" 200 OK
+INFO:     10.64.130.200:42222 - "GET /api/services?status=pending HTTP/1.1" 200 OK
+INFO:     10.64.130.204:44220 - "GET /api/services?status=in_progress HTTP/1.1" 200 OK
+INFO:     10.64.131.142:48352 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.64.133.203:59570 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     10.64.130.136:43030 - "GET /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.130.137:50826 - "GET /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.133.203:59570 - "GET /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.130.137:50826 - "GET /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.131.136:51664 - "DELETE /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.130.136:48478 - "GET /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.131.142:48116 - "DELETE /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.133.203:59708 - "GET /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.130.136:34684 - "GET /api/dashboard/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.171:46538 - "GET /api/backup/stats HTTP/1.1" 200 OK
+INFO:     10.64.131.136:33594 - "GET /api/backup/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.136:34684 - "GET /api/dashboard/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.137:34994 - "GET /api/sales HTTP/1.1" 200 OK
+INFO:     10.64.131.142:40826 - "GET /api/customers?page=1&limit=10000&sort=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     10.64.131.136:33594 - "GET /api/sales HTTP/1.1" 200 OK
+INFO:     10.64.130.136:34684 - "GET /api/customers?page=1&limit=10000&sort=created_at&order=desc HTTP/1.1" 200 OK
+INFO:     10.64.131.136:33594 - "GET /api/backup/stats HTTP/1.1" 200 OK
+INFO:     10.64.131.142:40826 - "GET /api/dashboard/stats HTTP/1.1" 200 OK
+INFO:     10.64.133.203:34020 - "GET /api/backup/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.136:34684 - "GET /api/dashboard/stats HTTP/1.1" 200 OK
+INFO:     10.64.131.142:44816 - "GET /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.131.136:58770 - "GET /api/vehicles HTTP/1.1" 200 OK
+INFO:     10.64.133.203:57092 - "GET /api/vehicles?brand=TVS HTTP/1.1" 200 OK
+INFO:     10.64.131.136:58780 - "GET /api/vehicles?brand=TVS HTTP/1.1" 200 OK
+INFO:     10.64.131.142:37318 - "DELETE /api/vehicles/4c0b1c25-f3d6-4243-80b0-178dee4e67c3 HTTP/1.1" 404 Not Found) for any errors during the process.
+    -   **Why fix this issue and what will be achieved with the fix?**: This is the final step of the user's request to be able to delete vehicles with dependencies. Confirming this feature works will complete the vehicle management enhancements.
+    -   **Status**: USER VERIFICATION PENDING
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: Frontend
+    -   **Blocked on other issue**: None
+
+**In progress Task List**:
+-   None.
+
+**Upcoming and Future Tasks**
+-   **Upcoming Tasks:**
+    -   **(P1) Apply Pagination and Sorting to other modules:** For UI consistency, the new reusable  and  components should be implemented on other list pages like , , , etc.
+-   **Future Tasks:**
+    -   **(P2) Refactor large components:** Files like  and  are very large and contain multiple components. They should be broken down into smaller, more manageable files for better maintainability.
+
+**Completed work in this session**
+-   **List of all completed tasks with file and method name**:
+    -   Fixed GST Bill generation validation ().
+    -   Fixed Choose File button ().
+    -   Added database clearing script ().
+    -   Fixed multiple bugs in Edit Invoice functionality (, ).
+    -   Enhanced date parsing for data imports to support more formats ().
+    -   **Feature: Customer Management Enhancements (, )**
+        -   Implemented server-side pagination and sorting.
+        -   Added bulk hard-delete functionality.
+        -   Added action buttons with modals for viewing customer/invoice details.
+        -   Added a professional invoice download feature.
+    -   **Feature: Sales Chart Toggle (, )**
+        -   Added a Monthly/Yearly toggle to the sales performance graph.
+    -   **Feature: Bulk Delete for Invoices (, )**
+        -   Added bulk hard-delete functionality to the  page.
+    -   **Feature: Bulk Delete for Vehicles (, )**
+        -   Added bulk hard-delete with a Force Delete cascade option.
+    -   **Refactor/Fix:** Updated all API calls fetching customers across  and  to handle the new paginated response structure .
+
+**Earlier issues found/mentioned but not fixed**
+-   None.
+
+**Known issue recurrence from previous fork**
+-   None.
+
+**Code Architecture**
 
 
-**Key Files and Changes:**
--   :
-    -   **Importance:** Core backend logic, API endpoints, and data models.
-    -   **Changes:** Implemented ,  utility functions for cross-referencing. Rewrote , , , and  functions to support cross-referencing, create missing records, and implement duplicate prevention logic (skipping existing records). Added , ,  fields to the  model and updated service import to store these. Enhanced  and  models to track  and . Removed old duplicate check functions.
--   :
-    -   **Importance:** Manages sales, invoicing, and reporting. Contains  component.
-    -   **Changes:** Updated  to include both direct and imported sales ( field) for Brand-wise Sales Distribution. Modified chart to display sales count instead of revenue, and interchanged axes for vertical bars (brands on X-axis, counts on Y-axis). Enhanced  in  to correctly retrieve  and handle vehicle details for imported sales. Added  and  columns to the Brand Performance Summary table.
--   :
-    -   **Importance:** Provides UI for data import and template downloads.
-    -   **Changes:** Updated template field descriptions to align with cross-reference columns. Enhanced import result display to show , , , and  statistics. Updated service template description to include , , and .
--   :
-    -   **Importance:** Handles service registration and viewing. Contains  component.
-    -   **Changes:** In , modified data fetching to retrieve , , , and  directly from linked vehicle records or service records (for imported data), removing reliance on  from service description.
--   :
-    -   **Importance:** Manages spare parts inventory and bills.
-    -   **Changes:** Implemented professional PDF download and print functionality for spare parts bills using . Iteratively fixed blank PDF issues, refined the HTML structure for printing, and optimized layout (font sizes, padding, column widths) to fit an A4 sheet.
-</code_architecture>
+**Key Technical Concepts**
+-   **Backend**: FastAPI, Pydantic for data validation (), server-side pagination and sorting logic.
+-   **Frontend**: React, Axios, client-side state management with /.
+-   **Database**: MongoDB.
+-   **Deletion Strategy**: Hard deletes are used as per user request. Cascading deletes are implemented via a  flag in the API.
+-   **API Design**: The structure of the  endpoint was changed to return a paginated object (). Bulk delete operations were implemented using  requests with a request body.
 
-<pending_tasks>
-- There are no explicit pending tasks from the trajectory. The last completed task was fixing the Spare Parts Bill PDF layout.
-</pending_tasks>
+**key DB schema**
+-   **customers**: (id, name, mobile, created_at)
+-   **vehicles**: (id, vehicle_number, chassis_number, status) - Has relations to  and .
+-   **sales**: (id, customer_id, vehicle_id, sale_date)
+-   **services**: (id, customer_id, vehicle_id)
 
-<current_work>
-Immediately before this summary request, the AI engineer was working on resolving issues with the Spare Parts Bill PDF download and print functionality. The user reported receiving a blank PDF and that the printed bill didn't look professional. The AI engineer identified issues with the PDF generation process and the styling.
+**changes in tech stack**
+-   None.
 
-Initially, the engineer updated the  function in  to generate a professional PDF. However, a blank page persisted. The engineer then revised the implementation in  and  to use a more robust  approach, converting a dynamically generated HTML string with professional styling into a PDF or print output. The styling included elements like , , , , and , using inline CSS for A4 optimization.
+**All files**
+-   **Created:**
+    -   : A script to wipe the database upon user request.
+    -   : A reusable React component for pagination controls.
+    -   : A reusable React component for sorting UI.
+    -   : A new page component to replace the old customer view, incorporating pagination, sorting, and bulk delete.
+-   **Updated:**
+    -   : Heavily modified to add pagination, sorting, and bulk delete endpoints (including force delete) for customers, sales, and vehicles. Also added a sales summary endpoint and improved data import parsing.
+    -   : Updated to add bulk delete to invoices, a chart toggle, and stricter validation. All customer API calls were fixed to handle the new paginated response.
+    -   : Updated all customer API calls to handle the new paginated response.
+    -   : Added comprehensive bulk delete functionality, including the Force Delete UI and logic.
+    -   : Routing was updated to point to the new .
 
-The user then reported that the bill didn't fit an A4 sheet. The AI engineer addressed this by further optimizing the layout, reducing font sizes, padding, and adjusting column widths within the dynamically generated HTML structure in  to ensure proper A4 fit. The last message indicates this layout optimization was successfully applied.
-</current_work>
+**Areas that need refactoring**:
+-   The  and  files are monolithic and contain multiple distinct components. They should be broken down into smaller, single-responsibility component files to improve code readability and maintainability.
 
-<optional_next_step>
-Confirm with the user if the A4-optimized Spare Parts Bill PDF download and print functionality now works as expected.
-</optional_next_step>
+**key api endpoints**
+-   : Fetches paginated and sorted customers.
+-   : Bulk deletes customers. Body: .
+-   : Bulk deletes sales invoices. Body: .
+-   : Bulk deletes vehicles. Body: .
+-   : Fetches aggregated sales data for charts.
+
+**Critical Info for New Agent**
+-   The user has explicitly requested **hard deletes**.
+-   The API for fetching list data (starting with customers) is being standardized to a paginated format: . Any new or modified frontend code that fetches lists must handle this structure.
+-   A Force Delete pattern has been established for vehicles, which performs a cascading delete of dependent records (sales, services). This is controlled by a  flag in the API call.
+
+**documents created in this job**
+-   None.
+
+**Last 5 User Messages and any pending user messages**
+1.  **Request**: Fetch  from the import template. **Status**: Completed.
+2.  **Request**: Move sales info to the invoice modal and add a professional invoice download button. **Status**: Completed.
+3.  **Request**: Add bulk delete to the vehicle details page. **Status**: Completed (but led to the next issue).
+4.  **Report**: UNABLE TO DELETE vehicles with dependencies. **Status**: Completed (agent diagnosed the issue).
+5.  **Request**: Add a Force Delete option to remove associated records. **Status**: Implemented, pending user verification.
+
+**Project Health Check:**
+-   **Broken**: None confirmed, but the last implemented feature (Force Delete) is unverified.
+-   **Mocked**: None.
+
+**Testing status**
+-   **Testing agent used after significant changes**: NO
+-   **Troubleshoot agent used after agent stuck in loop**: NO
+-   **Test files created**: []
+-   **Known regressions**: None known, but the change in the  response structure caused temporary breakages that were fixed. Similar breakages could occur if other list endpoints are paginated without updating all frontend consumers.
+
+**Credentials to test flow:**
+-   N/A
+
+**What agent forgot to execute**
+-   The agent did not proactively apply the new pagination and sorting components to other relevant pages (, , ) for a consistent user experience. This was not explicitly requested by the user but is a logical next step for UI consistency.</analysis>
