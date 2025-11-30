@@ -1278,28 +1278,78 @@ const StockView = () => {
       {/* Bulk Delete Confirmation Modal */}
       {showBulkDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
+          <div className="bg-white rounded-lg max-w-lg w-full p-6">
             <h2 className="text-xl font-bold mb-4 text-red-600">⚠️ Confirm Delete</h2>
             <p className="mb-4 font-semibold">
               Are you sure you want to delete {selectedVehicles.length} vehicle(s)?
             </p>
-            <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mb-4">
-              <p className="text-sm text-yellow-800 font-semibold mb-2">⚠️ Important Restrictions:</p>
-              <ul className="text-sm text-yellow-700 list-disc list-inside space-y-1">
-                <li>Vehicles with sales records cannot be deleted</li>
-                <li>Vehicles with service records cannot be deleted</li>
-                <li>You must delete associated records first</li>
-              </ul>
+            
+            {/* Force Delete Option */}
+            <div className="mb-4 p-4 border-2 border-red-200 rounded-lg bg-red-50">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={forceDelete}
+                  onChange={(e) => setForceDelete(e.target.checked)}
+                  className="mt-1 rounded"
+                />
+                <div>
+                  <span className="font-bold text-red-700">Force Delete (Cascade)</span>
+                  <p className="text-sm text-red-600 mt-1">
+                    ⚠️ This will permanently delete the vehicles AND all associated sales and service records. This action is irreversible!
+                  </p>
+                </div>
+              </label>
             </div>
+
+            {!forceDelete ? (
+              <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mb-4">
+                <p className="text-sm text-yellow-800 font-semibold mb-2">⚠️ Normal Delete Restrictions:</p>
+                <ul className="text-sm text-yellow-700 list-disc list-inside space-y-1">
+                  <li>Vehicles with sales records cannot be deleted</li>
+                  <li>Vehicles with service records cannot be deleted</li>
+                  <li>You must delete associated records first, OR enable Force Delete</li>
+                </ul>
+              </div>
+            ) : (
+              <div className="bg-red-50 border border-red-300 rounded p-3 mb-4">
+                <p className="text-sm text-red-800 font-bold mb-2">🚨 Force Delete WILL REMOVE:</p>
+                <ul className="text-sm text-red-700 list-disc list-inside space-y-1">
+                  <li>All selected vehicles</li>
+                  <li>All sales records for these vehicles</li>
+                  <li>All service records for these vehicles</li>
+                  <li>Customer purchase history will be affected</li>
+                </ul>
+                <p className="text-sm text-red-800 font-bold mt-2">
+                  ⚠️ THIS CANNOT BE UNDONE!
+                </p>
+              </div>
+            )}
+            
             <p className="text-sm text-gray-600 mb-4">
-              Only vehicles without any sales or service history will be deleted. Others will be skipped with detailed error messages.
+              {forceDelete 
+                ? "All selected vehicles and their complete history will be permanently deleted."
+                : "Only vehicles without any sales or service history will be deleted. Others will be skipped."
+              }
             </p>
+            
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowBulkDeleteModal(false)}>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowBulkDeleteModal(false);
+                  setForceDelete(false);
+                }}
+              >
                 Cancel
               </Button>
-              <Button variant="destructive" onClick={handleBulkDelete} disabled={loading}>
-                {loading ? 'Deleting...' : 'Proceed with Delete'}
+              <Button 
+                variant="destructive" 
+                onClick={handleBulkDelete} 
+                disabled={loading}
+                className={forceDelete ? "bg-red-700 hover:bg-red-800" : ""}
+              >
+                {loading ? 'Deleting...' : forceDelete ? '🚨 Force Delete All' : 'Proceed with Delete'}
               </Button>
             </div>
           </div>
