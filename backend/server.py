@@ -760,6 +760,50 @@ async def delete_vehicle(vehicle_id: str, current_user: User = Depends(get_curre
     
     return {"message": "Vehicle deleted successfully", "deleted_vehicle_id": vehicle_id}
 
+@api_router.delete("/vehicles")
+async def bulk_delete_vehicles(request: BulkDeleteRequest, current_user: User = Depends(get_current_user)):
+    """Bulk delete vehicles"""
+    if not request.ids:
+        raise HTTPException(status_code=400, detail="No vehicle IDs provided")
+    
+    deleted = []
+    failed = []
+    
+    for vehicle_id in request.ids:
+        try:
+            # Check if vehicle exists
+            existing_vehicle = await db.vehicles.find_one({"id": vehicle_id})
+            if not existing_vehicle:
+                failed.append({"id": vehicle_id, "error": "Vehicle not found"})
+                continue
+            
+            # Check if vehicle has associated sales records
+            sales_count = await db.sales.count_documents({"vehicle_id": vehicle_id})
+            if sales_count > 0:
+                failed.append({"id": vehicle_id, "error": f"Vehicle has {sales_count} associated sales record(s)"})
+                continue
+            
+            # Check if vehicle has associated service records
+            services_count = await db.services.count_documents({"vehicle_id": vehicle_id})
+            if services_count > 0:
+                failed.append({"id": vehicle_id, "error": f"Vehicle has {services_count} associated service record(s)"})
+                continue
+            
+            # Delete the vehicle
+            result = await db.vehicles.delete_one({"id": vehicle_id})
+            if result.deleted_count > 0:
+                deleted.append(vehicle_id)
+            else:
+                failed.append({"id": vehicle_id, "error": "Failed to delete"})
+        except Exception as e:
+            failed.append({"id": vehicle_id, "error": str(e)})
+    
+    return {
+        "deleted": len(deleted),
+        "deleted_ids": deleted,
+        "failed": failed
+    }
+
 # Sales endpoints
 @api_router.post("/sales", response_model=Sale)
 async def create_sale(sale_data: SaleCreate, current_user: User = Depends(get_current_user)):
