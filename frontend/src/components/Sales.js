@@ -3603,8 +3603,15 @@ const CustomersManagement = () => {
 
   const fetchCustomers = async () => {
     try {
-      const response = await axios.get(`${API}/customers`);
-      setCustomers(response.data);
+      const response = await axios.get(`${API}/customers`, {
+        params: {
+          page: 1,
+          limit: 10000,
+          sort: 'created_at',
+          order: 'desc'
+        }
+      });
+      setCustomers(response.data.data || response.data);
     } catch (error) {
       toast.error('Failed to fetch customers');
     }
