@@ -763,12 +763,13 @@ async def delete_vehicle(vehicle_id: str, current_user: User = Depends(get_curre
 
 @api_router.delete("/vehicles")
 async def bulk_delete_vehicles(request: BulkDeleteRequest, current_user: User = Depends(get_current_user)):
-    """Bulk delete vehicles"""
+    """Bulk delete vehicles with optional force delete (cascade)"""
     if not request.ids:
         raise HTTPException(status_code=400, detail="No vehicle IDs provided")
     
     deleted = []
     failed = []
+    cascade_stats = {"sales": 0, "services": 0}
     
     for vehicle_id in request.ids:
         try:
@@ -778,17 +779,30 @@ async def bulk_delete_vehicles(request: BulkDeleteRequest, current_user: User = 
                 failed.append({"id": vehicle_id, "error": "Vehicle not found"})
                 continue
             
-            # Check if vehicle has associated sales records
+            # Check for associated records
             sales_count = await db.sales.count_documents({"vehicle_id": vehicle_id})
-            if sales_count > 0:
-                failed.append({"id": vehicle_id, "error": f"Vehicle has {sales_count} associated sales record(s)"})
-                continue
-            
-            # Check if vehicle has associated service records
             services_count = await db.services.count_documents({"vehicle_id": vehicle_id})
-            if services_count > 0:
-                failed.append({"id": vehicle_id, "error": f"Vehicle has {services_count} associated service record(s)"})
-                continue
+            
+            # If force delete is enabled, delete associated records first
+            if request.force_delete:
+                # Delete associated sales
+                if sales_count > 0:
+                    sales_result = await db.sales.delete_many({"vehicle_id": vehicle_id})
+                    cascade_stats["sales"] += sales_result.deleted_count
+                
+                # Delete associated services
+                if services_count > 0:
+                    services_result = await db.services.delete_many({"vehicle_id": vehicle_id})
+                    cascade_stats["services"] += services_result.deleted_count
+            else:
+                # Normal delete - check for restrictions
+                if sales_count > 0:
+                    failed.append({"id": vehicle_id, "error": f"Vehicle has {sales_count} associated sales record(s)"})
+                    continue
+                
+                if services_count > 0:
+                    failed.append({"id": vehicle_id, "error": f"Vehicle has {services_count} associated service record(s)"})
+                    continue
             
             # Delete the vehicle
             result = await db.vehicles.delete_one({"id": vehicle_id})
@@ -799,11 +813,17 @@ async def bulk_delete_vehicles(request: BulkDeleteRequest, current_user: User = 
         except Exception as e:
             failed.append({"id": vehicle_id, "error": str(e)})
     
-    return {
+    response = {
         "deleted": len(deleted),
         "deleted_ids": deleted,
         "failed": failed
     }
+    
+    # Include cascade statistics if force delete was used
+    if request.force_delete:
+        response["cascade_deleted"] = cascade_stats
+    
+    return response
 
 # Sales endpoints
 @api_router.post("/sales", response_model=Sale)
