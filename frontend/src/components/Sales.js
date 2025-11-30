@@ -5389,6 +5389,12 @@ const ViewCustomerDetails = () => {
       const token = localStorage.getItem('token');
       const [customersRes, vehiclesRes, salesRes] = await Promise.all([
         axios.get(`${API}/customers`, {
+          params: {
+            page: 1,
+            limit: 10000,
+            sort: 'created_at',
+            order: 'desc'
+          },
           headers: { Authorization: `Bearer ${token}` }
         }),
         axios.get(`${API}/vehicles`, {
@@ -5399,7 +5405,7 @@ const ViewCustomerDetails = () => {
         })
       ]);
       
-      setCustomers(customersRes.data);
+      setCustomers(customersRes.data.data || customersRes.data);
       setVehicles(vehiclesRes.data);
       setSales(salesRes.data);
     } catch (error) {
