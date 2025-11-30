@@ -1982,9 +1982,9 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
                     {'name': customer_name or 'Unknown Customer'}, 
                     import_stats
                 )
-                vehicle_dict['customer_id'] = customer_id
+                vehicle.customer_id = customer_id
             
-            await db.vehicles.insert_one(vehicle_dict)
+            await db.vehicles.insert_one(vehicle.dict())
             
             # CROSS-REFERENCE: Create sales record if sale data is provided
             sale_amount = (row.get('sale_amount') or '').strip()
