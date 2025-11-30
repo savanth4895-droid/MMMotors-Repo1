@@ -165,10 +165,23 @@ class Sale(BaseModel):
 class SaleCreate(BaseModel):
     customer_id: str
     vehicle_id: Optional[str] = None  # Made optional for imported sales
+    sale_date: Optional[datetime] = None  # Allow updating sale date
     amount: float
     payment_method: str
     insurance_details: Optional[Dict[str, Any]] = None
     source: str = "direct"  # Default to direct sales
+    
+    # Additional fields for imported sales and editing
+    vehicle_brand: Optional[str] = None
+    vehicle_model: Optional[str] = None
+    vehicle_color: Optional[str] = None
+    vehicle_chassis: Optional[str] = None
+    vehicle_engine: Optional[str] = None
+    vehicle_registration: Optional[str] = None
+    insurance_nominee: Optional[str] = None
+    insurance_relation: Optional[str] = None
+    insurance_age: Optional[str] = None
+    hypothecation: Optional[str] = None
 
 class Service(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
