@@ -2893,6 +2893,14 @@ const ViewInvoices = () => {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b bg-gray-50">
+                  <th className="p-3 text-left">
+                    <input
+                      type="checkbox"
+                      checked={selectedInvoices.length === filteredInvoices.length && filteredInvoices.length > 0}
+                      onChange={handleSelectAll}
+                      className="rounded"
+                    />
+                  </th>
                   <th className="text-left p-3 font-semibold">Invoice No.</th>
                   <th className="text-left p-3 font-semibold">Date</th>
                   <th className="text-left p-3 font-semibold">Customer Name</th>
@@ -2905,13 +2913,21 @@ const ViewInvoices = () => {
               <tbody>
                 {filteredInvoices.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="p-8 text-center text-gray-500">
+                    <td colSpan="8" className="p-8 text-center text-gray-500">
                       {searchTerm ? 'No invoices found matching your search' : 'No invoices found'}
                     </td>
                   </tr>
                 ) : (
                   filteredInvoices.map((invoice) => (
                     <tr key={invoice.id} className="border-b hover:bg-gray-50 transition-colors">
+                      <td className="p-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedInvoices.includes(invoice.id)}
+                          onChange={() => handleSelectInvoice(invoice.id)}
+                          className="rounded"
+                        />
+                      </td>
                       <td className="p-3">
                         <button
                           onClick={() => handleViewInvoice(invoice)}
