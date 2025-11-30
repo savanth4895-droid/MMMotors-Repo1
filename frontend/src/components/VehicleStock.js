@@ -1274,19 +1274,27 @@ const StockView = () => {
       {showBulkDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h2 className="text-xl font-bold mb-4">Confirm Delete</h2>
-            <p className="mb-4">
+            <h2 className="text-xl font-bold mb-4 text-red-600">⚠️ Confirm Delete</h2>
+            <p className="mb-4 font-semibold">
               Are you sure you want to delete {selectedVehicles.length} vehicle(s)?
             </p>
+            <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mb-4">
+              <p className="text-sm text-yellow-800 font-semibold mb-2">⚠️ Important Restrictions:</p>
+              <ul className="text-sm text-yellow-700 list-disc list-inside space-y-1">
+                <li>Vehicles with sales records cannot be deleted</li>
+                <li>Vehicles with service records cannot be deleted</li>
+                <li>You must delete associated records first</li>
+              </ul>
+            </div>
             <p className="text-sm text-gray-600 mb-4">
-              This action cannot be undone. Vehicles with associated sales or service records cannot be deleted.
+              Only vehicles without any sales or service history will be deleted. Others will be skipped with detailed error messages.
             </p>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setShowBulkDeleteModal(false)}>
                 Cancel
               </Button>
               <Button variant="destructive" onClick={handleBulkDelete} disabled={loading}>
-                {loading ? 'Deleting...' : 'Confirm Delete'}
+                {loading ? 'Deleting...' : 'Proceed with Delete'}
               </Button>
             </div>
           </div>
