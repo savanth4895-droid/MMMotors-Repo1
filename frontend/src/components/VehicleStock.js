@@ -955,6 +955,8 @@ const StockView = () => {
   const [loading, setLoading] = useState(true);
   const [editVehicle, setEditVehicle] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedVehicles, setSelectedVehicles] = useState([]);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
 
   const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA'];
 
