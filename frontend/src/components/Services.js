@@ -1383,11 +1383,18 @@ const JobCards = () => {
     try {
       const [servicesRes, customersRes] = await Promise.all([
         axios.get(`${API}/services`),
-        axios.get(`${API}/customers`)
+        axios.get(`${API}/customers`, {
+          params: {
+            page: 1,
+            limit: 10000,
+            sort: 'created_at',
+            order: 'desc'
+          }
+        })
       ]);
 
       const services = servicesRes.data;
-      const customers = customersRes.data;
+      const customers = customersRes.data.data || customersRes.data;
 
       // Combine service and customer data to create job card records
       const combined = services.map(service => {
