@@ -248,11 +248,18 @@ const SalesOverview = () => {
       setLoading(true);
       const [salesRes, customersRes] = await Promise.all([
         axios.get(`${API}/sales`),
-        axios.get(`${API}/customers`)
+        axios.get(`${API}/customers`, {
+          params: {
+            page: 1,
+            limit: 10000,
+            sort: 'created_at',
+            order: 'desc'
+          }
+        })
       ]);
 
       const sales = salesRes.data;
-      const customers = customersRes.data;
+      const customers = customersRes.data.data || customersRes.data;
 
       // Calculate current month revenue
       const currentMonth = new Date().getMonth();
