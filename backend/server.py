@@ -433,13 +433,75 @@ async def create_customer(customer_data: CustomerCreate, current_user: User = De
     return customer
 
 @api_router.get("/customers")
-async def get_customers(current_user: User = Depends(get_current_user)):
-    customers = await db.customers.find().to_list(1000)
-    # Convert ObjectId to string for JSON serialization and return raw customer data
+async def get_customers(
+    page: int = 1,
+    limit: int = 100,
+    sort: str = "created_at",
+    order: str = "desc",
+    current_user: User = Depends(get_current_user)
+):
+    # Validate sort field
+    valid_sort_fields = ["name", "mobile", "created_at", "total_purchases"]
+    if sort not in valid_sort_fields:
+        raise HTTPException(status_code=400, detail=f"Invalid sort field. Must be one of: {', '.join(valid_sort_fields)}")
+    
+    # Validate order
+    if order not in ["asc", "desc"]:
+        raise HTTPException(status_code=400, detail="Invalid order. Must be 'asc' or 'desc'")
+    
+    # Calculate skip
+    skip = (page - 1) * limit
+    
+    # Build sort criteria
+    sort_direction = 1 if order == "asc" else -1
+    
+    # For total_purchases, we need to aggregate
+    if sort == "total_purchases":
+        # Aggregate to calculate total purchases
+        pipeline = [
+            {
+                "$lookup": {
+                    "from": "sales",
+                    "localField": "id",
+                    "foreignField": "customer_id",
+                    "as": "sales"
+                }
+            },
+            {
+                "$addFields": {
+                    "total_purchases": {"$size": "$sales"}
+                }
+            },
+            {"$sort": {"total_purchases": sort_direction}},
+            {"$skip": skip},
+            {"$limit": limit}
+        ]
+        customers = await db.customers.aggregate(pipeline).to_list(None)
+        
+        # Get total count
+        total = await db.customers.count_documents({})
+    else:
+        # Regular sort
+        customers = await db.customers.find().sort(sort, sort_direction).skip(skip).limit(limit).to_list(None)
+        total = await db.customers.count_documents({})
+    
+    # Convert ObjectId to string for JSON serialization
     for customer in customers:
         if '_id' in customer:
             customer['_id'] = str(customer['_id'])
-    return customers
+    
+    # Calculate total pages
+    total_pages = (total + limit - 1) // limit
+    
+    return {
+        "data": customers,
+        "meta": {
+            "total": total,
+            "page": page,
+            "limit": limit,
+            "totalPages": total_pages
+        }
+    }
 
 @api_router.get("/customers/{customer_id}")
 async def get_customer(customer_id: str, current_user: User = Depends(get_current_user)):
