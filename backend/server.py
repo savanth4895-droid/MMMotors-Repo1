@@ -590,16 +590,19 @@ async def delete_customer(customer_id: str, current_user: User = Depends(get_cur
     
     return {"message": "Customer deleted successfully", "deleted_customer_id": customer_id}
 
+class BulkDeleteRequest(BaseModel):
+    ids: List[str]
+
 @api_router.delete("/customers")
-async def bulk_delete_customers(ids: List[str], current_user: User = Depends(get_current_user)):
+async def bulk_delete_customers(request: BulkDeleteRequest, current_user: User = Depends(get_current_user)):
     """Bulk delete customers"""
-    if not ids:
+    if not request.ids:
         raise HTTPException(status_code=400, detail="No customer IDs provided")
     
     deleted = []
     failed = []
     
-    for customer_id in ids:
+    for customer_id in request.ids:
         try:
             # Check if customer exists
             existing_customer = await db.customers.find_one({"id": customer_id})
