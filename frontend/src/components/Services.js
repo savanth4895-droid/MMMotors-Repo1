@@ -413,9 +413,17 @@ const NewService = () => {
           headers: { Authorization: `Bearer ${token}` }
         }),
         axios.get(`${API}/customers`, {
+          params: {
+            page: 1,
+            limit: 10000,
+            sort: 'created_at',
+            order: 'desc'
+          },
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
+
+      const customers = customersResponse.data.data || customersResponse.data;
 
       // Find matching vehicle by chassis number
       const matchingVehicle = vehiclesResponse.data.find(vehicle => 
