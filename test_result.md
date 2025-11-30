@@ -67,12 +67,7 @@
 
 ## test_plan:
 ##   current_focus:
-##     - "Cross-Reference Data Import System"
-##     - "Customer Import with Vehicle Linking"  
-##     - "Vehicle Import with Customer Auto-Creation"
-##     - "Service Import with Chassis Number Lookup"
-##     - "Cross-Reference Statistics Tracking"
-##     - "Incomplete Records Identification"
+##     - "Vehicle Stock TVS Page Fix Testing"
 ##   stuck_tasks: []
 ##   test_all: false
 ##   test_priority: "high_first"
