@@ -4668,6 +4668,7 @@ const SalesReports = () => {
   const [loading, setLoading] = useState(true);
   const [monthlyData, setMonthlyData] = useState([]);
   const [brandData, setBrandData] = useState([]);
+  const [chartGranularity, setChartGranularity] = useState('monthly');
   const [totalStats, setTotalStats] = useState({
     totalSales: 0,
     totalRevenue: 0,
@@ -4685,7 +4686,7 @@ const SalesReports = () => {
       processBrandData();
       calculateStats();
     }
-  }, [sales, vehicles]);
+  }, [sales, vehicles, chartGranularity]);
 
   const fetchAllData = async () => {
     try {
