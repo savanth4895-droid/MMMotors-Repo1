@@ -1403,6 +1403,8 @@ const ViewInvoices = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [editFormData, setEditFormData] = useState({});
+  const [selectedInvoices, setSelectedInvoices] = useState([]);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
 
   useEffect(() => {
     fetchInvoices();
