@@ -2174,12 +2174,18 @@ const ServicesBilling = () => {
           headers: { Authorization: `Bearer ${token}` }
         }),
         axios.get(`${API}/customers`, {
+          params: {
+            page: 1,
+            limit: 10000,
+            sort: 'created_at',
+            order: 'desc'
+          },
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
       
       const services = servicesResponse.data;
-      const customers = customersResponse.data;
+      const customers = customersResponse.data.data || customersResponse.data;
       
       // Map customer details to services
       const servicesWithCustomers = services.map(service => {
