@@ -760,10 +760,27 @@ async def delete_vehicle(vehicle_id: str, current_user: User = Depends(get_curre
 # Sales endpoints
 @api_router.post("/sales", response_model=Sale)
 async def create_sale(sale_data: SaleCreate, current_user: User = Depends(get_current_user)):
-    # Check if vehicle exists and is available
-    vehicle = await db.vehicles.find_one({"id": sale_data.vehicle_id})
-    if not vehicle or vehicle['status'] != VehicleStatus.IN_STOCK:
-        raise HTTPException(status_code=400, detail="Vehicle not available for sale")
+    # Validate customer exists
+    customer = await db.customers.find_one({"id": sale_data.customer_id})
+    if not customer:
+        raise HTTPException(status_code=400, detail="Customer not found")
+    
+    # Validate vehicle if provided
+    if sale_data.vehicle_id:
+        vehicle = await db.vehicles.find_one({"id": sale_data.vehicle_id})
+        if not vehicle:
+            raise HTTPException(status_code=400, detail="Vehicle not found")
+        if vehicle['status'] != VehicleStatus.IN_STOCK:
+            raise HTTPException(status_code=400, detail="Vehicle not available for sale")
+    
+    # Validate amount is positive
+    if sale_data.amount <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be greater than zero")
+    
+    # Validate payment method
+    valid_payment_methods = ["Cash", "Card", "UPI", "Bank Transfer", "Cheque", "Finance"]
+    if sale_data.payment_method not in valid_payment_methods:
+        raise HTTPException(status_code=400, detail=f"Invalid payment method. Must be one of: {', '.join(valid_payment_methods)}")
     
     # Generate invoice number
     count = await db.sales.count_documents({})
@@ -774,11 +791,12 @@ async def create_sale(sale_data: SaleCreate, current_user: User = Depends(get_cu
     sale_dict['created_by'] = current_user.id
     sale = Sale(**sale_dict)
     
-    # Update vehicle status
-    await db.vehicles.update_one(
-        {"id": sale_data.vehicle_id},
-        {"$set": {"status": VehicleStatus.SOLD, "customer_id": sale_data.customer_id, "date_sold": datetime.now(timezone.utc)}}
-    )
+    # Update vehicle status if vehicle_id provided
+    if sale_data.vehicle_id:
+        await db.vehicles.update_one(
+            {"id": sale_data.vehicle_id},
+            {"$set": {"status": VehicleStatus.SOLD, "customer_id": sale_data.customer_id, "date_sold": datetime.now(timezone.utc)}}
+        )
     
     await db.sales.insert_one(sale.dict())
     return sale
