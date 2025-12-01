@@ -60,6 +60,26 @@ app = FastAPI(title="Two Wheeler Business Management API")
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+# Startup event to verify MongoDB connection
+@app.on_event("startup")
+async def startup_db_client():
+    """Test MongoDB connection on startup"""
+    try:
+        # Test the connection
+        await client.admin.command('ping')
+        print("✅ Successfully connected to MongoDB Atlas")
+    except Exception as e:
+        print(f"❌ Failed to connect to MongoDB: {str(e)}")
+        print(f"   Error type: {type(e).__name__}")
+        print(f"   Make sure MONGO_URL is correctly configured for Atlas")
+        # Don't raise exception - let the app start and show errors via /ready endpoint
+
+@app.on_event("shutdown")
+async def shutdown_db_client():
+    """Close MongoDB connection on shutdown"""
+    client.close()
+    print("✅ MongoDB connection closed")
+
 # Security
 security = HTTPBearer()
 
