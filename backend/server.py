@@ -31,9 +31,22 @@ import re
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
+# MongoDB connection with Atlas-compatible settings
 mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
+
+# Configure MongoDB client with proper timeouts and SSL settings for Atlas
+client = AsyncIOMotorClient(
+    mongo_url,
+    serverSelectionTimeoutMS=30000,  # 30 seconds for server selection
+    connectTimeoutMS=30000,           # 30 seconds for initial connection
+    socketTimeoutMS=30000,            # 30 seconds for socket operations
+    maxPoolSize=50,                   # Connection pool size
+    minPoolSize=10,                   # Minimum connections to maintain
+    retryWrites=True,                 # Retry write operations
+    retryReads=True,                  # Retry read operations
+    tls=True,                         # Enable TLS/SSL for Atlas
+    tlsAllowInvalidCertificates=False # Validate SSL certificates (set to True only for dev/testing)
+)
 db = client[os.environ['DB_NAME']]
 
 # JWT Configuration
