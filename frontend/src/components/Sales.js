@@ -3692,7 +3692,7 @@ const CustomersManagement = () => {
     age: ''
   });
 
-  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA'];
+  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO'];
   const relations = ['father', 'mother', 'spouse', 'son', 'daughter', 'brother', 'sister', 'other'];
 
   useEffect(() => {
