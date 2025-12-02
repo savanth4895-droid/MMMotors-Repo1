@@ -799,7 +799,7 @@ const AddVehicle = () => {
   });
   const [loading, setLoading] = useState(false);
 
-  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA'];
+  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO'];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
