@@ -961,7 +961,7 @@ const StockView = () => {
   const [deleteErrors, setDeleteErrors] = useState([]);
   const [showErrorModal, setShowErrorModal] = useState(false);
 
-  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA'];
+  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO'];
 
   useEffect(() => {
     fetchVehicles();
