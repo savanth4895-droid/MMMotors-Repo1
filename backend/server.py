@@ -774,7 +774,7 @@ async def get_vehicles(brand: Optional[str] = None, status: Optional[VehicleStat
 
 @api_router.get("/vehicles/brands")
 async def get_vehicle_brands(current_user: User = Depends(get_current_user)):
-    brands = ["TVS", "BAJAJ", "HERO", "HONDA", "TRIUMPH", "KTM", "SUZUKI", "APRILIA"]
+    brands = ["TVS", "BAJAJ", "HERO", "HONDA", "TRIUMPH", "KTM", "SUZUKI", "APRILIA", "YAMAHA", "PIAGGIO"]
     return brands
 
 @api_router.put("/vehicles/{vehicle_id}", response_model=Vehicle)
