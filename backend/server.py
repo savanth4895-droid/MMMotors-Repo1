@@ -152,7 +152,7 @@ class CustomerCreate(BaseModel):
 
 class Vehicle(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    brand: Optional[str] = None  # TVS, BAJAJ, HERO, HONDA, TRIUMPH, KTM, SUZUKI, APRILIA
+    brand: Optional[str] = None  # TVS, BAJAJ, HERO, HONDA, TRIUMPH, KTM, SUZUKI, APRILIA, YAMAHA, PIAGGIO
     model: Optional[str] = None
     chassis_number: Optional[str] = None  # Standardized from chassis_no
     engine_number: Optional[str] = None  # Standardized from engine_no
