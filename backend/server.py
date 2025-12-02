@@ -1981,7 +1981,7 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
         'sales_created': 0
     }
     
-    valid_brands = ["TVS", "BAJAJ", "HERO", "HONDA", "TRIUMPH", "KTM", "SUZUKI", "APRILIA"]
+    valid_brands = ["TVS", "BAJAJ", "HERO", "HONDA", "TRIUMPH", "KTM", "SUZUKI", "APRILIA", "YAMAHA", "PIAGGIO"]
     
     for idx, row in enumerate(data):
         try:
