@@ -94,7 +94,9 @@ const BrandOverview = () => {
     { name: 'TRIUMPH', color: 'from-purple-500 to-purple-600' },
     { name: 'KTM', color: 'from-orange-500 to-orange-600' },
     { name: 'SUZUKI', color: 'from-pink-500 to-pink-600' },
-    { name: 'APRILIA', color: 'from-indigo-500 to-indigo-600' }
+    { name: 'APRILIA', color: 'from-indigo-500 to-indigo-600' },
+    { name: 'YAMAHA', color: 'from-teal-500 to-teal-600' },
+    { name: 'PIAGGIO', color: 'from-cyan-500 to-cyan-600' }
   ];
 
   useEffect(() => {
