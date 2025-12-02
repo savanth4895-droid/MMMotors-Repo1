@@ -363,7 +363,7 @@ const CreateInvoice = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
 
-  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA'];
+  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO'];
 
   // Vehicle search functionality
   const searchVehiclesByChassisNo = async (chassisQuery) => {
