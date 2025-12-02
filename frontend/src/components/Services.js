@@ -1433,7 +1433,7 @@ const JobCards = () => {
   };
 
   const extractVehicleInfo = (description, vehicleNumber) => {
-    const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA'];
+    const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO'];
     let brand = 'N/A';
     let model = 'N/A';
     let year = 'N/A';
