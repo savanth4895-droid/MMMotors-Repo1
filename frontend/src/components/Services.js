@@ -1051,14 +1051,34 @@ const ViewRegistration = () => {
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-        <Input
-          placeholder="Search by customer name, phone, vehicle brand, model, year, or registration number..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
+      {/* Search Bar & Sort */}
+      <div className="flex flex-wrap gap-4">
+        <div className="relative flex-1 min-w-64">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Search by customer name, phone, vehicle brand, model, year, or registration number..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <SortDropdown
+          currentSort={sortBy}
+          currentOrder={sortOrder}
+          onSortChange={(field, order) => {
+            setSortBy(field);
+            setSortOrder(order);
+          }}
+          options={[
+            { field: 'registration_date', order: 'desc', label: 'Newest First' },
+            { field: 'registration_date', order: 'asc', label: 'Oldest First' },
+            { field: 'customer_name', order: 'asc', label: 'Customer (A-Z)' },
+            { field: 'customer_name', order: 'desc', label: 'Customer (Z-A)' },
+            { field: 'vehicle_brand', order: 'asc', label: 'Brand (A-Z)' },
+            { field: 'vehicle_brand', order: 'desc', label: 'Brand (Z-A)' },
+            { field: 'amount', order: 'desc', label: 'Amount (High to Low)' },
+            { field: 'amount', order: 'asc', label: 'Amount (Low to High)' }
+          ]}
         />
       </div>
 
