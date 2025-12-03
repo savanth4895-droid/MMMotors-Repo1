@@ -2948,6 +2948,108 @@ async def download_backup(
         media_type='application/octet-stream'
     )
 
+# ==================== Activity/Notifications System ====================
+
+class ActivityType(str, Enum):
+    SALE_CREATED = "sale_created"
+    SERVICE_COMPLETED = "service_completed"
+    SERVICE_CREATED = "service_created"
+    VEHICLE_ADDED = "vehicle_added"
+    VEHICLE_SOLD = "vehicle_sold"
+    LOW_STOCK = "low_stock"
+    CUSTOMER_ADDED = "customer_added"
+    BACKUP_CREATED = "backup_created"
+
+class Activity(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    type: ActivityType
+    title: str
+    description: str
+    icon: str = "info"  # info, success, warning, error
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    read: bool = False
+    metadata: Optional[Dict[str, Any]] = None
+
+class ActivityCreate(BaseModel):
+    type: ActivityType
+    title: str
+    description: str
+    icon: str = "info"
+    metadata: Optional[Dict[str, Any]] = None
+
+async def create_activity(activity_data: ActivityCreate):
+    """Helper function to create an activity"""
+    activity = Activity(**activity_data.dict())
+    await db.activities.insert_one(activity.dict())
+    return activity
+
+@app.get("/api/activities")
+async def get_activities(
+    limit: int = 20,
+    skip: int = 0,
+    unread_only: bool = False,
+    current_user: dict = Depends(verify_token)
+):
+    """Get recent activities/notifications"""
+    query = {}
+    if unread_only:
+        query["read"] = False
+    
+    activities = await db.activities.find(
+        query,
+        {"_id": 0}
+    ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    total = await db.activities.count_documents(query)
+    unread_count = await db.activities.count_documents({"read": False})
+    
+    return {
+        "activities": activities,
+        "total": total,
+        "unread_count": unread_count
+    }
+
+@app.post("/api/activities/{activity_id}/mark-read")
+async def mark_activity_read(
+    activity_id: str,
+    current_user: dict = Depends(verify_token)
+):
+    """Mark an activity as read"""
+    result = await db.activities.update_one(
+        {"id": activity_id},
+        {"$set": {"read": True}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Activity not found")
+    
+    return {"message": "Activity marked as read"}
+
+@app.post("/api/activities/mark-all-read")
+async def mark_all_activities_read(current_user: dict = Depends(verify_token)):
+    """Mark all activities as read"""
+    await db.activities.update_many(
+        {"read": False},
+        {"$set": {"read": True}}
+    )
+    
+    return {"message": "All activities marked as read"}
+
+@app.delete("/api/activities/{activity_id}")
+async def delete_activity(
+    activity_id: str,
+    current_user: dict = Depends(verify_token)
+):
+    """Delete an activity"""
+    result = await db.activities.delete_one({"id": activity_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Activity not found")
+    
+    return {"message": "Activity deleted"}
+
+# ==================== End Activity/Notifications System ====================
+
 app.include_router(api_router)
 
 app.add_middleware(
