@@ -72,8 +72,12 @@ const Dashboard = () => {
       
       setStats(dashboardRes.data);
       setBackupStats(backupRes.data);
+      setLastUpdate(new Date());
     } catch (error) {
-      toast.error('Failed to fetch dashboard statistics');
+      if (loading) {
+        toast.error('Failed to fetch dashboard statistics');
+      }
+      // Silently fail for auto-refresh to avoid annoying the user
     } finally {
       setLoading(false);
     }
