@@ -1457,7 +1457,7 @@ const JobCards = () => {
 
   useEffect(() => {
     filterJobCards();
-  }, [jobCards, searchTerm]);
+  }, [jobCards, searchTerm, sortBy, sortOrder]);
 
   const fetchAllData = async () => {
     try {
