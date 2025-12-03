@@ -975,6 +975,11 @@ async def create_sale(sale_data: SaleCreate, current_user: User = Depends(get_cu
     sale_dict = sale_data.dict()
     sale_dict['invoice_number'] = invoice_number
     sale_dict['created_by'] = current_user.id
+    
+    # Remove None sale_date to allow default factory to work
+    if sale_dict.get('sale_date') is None:
+        sale_dict.pop('sale_date', None)
+    
     sale = Sale(**sale_dict)
     
     # Update vehicle status if vehicle_id provided
