@@ -990,6 +990,25 @@ async def create_sale(sale_data: SaleCreate, current_user: User = Depends(get_cu
         )
     
     await db.sales.insert_one(sale.dict())
+    
+    # Create activity notification
+    try:
+        vehicle_info = ""
+        if sale_data.vehicle_id:
+            vehicle = await db.vehicles.find_one({"id": sale_data.vehicle_id}, {"_id": 0})
+            if vehicle:
+                vehicle_info = f" - {vehicle.get('brand', '')} {vehicle.get('model', '')}"
+        
+        await create_activity(ActivityCreate(
+            type=ActivityType.SALE_CREATED,
+            title="New sale recorded",
+            description=f"{customer.get('name', 'Unknown')} - Invoice {invoice_number}{vehicle_info}",
+            icon="success",
+            metadata={"sale_id": sale.id, "customer_id": sale_data.customer_id, "invoice_number": invoice_number}
+        ))
+    except Exception as e:
+        logger.warning(f"Failed to create activity for sale: {e}")
+    
     return sale
 
 @api_router.get("/sales", response_model=List[Sale])
