@@ -36,6 +36,7 @@ const Dashboard = () => {
     vehicles_sold: 0,
     pending_services: 0,
     low_stock_parts: 0,
+    completed_today: 0,
     sales_stats: {
       total_sales: 0,
       direct_sales: 0,
@@ -47,9 +48,19 @@ const Dashboard = () => {
   });
   const [backupStats, setBackupStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState(new Date());
 
   useEffect(() => {
+    // Initial fetch
     fetchStats();
+    
+    // Set up auto-refresh every 30 seconds for real-time updates
+    const refreshInterval = setInterval(() => {
+      fetchStats();
+    }, 30000); // 30 seconds
+    
+    // Cleanup interval on component unmount
+    return () => clearInterval(refreshInterval);
   }, []);
 
   const fetchStats = async () => {
