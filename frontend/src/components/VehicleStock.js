@@ -729,7 +729,9 @@ const BrandDetails = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredVehicles.map((vehicle) => (
+                  filteredVehicles
+                    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                    .map((vehicle) => (
                     <tr key={vehicle.id} className="border-b hover:bg-gray-50 transition-colors">
                       <td className="p-3 text-gray-600">
                         {new Date(vehicle.date_received).toLocaleDateString('en-IN')}
