@@ -1205,6 +1205,28 @@ const StockView = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            <div>
+              <Label>Sort By</Label>
+              <SortDropdown
+                currentSort={sortBy}
+                currentOrder={sortOrder}
+                onSortChange={(field, order) => {
+                  setSortBy(field);
+                  setSortOrder(order);
+                }}
+                options={[
+                  { field: 'date_received', order: 'desc', label: 'Newest First' },
+                  { field: 'date_received', order: 'asc', label: 'Oldest First' },
+                  { field: 'brand', order: 'asc', label: 'Brand (A-Z)' },
+                  { field: 'brand', order: 'desc', label: 'Brand (Z-A)' },
+                  { field: 'model', order: 'asc', label: 'Model (A-Z)' },
+                  { field: 'model', order: 'desc', label: 'Model (Z-A)' },
+                  { field: 'chassis_number', order: 'asc', label: 'Chassis No (A-Z)' },
+                  { field: 'chassis_number', order: 'desc', label: 'Chassis No (Z-A)' }
+                ]}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
