@@ -783,6 +783,17 @@ const BrandDetails = () => {
             </table>
           </div>
         </CardContent>
+        
+        {/* Pagination */}
+        {filteredVehicles.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(filteredVehicles.length / itemsPerPage)}
+            total={filteredVehicles.length}
+            limit={itemsPerPage}
+            onPageChange={setCurrentPage}
+          />
+        )}
       </Card>
 
       {/* Edit Vehicle Modal */}
