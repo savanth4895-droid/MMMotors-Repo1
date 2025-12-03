@@ -3,6 +3,7 @@ import { AuthContext } from '../App';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
+import NotificationDropdown from './NotificationDropdown';
 import { 
   Bike, 
   LayoutDashboard, 
