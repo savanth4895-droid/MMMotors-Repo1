@@ -147,15 +147,15 @@ const Dashboard = () => {
     },
     {
       title: 'Completed Today',
-      value: '8',
-      change: '+2',
+      value: stats.completed_today || 0,
+      change: stats.completed_today > 0 ? `+${stats.completed_today}` : 'No completions',
       changeType: 'positive',
       icon: CheckCircle
     },
     {
       title: 'Active Customers',
       value: stats.total_customers,
-      change: '+5',
+      change: stats.total_customers > 0 ? `${stats.total_customers} total` : 'No customers',
       changeType: 'positive',
       icon: Users
     }
