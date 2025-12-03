@@ -47,6 +47,7 @@ const Dashboard = () => {
     }
   });
   const [backupStats, setBackupStats] = useState(null);
+  const [recentActivities, setRecentActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(new Date());
 
