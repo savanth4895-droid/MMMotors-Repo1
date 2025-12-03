@@ -1570,7 +1570,40 @@ const JobCards = () => {
       );
     }
 
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let aVal, bVal;
+      
+      switch (sortBy) {
+        case 'service_date':
+          aVal = new Date(a.service_date || 0);
+          bVal = new Date(b.service_date || 0);
+          break;
+        case 'customer_name':
+          aVal = a.customer_name || '';
+          bVal = b.customer_name || '';
+          break;
+        case 'job_card_id':
+          aVal = a.job_card_id || '';
+          bVal = b.job_card_id || '';
+          break;
+        case 'status':
+          aVal = a.status || '';
+          bVal = b.status || '';
+          break;
+        default:
+          return 0;
+      }
+
+      if (sortOrder === 'asc') {
+        return aVal > bVal ? 1 : -1;
+      } else {
+        return aVal < bVal ? 1 : -1;
+      }
+    });
+
     setFilteredJobCards(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   const getStatusBadge = (status) => {
