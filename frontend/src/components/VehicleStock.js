@@ -964,6 +964,12 @@ const StockView = () => {
   const [forceDelete, setForceDelete] = useState(false);
   const [deleteErrors, setDeleteErrors] = useState([]);
   const [showErrorModal, setShowErrorModal] = useState(false);
+  
+  // Pagination & Sorting
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(25);
+  const [sortBy, setSortBy] = useState('date_received');
+  const [sortOrder, setSortOrder] = useState('desc');
 
   const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO'];
 
