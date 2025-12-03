@@ -523,6 +523,7 @@ const BrandDetails = () => {
       );
     }
     setFilteredVehicles(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   const getStatusBadge = (status) => {
