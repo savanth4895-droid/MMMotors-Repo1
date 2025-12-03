@@ -472,40 +472,34 @@ const Dashboard = () => {
           <CardDescription>Latest updates from your business</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center space-x-4 p-3 bg-blue-50 rounded-lg">
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <ShoppingCart className="w-4 h-4 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">New sale recorded</p>
-                <p className="text-xs text-gray-500">Hero Splendor+ sold to customer #1234</p>
-              </div>
-              <span className="text-xs text-gray-400">2 hours ago</span>
+          {recentActivities.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <Database className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+              <p className="text-sm">No recent activity</p>
             </div>
-
-            <div className="flex items-center space-x-4 p-3 bg-green-50 rounded-lg">
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                <Wrench className="w-4 h-4 text-green-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Service completed</p>
-                <p className="text-xs text-gray-500">Regular maintenance for TVS Apache</p>
-              </div>
-              <span className="text-xs text-gray-400">4 hours ago</span>
+          ) : (
+            <div className="space-y-4">
+              {recentActivities.map((activity) => (
+                <div 
+                  key={activity.id} 
+                  className={`flex items-center space-x-4 p-3 rounded-lg ${
+                    activity.icon === 'success' ? 'bg-green-50' :
+                    activity.icon === 'warning' ? 'bg-yellow-50' :
+                    activity.icon === 'error' ? 'bg-red-50' : 'bg-blue-50'
+                  }`}
+                >
+                  {getActivityIcon(activity.type, activity.icon)}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{activity.title}</p>
+                    <p className="text-xs text-gray-500 truncate">{activity.description}</p>
+                  </div>
+                  <span className="text-xs text-gray-400 whitespace-nowrap">
+                    {formatTimeAgo(activity.created_at)}
+                  </span>
+                </div>
+              ))}
             </div>
-
-            <div className="flex items-center space-x-4 p-3 bg-yellow-50 rounded-lg">
-              <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-4 h-4 text-yellow-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Low stock alert</p>
-                <p className="text-xs text-gray-500">Brake pads running low in inventory</p>
-              </div>
-              <span className="text-xs text-gray-400">6 hours ago</span>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>
