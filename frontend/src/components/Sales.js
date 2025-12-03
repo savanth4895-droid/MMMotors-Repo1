@@ -589,14 +589,69 @@ const CreateInvoice = () => {
     // Get the invoice preview content
     const invoiceElement = document.getElementById('invoice-preview');
     if (invoiceElement) {
-      const printWindow = window.open('', '_blank');
+      const printWindow = window.open('', '_blank', 'width=900,height=800');
       printWindow.document.write(`
         <html>
           <head>
-            <title>Invoice ${generatedInvoice.invoice_number}</title>
+            <title>Invoice Preview - ${generatedInvoice.invoice_number}</title>
             <style>
-              body { font-family: Arial, sans-serif; margin: 0; padding: 10px; line-height: 1.3; }
-              .invoice-container { max-width: 21cm; margin: 0 auto; }
+              body { 
+                font-family: Arial, sans-serif; 
+                margin: 0; 
+                padding: 0;
+                background-color: #f5f5f5;
+              }
+              .toolbar {
+                background-color: #2563eb;
+                color: white;
+                padding: 15px 20px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+              }
+              .toolbar h2 {
+                margin: 0;
+                font-size: 18px;
+              }
+              .toolbar-buttons {
+                display: flex;
+                gap: 10px;
+              }
+              .toolbar button {
+                background-color: white;
+                color: #2563eb;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 5px;
+                cursor: pointer;
+                font-weight: 600;
+                font-size: 14px;
+                transition: all 0.2s;
+              }
+              .toolbar button:hover {
+                background-color: #f0f0f0;
+                transform: translateY(-1px);
+              }
+              .toolbar button.print-btn {
+                background-color: #10b981;
+                color: white;
+              }
+              .toolbar button.print-btn:hover {
+                background-color: #059669;
+              }
+              .preview-container {
+                max-width: 21cm;
+                margin: 20px auto;
+                background-color: white;
+                padding: 20px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                border-radius: 8px;
+              }
+              .invoice-container { 
+                max-width: 100%;
+                margin: 0 auto;
+              }
               .header { text-align: center; margin-bottom: 12px; border-bottom: 2px solid #333; padding-bottom: 10px; }
               .header h1 { margin: 0; font-size: 18px; color: #2563eb; font-weight: bold; }
               .header p { margin: 3px 0; font-size: 11px; }
@@ -616,28 +671,43 @@ const CreateInvoice = () => {
               .service-footer { text-align: center; padding: 4px; background-color: #f0f0f0; border: 2px solid #333; border-top: none; font-weight: bold; font-size: 9px; }
               .footer { text-align: center; margin-top: 15px; border-top: 1px solid #ccc; padding-top: 8px; }
               .grid { display: flex; justify-content: space-between; margin-top: 8px; }
-              .no-print { display: none !important; }
+              
               @media print { 
-                body { margin: 0; padding: 8px; } 
+                body { 
+                  margin: 0; 
+                  padding: 0;
+                  background-color: white;
+                }
+                .toolbar { display: none !important; }
+                .preview-container {
+                  margin: 0;
+                  padding: 10px;
+                  box-shadow: none;
+                  border-radius: 0;
+                }
                 .section { page-break-inside: avoid; }
-                .no-print { display: none !important; }
                 @page { size: A4; margin: 0.5cm; }
               }
             </style>
           </head>
           <body>
-            <div class="invoice-container">
-              ${invoiceElement.innerHTML}
+            <div class="toolbar">
+              <h2>📄 Invoice Preview - ${generatedInvoice.invoice_number}</h2>
+              <div class="toolbar-buttons">
+                <button onclick="window.print()" class="print-btn">🖨️ Print Invoice</button>
+                <button onclick="window.close()">✖ Close</button>
+              </div>
+            </div>
+            <div class="preview-container">
+              <div class="invoice-container">
+                ${invoiceElement.innerHTML}
+              </div>
             </div>
           </body>
         </html>
       `);
       printWindow.document.close();
       printWindow.focus();
-      setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-      }, 250);
     }
   };
 
