@@ -759,6 +759,19 @@ async def create_vehicle(vehicle_data: VehicleCreate, current_user: User = Depen
     
     vehicle = Vehicle(**vehicle_data.dict())
     await db.vehicles.insert_one(vehicle.dict())
+    
+    # Create activity notification
+    try:
+        await create_activity(ActivityCreate(
+            type=ActivityType.VEHICLE_ADDED,
+            title="New vehicle added to stock",
+            description=f"{vehicle_data.brand} {vehicle_data.model} - {vehicle_data.chassis_number}",
+            icon="info",
+            metadata={"vehicle_id": vehicle.id}
+        ))
+    except Exception as e:
+        logger.warning(f"Failed to create activity for vehicle addition: {e}")
+    
     return vehicle
 
 @api_router.get("/vehicles", response_model=List[Vehicle])
