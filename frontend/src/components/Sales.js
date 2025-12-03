@@ -3127,6 +3127,17 @@ const ViewInvoices = () => {
             </table>
           </div>
         </CardContent>
+        
+        {/* Pagination */}
+        {filteredInvoices.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(filteredInvoices.length / itemsPerPage)}
+            total={filteredInvoices.length}
+            limit={itemsPerPage}
+            onPageChange={setCurrentPage}
+          />
+        )}
       </Card>
 
       {/* Invoice View Modal */}
