@@ -893,7 +893,40 @@ const ViewRegistration = () => {
       );
     }
 
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let aVal, bVal;
+      
+      switch (sortBy) {
+        case 'registration_date':
+          aVal = new Date(a.registration_date || 0);
+          bVal = new Date(b.registration_date || 0);
+          break;
+        case 'customer_name':
+          aVal = a.customer_name || '';
+          bVal = b.customer_name || '';
+          break;
+        case 'vehicle_brand':
+          aVal = a.vehicle_brand || '';
+          bVal = b.vehicle_brand || '';
+          break;
+        case 'amount':
+          aVal = a.amount || 0;
+          bVal = b.amount || 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (sortOrder === 'asc') {
+        return aVal > bVal ? 1 : -1;
+      } else {
+        return aVal < bVal ? 1 : -1;
+      }
+    });
+
     setFilteredRegistrations(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   const handleViewRegistration = (registration) => {
