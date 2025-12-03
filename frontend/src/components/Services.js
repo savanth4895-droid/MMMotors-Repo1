@@ -1164,56 +1164,58 @@ const ViewRegistration = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredRegistrations.map((registration) => (
-                    <tr key={registration.id} className="border-b hover:bg-gray-50 transition-colors">
-                      <td className="p-3 text-gray-600">
-                        {new Date(registration.registration_date).toLocaleDateString('en-IN')}
-                      </td>
-                      <td className="p-3">
-                        <div className="font-medium text-gray-900">{registration.customer_name}</div>
-                      </td>
-                      <td className="p-3 text-gray-600">{registration.phone_number}</td>
-                      <td className="p-3">
-                        <span className={`font-medium ${registration.vehicle_brand !== 'N/A' ? 'text-blue-600' : 'text-gray-400'}`}>
-                          {registration.vehicle_brand}
-                        </span>
-                      </td>
-                      <td className="p-3 text-gray-600">{registration.vehicle_model}</td>
-                      <td className="p-3 text-gray-600">{registration.vehicle_year}</td>
-                      <td className="p-3 text-gray-600 font-mono">{registration.vehicle_reg_no}</td>
-                      <td className="p-3">
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleViewRegistration(registration)}
-                            className="flex items-center gap-1"
-                          >
-                            <Eye className="w-4 h-4" />
-                            View
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEditRegistration(registration)}
-                            className="flex items-center gap-1"
-                          >
-                            <FileText className="w-4 h-4" />
-                            Edit
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDeleteRegistration(registration)}
-                            className="flex items-center gap-1 text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            Delete
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                  filteredRegistrations
+                    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                    .map((registration) => (
+                      <tr key={registration.id} className="border-b hover:bg-gray-50 transition-colors">
+                        <td className="p-3 text-gray-600">
+                          {new Date(registration.registration_date).toLocaleDateString('en-IN')}
+                        </td>
+                        <td className="p-3">
+                          <div className="font-medium text-gray-900">{registration.customer_name}</div>
+                        </td>
+                        <td className="p-3 text-gray-600">{registration.phone_number}</td>
+                        <td className="p-3">
+                          <span className={`font-medium ${registration.vehicle_brand !== 'N/A' ? 'text-blue-600' : 'text-gray-400'}`}>
+                            {registration.vehicle_brand}
+                          </span>
+                        </td>
+                        <td className="p-3 text-gray-600">{registration.vehicle_model}</td>
+                        <td className="p-3 text-gray-600">{registration.vehicle_year}</td>
+                        <td className="p-3 text-gray-600 font-mono">{registration.vehicle_reg_no}</td>
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleViewRegistration(registration)}
+                              className="flex items-center gap-1"
+                            >
+                              <Eye className="w-4 h-4" />
+                              View
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditRegistration(registration)}
+                              className="flex items-center gap-1"
+                            >
+                              <FileText className="w-4 h-4" />
+                              Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDeleteRegistration(registration)}
+                              className="flex items-center gap-1 text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Delete
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
                 )}
               </tbody>
             </table>
