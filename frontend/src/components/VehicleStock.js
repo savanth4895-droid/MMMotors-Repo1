@@ -1012,7 +1012,40 @@ const StockView = () => {
       filtered = filtered.filter(vehicle => vehicle.status === selectedStatus);
     }
 
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let aVal, bVal;
+      
+      switch (sortBy) {
+        case 'date_received':
+          aVal = new Date(a.date_received || 0);
+          bVal = new Date(b.date_received || 0);
+          break;
+        case 'brand':
+          aVal = a.brand || '';
+          bVal = b.brand || '';
+          break;
+        case 'model':
+          aVal = a.model || '';
+          bVal = b.model || '';
+          break;
+        case 'chassis_number':
+          aVal = a.chassis_number || '';
+          bVal = b.chassis_number || '';
+          break;
+        default:
+          return 0;
+      }
+
+      if (sortOrder === 'asc') {
+        return aVal > bVal ? 1 : -1;
+      } else {
+        return aVal < bVal ? 1 : -1;
+      }
+    });
+
     setFilteredVehicles(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   const handleEditVehicle = (vehicle) => {
