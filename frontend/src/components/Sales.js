@@ -412,7 +412,7 @@ const CreateInvoice = () => {
   };
 
   // Select vehicle from suggestions
-  const selectVehicle = async (vehicle) => {
+  const selectVehicle = (vehicle) => {
     setSelectedVehicle(vehicle);
     setInvoiceData(prev => ({
       ...prev,
@@ -421,25 +421,13 @@ const CreateInvoice = () => {
       color: vehicle.color,
       chassis_number: vehicle.chassis_number,
       engine_number: vehicle.engine_number,
-      vehicle_no: vehicle.vehicle_no || ''
+      vehicle_no: vehicle.vehicle_number || vehicle.vehicle_no || ''
     }));
     
     setShowSuggestions(false);
     setVehicleSuggestions([]);
-
-    // Update vehicle status to sold
-    try {
-      await axios.put(`${API}/vehicles/${vehicle.id}`, {
-        ...vehicle,
-        status: 'sold',
-        date_sold: new Date().toISOString()
-      });
-      
-      toast.success(`Vehicle ${vehicle.chassis_number} marked as sold`);
-    } catch (error) {
-      console.error('Error updating vehicle status:', error);
-      toast.error('Vehicle details loaded, but failed to update status');
-    }
+    
+    toast.success(`Vehicle details loaded: ${vehicle.brand} ${vehicle.model}`);
   };
 
   const generateInvoiceNumber = () => {
