@@ -1221,6 +1221,17 @@ const ViewRegistration = () => {
             </table>
           </div>
         </CardContent>
+        
+        {/* Pagination */}
+        {filteredRegistrations.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(filteredRegistrations.length / itemsPerPage)}
+            total={filteredRegistrations.length}
+            limit={itemsPerPage}
+            onPageChange={setCurrentPage}
+          />
+        )}
       </Card>
 
       {/* View Registration Modal */}
