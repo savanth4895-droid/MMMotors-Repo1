@@ -1242,6 +1242,25 @@ async def update_service_status(service_id: str, status_data: dict, current_user
         update_data["completion_date"] = datetime.now(timezone.utc)
     
     await db.services.update_one({"id": service_id}, {"$set": update_data})
+    
+    # Create activity notification for completed services
+    if status == ServiceStatus.COMPLETED:
+        try:
+            service = await db.services.find_one({"id": service_id}, {"_id": 0})
+            if service:
+                vehicle_info = service.get('vehicle_number', 'N/A')
+                service_type = service.get('service_type', 'Service')
+                
+                await create_activity(ActivityCreate(
+                    type=ActivityType.SERVICE_COMPLETED,
+                    title="Service completed",
+                    description=f"{service_type} for {vehicle_info}",
+                    icon="success",
+                    metadata={"service_id": service_id}
+                ))
+        except Exception as e:
+            logger.warning(f"Failed to create activity for service completion: {e}")
+    
     return {"message": "Service status updated successfully"}
 
 @api_router.get("/services/job-card/{job_card_number}")
