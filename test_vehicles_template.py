@@ -7,7 +7,7 @@ from datetime import datetime
 import uuid
 
 class VehiclesTemplateStatusTester:
-    def __init__(self, base_url="https://mechanic-helper-24.preview.emergentagent.com/api"):
+    def __init__(self, base_url="https://moto-inventory-2.preview.emergentagent.com/api"):
         self.base_url = base_url
         self.token = None
 
