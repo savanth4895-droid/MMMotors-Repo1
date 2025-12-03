@@ -54,10 +54,12 @@ const Dashboard = () => {
   useEffect(() => {
     // Initial fetch
     fetchStats();
+    fetchRecentActivities();
     
     // Set up auto-refresh every 30 seconds for real-time updates
     const refreshInterval = setInterval(() => {
       fetchStats();
+      fetchRecentActivities();
     }, 30000); // 30 seconds
     
     // Cleanup interval on component unmount
