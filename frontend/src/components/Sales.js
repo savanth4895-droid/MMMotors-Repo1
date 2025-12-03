@@ -1538,7 +1538,42 @@ const ViewInvoices = () => {
       });
     }
 
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let aVal, bVal;
+      
+      switch (sortBy) {
+        case 'sale_date':
+          aVal = new Date(a.sale_date || 0);
+          bVal = new Date(b.sale_date || 0);
+          break;
+        case 'invoice_number':
+          aVal = a.invoice_number || '';
+          bVal = b.invoice_number || '';
+          break;
+        case 'customer_name':
+          const customerA = customers.find(c => c.id === a.customer_id);
+          const customerB = customers.find(c => c.id === b.customer_id);
+          aVal = customerA?.name || '';
+          bVal = customerB?.name || '';
+          break;
+        case 'amount':
+          aVal = a.amount || 0;
+          bVal = b.amount || 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (sortOrder === 'asc') {
+        return aVal > bVal ? 1 : -1;
+      } else {
+        return aVal < bVal ? 1 : -1;
+      }
+    });
+
     setFilteredInvoices(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   const getCustomerName = (customerId) => {
