@@ -979,7 +979,7 @@ const StockView = () => {
 
   useEffect(() => {
     filterVehicles();
-  }, [vehicles, searchTerm, selectedBrand, selectedStatus]);
+  }, [vehicles, searchTerm, selectedBrand, selectedStatus, sortBy, sortOrder]);
 
   const fetchVehicles = async () => {
     try {
