@@ -173,10 +173,31 @@ const Dashboard = () => {
     <div className="space-y-6 fade-in">
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white">
-        <h1 className="text-2xl font-bold mb-2">Welcome to M M Motors Dashboard</h1>
-        <p className="text-blue-100">
-          Manage your two-wheeler business efficiently with our comprehensive system.
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold mb-2">Welcome to M M Motors Dashboard</h1>
+            <p className="text-blue-100">
+              Manage your two-wheeler business efficiently with our comprehensive system.
+            </p>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={fetchStats}
+              className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+            >
+              <Database className="w-4 h-4 mr-2" />
+              Refresh Stats
+            </Button>
+            <p className="text-xs text-blue-100">
+              Last updated: {lastUpdate.toLocaleTimeString()}
+            </p>
+            <p className="text-xs text-blue-200">
+              Auto-refresh every 30s
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Quick Stats */}
