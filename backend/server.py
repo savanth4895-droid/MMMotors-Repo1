@@ -1435,6 +1435,14 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
     pending_services = await db.services.count_documents({"status": ServiceStatus.PENDING})
     low_stock_parts = await db.spare_parts.count_documents({"$expr": {"$lte": ["$quantity", "$low_stock_threshold"]}})
     
+    # Calculate completed services today
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    today_end = datetime.now(timezone.utc).replace(hour=23, minute=59, second=59, microsecond=999999)
+    completed_today = await db.services.count_documents({
+        "status": ServiceStatus.COMPLETED,
+        "updated_at": {"$gte": today_start, "$lte": today_end}
+    })
+    
     # Sales statistics including imported data
     total_sales = await db.sales.count_documents({})
     direct_sales = await db.sales.count_documents({"$or": [{"source": {"$exists": False}}, {"source": "direct"}]})
