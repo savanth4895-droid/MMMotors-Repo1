@@ -1481,7 +1481,7 @@ const ViewInvoices = () => {
 
   useEffect(() => {
     filterInvoices();
-  }, [invoices, searchTerm]);
+  }, [invoices, searchTerm, customers, vehicles, sortBy, sortOrder]);
 
   const fetchInvoices = async () => {
     try {
