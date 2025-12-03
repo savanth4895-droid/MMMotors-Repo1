@@ -486,6 +486,10 @@ const BrandDetails = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [editVehicle, setEditVehicle] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(25);
 
   useEffect(() => {
     fetchBrandVehicles();
