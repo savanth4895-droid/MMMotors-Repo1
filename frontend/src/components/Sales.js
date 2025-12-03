@@ -3042,84 +3042,86 @@ const ViewInvoices = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredInvoices.map((invoice) => (
-                    <tr key={invoice.id} className="border-b hover:bg-gray-50 transition-colors">
-                      <td className="p-3">
-                        <input
-                          type="checkbox"
-                          checked={selectedInvoices.includes(invoice.id)}
-                          onChange={() => handleSelectInvoice(invoice.id)}
-                          className="rounded"
-                        />
-                      </td>
-                      <td className="p-3">
-                        <button
-                          onClick={() => handleViewInvoice(invoice)}
-                          className="font-medium text-blue-600 hover:text-blue-800 cursor-pointer"
-                        >
-                          {invoice.invoice_number}
-                        </button>
-                      </td>
-                      <td className="p-3 text-gray-600">
-                        {new Date(invoice.sale_date).toLocaleDateString('en-IN')}
-                      </td>
-                      <td className="p-3">
-                        <div className="font-medium text-gray-900">
-                          {getCustomerName(invoice.customer_id)}
-                        </div>
-                      </td>
-                      <td className="p-3 text-gray-600">
-                        {getVehicleModel(invoice.vehicle_id)}
-                      </td>
-                      <td className="p-3">
-                        <span className="font-semibold text-gray-900">
-                          ₹{invoice.amount?.toLocaleString() || '0'}
-                        </span>
-                      </td>
-                      <td className="p-3">
-                        {getStatusBadge(invoice.status || 'paid')}
-                      </td>
-                      <td className="p-3">
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
+                  filteredInvoices
+                    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                    .map((invoice) => (
+                      <tr key={invoice.id} className="border-b hover:bg-gray-50 transition-colors">
+                        <td className="p-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedInvoices.includes(invoice.id)}
+                            onChange={() => handleSelectInvoice(invoice.id)}
+                            className="rounded"
+                          />
+                        </td>
+                        <td className="p-3">
+                          <button
                             onClick={() => handleViewInvoice(invoice)}
-                            className="flex items-center gap-1"
+                            className="font-medium text-blue-600 hover:text-blue-800 cursor-pointer"
                           >
-                            <Eye className="w-4 h-4" />
-                            View
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEditInvoice(invoice)}
-                            className="flex items-center gap-1"
-                          >
-                            <FileText className="w-4 h-4" />
-                            Edit
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handlePrintInvoice(invoice)}
-                            className="flex items-center gap-1"
-                          >
-                            Print
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDeleteInvoice(invoice)}
-                            className="flex items-center gap-1 text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            Delete
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                            {invoice.invoice_number}
+                          </button>
+                        </td>
+                        <td className="p-3 text-gray-600">
+                          {new Date(invoice.sale_date).toLocaleDateString('en-IN')}
+                        </td>
+                        <td className="p-3">
+                          <div className="font-medium text-gray-900">
+                            {getCustomerName(invoice.customer_id)}
+                          </div>
+                        </td>
+                        <td className="p-3 text-gray-600">
+                          {getVehicleModel(invoice.vehicle_id)}
+                        </td>
+                        <td className="p-3">
+                          <span className="font-semibold text-gray-900">
+                            ₹{invoice.amount?.toLocaleString() || '0'}
+                          </span>
+                        </td>
+                        <td className="p-3">
+                          {getStatusBadge(invoice.status || 'paid')}
+                        </td>
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleViewInvoice(invoice)}
+                              className="flex items-center gap-1"
+                            >
+                              <Eye className="w-4 h-4" />
+                              View
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditInvoice(invoice)}
+                              className="flex items-center gap-1"
+                            >
+                              <FileText className="w-4 h-4" />
+                              Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handlePrintInvoice(invoice)}
+                              className="flex items-center gap-1"
+                            >
+                              Print
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDeleteInvoice(invoice)}
+                              className="flex items-center gap-1 text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Delete
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
                 )}
               </tbody>
             </table>
