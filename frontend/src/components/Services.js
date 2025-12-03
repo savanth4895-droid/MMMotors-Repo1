@@ -1444,6 +1444,12 @@ const JobCards = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingJobCard, setEditingJobCard] = useState(null);
   const [editFormData, setEditFormData] = useState({});
+  
+  // Pagination & Sorting
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(25);
+  const [sortBy, setSortBy] = useState('service_date');
+  const [sortOrder, setSortOrder] = useState('desc');
 
   useEffect(() => {
     fetchAllData();
