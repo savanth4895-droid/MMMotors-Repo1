@@ -1275,55 +1275,67 @@ const StockView = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredVehicles.map((vehicle) => (
-                  <tr key={vehicle.id} className="border-b hover:bg-gray-50">
-                    <td className="p-2">
-                      <input
-                        type="checkbox"
-                        checked={selectedVehicles.includes(vehicle.id)}
-                        onChange={() => handleSelectVehicle(vehicle.id)}
-                        className="rounded"
-                      />
-                    </td>
-                    <td className="p-2">{new Date(vehicle.date_received).toLocaleDateString()}</td>
-                    <td className="p-2 font-medium">{vehicle.brand}</td>
-                    <td className="p-2">{vehicle.model}</td>
-                    <td className="p-2">{vehicle.chassis_number}</td>
-                    <td className="p-2">{vehicle.engine_number}</td>
-                    <td className="p-2">{vehicle.color}</td>
-                    <td className="p-2">{vehicle.key_number}</td>
-                    <td className="p-2">{vehicle.inbound_location}</td>
-                    <td className="p-2">{getStatusBadge(vehicle.status)}</td>
-                    <td className="p-2">
-                      {vehicle.status === 'returned' && vehicle.date_returned 
-                        ? new Date(vehicle.date_returned).toLocaleDateString('en-IN')
-                        : (vehicle.status === 'returned' ? 'Not Set' : 'N/A')
-                      }
-                    </td>
-                    <td className="p-2">
-                      <div className="flex items-center gap-2">
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleEditVehicle(vehicle)}
-                          className="flex items-center gap-1"
-                        >
-                          <Edit className="w-3 h-3" />
-                          Edit
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleDeleteVehicle(vehicle.id, vehicle.chassis_number)}
-                          className="flex items-center gap-1 text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                          Delete
-                        </Button>
-                      </div>
+                {filteredVehicles.length === 0 ? (
+                  <tr>
+                    <td colSpan="12" className="p-8 text-center text-gray-500">
+                      {searchTerm || selectedBrand !== 'all' || selectedStatus !== 'all'
+                        ? 'No vehicles found matching your filters'
+                        : 'No vehicles found'}
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filteredVehicles
+                    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                    .map((vehicle) => (
+                      <tr key={vehicle.id} className="border-b hover:bg-gray-50">
+                        <td className="p-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedVehicles.includes(vehicle.id)}
+                            onChange={() => handleSelectVehicle(vehicle.id)}
+                            className="rounded"
+                          />
+                        </td>
+                        <td className="p-2">{new Date(vehicle.date_received).toLocaleDateString()}</td>
+                        <td className="p-2 font-medium">{vehicle.brand}</td>
+                        <td className="p-2">{vehicle.model}</td>
+                        <td className="p-2">{vehicle.chassis_number}</td>
+                        <td className="p-2">{vehicle.engine_number}</td>
+                        <td className="p-2">{vehicle.color}</td>
+                        <td className="p-2">{vehicle.key_number}</td>
+                        <td className="p-2">{vehicle.inbound_location}</td>
+                        <td className="p-2">{getStatusBadge(vehicle.status)}</td>
+                        <td className="p-2">
+                          {vehicle.status === 'returned' && vehicle.date_returned 
+                            ? new Date(vehicle.date_returned).toLocaleDateString('en-IN')
+                            : (vehicle.status === 'returned' ? 'Not Set' : 'N/A')
+                          }
+                        </td>
+                        <td className="p-2">
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleEditVehicle(vehicle)}
+                              className="flex items-center gap-1"
+                            >
+                              <Edit className="w-3 h-3" />
+                              Edit
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleDeleteVehicle(vehicle.id, vehicle.chassis_number)}
+                              className="flex items-center gap-1 text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              Delete
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                )}
               </tbody>
             </table>
           </div>
