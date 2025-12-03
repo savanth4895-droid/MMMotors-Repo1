@@ -86,6 +86,60 @@ const Dashboard = () => {
     }
   };
 
+  const fetchRecentActivities = async () => {
+    try {
+      const response = await axios.get(`${API}/activities?limit=5`);
+      setRecentActivities(response.data.activities || []);
+    } catch (error) {
+      console.error('Failed to fetch recent activities:', error);
+    }
+  };
+
+  const getActivityIcon = (type, icon) => {
+    const iconClasses = "w-4 h-4";
+    const colorMap = {
+      success: { bg: 'bg-green-100', text: 'text-green-600', icon: CheckCircle },
+      warning: { bg: 'bg-yellow-100', text: 'text-yellow-600', icon: AlertTriangle },
+      error: { bg: 'bg-red-100', text: 'text-red-600', icon: AlertTriangle },
+      info: { bg: 'bg-blue-100', text: 'text-blue-600', icon: Database }
+    };
+
+    const typeIconMap = {
+      sale_created: ShoppingCart,
+      service_completed: Wrench,
+      service_created: Wrench,
+      vehicle_added: MotorcycleIcon,
+      vehicle_sold: ShoppingCart,
+      low_stock: AlertTriangle,
+      customer_added: Users,
+      backup_created: Database
+    };
+
+    const color = colorMap[icon] || colorMap.info;
+    const IconComponent = typeIconMap[type] || color.icon;
+
+    return (
+      <div className={`w-8 h-8 ${color.bg} rounded-full flex items-center justify-center`}>
+        <IconComponent className={`${iconClasses} ${color.text}`} />
+      </div>
+    );
+  };
+
+  const formatTimeAgo = (timestamp) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    return date.toLocaleDateString();
+  };
+
   const mainModules = [
     {
       title: 'Sales',
