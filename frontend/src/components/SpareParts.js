@@ -458,7 +458,8 @@ const Inventory = () => {
       filtered = filtered.filter(part => 
         part.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         part.part_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        part.brand.toLowerCase().includes(searchTerm.toLowerCase())
+        part.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (part.compatible_models && part.compatible_models.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
