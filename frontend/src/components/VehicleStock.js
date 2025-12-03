@@ -8,6 +8,8 @@ import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Badge } from './ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import Pagination from './Pagination';
+import SortDropdown from './SortDropdown';
 import { 
   Plus, 
   Search, 
