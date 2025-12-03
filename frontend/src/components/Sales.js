@@ -2898,19 +2898,41 @@ const ViewInvoices = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header and Search */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Header */}
+      <div className="flex flex-col gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">All Invoices</h2>
           <p className="text-gray-600">Manage and view all sales invoices</p>
         </div>
-        <div className="relative">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Search by invoice no, customer, vehicle, or amount..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 w-full sm:w-80"
+        
+        {/* Search & Sort */}
+        <div className="flex flex-wrap gap-4">
+          <div className="relative flex-1 min-w-64">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search by invoice no, customer, vehicle, or amount..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <SortDropdown
+            currentSort={sortBy}
+            currentOrder={sortOrder}
+            onSortChange={(field, order) => {
+              setSortBy(field);
+              setSortOrder(order);
+            }}
+            options={[
+              { field: 'sale_date', order: 'desc', label: 'Newest First' },
+              { field: 'sale_date', order: 'asc', label: 'Oldest First' },
+              { field: 'invoice_number', order: 'asc', label: 'Invoice No (A-Z)' },
+              { field: 'invoice_number', order: 'desc', label: 'Invoice No (Z-A)' },
+              { field: 'customer_name', order: 'asc', label: 'Customer (A-Z)' },
+              { field: 'customer_name', order: 'desc', label: 'Customer (Z-A)' },
+              { field: 'amount', order: 'desc', label: 'Amount (High to Low)' },
+              { field: 'amount', order: 'asc', label: 'Amount (Low to High)' }
+            ]}
           />
         </div>
       </div>
