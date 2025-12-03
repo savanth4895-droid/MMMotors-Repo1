@@ -1466,6 +1466,12 @@ const ViewInvoices = () => {
   const [editFormData, setEditFormData] = useState({});
   const [selectedInvoices, setSelectedInvoices] = useState([]);
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  
+  // Pagination & Sorting
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(25);
+  const [sortBy, setSortBy] = useState('sale_date');
+  const [sortOrder, setSortOrder] = useState('desc');
 
   useEffect(() => {
     fetchInvoices();
