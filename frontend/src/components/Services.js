@@ -1872,64 +1872,66 @@ const JobCards = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredJobCards.map((jobCard) => (
-                    <tr key={jobCard.id} className="border-b hover:bg-gray-50 transition-colors">
-                      <td className="p-3">
-                        <span className="font-medium text-blue-600">{jobCard.job_card_id}</span>
-                      </td>
-                      <td className="p-3">
-                        <div className="font-medium text-gray-900">{jobCard.customer_name}</div>
-                      </td>
-                      <td className="p-3 text-gray-600">{jobCard.phone_number}</td>
-                      <td className="p-3">
-                        <span className={`font-medium ${jobCard.vehicle_brand !== 'N/A' ? 'text-blue-600' : 'text-gray-400'}`}>
-                          {jobCard.vehicle_brand}
-                        </span>
-                      </td>
-                      <td className="p-3 text-gray-600">{jobCard.vehicle_model}</td>
-                      <td className="p-3 text-gray-600">{jobCard.vehicle_year}</td>
-                      <td className="p-3 text-gray-600 font-mono">{jobCard.vehicle_reg_no}</td>
-                      <td className="p-3 max-w-xs">
-                        <div className="truncate" title={jobCard.complaint}>
-                          {jobCard.complaint}
-                        </div>
-                      </td>
-                      <td className="p-3">
-                        {getStatusBadge(jobCard.status)}
-                      </td>
-                      <td className="p-3">
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleViewJobCard(jobCard)}
-                            className="flex items-center gap-1"
-                          >
-                            <Eye className="w-4 h-4" />
-                            View
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEditJobCard(jobCard)}
-                            className="flex items-center gap-1"
-                          >
-                            <FileText className="w-4 h-4" />
-                            Edit
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDeleteService(jobCard.id, jobCard.job_card_number)}
-                            className="flex items-center gap-1 text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            Delete
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                  filteredJobCards
+                    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                    .map((jobCard) => (
+                      <tr key={jobCard.id} className="border-b hover:bg-gray-50 transition-colors">
+                        <td className="p-3">
+                          <span className="font-medium text-blue-600">{jobCard.job_card_id}</span>
+                        </td>
+                        <td className="p-3">
+                          <div className="font-medium text-gray-900">{jobCard.customer_name}</div>
+                        </td>
+                        <td className="p-3 text-gray-600">{jobCard.phone_number}</td>
+                        <td className="p-3">
+                          <span className={`font-medium ${jobCard.vehicle_brand !== 'N/A' ? 'text-blue-600' : 'text-gray-400'}`}>
+                            {jobCard.vehicle_brand}
+                          </span>
+                        </td>
+                        <td className="p-3 text-gray-600">{jobCard.vehicle_model}</td>
+                        <td className="p-3 text-gray-600">{jobCard.vehicle_year}</td>
+                        <td className="p-3 text-gray-600 font-mono">{jobCard.vehicle_reg_no}</td>
+                        <td className="p-3 max-w-xs">
+                          <div className="truncate" title={jobCard.complaint}>
+                            {jobCard.complaint}
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          {getStatusBadge(jobCard.status)}
+                        </td>
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleViewJobCard(jobCard)}
+                              className="flex items-center gap-1"
+                            >
+                              <Eye className="w-4 h-4" />
+                              View
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditJobCard(jobCard)}
+                              className="flex items-center gap-1"
+                            >
+                              <FileText className="w-4 h-4" />
+                              Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDeleteService(jobCard.id, jobCard.job_card_number)}
+                              className="flex items-center gap-1 text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Delete
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
                 )}
               </tbody>
             </table>
