@@ -541,7 +541,7 @@ const Inventory = () => {
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Search parts by name, number, or brand..."
+              placeholder="Search parts by name, number, brand, or compatible models..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
