@@ -795,6 +795,12 @@ const ViewRegistration = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingRegistration, setEditingRegistration] = useState(null);
   const [editFormData, setEditFormData] = useState({});
+  
+  // Pagination & Sorting
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(25);
+  const [sortBy, setSortBy] = useState('registration_date');
+  const [sortOrder, setSortOrder] = useState('desc');
 
   useEffect(() => {
     fetchAllData();
