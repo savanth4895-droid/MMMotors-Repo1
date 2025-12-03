@@ -1937,6 +1937,17 @@ const JobCards = () => {
             </table>
           </div>
         </CardContent>
+        
+        {/* Pagination */}
+        {filteredJobCards.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(filteredJobCards.length / itemsPerPage)}
+            total={filteredJobCards.length}
+            limit={itemsPerPage}
+            onPageChange={setCurrentPage}
+          />
+        )}
       </Card>
 
       {/* View Job Card Modal */}
