@@ -1761,14 +1761,34 @@ const JobCards = () => {
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-        <Input
-          placeholder="Search by job card ID, customer name, phone, vehicle details, complaint, or status..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
+      {/* Search Bar & Sort */}
+      <div className="flex flex-wrap gap-4">
+        <div className="relative flex-1 min-w-64">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Search by job card ID, customer name, phone, vehicle details, complaint, or status..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <SortDropdown
+          currentSort={sortBy}
+          currentOrder={sortOrder}
+          onSortChange={(field, order) => {
+            setSortBy(field);
+            setSortOrder(order);
+          }}
+          options={[
+            { field: 'service_date', order: 'desc', label: 'Newest First' },
+            { field: 'service_date', order: 'asc', label: 'Oldest First' },
+            { field: 'customer_name', order: 'asc', label: 'Customer (A-Z)' },
+            { field: 'customer_name', order: 'desc', label: 'Customer (Z-A)' },
+            { field: 'job_card_id', order: 'asc', label: 'Job Card ID (A-Z)' },
+            { field: 'job_card_id', order: 'desc', label: 'Job Card ID (Z-A)' },
+            { field: 'status', order: 'asc', label: 'Status (A-Z)' },
+            { field: 'status', order: 'desc', label: 'Status (Z-A)' }
+          ]}
         />
       </div>
 
