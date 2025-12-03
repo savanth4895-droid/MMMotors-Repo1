@@ -1477,6 +1477,7 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
         "vehicles_in_stock": vehicles_in_stock,
         "vehicles_sold": vehicles_sold,
         "pending_services": pending_services,
+        "completed_today": completed_today,
         "low_stock_parts": low_stock_parts,
         "sales_stats": {
             "total_sales": total_sales,
