@@ -808,7 +808,7 @@ const ViewRegistration = () => {
 
   useEffect(() => {
     filterRegistrations();
-  }, [registrations, searchTerm]);
+  }, [registrations, searchTerm, sortBy, sortOrder]);
 
   const fetchAllData = async () => {
     try {
