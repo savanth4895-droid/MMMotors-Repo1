@@ -2498,6 +2498,7 @@ const ServicesBilling = () => {
 
   useEffect(() => {
     fetchCustomers();
+    fetchSpareParts();
     if (activeTab === 'view') {
       fetchServiceBills();
     }
@@ -2521,6 +2522,85 @@ const ServicesBilling = () => {
     } catch (error) {
       toast.error('Failed to fetch customers');
     }
+  };
+
+  const fetchSpareParts = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/spare-parts`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSpareParts(response.data);
+    } catch (error) {
+      console.error('Failed to fetch spare parts:', error);
+    }
+  };
+
+  // Search spare parts for autocomplete
+  const searchSpareParts = (searchTerm) => {
+    if (!searchTerm || searchTerm.length < 2) {
+      setSparePartSuggestions([]);
+      return;
+    }
+
+    const lowerSearch = searchTerm.toLowerCase();
+    
+    // Combine spare parts from database with predefined service items
+    const dbMatches = spareParts.filter(part => 
+      part.name?.toLowerCase().includes(lowerSearch) ||
+      part.part_number?.toLowerCase().includes(lowerSearch) ||
+      part.brand?.toLowerCase().includes(lowerSearch)
+    ).map(part => ({
+      name: part.name,
+      hsn_sac: part.hsn_sac || '',
+      unit: part.unit || 'Nos',
+      rate: part.unit_price || 0,
+      gst_percent: part.gst_percentage || 18,
+      source: 'spare_parts'
+    }));
+
+    const predefinedMatches = serviceItems.filter(item =>
+      item.name.toLowerCase().includes(lowerSearch)
+    ).map(item => ({
+      ...item,
+      source: 'predefined'
+    }));
+
+    // Combine and limit suggestions
+    const allSuggestions = [...dbMatches, ...predefinedMatches].slice(0, 10);
+    setSparePartSuggestions(allSuggestions);
+  };
+
+  // Debounced search for description field
+  const debouncedSparePartSearch = useCallback(
+    debounce((searchTerm) => searchSpareParts(searchTerm), 300),
+    [spareParts, serviceItems]
+  );
+
+  const handleDescriptionChange = (index, value) => {
+    updateBillItem(index, 'description', value);
+    setActiveDescriptionIndex(index);
+    debouncedSparePartSearch(value);
+  };
+
+  const handleSelectSparePart = (index, part) => {
+    const updatedItems = [...billItems];
+    updatedItems[index] = {
+      ...updatedItems[index],
+      description: part.name,
+      hsn_sac: part.hsn_sac,
+      unit: part.unit,
+      rate: part.rate,
+      gst_percent: part.gst_percent
+    };
+    
+    // Recalculate amounts
+    const calculatedAmounts = calculateItemAmounts(updatedItems[index]);
+    updatedItems[index] = { ...updatedItems[index], ...calculatedAmounts };
+    
+    setBillItems(updatedItems);
+    setSparePartSuggestions([]);
+    setActiveDescriptionIndex(null);
   };
 
   const fetchServiceBills = async () => {
