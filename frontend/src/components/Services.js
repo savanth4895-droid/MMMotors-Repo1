@@ -796,6 +796,11 @@ const ViewRegistration = () => {
   const [editingRegistration, setEditingRegistration] = useState(null);
   const [editFormData, setEditFormData] = useState({});
   
+  // Bulk selection state
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  
   // Pagination & Sorting
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(25);
