@@ -1486,6 +1486,80 @@ async def delete_spare_part_bill(bill_id: str, current_user: User = Depends(get_
     
     return {"message": "Spare part bill deleted successfully", "deleted_bill_id": bill_id}
 
+# Service Bills API Endpoints
+@api_router.post("/service-bills", response_model=ServiceBill)
+async def create_service_bill(bill_data: ServiceBillCreate, current_user: User = Depends(get_current_user)):
+    # Generate bill number if not provided
+    if not bill_data.bill_number:
+        count = await db.service_bills.count_documents({})
+        bill_data.bill_number = f"SB-{count + 1:06d}"
+    
+    # Get customer info if customer_id is provided
+    customer_name = bill_data.customer_name
+    customer_mobile = bill_data.customer_mobile
+    
+    if bill_data.customer_id and not customer_name:
+        customer = await db.customers.find_one({"id": bill_data.customer_id})
+        if customer:
+            customer_name = customer.get("name", "")
+            customer_mobile = customer.get("mobile", customer.get("phone", ""))
+    
+    # Parse bill date
+    bill_date = datetime.now(timezone.utc)
+    if bill_data.bill_date:
+        try:
+            bill_date = datetime.fromisoformat(bill_data.bill_date.replace('Z', '+00:00'))
+        except:
+            pass
+    
+    bill = ServiceBill(
+        bill_number=bill_data.bill_number,
+        job_card_number=bill_data.job_card_number,
+        customer_id=bill_data.customer_id,
+        customer_name=customer_name,
+        customer_mobile=customer_mobile,
+        vehicle_number=bill_data.vehicle_number,
+        vehicle_brand=bill_data.vehicle_brand,
+        vehicle_model=bill_data.vehicle_model,
+        items=bill_data.items,
+        subtotal=bill_data.subtotal,
+        total_discount=bill_data.total_discount,
+        total_cgst=bill_data.total_cgst,
+        total_sgst=bill_data.total_sgst,
+        total_tax=bill_data.total_tax,
+        total_amount=bill_data.total_amount,
+        bill_date=bill_date,
+        status=bill_data.status,
+        created_by=current_user.username
+    )
+    
+    await db.service_bills.insert_one(bill.dict())
+    return bill
+
+@api_router.get("/service-bills")
+async def get_service_bills(current_user: User = Depends(get_current_user)):
+    bills = await db.service_bills.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return bills
+
+@api_router.get("/service-bills/{bill_id}")
+async def get_service_bill(bill_id: str, current_user: User = Depends(get_current_user)):
+    bill = await db.service_bills.find_one({"id": bill_id}, {"_id": 0})
+    if not bill:
+        raise HTTPException(status_code=404, detail="Service bill not found")
+    return bill
+
+@api_router.delete("/service-bills/{bill_id}")
+async def delete_service_bill(bill_id: str, current_user: User = Depends(get_current_user)):
+    existing_bill = await db.service_bills.find_one({"id": bill_id})
+    if not existing_bill:
+        raise HTTPException(status_code=404, detail="Service bill not found")
+    
+    result = await db.service_bills.delete_one({"id": bill_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Service bill not found")
+    
+    return {"message": "Service bill deleted successfully", "deleted_bill_id": bill_id}
+
 @api_router.get("/spare-parts/{part_id}", response_model=SparePart)
 async def get_spare_part(part_id: str, current_user: User = Depends(get_current_user)):
     part = await db.spare_parts.find_one({"id": part_id})
