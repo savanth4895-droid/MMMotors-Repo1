@@ -2388,6 +2388,17 @@ async def import_services_data(data: List[Dict], import_job: ImportJob, user_id:
             service_dict['job_card_number'] = job_card_number
             service_dict['created_by'] = user_id
             
+            # Handle registration_date (service_date)
+            registration_date = (row.get('registration_date') or '').strip()
+            if registration_date:
+                try:
+                    from dateutil import parser as date_parser
+                    parsed_date = date_parser.parse(registration_date)
+                    service_dict['service_date'] = parsed_date
+                except Exception:
+                    # If parsing fails, use current datetime
+                    service_dict['service_date'] = datetime.now(timezone.utc)
+            
             # Add vehicle details for imported services (so they can be displayed even if vehicle is deleted)
             if vehicle_brand:
                 service_dict['vehicle_brand'] = vehicle_brand
