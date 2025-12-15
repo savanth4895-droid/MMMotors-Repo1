@@ -2430,6 +2430,9 @@ const ServicesBilling = () => {
   const [serviceDetails, setServiceDetails] = useState(null);
   const [fetchingService, setFetchingService] = useState(false);
   const [jobCardSuggestions, setJobCardSuggestions] = useState([]);
+  const [spareParts, setSpareParts] = useState([]);
+  const [sparePartSuggestions, setSparePartSuggestions] = useState([]);
+  const [activeDescriptionIndex, setActiveDescriptionIndex] = useState(null);
   const [billItems, setBillItems] = useState([{
     sl_no: 1,
     description: '',
