@@ -3412,6 +3412,11 @@ const ServicesBilling = () => {
           clearServiceDetails={clearServiceDetails}
           jobCardSuggestions={jobCardSuggestions}
           handleJobCardSelection={handleJobCardSelection}
+          activeDescriptionIndex={activeDescriptionIndex}
+          setActiveDescriptionIndex={setActiveDescriptionIndex}
+          sparePartSuggestions={sparePartSuggestions}
+          handleDescriptionChange={handleDescriptionChange}
+          handleSelectSparePart={handleSelectSparePart}
         />
       ) : (
         <ViewBillsContent 
