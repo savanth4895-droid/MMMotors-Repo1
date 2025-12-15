@@ -3735,7 +3735,8 @@ const CreateBillContent = ({
   addPredefinedItem, addServicePackage, handleSaveBill, handlePrintBill, units, gstRates,
   serviceItems, jobCardNumber, setJobCardNumber, serviceDetails, fetchingService,
   handleJobCardSearch, handleJobCardBlur, clearServiceDetails, jobCardSuggestions, handleJobCardSelection,
-  activeDescriptionIndex, setActiveDescriptionIndex, sparePartSuggestions, handleDescriptionChange, handleSelectSparePart
+  activeDescriptionIndex, setActiveDescriptionIndex, sparePartSuggestions, handleDescriptionChange, handleSelectSparePart,
+  handleOpenEditServiceItems
 }) => {
   const totals = calculateTotals();
 
