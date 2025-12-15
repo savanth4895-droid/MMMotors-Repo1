@@ -1,74 +1,56 @@
-<analysis>**original_problem_statement:** The user's engagement began with minor bug reports, including a button typo and data inconsistencies on the vehicle brand page. This evolved into a series of critical fixes and feature enhancements. Key issues addressed include:
-- A recurring Vehicle not found error, which was traced to a database status mismatch ( vs. ) and later to newly created/imported vehicles missing a unique uid=0(root) gid=0(root) groups=0(root) field.
-- Failures in bulk vehicle deletion, which led to improved error handling.
-- A user request to add  to the vehicle import process.
-- Multiple deployment failures related to JWT security, timezone-aware datetime usage, missing Kubernetes health checks, and incorrect MongoDB Atlas connection settings.
-- Post-deployment Network Errors caused by outdated environment variables and browser caching after linking a custom domain.
-- A series of bugs in the Create Invoice workflow, including invalid payment method validation, premature data saving, and a server-side 500 error due to a  sale date.
-- The user also requested to add 'YAMAHA' and 'PIAGGIO' brands across the application and to implement real-time updates for the main dashboard statistics. The final request was to improve the invoice printing experience.
+<analysis>**original_problem_statement:** The user's engagement began with minor bug reports and evolved into a series of critical fixes and feature enhancements. Key requests included fixing a recurring Vehicle not found error, improving bulk deletion, adding  to vehicle imports, hardening the application for production deployment, and resolving numerous bugs in the Create Invoice workflow. The user then requested the addition of 'YAMAHA' and 'PIAGGIO' brands, real-time dashboard updates, and an improved invoice printing experience.
+
+In the current session, the user's requests expanded to include:
+1.  Implementing pagination and sorting across all major list views for UI consistency.
+2.  Adding a real-time notification system, triggered by a bell icon in the header, to provide updates on key application events.
+3.  Enhancing the spare parts search functionality to include compatible models.
 
 **PRODUCT REQUIREMENTS**:
 - Ensure data consistency and integrity across the application, especially for vehicle status and unique identifiers.
-- Harden the application for production deployment by addressing security vulnerabilities, implementing health checks, and ensuring robust database connectivity with Atlas.
-- Improve the user experience by providing clear error feedback, especially for bulk operations and form submissions.
-- Enhance core features by adding new data points (vehicle brands, import dates) and improving interactivity (real-time dashboards, better print previews).
-- Resolve all bugs preventing core workflows like invoice generation and vehicle editing.
+- Harden the application for production deployment by addressing security vulnerabilities, implementing health checks, and ensuring robust database connectivity.
+- Improve the user experience by providing clear error feedback, consistent UI patterns (like pagination and sorting), and real-time notifications.
+- Enhance core features by adding new data points (vehicle brands, import dates) and improving interactivity (real-time dashboards, better print previews, advanced search).
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a full-stack solution (React/FastAPI/MongoDB) for managing a two-wheeler business, featuring modules for a dashboard, customers, vehicles, sales, and services. The codebase has been significantly hardened for production, with fixes for deployment, database connectivity (supporting both local and Atlas MongoDB), and data integrity. Recent features include the addition of new vehicle brands (YAMAHA, PIAGGIO) and a real-time, auto-refreshing dashboard. The agent just finished implementing a change to the invoice printing flow.
+The application is a full-stack solution (React/FastAPI/MongoDB) for managing a two-wheeler business. It features modules for a Dashboard, Customers, Vehicles, Sales, Services, and Spare Parts. The codebase has been significantly improved with production-readiness fixes, UI consistency enhancements, and new real-time features.
+
+Key recent implementations include:
+- Reusable pagination and sorting components have been applied to the Vehicle Stock, Service Registrations, Service Job Cards, and Sales Invoices pages.
+- A complete, real-time notification system has been implemented. This includes backend endpoints to track activities (new sales, service updates, vehicle additions), a notification dropdown in the UI triggered by a bell icon, and a Recent Activity feed on the dashboard.
+- The search functionality on the Spare Parts page has been updated to include searching within a part's compatible models.
 
 **Last working item**:
--   **Last item agent was working**: Improving the invoice print preview. The agent modified the  function in  to open a new window containing the formatted invoice HTML and a Print button. This prevents the default browser print dialog from appearing immediately and allows the user to see a stylized preview first.
--   **Status**: IN PROGRESS
+-   **Last item agent was working**: The agent enhanced the search functionality for spare parts. It modified the  function in  to allow searching by a part's name, number, brand, and now also its . The search input's placeholder text was updated accordingly.
+-   **Status**: USER VERIFICATION PENDING
 -   **Agent Testing Done**: N
--   **Which testing method agent to use?**: Frontend testing agent. The test should navigate to the sales page, generate an invoice, and click the Print button. It must verify that a new browser window/tab opens displaying the styled invoice content and includes a clickable Print button within that new view.
+-   **Which testing method agent to use?**: Frontend testing agent. The test should navigate to the Spare Parts page, search using a model name that exists in a part's  list, and verify that the correct part is displayed in the results.
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Test the new Invoice Print Preview functionality (P0)**
-    -   The feature to show a formatted invoice preview in a new window before printing has been implemented but remains untested.
+-   None.
 
 **Issues Detail**:
--   **Issue 1: Test the new Invoice Print Preview functionality**
-    -   **Attempted fixes**: The  function in  was modified to construct the HTML for the invoice, open a new window, write the content (including a new print button), and call CSS styles.
-    -   **Next debug checklist**:
-        - Use the frontend testing agent to execute the print flow.
-        - Verify the new window opens.
-        - Verify the invoice content in the new window is correctly styled.
-        - Verify the Print button inside the new window is present and functional (it should trigger the browser's print dialog).
-        - Check for any console errors in the new window.
-    -   **Why fix this issue and what will be achieved with the fix?**: This will complete the user's request for a more professional and user-friendly invoice printing experience, ensuring the user sees exactly what will be printed.
-    -   **Status**: IN PROGRESS
-    -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: Frontend
-    -   **Blocked on other issue**: None
+-   None.
 
 **In progress Task List**:
 -   None.
 
 **Upcoming and Future Tasks**
--   **Upcoming Tasks:**
-    -   **(P1) Apply Pagination and Sorting to other modules:** For UI consistency, the reusable  and  components should be implemented on other list pages like , , and .
 -   **Future Tasks:**
-    -   **(P2) Refactor large components:** Files like  and  are monolithic and should be broken down into smaller, single-responsibility components for better maintainability.
+    -   **(P1) Refactor large components:** Files like  and  are monolithic and handle too many responsibilities. They should be broken down into smaller, single-responsibility components to improve maintainability and reduce complexity.
 
 **Completed work in this session**
 - **List of all completed tasks with file and method name**:
+
 - **Recently completed:**
-  - **Bug Fix**: Resolved data inconsistency for vehicle stock counts by migrating status from  to  (, ).
-  - **Bug Fix**: Improved bulk delete error feedback on the Vehicle Stock page with a detailed modal ().
-  - **Feature**: Added a script to clear all vehicle data ().
-  - **Feature**: Added  column to the vehicle import template, backend logic, and UI (, ).
-  - **Bug Fix**: Permanently fixed Vehicle not found errors by ensuring a unique uid=0(root) gid=0(root) groups=0(root) is assigned upon vehicle creation and import (, ).
-  - **Deployment Hardening**:
-    -   Secured JWT secret handling and added Kubernetes health/readiness endpoints (, ) in .
-    -   Corrected MongoDB connection logic in  to conditionally use SSL/TLS, supporting both local and Atlas environments.
-    -   Updated frontend environment variable for custom domain support ().
-  - **Feature**: Added 'YAMAHA' and 'PIAGGIO' brands across , , , and .
-  - **Feature**: Implemented real-time auto-refreshing stats on the  component, with a supporting API update in .
-  - **Bug Fix**: Corrected invoice generation failures related to payment method validation, premature data saving, and server-side date validation errors in  and .
+  - **Feature**: Implemented pagination and sorting across multiple modules (, , ) using reusable  and  components.
+  - **Feature**: Created a comprehensive real-time notification system.
+    -   Backend: Added an  model and endpoints (, ) in . Integrated activity logging for creating sales, updating services, and adding vehicles.
+    -   Frontend: Created  and integrated it into . Implemented polling to fetch and display notifications.
+  - **Feature**: Upgraded the Recent Activity section on the  to display real-time data from the new notification system.
+  - **Feature**: Enhanced spare parts search in  to include .
 
 **Earlier issues found/mentioned but not fixed**
 -   None.
@@ -80,77 +62,71 @@ The application is a full-stack solution (React/FastAPI/MongoDB) for managing a 
 
 
 **Key Technical Concepts**
--   **Backend**: FastAPI, Pydantic for data validation, Motor for async MongoDB operations.
--   **Frontend**: React with hooks (, ), Axios for API calls.
--   **Database**: MongoDB.
--   **Deployment Readiness**: The backend is now hardened for Kubernetes deployments with health (, ) and readiness (, ) endpoints. The MongoDB client is configured to conditionally handle SSL/TLS for Atlas compatibility.
--   **Data Integrity**: A crucial pattern was established to add a separate, client-generated  to all key models (, , etc.) to ensure reliable lookups, separate from MongoDB's .
--   **Real-time UI**: The dashboard uses frontend polling () to fetch and display updated stats every 30 seconds.
+-   **Frontend**: React with hooks, Axios for API calls. Reusable components (, ) are now used for UI consistency. Frontend polling () is used for real-time notifications and dashboard stats.
+-   **Backend**: FastAPI, Pydantic, Motor. A new  model and corresponding endpoints have been added to facilitate the notification system.
+-   **Database**: MongoDB. A new  collection has been introduced.
 
 **key DB schema**
 -   **customers**: 
 -   **vehicles**: 
 -   **sales**: 
 -   **services**: 
+-   **spare_parts**: 
+-   **activities**: 
 
 **changes in tech stack**
 -   None.
 
 **All files of reference**
--   **Updated:**
-    -   : Heavily modified to add features (dashboard stats, brands), fix bugs (ID generation, validation), and add deployment-critical code (health checks, conditional DB connection).
-    -   : Multiple bug fixes for invoice generation flow and implementation of the new print preview.
-    -   : Implemented real-time, auto-refreshing statistics via polling.
-    -   , : Updated to include new vehicle brands.
-    -   : Updated UI to show the new  field in the vehicle import template.
-    -   :  was updated to point to the user's custom domain.
 -   **Created:**
-    -   : Script to align vehicle status values in the DB.
-    -   : Script to wipe all vehicle data.
-    -   : Critical migration script to add a unique uid=0(root) gid=0(root) groups=0(root) field to all existing vehicles.
-    -   : A markdown file documenting the deployment-related fixes.
+    -   : A new UI component to display a list of recent activities/notifications.
+-   **Updated:**
+    -   : Added the  Pydantic model, created  endpoints for fetching and marking notifications as read, and integrated activity logging into the , , and  functions.
+    -   : Integrated  and  components to manage the vehicle list.
+    -   : Integrated  and  into the View Registrations and Job Cards sub-components.
+    -   : Integrated  and  into the View Invoices sub-component.
+    -   : Imported and rendered the  component, connecting it to the bell icon in the header.
+    -   : Replaced the hardcoded Recent Activity list with a dynamic feed that polls the  endpoint.
+    -   : Updated the search filter logic to include  and modified the search input's placeholder text.
 
 **Areas that need refactoring**:
--   The  and  components remain very large and handle too many responsibilities (e.g., creating, viewing, editing, reporting). They are prime candidates for being broken down into smaller, more focused components.
+-    and  are still large and complex. Refactoring them into smaller, more manageable components remains an important future task.
 
 **key api endpoints**
--   , : New endpoints for Kubernetes liveness and readiness probes.
--   : Updated to return a  count for services.
--   : Fixed a validation bug where a   would cause a 500 error.
--   , : Logic fixed to ensure a unique string uid=0(root) gid=0(root) groups=0(root) is always generated and saved for new vehicles, preventing subsequent edit/lookup failures.
--   : A new endpoint added by the testing agent to dynamically fetch the list of brands, centralizing the brand list.
+-   : Fetches recent activities for the notification system.
+-   : Marks specified activities as read.
 
 **Critical Info for New Agent**
--   **ID vs _id**: Do not rely on MongoDB's  for client-side operations. The application now uses a mandatory, unique string uid=0(root) gid=0(root) groups=0(root) field on all major data models. All new records MUST be created with this field. The  script was a one-time fix for this.
--   **DB Connection**: The MongoDB connection logic in  is now conditional. It checks if  contains mongodb+srv to enable/disable TLS/SSL settings. This allows the same codebase to work with both local unsecured MongoDB and production Atlas.
--   **Deployment Context**: The user is deploying to a production environment with a custom domain (). The frontend  is set accordingly. Browser caching can be an issue after  changes.
--   **Platform vs. Code Issues**: Be aware that some deployment errors (e.g., Cloudflare quotas) are platform-level limitations and cannot be fixed with code changes.
--   **Monolithic Components**:  is a very large and complex file. Be extra careful when making changes to the invoice creation or editing logic to avoid introducing regressions.
+-   **User Testing Preference**: The user has previously opted to perform testing manually, skipping agent-led automated tests. Always confirm the testing approach with the user before proceeding.
+-   **Notification System**: A centralized notification system is now in place. When implementing new features that involve key user actions (e.g., creating new records, changing statuses), consider adding a call to log an activity in the corresponding backend endpoint.
+-   **Reusable Components**: The  and  components should be used for any new data tables or lists to maintain UI consistency across the application.
 
 **documents created in this job**
--   
+-   None.
 
 **Last 10 User Messages and any pending user messages**
-1.  **Request:** Add 'YAMAHA' and 'PIAGGIO' brands to the sales and services modules. **Status:** Completed.
-2.  **Request:** Make the dashboard stats update in real-time. **Status:** Completed.
-3.  **Report:** Unable to generate Invoice due to a payment method validation mismatch. **Status:** Completed.
-4.  **Report:** In the sales form, details were not auto-populating and data was being saved before the invoice was generated. **Status:** Completed.
-5.  **Report:** A 500 server error was occurring on invoice generation. **Status:** Completed.
-6.  **Request:** Change the browser's print dialog to a formatted invoice preview window. **Status:** In Progress (implemented, pending testing).
-7.  **Report:** Deployment failed due to a Cloudflare quota error. **Status:** Identified as a platform issue.
-8.  **Report:** Network Error on login after linking a custom domain. **Status:** Completed.
-9.  **Report:** A persistent Network Error on login. **Status:** Identified as a caching/build issue; user was advised.
-10. **Report:** MongoDB Atlas SSL handshake timeout error during deployment. **Status:** Completed.
+1.  **User Message:** 
+    - **Summary:** The user decided to manually test the previously implemented invoice print preview, instructing the agent to not run automated tests.
+    - **Status:** Acknowledged.
+2.  **User Message:** 
+    - **Summary:** The user instructed the agent to begin work on implementing pagination and sorting.
+    - **Status:** Completed.
+3.  **User Message:** 
+    - **Summary:** The user requested a real-time notification system accessible via the bell icon in the header.
+    - **Status:** Completed.
+4.  **User Message:** 
+    - **Summary:** The user requested to enhance the spare parts search to include matching against compatible models.
+    - **Status:** Completed, pending user verification.
 
 **Project Health Check:**
 -   **Broken**: None.
 -   **Mocked**: None.
 
-**3rd Party Integrations**:
+**3rd Party Integrations**
 -   None.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES
+-   **Testing agent used after significant changes**: NO
 -   **Troubleshoot agent used after agent stuck in loop**: NO
 -   **Test files created**: []
 -   **Known regressions**: None.
@@ -159,4 +135,4 @@ The application is a full-stack solution (React/FastAPI/MongoDB) for managing a 
 -   N/A
 
 **What agent forgot to execute**
--   The agent did not implement the pagination and sorting features on other pages (, , ) as suggested in the initial handoff summary. The work was deprioritized in favor of fixing numerous bugs and critical user-reported issues.</analysis>
+-   The agent correctly followed all user requests in this session. The initial task to test the invoice print preview was explicitly cancelled by the user. The refactoring of large components remains a documented future task.</analysis>

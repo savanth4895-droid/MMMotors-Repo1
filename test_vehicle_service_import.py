@@ -6,7 +6,7 @@ Standalone test for vehicle and service import fixes
 import requests
 import json
 
-BASE_URL = "https://moto-inventory-2.preview.emergentagent.com/api"
+BASE_URL = "https://twowheeler-system.preview.emergentagent.com/api"
 token = None
 
 def login():
