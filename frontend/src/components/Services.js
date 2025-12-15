@@ -2961,6 +2961,45 @@ const ServicesBilling = () => {
     }
   };
 
+  // Edit Service Items handlers
+  const handleOpenEditServiceItems = () => {
+    setEditableServiceItems([...serviceItems]);
+    setShowEditServiceItemsModal(true);
+  };
+
+  const handleUpdateServiceItem = (index, field, value) => {
+    const updated = [...editableServiceItems];
+    updated[index] = { ...updated[index], [field]: field === 'rate' || field === 'gst_percent' ? parseFloat(value) || 0 : value };
+    setEditableServiceItems(updated);
+  };
+
+  const handleAddNewServiceItem = () => {
+    setEditableServiceItems([...editableServiceItems, {
+      name: '',
+      hsn_sac: '',
+      unit: 'Nos',
+      rate: 0,
+      gst_percent: 18
+    }]);
+  };
+
+  const handleRemoveServiceItem = (index) => {
+    const updated = editableServiceItems.filter((_, i) => i !== index);
+    setEditableServiceItems(updated);
+  };
+
+  const handleSaveServiceItems = () => {
+    // Validate items
+    const validItems = editableServiceItems.filter(item => item.name.trim() !== '');
+    if (validItems.length === 0) {
+      toast.error('Please add at least one service item');
+      return;
+    }
+    setServiceItems(validItems);
+    setShowEditServiceItemsModal(false);
+    toast.success('Service items updated successfully!');
+  };
+
   // Debounced search function for job card suggestions
   const debouncedJobCardSearch = useCallback(
     debounce((partialJobCard) => fetchJobCardSuggestions(partialJobCard), 300),
