@@ -1644,6 +1644,14 @@ const JobCards = () => {
   const [editingJobCard, setEditingJobCard] = useState(null);
   const [editFormData, setEditFormData] = useState({});
   
+  // Bulk selection state
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [bulkUpdatingStatus, setBulkUpdatingStatus] = useState(false);
+  const [showBulkStatusModal, setShowBulkStatusModal] = useState(false);
+  const [bulkStatus, setBulkStatus] = useState('');
+  
   // Pagination & Sorting
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(25);
