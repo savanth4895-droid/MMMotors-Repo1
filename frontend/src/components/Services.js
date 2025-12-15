@@ -3255,22 +3255,47 @@ const ServicesBilling = () => {
 
     setLoading(true);
     try {
-      // Create a service bill record (you might need to create a new API endpoint for this)
+      const totals = calculateTotals();
+      const customerData = customers.find(c => c.id === selectedCustomer);
+      
+      // Create itemized service bill
       const billData = {
         bill_number: billNumber,
-        bill_date: billDate,
+        job_card_number: jobCardNumber || null,
         customer_id: selectedCustomer,
-        items: billItems,
-        totals: calculateTotals()
+        customer_name: customerData?.name || '',
+        customer_mobile: customerData?.mobile || customerData?.phone || '',
+        vehicle_number: serviceDetails?.vehicle_number || '',
+        vehicle_brand: serviceDetails?.vehicle_brand || '',
+        vehicle_model: serviceDetails?.vehicle_model || '',
+        items: billItems.filter(item => item.description).map(item => ({
+          sl_no: item.sl_no,
+          description: item.description,
+          hsn_sac: item.hsn_sac,
+          qty: item.qty,
+          unit: item.unit,
+          rate: item.rate,
+          labor: item.labor,
+          disc_percent: item.disc_percent,
+          gst_percent: item.gst_percent,
+          cgst_amount: item.cgst_amount,
+          sgst_amount: item.sgst_amount,
+          total_tax: item.total_tax,
+          amount: item.amount
+        })),
+        subtotal: totals.subtotal,
+        total_discount: totals.totalDiscount,
+        total_cgst: totals.totalCgst,
+        total_sgst: totals.totalSgst,
+        total_tax: totals.totalTax,
+        total_amount: totals.grandTotal,
+        bill_date: billDate,
+        status: 'pending'
       };
 
-      // For now, we'll create a service record with the bill details
-      await axios.post(`${API}/services`, {
-        customer_id: selectedCustomer,
-        vehicle_number: 'Service Bill',
-        service_type: 'billing',
-        description: `Service Bill ${billNumber} - ${billItems.length} items`,
-        amount: calculateTotals().grandTotal
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/service-bills`, billData, {
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       toast.success('Service bill saved successfully!');
@@ -3294,9 +3319,12 @@ const ServicesBilling = () => {
       setSelectedCustomer('');
       setBillNumber(`SB-${Date.now().toString().slice(-6)}`);
       setBillDate(new Date().toISOString().split('T')[0]);
+      setJobCardNumber('');
+      setServiceDetails(null);
       
     } catch (error) {
       toast.error('Failed to save service bill');
+      console.error('Save bill error:', error);
     } finally {
       setLoading(false);
     }
