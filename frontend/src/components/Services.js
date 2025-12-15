@@ -2565,12 +2565,6 @@ const ServicesBilling = () => {
     [spareParts, serviceItems]
   );
 
-  const handleDescriptionChange = (index, value) => {
-    updateBillItem(index, 'description', value);
-    setActiveDescriptionIndex(index);
-    debouncedSparePartSearch(value);
-  };
-
   const fetchServiceBills = async () => {
     try {
       setLoading(true);
