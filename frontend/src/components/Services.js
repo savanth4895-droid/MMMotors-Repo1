@@ -1686,27 +1686,25 @@ const JobCards = () => {
       // Combine service and customer data to create job card records
       const combined = services.map(service => {
         const customer = customers.find(c => c.id === service.customer_id);
-        
-        // Extract vehicle information from service description
-        const vehicleInfo = extractVehicleInfo(service.description, service.vehicle_number);
 
         return {
           id: service.id,
           job_card_id: service.job_card_number || `JOB-${service.id.slice(-6)}`,
           customer_name: customer?.name || 'Unknown',
-          phone_number: customer?.phone || 'N/A',
-          vehicle_brand: vehicleInfo.brand,
-          vehicle_model: vehicleInfo.model,
-          vehicle_year: vehicleInfo.year,
+          phone_number: customer?.mobile || customer?.phone || 'N/A',
+          vehicle_brand: service.vehicle_brand || 'N/A',
+          vehicle_model: service.vehicle_model || 'N/A',
+          vehicle_year: service.vehicle_year || 'N/A',
           vehicle_reg_no: service.vehicle_number || 'N/A',
-          complaint: vehicleInfo.complaint || service.description || 'No complaint specified',
+          complaint: service.description || 'No complaint specified',
           status: service.status || 'pending',
           service_type: service.service_type,
           amount: service.amount,
           service_date: service.service_date,
           completion_date: service.completion_date,
           created_by: service.created_by,
-          customer_address: customer?.address || 'N/A'
+          customer_address: customer?.address || 'N/A',
+          customer_id: service.customer_id
         };
       });
 
@@ -1718,6 +1716,139 @@ const JobCards = () => {
       setLoading(false);
     }
   };
+
+  // Bulk selection handlers
+  const handleSelectAll = () => {
+    const currentPageItems = filteredJobCards.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
+    
+    if (selectAll) {
+      setSelectedIds(prev => prev.filter(id => !currentPageItems.find(item => item.id === id)));
+      setSelectAll(false);
+    } else {
+      const currentPageIds = currentPageItems.map(item => item.id);
+      setSelectedIds(prev => [...new Set([...prev, ...currentPageIds])]);
+      setSelectAll(true);
+    }
+  };
+
+  const handleSelectItem = (id) => {
+    setSelectedIds(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(itemId => itemId !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) {
+      toast.error('No items selected for deletion');
+      return;
+    }
+
+    const confirmMessage = `Are you sure you want to delete ${selectedIds.length} job card(s)? This action cannot be undone.`;
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    setBulkDeleting(true);
+    try {
+      const token = localStorage.getItem('token');
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const id of selectedIds) {
+        try {
+          await axios.delete(`${API}/services/${id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          successCount++;
+        } catch (error) {
+          failCount++;
+          console.error(`Failed to delete job card ${id}:`, error);
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(`Successfully deleted ${successCount} job card(s)`);
+      }
+      if (failCount > 0) {
+        toast.error(`Failed to delete ${failCount} job card(s)`);
+      }
+
+      setSelectedIds([]);
+      setSelectAll(false);
+      fetchAllData();
+    } catch (error) {
+      toast.error('Failed to perform bulk delete');
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
+  const handleBulkStatusUpdate = async () => {
+    if (selectedIds.length === 0) {
+      toast.error('No items selected for status update');
+      return;
+    }
+
+    if (!bulkStatus) {
+      toast.error('Please select a status');
+      return;
+    }
+
+    setBulkUpdatingStatus(true);
+    try {
+      const token = localStorage.getItem('token');
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const id of selectedIds) {
+        try {
+          await axios.patch(`${API}/services/${id}/status`, 
+            { status: bulkStatus },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          successCount++;
+        } catch (error) {
+          failCount++;
+          console.error(`Failed to update status for job card ${id}:`, error);
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(`Successfully updated status for ${successCount} job card(s)`);
+      }
+      if (failCount > 0) {
+        toast.error(`Failed to update status for ${failCount} job card(s)`);
+      }
+
+      setSelectedIds([]);
+      setSelectAll(false);
+      setShowBulkStatusModal(false);
+      setBulkStatus('');
+      fetchAllData();
+    } catch (error) {
+      toast.error('Failed to perform bulk status update');
+    } finally {
+      setBulkUpdatingStatus(false);
+    }
+  };
+
+  // Update selectAll state when page changes
+  useEffect(() => {
+    const currentPageItems = filteredJobCards.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
+    const allSelected = currentPageItems.length > 0 && 
+      currentPageItems.every(item => selectedIds.includes(item.id));
+    setSelectAll(allSelected);
+  }, [currentPage, filteredJobCards, selectedIds, itemsPerPage]);
 
   const extractVehicleInfo = (description, vehicleNumber) => {
     const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO'];
