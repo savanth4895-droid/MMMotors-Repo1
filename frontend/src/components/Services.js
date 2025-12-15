@@ -3715,7 +3715,7 @@ const CreateBillContent = ({
                 {billItems.map((item, index) => (
                   <tr key={index} className="hover:bg-gray-50">
                     <td className="border border-gray-300 p-2 text-center font-medium">{item.sl_no}</td>
-                    <td className="border border-gray-300 p-2">
+                    <td className="border border-gray-300 p-2 relative">
                       <Input
                         value={item.description}
                         onChange={(e) => handleDescriptionChange(index, e.target.value)}
