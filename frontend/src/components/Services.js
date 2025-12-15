@@ -2897,6 +2897,7 @@ const ServicesBilling = () => {
         bill.vehicle_reg_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         bill.vehicle_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         bill.job_card_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        bill.bill_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         bill.service_type?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
