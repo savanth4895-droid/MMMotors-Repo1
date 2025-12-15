@@ -2587,6 +2587,93 @@ const JobCards = () => {
           </div>
         </div>
       )}
+
+      {/* Bulk Status Update Modal */}
+      {showBulkStatusModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold">Update Status for {selectedIds.length} Job Card(s)</h2>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setShowBulkStatusModal(false);
+                    setBulkStatus('');
+                  }}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="bulk_status">Select New Status</Label>
+                  <Select 
+                    value={bulkStatus} 
+                    onValueChange={setBulkStatus}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose status..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-yellow-600" />
+                          Pending
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="in_progress">
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4 text-blue-600" />
+                          In Progress
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="completed">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-green-600" />
+                          Completed
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="cancelled">
+                        <div className="flex items-center gap-2">
+                          <X className="w-4 h-4 text-red-600" />
+                          Cancelled
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                  <p className="text-sm text-blue-700">
+                    This will update the status of <strong>{selectedIds.length}</strong> selected job card(s) to the chosen status.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowBulkStatusModal(false);
+                    setBulkStatus('');
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleBulkStatusUpdate} 
+                  disabled={bulkUpdatingStatus || !bulkStatus}
+                >
+                  {bulkUpdatingStatus ? 'Updating...' : 'Update Status'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
