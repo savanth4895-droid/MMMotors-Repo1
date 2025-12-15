@@ -2889,6 +2889,12 @@ const ServicesBilling = () => {
     setBillItems(updatedItems);
   };
 
+  const handleDescriptionChange = (index, value) => {
+    updateBillItem(index, 'description', value);
+    setActiveDescriptionIndex(index);
+    debouncedSparePartSearch(value);
+  };
+
   const addBillItem = () => {
     const newItem = {
       sl_no: billItems.length + 1,
