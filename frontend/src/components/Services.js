@@ -4174,7 +4174,7 @@ const CreateBillContent = ({
                   <Plus className="w-4 h-4" />
                   Add Custom Item
                 </Button>
-                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                <Button onClick={handleOpenEditServiceItems} variant="outline" size="sm" className="flex items-center gap-2">
                   <FileText className="w-4 h-4" />
                   Edit
                 </Button>
