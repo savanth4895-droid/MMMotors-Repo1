@@ -4412,13 +4412,91 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
   };
 
   const handlePrintBill = (bill) => {
-    // Create professional service bill for printing
+    // Check if bill has itemized data
+    const hasItems = bill.items && bill.items.length > 0;
+    
+    // Generate items rows for the table
+    const itemsRows = hasItems ? bill.items.map((item, index) => `
+      <tr>
+        <td style="text-align: center;">${index + 1}</td>
+        <td>${item.description || item.name || 'Service Item'}</td>
+        <td style="text-align: center;">${item.hsn_sac || '-'}</td>
+        <td style="text-align: center;">${item.qty || 1} ${item.unit || 'Nos'}</td>
+        <td style="text-align: right;">₹${(item.rate || 0).toFixed(2)}</td>
+        <td style="text-align: right;">₹${(item.cgst_amount || 0).toFixed(2)}</td>
+        <td style="text-align: right;">₹${(item.sgst_amount || 0).toFixed(2)}</td>
+        <td style="text-align: right; font-weight: bold;">₹${(item.amount || 0).toFixed(2)}</td>
+      </tr>
+    `).join('') : `
+      <tr>
+        <td style="text-align: center;">1</td>
+        <td>${bill.description || 'Service Charge'}</td>
+        <td style="text-align: center;">9987</td>
+        <td style="text-align: center;">1 Nos</td>
+        <td style="text-align: right;">₹${((bill.amount || 0) / 1.18).toFixed(2)}</td>
+        <td style="text-align: right;">₹${((bill.amount || 0) * 0.09 / 1.18).toFixed(2)}</td>
+        <td style="text-align: right;">₹${((bill.amount || 0) * 0.09 / 1.18).toFixed(2)}</td>
+        <td style="text-align: right; font-weight: bold;">₹${(bill.amount || 0).toFixed(2)}</td>
+      </tr>
+    `;
+    
+    // Calculate totals
+    const subtotal = hasItems 
+      ? bill.items.reduce((sum, item) => sum + ((item.rate || 0) * (item.qty || 1)), 0)
+      : (bill.amount || 0) / 1.18;
+    const totalCgst = hasItems 
+      ? bill.items.reduce((sum, item) => sum + (item.cgst_amount || 0), 0)
+      : (bill.amount || 0) * 0.09 / 1.18;
+    const totalSgst = hasItems 
+      ? bill.items.reduce((sum, item) => sum + (item.sgst_amount || 0), 0)
+      : (bill.amount || 0) * 0.09 / 1.18;
+    const grandTotal = bill.total_amount || bill.amount || 0;
+    
+    // Number to words function
+    const numberToWordsLocal = (num) => {
+      const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
+        'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+      const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+      
+      if (num === 0) return 'Zero';
+      
+      const convertLessThanThousand = (n) => {
+        if (n === 0) return '';
+        if (n < 20) return ones[n];
+        if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + ones[n % 10] : '');
+        return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 !== 0 ? ' ' + convertLessThanThousand(n % 100) : '');
+      };
+      
+      const rupees = Math.floor(num);
+      let result = '';
+      let n = rupees;
+      
+      if (n >= 10000000) {
+        result += convertLessThanThousand(Math.floor(n / 10000000)) + ' Crore ';
+        n %= 10000000;
+      }
+      if (n >= 100000) {
+        result += convertLessThanThousand(Math.floor(n / 100000)) + ' Lakh ';
+        n %= 100000;
+      }
+      if (n >= 1000) {
+        result += convertLessThanThousand(Math.floor(n / 1000)) + ' Thousand ';
+        n %= 1000;
+      }
+      if (n > 0) {
+        result += convertLessThanThousand(n);
+      }
+      
+      return result.trim() || 'Zero';
+    };
+    
+    // Create professional itemized service bill for printing
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Service Bill - ${bill.job_card_number || 'N/A'}</title>
+          <title>Service Bill - ${bill.bill_number || bill.job_card_number || 'N/A'}</title>
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { 
@@ -4426,152 +4504,169 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
               line-height: 1.4; 
               color: #333;
               background: white;
+              font-size: 12px;
             }
             .bill-container { 
               max-width: 210mm; 
               margin: 0 auto; 
-              padding: 15mm;
+              padding: 10mm;
               background: white;
             }
             
             /* Header Styles */
             .bill-header { 
               text-align: center; 
-              border-bottom: 3px solid #2563eb;
-              padding-bottom: 15px;
-              margin-bottom: 20px;
+              border-bottom: 2px solid #1e40af;
+              padding-bottom: 10px;
+              margin-bottom: 15px;
             }
             .company-name { 
-              font-size: 28px; 
+              font-size: 24px; 
               font-weight: bold; 
               color: #1e40af;
-              margin-bottom: 4px;
+              margin-bottom: 2px;
             }
             .company-tagline { 
-              font-size: 14px; 
+              font-size: 12px; 
               color: #6b7280;
-              margin-bottom: 8px;
+              margin-bottom: 5px;
             }
             .company-address { 
-              font-size: 12px; 
+              font-size: 11px; 
               color: #4b5563;
-              line-height: 1.4;
+            }
+            .gstin { 
+              font-size: 11px; 
+              color: #1e40af;
+              font-weight: bold;
+              margin-top: 5px;
             }
             
             /* Bill Title */
             .bill-title { 
               text-align: center;
-              background: linear-gradient(135deg, #2563eb, #1d4ed8);
+              background: #1e40af;
               color: white;
-              padding: 12px;
-              font-size: 20px;
+              padding: 8px;
+              font-size: 16px;
               font-weight: bold;
-              margin: 20px 0;
-              border-radius: 8px;
+              margin: 10px 0;
             }
             
-            /* Bill Info */
+            /* Bill Info Grid */
             .bill-info { 
               display: grid;
               grid-template-columns: 1fr 1fr;
-              gap: 20px;
-              margin-bottom: 20px;
-              padding: 15px;
+              gap: 15px;
+              margin-bottom: 15px;
+              padding: 10px;
               background: #f8fafc;
-              border-radius: 8px;
               border: 1px solid #e2e8f0;
             }
             .info-section h4 { 
               color: #1e40af;
-              font-size: 14px;
+              font-size: 12px;
               font-weight: bold;
-              margin-bottom: 8px;
-              border-bottom: 2px solid #3b82f6;
-              padding-bottom: 4px;
+              margin-bottom: 5px;
+              border-bottom: 1px solid #3b82f6;
+              padding-bottom: 3px;
             }
             .info-row { 
               display: flex;
               justify-content: space-between;
-              margin-bottom: 6px;
-              padding: 3px 0;
+              margin-bottom: 3px;
+              font-size: 11px;
             }
-            .info-label { 
-              font-weight: 600;
-              color: #374151;
-              font-size: 12px;
-            }
-            .info-value { 
-              color: #111827;
-              font-size: 12px;
-            }
+            .info-label { font-weight: 600; color: #374151; }
+            .info-value { color: #111827; }
             
-            /* Service Details Table */
-            .service-table { 
+            /* Items Table */
+            .items-table { 
               width: 100%; 
               border-collapse: collapse; 
-              margin: 20px 0;
-              box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+              margin: 10px 0;
+              font-size: 11px;
             }
-            .service-table th { 
-              background: linear-gradient(135deg, #1e40af, #3b82f6);
+            .items-table th { 
+              background: #1e40af;
               color: white;
               font-weight: bold;
-              padding: 12px;
+              padding: 8px 5px;
               text-align: left;
               border: 1px solid #1e40af;
-              font-size: 12px;
             }
-            .service-table td { 
-              padding: 12px;
+            .items-table td { 
+              padding: 6px 5px;
               border: 1px solid #d1d5db;
-              background: #f8fafc;
-              font-size: 12px;
+            }
+            .items-table tr:nth-child(even) { background: #f8fafc; }
+            
+            /* Summary Section */
+            .summary-section {
+              display: flex;
+              justify-content: flex-end;
+              margin-top: 15px;
+            }
+            .summary-table {
+              width: 300px;
+              border-collapse: collapse;
+            }
+            .summary-table td {
+              padding: 6px 10px;
+              border: 1px solid #d1d5db;
+              font-size: 11px;
+            }
+            .summary-table .label { background: #f8fafc; font-weight: 600; }
+            .summary-table .total-row { background: #1e40af; color: white; font-weight: bold; font-size: 14px; }
+            
+            /* Amount in Words */
+            .amount-words {
+              background: #dbeafe;
+              padding: 8px 12px;
+              margin: 15px 0;
+              border-left: 4px solid #1e40af;
+              font-size: 11px;
             }
             
-            /* Amount Section */
-            .amount-section { 
-              margin-top: 30px;
-              padding: 25px;
-              background: linear-gradient(135deg, #059669, #10b981);
-              color: white;
-              border-radius: 12px;
+            /* Terms */
+            .terms {
+              margin-top: 20px;
+              padding-top: 10px;
+              border-top: 1px solid #e5e7eb;
+              font-size: 10px;
+              color: #6b7280;
+            }
+            .terms h4 { font-size: 11px; color: #374151; margin-bottom: 5px; }
+            .terms ol { margin-left: 15px; }
+            
+            /* Signatures */
+            .signatures {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 50px;
+              margin-top: 40px;
+              padding-top: 20px;
+            }
+            .signature-box {
               text-align: center;
+              padding-top: 30px;
+              border-top: 1px solid #374151;
+              font-size: 11px;
             }
-            .amount-label { 
-              font-size: 18px;
-              margin-bottom: 10px;
-            }
-            .amount-value { 
-              font-size: 36px;
-              font-weight: bold;
-            }
-            
-            /* Status Badge */
-            .status-badge { 
-              display: inline-block;
-              padding: 8px 16px;
-              border-radius: 20px;
-              font-weight: bold;
-              font-size: 14px;
-              text-transform: uppercase;
-            }
-            .status-completed { background: #dcfce7; color: #166534; }
-            .status-pending { background: #fef3c7; color: #92400e; }
-            .status-in-progress { background: #dbeafe; color: #1e40af; }
             
             /* Footer */
             .bill-footer { 
-              margin-top: 40px;
+              margin-top: 20px;
               text-align: center;
               color: #6b7280;
-              font-size: 14px;
-              border-top: 2px solid #e5e7eb;
-              padding-top: 20px;
+              font-size: 11px;
+              border-top: 1px solid #e5e7eb;
+              padding-top: 10px;
             }
             
             @media print {
-              body { -webkit-print-color-adjust: exact; }
-              .bill-container { padding: 8mm; }
+              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .bill-container { padding: 5mm; }
             }
           </style>
         </head>
@@ -4582,36 +4677,30 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
               <div class="company-name">M M MOTORS</div>
               <div class="company-tagline">Two Wheeler Service Excellence</div>
               <div class="company-address">
-                Bengaluru main road, behind Ruchi Bakery<br>
-                Malur, Karnataka 563130<br>
+                Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130<br>
                 Phone: 7026263123 | Email: mmmotors3123@gmail.com
               </div>
+              <div class="gstin">GSTIN: 29XXXXXXXXXXXXXXX</div>
             </div>
             
             <!-- Bill Title -->
-            <div class="bill-title">
-              SERVICE COMPLETION CERTIFICATE
-            </div>
+            <div class="bill-title">TAX INVOICE / SERVICE BILL</div>
             
             <!-- Bill Information -->
             <div class="bill-info">
               <div class="info-section">
-                <h4>Service Details</h4>
+                <h4>Bill Information</h4>
                 <div class="info-row">
-                  <span class="info-label">Job Card Number:</span>
-                  <span class="info-value">${bill.job_card_number || 'N/A'}</span>
+                  <span class="info-label">Bill Number:</span>
+                  <span class="info-value">${bill.bill_number || bill.job_card_number || 'N/A'}</span>
                 </div>
                 <div class="info-row">
-                  <span class="info-label">Service Date:</span>
-                  <span class="info-value">${bill.created_at ? new Date(bill.created_at).toLocaleDateString('en-IN') : 'N/A'}</span>
+                  <span class="info-label">Bill Date:</span>
+                  <span class="info-value">${bill.created_at || bill.bill_date ? new Date(bill.created_at || bill.bill_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</span>
                 </div>
                 <div class="info-row">
                   <span class="info-label">Status:</span>
-                  <span class="info-value">
-                    <span class="status-badge status-${bill.status || 'pending'}">
-                      ${bill.status ? bill.status.replace('_', ' ').toUpperCase() : 'PENDING'}
-                    </span>
-                  </span>
+                  <span class="info-value">${bill.status ? bill.status.replace('_', ' ').toUpperCase() : 'PENDING'}</span>
                 </div>
               </div>
               
@@ -4622,39 +4711,82 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
                   <span class="info-value">${bill.customer_name || 'N/A'}</span>
                 </div>
                 <div class="info-row">
-                  <span class="info-label">Vehicle Reg No:</span>
+                  <span class="info-label">Mobile:</span>
+                  <span class="info-value">${bill.customer_mobile || bill.customer_phone || 'N/A'}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Vehicle:</span>
                   <span class="info-value">${bill.vehicle_reg_no || bill.vehicle_number || 'N/A'}</span>
                 </div>
               </div>
             </div>
             
-            <!-- Service Work Details -->
-            <table class="service-table">
+            <!-- Items Table -->
+            <table class="items-table">
               <thead>
                 <tr>
-                  <th style="width: 25%;">Service Type</th>
-                  <th style="width: 75%;">Work Description</th>
+                  <th style="width: 5%; text-align: center;">Sl</th>
+                  <th style="width: 35%;">Description of Goods/Services</th>
+                  <th style="width: 10%; text-align: center;">HSN/SAC</th>
+                  <th style="width: 10%; text-align: center;">Qty</th>
+                  <th style="width: 10%; text-align: right;">Rate</th>
+                  <th style="width: 10%; text-align: right;">CGST</th>
+                  <th style="width: 10%; text-align: right;">SGST</th>
+                  <th style="width: 10%; text-align: right;">Amount</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td><strong>${bill.service_type ? bill.service_type.replace('_', ' ').toUpperCase() : 'GENERAL SERVICE'}</strong></td>
-                  <td>${bill.description || 'No description provided'}</td>
-                </tr>
+                ${itemsRows}
               </tbody>
             </table>
             
-            <!-- Amount Section -->
-            <div class="amount-section">
-              <div class="amount-label">Total Service Amount</div>
-              <div class="amount-value">₹${bill.amount?.toLocaleString() || '0'}</div>
+            <!-- Summary -->
+            <div class="summary-section">
+              <table class="summary-table">
+                <tr>
+                  <td class="label">Subtotal:</td>
+                  <td style="text-align: right;">₹${subtotal.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td class="label">CGST:</td>
+                  <td style="text-align: right;">₹${totalCgst.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td class="label">SGST:</td>
+                  <td style="text-align: right;">₹${totalSgst.toFixed(2)}</td>
+                </tr>
+                <tr class="total-row">
+                  <td>Grand Total:</td>
+                  <td style="text-align: right;">₹${grandTotal.toFixed(2)}</td>
+                </tr>
+              </table>
+            </div>
+            
+            <!-- Amount in Words -->
+            <div class="amount-words">
+              <strong>Amount in Words:</strong> ${numberToWordsLocal(grandTotal)} Rupees Only
+            </div>
+            
+            <!-- Terms -->
+            <div class="terms">
+              <h4>Terms & Conditions:</h4>
+              <ol>
+                <li>Warranty as per manufacturer terms only</li>
+                <li>Payment due on delivery</li>
+                <li>Goods once sold will not be taken back</li>
+              </ol>
+            </div>
+            
+            <!-- Signatures -->
+            <div class="signatures">
+              <div class="signature-box">Customer Signature</div>
+              <div class="signature-box">For M M MOTORS<br>Authorized Signatory</div>
             </div>
             
             <!-- Footer -->
             <div class="bill-footer">
-              <p><strong>Thank you for choosing M M Motors!</strong></p>
-              <p>Service completed successfully. Vehicle is ready for pickup.</p>
-              <p>For any queries, please contact us at mmmotors3123@gmail.com or 7026263123</p>
+              <p><strong>Thank you for your business!</strong></p>
+              <p>This is a computer generated invoice.</p>
             </div>
           </div>
         </body>
