@@ -1020,6 +1020,93 @@ const ViewRegistration = () => {
     setEditFormData({});
   };
 
+  // Bulk selection handlers
+  const handleSelectAll = () => {
+    const currentPageItems = filteredRegistrations.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
+    
+    if (selectAll) {
+      // Deselect all on current page
+      setSelectedIds(prev => prev.filter(id => !currentPageItems.find(item => item.id === id)));
+      setSelectAll(false);
+    } else {
+      // Select all on current page
+      const currentPageIds = currentPageItems.map(item => item.id);
+      setSelectedIds(prev => [...new Set([...prev, ...currentPageIds])]);
+      setSelectAll(true);
+    }
+  };
+
+  const handleSelectItem = (id) => {
+    setSelectedIds(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(itemId => itemId !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) {
+      toast.error('No items selected for deletion');
+      return;
+    }
+
+    const confirmMessage = `Are you sure you want to delete ${selectedIds.length} service registration(s)? This action cannot be undone.`;
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    setBulkDeleting(true);
+    try {
+      const token = localStorage.getItem('token');
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const id of selectedIds) {
+        try {
+          await axios.delete(`${API}/services/${id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          successCount++;
+        } catch (error) {
+          failCount++;
+          console.error(`Failed to delete service ${id}:`, error);
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(`Successfully deleted ${successCount} service registration(s)`);
+      }
+      if (failCount > 0) {
+        toast.error(`Failed to delete ${failCount} service registration(s)`);
+      }
+
+      // Clear selection and refresh data
+      setSelectedIds([]);
+      setSelectAll(false);
+      fetchAllData();
+    } catch (error) {
+      toast.error('Failed to perform bulk delete');
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
+  // Update selectAll state when page changes
+  useEffect(() => {
+    const currentPageItems = filteredRegistrations.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
+    const allSelected = currentPageItems.length > 0 && 
+      currentPageItems.every(item => selectedIds.includes(item.id));
+    setSelectAll(allSelected);
+  }, [currentPage, filteredRegistrations, selectedIds, itemsPerPage]);
+
   const exportRegistrations = () => {
     try {
       const csvContent = [
