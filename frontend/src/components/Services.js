@@ -1261,15 +1261,30 @@ const ViewRegistration = () => {
       {/* Registrations Table */}
       <Card>
         <CardHeader>
-          <CardTitle>
-            Service Registrations ({filteredRegistrations.length} records)
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>
+              Service Registrations ({filteredRegistrations.length} records)
+            </CardTitle>
+            {selectedIds.length > 0 && (
+              <div className="text-sm text-blue-600 font-medium">
+                {selectedIds.length} item(s) selected
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b bg-gray-50">
+                  <th className="text-left p-3 font-semibold w-10">
+                    <input
+                      type="checkbox"
+                      checked={selectAll}
+                      onChange={handleSelectAll}
+                      className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </th>
                   <th className="text-left p-3 font-semibold">Registration Date</th>
                   <th className="text-left p-3 font-semibold">Customer Name</th>
                   <th className="text-left p-3 font-semibold">Phone Number</th>
@@ -1283,7 +1298,7 @@ const ViewRegistration = () => {
               <tbody>
                 {filteredRegistrations.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="p-8 text-center text-gray-500">
+                    <td colSpan="9" className="p-8 text-center text-gray-500">
                       {searchTerm ? 'No registrations found matching your search' : 'No service registrations found'}
                     </td>
                   </tr>
@@ -1291,7 +1306,15 @@ const ViewRegistration = () => {
                   filteredRegistrations
                     .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
                     .map((registration) => (
-                      <tr key={registration.id} className="border-b hover:bg-gray-50 transition-colors">
+                      <tr key={registration.id} className={`border-b hover:bg-gray-50 transition-colors ${selectedIds.includes(registration.id) ? 'bg-blue-50' : ''}`}>
+                        <td className="p-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(registration.id)}
+                            onChange={() => handleSelectItem(registration.id)}
+                            className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                        </td>
                         <td className="p-3 text-gray-600">
                           {new Date(registration.registration_date).toLocaleDateString('en-IN')}
                         </td>
