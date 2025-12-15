@@ -3724,6 +3724,136 @@ const ServicesBilling = () => {
           onDeleteBill={handleDeleteServiceBill}
         />
       )}
+
+      {/* Edit Service Items Modal */}
+      {showEditServiceItemsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold">Edit Quick Add Service Items</h2>
+                  <p className="text-gray-600">Modify the service items that appear in the Quick Add section</p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowEditServiceItemsModal(false)}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Table Header */}
+                <div className="grid grid-cols-12 gap-2 text-sm font-medium text-gray-600 border-b pb-2">
+                  <div className="col-span-4">Item Name</div>
+                  <div className="col-span-2">HSN/SAC</div>
+                  <div className="col-span-1">Unit</div>
+                  <div className="col-span-2">Rate (₹)</div>
+                  <div className="col-span-2">GST %</div>
+                  <div className="col-span-1">Action</div>
+                </div>
+
+                {/* Editable Items */}
+                {editableServiceItems.map((item, index) => (
+                  <div key={index} className="grid grid-cols-12 gap-2 items-center">
+                    <div className="col-span-4">
+                      <Input
+                        value={item.name}
+                        onChange={(e) => handleUpdateServiceItem(index, 'name', e.target.value)}
+                        placeholder="Item name"
+                        className="text-sm"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <Input
+                        value={item.hsn_sac}
+                        onChange={(e) => handleUpdateServiceItem(index, 'hsn_sac', e.target.value)}
+                        placeholder="HSN/SAC"
+                        className="text-sm"
+                      />
+                    </div>
+                    <div className="col-span-1">
+                      <Select 
+                        value={item.unit} 
+                        onValueChange={(value) => handleUpdateServiceItem(index, 'unit', value)}
+                      >
+                        <SelectTrigger className="text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {units.map(unit => (
+                            <SelectItem key={unit} value={unit}>{unit}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="col-span-2">
+                      <Input
+                        type="number"
+                        value={item.rate}
+                        onChange={(e) => handleUpdateServiceItem(index, 'rate', e.target.value)}
+                        placeholder="Rate"
+                        className="text-sm"
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <Select 
+                        value={item.gst_percent?.toString()} 
+                        onValueChange={(value) => handleUpdateServiceItem(index, 'gst_percent', value)}
+                      >
+                        <SelectTrigger className="text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {gstRates.map(rate => (
+                            <SelectItem key={rate} value={rate.toString()}>{rate}%</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="col-span-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRemoveServiceItem(index)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Add New Item Button */}
+                <Button
+                  variant="outline"
+                  onClick={handleAddNewServiceItem}
+                  className="w-full flex items-center justify-center gap-2 border-dashed"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add New Item
+                </Button>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowEditServiceItemsModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveServiceItems}>
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
