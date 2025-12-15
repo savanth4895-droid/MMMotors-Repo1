@@ -3713,6 +3713,7 @@ const ServicesBilling = () => {
           sparePartSuggestions={sparePartSuggestions}
           handleDescriptionChange={handleDescriptionChange}
           handleSelectSparePart={handleSelectSparePart}
+          handleOpenEditServiceItems={handleOpenEditServiceItems}
         />
       ) : (
         <ViewBillsContent 
