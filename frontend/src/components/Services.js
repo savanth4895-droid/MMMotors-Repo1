@@ -1153,6 +1153,17 @@ const ViewRegistration = () => {
           <p className="text-gray-600">View and manage all service registrations</p>
         </div>
         <div className="flex gap-2">
+          {selectedIds.length > 0 && (
+            <Button 
+              onClick={handleBulkDelete} 
+              variant="destructive" 
+              className="flex items-center gap-2"
+              disabled={bulkDeleting}
+            >
+              <Trash2 className="w-4 h-4" />
+              {bulkDeleting ? 'Deleting...' : `Delete Selected (${selectedIds.length})`}
+            </Button>
+          )}
           <Button onClick={exportRegistrations} variant="outline" className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
             Export CSV
