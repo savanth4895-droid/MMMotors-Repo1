@@ -2571,26 +2571,6 @@ const ServicesBilling = () => {
     debouncedSparePartSearch(value);
   };
 
-  const handleSelectSparePart = (index, part) => {
-    const updatedItems = [...billItems];
-    updatedItems[index] = {
-      ...updatedItems[index],
-      description: part.name,
-      hsn_sac: part.hsn_sac,
-      unit: part.unit,
-      rate: part.rate,
-      gst_percent: part.gst_percent
-    };
-    
-    // Recalculate amounts
-    const calculatedAmounts = calculateItemAmounts(updatedItems[index]);
-    updatedItems[index] = { ...updatedItems[index], ...calculatedAmounts };
-    
-    setBillItems(updatedItems);
-    setSparePartSuggestions([]);
-    setActiveDescriptionIndex(null);
-  };
-
   const fetchServiceBills = async () => {
     try {
       setLoading(true);
