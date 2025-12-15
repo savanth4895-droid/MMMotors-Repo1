@@ -2087,7 +2087,28 @@ const JobCards = () => {
           <h2 className="text-2xl font-bold text-gray-900">Job Cards Management</h2>
           <p className="text-gray-600">Manage and track all service job cards</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          {selectedIds.length > 0 && (
+            <>
+              <Button 
+                onClick={() => setShowBulkStatusModal(true)} 
+                variant="outline" 
+                className="flex items-center gap-2 border-blue-500 text-blue-600 hover:bg-blue-50"
+              >
+                <CheckCircle className="w-4 h-4" />
+                Update Status ({selectedIds.length})
+              </Button>
+              <Button 
+                onClick={handleBulkDelete} 
+                variant="destructive" 
+                className="flex items-center gap-2"
+                disabled={bulkDeleting}
+              >
+                <Trash2 className="w-4 h-4" />
+                {bulkDeleting ? 'Deleting...' : `Delete Selected (${selectedIds.length})`}
+              </Button>
+            </>
+          )}
           <Button onClick={handleAddNewJob} className="flex items-center gap-2">
             <Plus className="w-4 h-4" />
             Add New Job
