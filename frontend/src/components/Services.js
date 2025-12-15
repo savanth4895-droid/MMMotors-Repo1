@@ -3718,10 +3718,42 @@ const CreateBillContent = ({
                     <td className="border border-gray-300 p-2">
                       <Input
                         value={item.description}
-                        onChange={(e) => updateBillItem(index, 'description', e.target.value)}
-                        placeholder="Enter description"
+                        onChange={(e) => handleDescriptionChange(index, e.target.value)}
+                        onFocus={() => setActiveDescriptionIndex(index)}
+                        onBlur={() => {
+                          // Delay hiding to allow clicking on suggestions
+                          setTimeout(() => setActiveDescriptionIndex(null), 200);
+                        }}
+                        placeholder="Type to search spare parts..."
                         className="border-0 p-1"
                       />
+                      {/* Spare Parts Autocomplete Dropdown */}
+                      {activeDescriptionIndex === index && sparePartSuggestions.length > 0 && (
+                        <div className="absolute z-50 w-72 mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                          <div className="p-2 text-xs font-medium text-blue-600 border-b bg-blue-50">
+                            <Package className="inline w-3 h-3 mr-1" />
+                            Matching Parts & Items
+                          </div>
+                          {sparePartSuggestions.map((part, idx) => (
+                            <div
+                              key={idx}
+                              className="p-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                              onMouseDown={() => handleSelectSparePart(index, part)}
+                            >
+                              <div className="font-medium text-sm text-gray-900">{part.name}</div>
+                              <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+                                {part.hsn_sac && <span>HSN: {part.hsn_sac}</span>}
+                                <span>₹{part.rate}</span>
+                                <span>{part.unit}</span>
+                                <span className="text-green-600">GST: {part.gst_percent}%</span>
+                                <Badge variant="outline" className="text-xs py-0">
+                                  {part.source === 'spare_parts' ? 'Inventory' : 'Service'}
+                                </Badge>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </td>
                     <td className="border border-gray-300 p-2">
                       <Input
