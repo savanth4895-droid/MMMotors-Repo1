@@ -4802,14 +4802,15 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
                   <p className="text-gray-600">Service Department</p>
                   <p className="text-gray-600">Bengaluru main road, behind Ruchi Bakery</p>
                   <p className="text-gray-600">Malur, Karnataka 563130</p>
+                  <p className="text-gray-600 mt-2">GSTIN: 29XXXXXXXXXXXXXXX</p>
                 </div>
 
-                {/* Service Bill Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Bill Information Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-b pb-4">
                   <div className="space-y-2">
-                    <h4 className="font-semibold text-blue-600">Service Bill Information</h4>
-                    <p><strong>Job Card Number:</strong> {selectedBill.job_card_number || 'N/A'}</p>
-                    <p><strong>Date:</strong> {selectedBill.created_at ? new Date(selectedBill.created_at).toLocaleDateString('en-IN') : 'N/A'}</p>
+                    <h4 className="font-semibold text-blue-600 border-b pb-1">Bill Information</h4>
+                    <p><strong>Bill Number:</strong> {selectedBill.job_card_number || 'N/A'}</p>
+                    <p><strong>Bill Date:</strong> {selectedBill.created_at ? new Date(selectedBill.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</p>
                     <p><strong>Status:</strong> 
                       <span className={`ml-2 px-2 py-1 rounded text-xs ${
                         selectedBill.status === 'completed' ? 'bg-green-100 text-green-800' :
@@ -4822,30 +4823,106 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
                   </div>
                   
                   <div className="space-y-2">
-                    <h4 className="font-semibold text-blue-600">Customer Details</h4>
+                    <h4 className="font-semibold text-blue-600 border-b pb-1">Customer Details</h4>
                     <p><strong>Name:</strong> {selectedBill.customer_name || 'N/A'}</p>
-                    <p><strong>Vehicle Reg No:</strong> {selectedBill.vehicle_reg_no || 'N/A'}</p>
+                    <p><strong>Vehicle:</strong> {selectedBill.vehicle_reg_no || 'N/A'}</p>
+                    <p><strong>Service Type:</strong> {selectedBill.service_type ? selectedBill.service_type.replace('_', ' ').toUpperCase() : 'N/A'}</p>
                   </div>
                 </div>
 
-                {/* Service Details */}
-                <div className="border rounded-lg p-4">
-                  <h4 className="font-semibold text-blue-600 mb-3">Service Details</h4>
-                  <div className="space-y-2">
-                    <p><strong>Service Type:</strong> {selectedBill.service_type ? selectedBill.service_type.replace('_', ' ').toUpperCase() : 'N/A'}</p>
-                    <p><strong>Description:</strong></p>
-                    <div className="bg-gray-50 p-3 rounded text-gray-700">
-                      {selectedBill.description || 'No description provided'}
+                {/* Itemized Bill Table */}
+                <div>
+                  <h4 className="font-semibold text-blue-600 mb-3">Parts & Services Breakdown</h4>
+                  <div className="border rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-100">
+                        <tr>
+                          <th className="p-2 text-left font-semibold">Sl</th>
+                          <th className="p-2 text-left font-semibold">Description</th>
+                          <th className="p-2 text-center font-semibold">HSN/SAC</th>
+                          <th className="p-2 text-center font-semibold">Qty</th>
+                          <th className="p-2 text-right font-semibold">Rate</th>
+                          <th className="p-2 text-right font-semibold">CGST</th>
+                          <th className="p-2 text-right font-semibold">SGST</th>
+                          <th className="p-2 text-right font-semibold">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedBill.items && selectedBill.items.length > 0 ? (
+                          selectedBill.items.map((item, index) => (
+                            <tr key={index} className="border-t hover:bg-gray-50">
+                              <td className="p-2 text-center">{index + 1}</td>
+                              <td className="p-2">{item.description || item.name || 'Service Item'}</td>
+                              <td className="p-2 text-center">{item.hsn_sac || '-'}</td>
+                              <td className="p-2 text-center">{item.qty || 1} {item.unit || 'Nos'}</td>
+                              <td className="p-2 text-right">₹{(item.rate || 0).toLocaleString()}</td>
+                              <td className="p-2 text-right">₹{(item.cgst_amount || 0).toFixed(2)}</td>
+                              <td className="p-2 text-right">₹{(item.sgst_amount || 0).toFixed(2)}</td>
+                              <td className="p-2 text-right font-medium">₹{(item.amount || 0).toLocaleString()}</td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr className="border-t">
+                            <td className="p-2 text-center">1</td>
+                            <td className="p-2">{selectedBill.description || 'Service Charge'}</td>
+                            <td className="p-2 text-center">9987</td>
+                            <td className="p-2 text-center">1 Nos</td>
+                            <td className="p-2 text-right">₹{((selectedBill.amount || 0) / 1.18).toFixed(2)}</td>
+                            <td className="p-2 text-right">₹{((selectedBill.amount || 0) * 0.09 / 1.18).toFixed(2)}</td>
+                            <td className="p-2 text-right">₹{((selectedBill.amount || 0) * 0.09 / 1.18).toFixed(2)}</td>
+                            <td className="p-2 text-right font-medium">₹{(selectedBill.amount || 0).toLocaleString()}</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Bill Summary */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div></div>
+                  <div className="space-y-2 border rounded-lg p-4 bg-gray-50">
+                    <div className="flex justify-between py-1 border-b">
+                      <span className="text-gray-600">Subtotal:</span>
+                      <span className="font-medium">₹{selectedBill.items ? 
+                        selectedBill.items.reduce((sum, item) => sum + ((item.rate || 0) * (item.qty || 1)), 0).toFixed(2) :
+                        ((selectedBill.amount || 0) / 1.18).toFixed(2)
+                      }</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b text-sm">
+                      <span className="text-gray-600">CGST (9%):</span>
+                      <span>₹{selectedBill.items ?
+                        selectedBill.items.reduce((sum, item) => sum + (item.cgst_amount || 0), 0).toFixed(2) :
+                        ((selectedBill.amount || 0) * 0.09 / 1.18).toFixed(2)
+                      }</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b text-sm">
+                      <span className="text-gray-600">SGST (9%):</span>
+                      <span>₹{selectedBill.items ?
+                        selectedBill.items.reduce((sum, item) => sum + (item.sgst_amount || 0), 0).toFixed(2) :
+                        ((selectedBill.amount || 0) * 0.09 / 1.18).toFixed(2)
+                      }</span>
+                    </div>
+                    <div className="flex justify-between py-2 text-lg font-bold text-green-600 border-t-2">
+                      <span>Grand Total:</span>
+                      <span>₹{(selectedBill.amount || 0).toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Amount */}
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <div className="flex justify-between items-center text-xl font-bold text-green-600">
-                    <span>Service Amount:</span>
-                    <span>₹{selectedBill.amount?.toLocaleString() || '0'}</span>
-                  </div>
+                {/* Amount in Words */}
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <p className="text-sm"><strong>Amount in Words:</strong> {numberToWords(selectedBill.amount || 0)} Rupees Only</p>
+                </div>
+
+                {/* Terms */}
+                <div className="text-xs text-gray-500 space-y-1 border-t pt-4">
+                  <p><strong>Terms & Conditions:</strong></p>
+                  <ol className="list-decimal list-inside space-y-1">
+                    <li>Warranty as per manufacturer terms only</li>
+                    <li>Payment due on delivery</li>
+                    <li>Goods once sold will not be taken back</li>
+                  </ol>
                 </div>
               </div>
 
