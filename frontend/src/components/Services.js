@@ -33,8 +33,7 @@ import {
   X,
   Car,
   User,
-  IndianRupee,
-  Package
+  IndianRupee
 } from 'lucide-react';
 import { toast } from 'sonner';
 
