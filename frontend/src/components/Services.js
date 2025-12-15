@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Badge } from './ui/badge';
 import Pagination from './Pagination';
 import SortDropdown from './SortDropdown';
+import debounce from 'lodash/debounce';
 import { 
   Plus, 
   Eye, 
@@ -28,6 +29,7 @@ import {
   Printer,
   Trash2,
   FileSearch,
+  Package,
   X,
   Car,
   User,
