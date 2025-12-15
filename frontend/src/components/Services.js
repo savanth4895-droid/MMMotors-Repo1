@@ -4646,6 +4646,57 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
     toast.success('Service bill downloaded successfully!');
   };
 
+  // Number to words converter for Indian currency
+  const numberToWords = (num) => {
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
+      'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    
+    if (num === 0) return 'Zero';
+    
+    const convertLessThanThousand = (n) => {
+      if (n === 0) return '';
+      if (n < 20) return ones[n];
+      if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + ones[n % 10] : '');
+      return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 !== 0 ? ' ' + convertLessThanThousand(n % 100) : '');
+    };
+    
+    const convertToWords = (n) => {
+      if (n === 0) return '';
+      
+      // Indian numbering system: Crore, Lakh, Thousand, Hundred
+      let result = '';
+      
+      if (n >= 10000000) {
+        result += convertLessThanThousand(Math.floor(n / 10000000)) + ' Crore ';
+        n %= 10000000;
+      }
+      if (n >= 100000) {
+        result += convertLessThanThousand(Math.floor(n / 100000)) + ' Lakh ';
+        n %= 100000;
+      }
+      if (n >= 1000) {
+        result += convertLessThanThousand(Math.floor(n / 1000)) + ' Thousand ';
+        n %= 1000;
+      }
+      if (n > 0) {
+        result += convertLessThanThousand(n);
+      }
+      
+      return result.trim();
+    };
+    
+    const rupees = Math.floor(num);
+    const paise = Math.round((num - rupees) * 100);
+    
+    let result = convertToWords(rupees);
+    if (paise > 0) {
+      result += ' and ' + convertToWords(paise) + ' Paise';
+    }
+    
+    return result || 'Zero';
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
