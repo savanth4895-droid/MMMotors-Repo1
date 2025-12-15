@@ -1237,7 +1237,7 @@ async def get_service(service_id: str, current_user: User = Depends(get_current_
     return Service(**service)
 
 @api_router.put("/services/{service_id}", response_model=Service)
-async def update_service(service_id: str, service_data: ServiceCreate, current_user: User = Depends(get_current_user)):
+async def update_service(service_id: str, service_data: ServiceUpdate, current_user: User = Depends(get_current_user)):
     # Check if service exists
     existing_service = await db.services.find_one({"id": service_id})
     if not existing_service:
@@ -1251,6 +1251,10 @@ async def update_service(service_id: str, service_data: ServiceCreate, current_u
     update_data["created_at"] = existing_service["created_at"]  # Keep original creation date
     update_data["status"] = existing_service.get("status", ServiceStatus.PENDING)  # Keep current status
     update_data["completion_date"] = existing_service.get("completion_date")  # Keep completion date if exists
+    
+    # If service_date not provided, keep the existing one
+    if update_data.get("service_date") is None:
+        update_data["service_date"] = existing_service.get("service_date")
     
     updated_service = Service(**update_data)
     await db.services.replace_one({"id": service_id}, updated_service.dict())
