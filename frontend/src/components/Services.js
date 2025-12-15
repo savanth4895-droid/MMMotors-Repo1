@@ -4797,29 +4797,88 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
   };
 
   const handleDownloadBill = (bill) => {
+    // Check if bill has itemized data
+    const hasItems = bill.items && bill.items.length > 0;
+    
     // Generate CSV content for the service bill
-    const csvContent = [
-      ['Service Bill'],
-      ['Job Card Number: ' + (bill.job_card_number || 'N/A')],
-      ['Date: ' + (bill.created_at ? new Date(bill.created_at).toLocaleDateString('en-IN') : 'N/A')],
-      ['Status: ' + (bill.status ? bill.status.replace('_', ' ').toUpperCase() : 'PENDING')],
+    let csvRows = [
+      ['SERVICE BILL / TAX INVOICE'],
       [''],
-      ['Customer Details:'],
-      ['Name: ' + (bill.customer_name || 'N/A')],
-      ['Vehicle Reg No: ' + (bill.vehicle_reg_no || 'N/A')],
+      ['M M MOTORS'],
+      ['Bengaluru main road, behind Ruchi Bakery'],
+      ['Malur, Karnataka 563130'],
+      ['Phone: 7026263123 | Email: mmmotors3123@gmail.com'],
+      ['GSTIN: 29XXXXXXXXXXXXXXX'],
       [''],
-      ['Service Details:'],
-      ['Service Type: ' + (bill.service_type ? bill.service_type.replace('_', ' ').toUpperCase() : 'N/A')],
-      ['Description: ' + (bill.description || 'No description provided')],
+      ['Bill Information'],
+      ['Bill Number', bill.bill_number || bill.job_card_number || 'N/A'],
+      ['Bill Date', bill.created_at || bill.bill_date ? new Date(bill.created_at || bill.bill_date).toLocaleDateString('en-IN') : 'N/A'],
+      ['Status', bill.status ? bill.status.replace('_', ' ').toUpperCase() : 'PENDING'],
       [''],
-      ['Service Amount: ₹' + (bill.amount?.toLocaleString() || '0')]
-    ].map(row => typeof row === 'string' ? row : row.join(',')).join('\n');
+      ['Customer Details'],
+      ['Name', bill.customer_name || 'N/A'],
+      ['Mobile', bill.customer_mobile || bill.customer_phone || 'N/A'],
+      ['Vehicle', bill.vehicle_reg_no || bill.vehicle_number || 'N/A'],
+      [''],
+      ['PARTS & SERVICES BREAKDOWN'],
+      ['Sl No', 'Description', 'HSN/SAC', 'Qty', 'Unit', 'Rate', 'CGST', 'SGST', 'Amount']
+    ];
+
+    if (hasItems) {
+      bill.items.forEach((item, index) => {
+        csvRows.push([
+          index + 1,
+          item.description || item.name || 'Service Item',
+          item.hsn_sac || '-',
+          item.qty || 1,
+          item.unit || 'Nos',
+          (item.rate || 0).toFixed(2),
+          (item.cgst_amount || 0).toFixed(2),
+          (item.sgst_amount || 0).toFixed(2),
+          (item.amount || 0).toFixed(2)
+        ]);
+      });
+    } else {
+      csvRows.push([
+        1,
+        bill.description || 'Service Charge',
+        '9987',
+        1,
+        'Nos',
+        ((bill.amount || 0) / 1.18).toFixed(2),
+        ((bill.amount || 0) * 0.09 / 1.18).toFixed(2),
+        ((bill.amount || 0) * 0.09 / 1.18).toFixed(2),
+        (bill.amount || 0).toFixed(2)
+      ]);
+    }
+
+    // Add summary
+    const subtotal = hasItems 
+      ? bill.items.reduce((sum, item) => sum + ((item.rate || 0) * (item.qty || 1)), 0)
+      : (bill.amount || 0) / 1.18;
+    const totalCgst = hasItems 
+      ? bill.items.reduce((sum, item) => sum + (item.cgst_amount || 0), 0)
+      : (bill.amount || 0) * 0.09 / 1.18;
+    const totalSgst = hasItems 
+      ? bill.items.reduce((sum, item) => sum + (item.sgst_amount || 0), 0)
+      : (bill.amount || 0) * 0.09 / 1.18;
+    const grandTotal = bill.total_amount || bill.amount || 0;
+
+    csvRows.push(['']);
+    csvRows.push(['', '', '', '', '', '', '', 'Subtotal:', subtotal.toFixed(2)]);
+    csvRows.push(['', '', '', '', '', '', '', 'CGST:', totalCgst.toFixed(2)]);
+    csvRows.push(['', '', '', '', '', '', '', 'SGST:', totalSgst.toFixed(2)]);
+    csvRows.push(['', '', '', '', '', '', '', 'GRAND TOTAL:', grandTotal.toFixed(2)]);
+    csvRows.push(['']);
+    csvRows.push(['Thank you for your business!']);
+
+    const csvContent = csvRows.map(row => row.join(',')).join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Service_Bill_${bill.job_card_number || 'N_A'}_${bill.customer_name || 'Customer'}.csv`;
+    a.download = `Service_Bill_${bill.bill_number || bill.job_card_number || 'N_A'}_${bill.customer_name || 'Customer'}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
