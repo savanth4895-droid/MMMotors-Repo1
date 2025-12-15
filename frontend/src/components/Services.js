@@ -4146,6 +4146,10 @@ const CreateBillContent = ({
                   <Plus className="w-4 h-4" />
                   Add Custom Item
                 </Button>
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Edit
+                </Button>
                 <Button onClick={addServicePackage} variant="outline" size="sm" className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100">
                   <Wrench className="w-4 h-4" />
                   Add Service Package
