@@ -979,7 +979,24 @@ const ViewRegistration = () => {
     
     try {
       setLoading(true);
-      await axios.put(`${API}/services/${editingRegistration.id}`, editFormData);
+      const token = localStorage.getItem('token');
+      
+      // Prepare the data with proper formatting
+      const updateData = {
+        customer_id: editFormData.customer_id,
+        vehicle_number: editFormData.vehicle_number,
+        vehicle_brand: editFormData.vehicle_brand || null,
+        vehicle_model: editFormData.vehicle_model || null,
+        vehicle_year: editFormData.vehicle_year || null,
+        service_type: editFormData.service_type,
+        description: editFormData.description,
+        amount: parseFloat(editFormData.amount) || 0,
+        service_date: editFormData.service_date ? new Date(editFormData.service_date).toISOString() : null
+      };
+      
+      await axios.put(`${API}/services/${editingRegistration.id}`, updateData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       toast.success('Service registration updated successfully!');
       setShowEditModal(false);
       setEditingRegistration(null);
