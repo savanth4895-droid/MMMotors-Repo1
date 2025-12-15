@@ -318,6 +318,48 @@ class SparePartBillCreate(BaseModel):
     total_tax: Optional[float] = 0
     total_amount: Optional[float] = 0
 
+# Service Bill Models
+class ServiceBill(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    bill_number: str
+    job_card_number: Optional[str] = None
+    customer_id: Optional[str] = None
+    customer_name: Optional[str] = None
+    customer_mobile: Optional[str] = None
+    vehicle_number: Optional[str] = None
+    vehicle_brand: Optional[str] = None
+    vehicle_model: Optional[str] = None
+    items: List[Dict[str, Any]]  # Itemized bill items with GST calculations
+    subtotal: float = 0
+    total_discount: float = 0
+    total_cgst: float = 0
+    total_sgst: float = 0
+    total_tax: float = 0
+    total_amount: float = 0
+    bill_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    status: str = "pending"
+    created_by: str = ""
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class ServiceBillCreate(BaseModel):
+    bill_number: str
+    job_card_number: Optional[str] = None
+    customer_id: Optional[str] = None
+    customer_name: Optional[str] = None
+    customer_mobile: Optional[str] = None
+    vehicle_number: Optional[str] = None
+    vehicle_brand: Optional[str] = None
+    vehicle_model: Optional[str] = None
+    items: List[Dict[str, Any]]
+    subtotal: float = 0
+    total_discount: float = 0
+    total_cgst: float = 0
+    total_sgst: float = 0
+    total_tax: float = 0
+    total_amount: float = 0
+    bill_date: Optional[str] = None
+    status: str = "pending"
+
 # Backup Models
 class BackupConfig(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
