@@ -2827,8 +2827,11 @@ const ServicesBilling = () => {
       setLoading(true);
       const token = localStorage.getItem('token');
       
-      // Fetch services and customers data
-      const [servicesResponse, customersResponse] = await Promise.all([
+      // Fetch from service-bills endpoint (itemized bills) and services (legacy)
+      const [serviceBillsResponse, servicesResponse, customersResponse] = await Promise.all([
+        axios.get(`${API}/service-bills`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).catch(() => ({ data: [] })), // Return empty if endpoint doesn't exist
         axios.get(`${API}/services`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
@@ -2843,22 +2846,40 @@ const ServicesBilling = () => {
         })
       ]);
       
+      const serviceBills = serviceBillsResponse.data || [];
       const services = servicesResponse.data;
       const customers = customersResponse.data.data || customersResponse.data;
       
-      // Map customer details to services
-      const servicesWithCustomers = services.map(service => {
+      // Map itemized service bills
+      const itemizedBills = serviceBills.map(bill => ({
+        ...bill,
+        job_card_number: bill.bill_number,
+        customer_name: bill.customer_name || 'Unknown Customer',
+        customer_phone: bill.customer_mobile || 'N/A',
+        vehicle_reg_no: bill.vehicle_number || 'N/A',
+        amount: bill.total_amount,
+        service_type: 'billing',
+        status: bill.status || 'pending',
+        isItemized: true // Flag to identify itemized bills
+      }));
+      
+      // Map legacy service records
+      const legacyBills = services.map(service => {
         const customer = customers.find(c => c.id === service.customer_id);
         return {
           ...service,
           customer_name: customer?.name || 'Unknown Customer',
           customer_phone: customer?.mobile || customer?.phone || 'N/A',
           customer_address: customer?.address || 'N/A',
-          vehicle_reg_no: service.vehicle_number || 'N/A'
+          vehicle_reg_no: service.vehicle_number || 'N/A',
+          isItemized: false
         };
       });
       
-      setServiceBills(servicesWithCustomers);
+      // Combine both, with itemized bills first
+      const allBills = [...itemizedBills, ...legacyBills];
+      
+      setServiceBills(allBills);
     } catch (error) {
       toast.error('Failed to fetch service bills');
     } finally {
