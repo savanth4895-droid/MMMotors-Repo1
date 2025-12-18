@@ -179,6 +179,20 @@ class VehicleCreate(BaseModel):
     inbound_location: Optional[str] = None
     page_number: Optional[str] = None
 
+class VehicleUpdate(BaseModel):
+    brand: Optional[str] = None
+    model: Optional[str] = None
+    chassis_number: Optional[str] = None
+    engine_number: Optional[str] = None
+    color: Optional[str] = None
+    vehicle_number: Optional[str] = None
+    key_number: Optional[str] = None
+    inbound_location: Optional[str] = None
+    page_number: Optional[str] = None
+    outbound_location: Optional[str] = None
+    status: Optional[str] = None
+    date_returned: Optional[str] = None
+
 class Sale(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     invoice_number: str
