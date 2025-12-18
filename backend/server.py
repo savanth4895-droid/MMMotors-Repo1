@@ -859,17 +859,28 @@ async def get_vehicle_brands(current_user: User = Depends(get_current_user)):
     return brands
 
 @api_router.put("/vehicles/{vehicle_id}", response_model=Vehicle)
-async def update_vehicle(vehicle_id: str, vehicle_data: VehicleCreate, current_user: User = Depends(get_current_user)):
+async def update_vehicle(vehicle_id: str, vehicle_data: VehicleUpdate, current_user: User = Depends(get_current_user)):
     # Check if vehicle exists
     existing_vehicle = await db.vehicles.find_one({"id": vehicle_id})
     if not existing_vehicle:
         raise HTTPException(status_code=404, detail="Vehicle not found")
     
-    # Update vehicle data
-    update_data = vehicle_data.dict()
+    # Update vehicle data - only update fields that are provided
+    update_data = {k: v for k, v in vehicle_data.dict().items() if v is not None}
     update_data["id"] = vehicle_id  # Keep the original ID
     
-    updated_vehicle = Vehicle(**{**existing_vehicle, **update_data})
+    # Handle date_returned if provided
+    if "date_returned" in update_data and update_data["date_returned"]:
+        try:
+            from dateutil import parser as date_parser
+            update_data["date_returned"] = date_parser.parse(update_data["date_returned"])
+        except:
+            pass
+    
+    # Merge existing data with updates
+    merged_data = {**existing_vehicle, **update_data}
+    
+    updated_vehicle = Vehicle(**merged_data)
     await db.vehicles.replace_one({"id": vehicle_id}, updated_vehicle.dict())
     return updated_vehicle
 
