@@ -18,6 +18,7 @@ import {
   ClipboardList, 
   Calendar,
   CheckCircle,
+  XCircle,
   Clock,
   AlertCircle,
   AlertTriangle,
