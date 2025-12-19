@@ -60,6 +60,38 @@
   - **No Data Overlap**: Registration data does NOT appear in services, Service data does NOT appear in registrations
   - **Success Rate**: 100% (8/8 tests passed)
 
+#### Test 2: Registration vs Job Card Separation Feature - Frontend UI Testing
+- **Status**: PASSED ✅
+- **Details**: 
+  - **Authentication**: Successfully logged in with admin/admin123 credentials
+  - **Navigation**: All expected navigation items present: Overview, New Registration, View Registrations, Job Cards, Service Bills, Service Due
+  - **New Registration Form**: 
+    - ✅ Form title shows "New Customer & Vehicle Registration"
+    - ✅ Customer Information section with correct fields: Customer Name, Mobile, Address
+    - ✅ Vehicle Information section with correct fields: Vehicle Reg No, Brand, Model, Year, Chassis Number, Engine Number
+    - ✅ NO service-related fields present (service type, amount, description) - proper separation
+    - ✅ Form submission works with dropdown selection and auto-fill features
+  - **View Registrations Page**:
+    - ✅ Page title shows "Customer & Vehicle Registrations"
+    - ✅ Stats cards present: Total Registrations, Unique Customers, Filtered Results
+    - ✅ Table headers correct: Registration Date, Customer Name, Phone Number, Vehicle Brand, Vehicle Model, Vehicle Year, Vehicle Reg. No, Actions
+    - ✅ Shows registration data from /api/registrations endpoint
+  - **Job Cards Page**:
+    - ✅ Job cards displayed with status indicators (Pending, In Progress, Completed)
+    - ✅ Bulk selection checkboxes present (8 checkboxes found)
+    - ✅ Bulk action buttons appear when items selected (Update Status, Delete Selected)
+    - ✅ Shows job card data from /api/services endpoint
+  - **Data Separation Verification**:
+    - ✅ Registration data correctly NOT found in Job Cards page (proper separation)
+    - ✅ Job card data correctly NOT found in View Registrations page (proper separation)
+    - ✅ No data leakage between the two systems
+  - **UI/UX Quality**:
+    - ✅ Responsive design and proper styling
+    - ✅ No console errors during navigation
+    - ✅ Smooth interactions and form submissions
+    - ✅ Auto-fill functionality working (customer details populated from phone number)
+  - **Success Rate**: 100% (15/15 frontend tests passed)
+
 #### Test 2: Vehicle Details Display (Previous Test)
 - **Status**: PASSED ✅
 - **Details**: 
