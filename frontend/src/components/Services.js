@@ -921,29 +921,29 @@ const ViewRegistration = () => {
       setLoading(true);
       const token = localStorage.getItem('token');
       
-      // Prepare the data with proper formatting
+      // Prepare the data for registration update
       const updateData = {
-        customer_id: editFormData.customer_id,
+        customer_name: editFormData.customer_name,
+        customer_mobile: editFormData.customer_mobile,
+        customer_address: editFormData.customer_address || '',
         vehicle_number: editFormData.vehicle_number,
         vehicle_brand: editFormData.vehicle_brand || null,
         vehicle_model: editFormData.vehicle_model || null,
         vehicle_year: editFormData.vehicle_year || null,
-        service_type: editFormData.service_type,
-        description: editFormData.description,
-        amount: parseFloat(editFormData.amount) || 0,
-        service_date: editFormData.service_date ? new Date(editFormData.service_date).toISOString() : null
+        chassis_number: editFormData.chassis_number || null,
+        engine_number: editFormData.engine_number || null
       };
       
-      await axios.put(`${API}/services/${editingRegistration.id}`, updateData, {
+      await axios.put(`${API}/registrations/${editingRegistration.id}`, updateData, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast.success('Service registration updated successfully!');
+      toast.success('Registration updated successfully!');
       setShowEditModal(false);
       setEditingRegistration(null);
       setEditFormData({});
       fetchAllData(); // Refresh the data
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to update service registration');
+      toast.error(error.response?.data?.detail || 'Failed to update registration');
     } finally {
       setLoading(false);
     }
