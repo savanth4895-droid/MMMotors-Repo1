@@ -5002,6 +5002,31 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
     toast.success('Service bill downloaded successfully!');
   };
 
+  // Toggle payment status (paid/unpaid)
+  const handleTogglePaymentStatus = async (bill) => {
+    const newStatus = (bill.status === 'paid' || bill.status === 'completed') ? 'unpaid' : 'paid';
+    const confirmMessage = newStatus === 'paid' 
+      ? `Mark bill ${bill.bill_number || bill.job_card_number} as PAID?` 
+      : `Mark bill ${bill.bill_number || bill.job_card_number} as UNPAID?`;
+    
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/service-bills/${bill.id}/status`, 
+        { status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast.success(`Bill marked as ${newStatus.toUpperCase()}`);
+      fetchServiceBills(); // Refresh the list
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update payment status');
+    }
+  };
+
   // Number to words converter for Indian currency
   const numberToWords = (num) => {
     const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
