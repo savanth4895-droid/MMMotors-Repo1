@@ -210,17 +210,16 @@ const ServicesOverview = () => {
 };
 
 const NewService = () => {
-  const [serviceData, setServiceData] = useState({
+  const [registrationData, setRegistrationData] = useState({
     customer_name: '',
     phone_number: '',
+    customer_address: '',
     vehicle_brand: '',
     vehicle_model: '',
     vehicle_year: '',
     vehicle_reg_no: '',
     chassis_number: '',
-    service_type: '',
-    description: '',
-    estimated_amount: ''
+    engine_number: ''
   });
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -242,29 +241,16 @@ const NewService = () => {
   }, []);
 
   const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO'];
-  const serviceTypes = [
-    'Regular Service',
-    'Oil Change',
-    'Brake Service',
-    'Engine Repair',
-    'Electrical Work',
-    'Body Work',
-    'Tire Replacement',
-    'Chain & Sprocket',
-    'Clutch Service',
-    'Suspension Service',
-    'Other'
-  ];
 
   const handleInputChange = (field, value) => {
-    setServiceData(prev => ({
+    setRegistrationData(prev => ({
       ...prev,
       [field]: value
     }));
   };
 
   const handleChassisSelection = (selectedChassis) => {
-    setServiceData(prev => ({
+    setRegistrationData(prev => ({
       ...prev,
       chassis_number: selectedChassis.chassis_number,
       vehicle_brand: selectedChassis.brand,
