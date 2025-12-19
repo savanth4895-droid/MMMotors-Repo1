@@ -304,3 +304,86 @@ The ViewBillsContent component in Services.js (lines 5084-5133) correctly implem
 
 ### Conclusion
 **The Service Bills Payment Status Update is successfully implemented**: The Service Bills page now correctly displays "Payment" column with "PAID/UNPAID" status instead of "PENDING". All requirements have been met through code analysis verification.
+
+## Service Bills Mark as Paid/Unpaid Feature Test Results
+
+### Test Execution Details
+- **Test Date**: December 19, 2024
+- **Test Type**: Frontend UI Testing - Payment Status Toggle Feature
+- **Authentication**: admin/admin123
+- **Frontend URL**: https://auto-shop-system-1.preview.emergentagent.com
+- **Browser**: Playwright automation (Desktop 1920x1080)
+
+### Test Objective
+Test the new "Mark as Paid/Unpaid" feature in Service Bills to verify payment status toggle functionality with proper button icons and confirmation dialogs.
+
+### Test Results Summary
+
+#### ✅ PASSED TESTS
+
+##### Service Bills Mark as Paid/Unpaid Feature Verification
+- **Status**: PASSED ✅
+- **Details**: 
+  - **Authentication**: Successfully logged in with admin/admin123 credentials
+  - **Navigation**: Successfully navigated to Services > Service Bills > View Bills tab
+  - **Table Structure**: 
+    - ✅ Service Bills page loads correctly with proper table structure
+    - ✅ Table headers present: Bill #, Customer, Vehicle, Service Type, Amount, Payment, Date, Actions
+    - ✅ Payment column displays "PAID" (green) and "UNPAID" (red) status badges
+    - ✅ Actions column contains payment toggle buttons with proper icons
+  - **Payment Toggle Buttons**:
+    - ✅ Found 5 payment toggle buttons in Actions column
+    - ✅ CheckCircle icon (green) for unpaid bills - clicking marks as paid
+    - ✅ XCircle icon (red) for paid bills - clicking marks as unpaid
+    - ✅ Proper button tooltips: "Mark as Paid" and "Mark as Unpaid"
+  - **Mark as Paid Functionality**:
+    - ✅ Successfully tested with bill SB-994426 (initially UNPAID)
+    - ✅ Confirmation dialog appears when clicking CheckCircle button
+    - ✅ Bill status successfully changed from UNPAID to PAID
+    - ✅ Button icon changed from CheckCircle (green) to XCircle (red)
+    - ✅ Status badge changed from red "UNPAID" to green "PAID"
+  - **Mark as Unpaid Functionality**:
+    - ✅ Successfully tested with bill SB-994426 (after marking as PAID)
+    - ✅ Confirmation dialog appears when clicking XCircle button
+    - ✅ Bill status successfully changed from PAID to UNPAID
+    - ✅ Button icon changed from XCircle (red) to CheckCircle (green)
+    - ✅ Status badge changed from green "PAID" to red "UNPAID"
+  - **Data Integrity**:
+    - ✅ Found 5 service bills with SB-* prefix (proper service bill format)
+    - ✅ All bills show "BILLING" as service type
+    - ✅ Proper customer names, vehicle registration numbers, and amounts
+    - ✅ Total Revenue calculation: ₹6,565.6
+  - **UI/UX Quality**:
+    - ✅ Clean table layout with proper styling and responsive design
+    - ✅ Proper color coding: green for PAID, red for UNPAID
+    - ✅ Smooth interactions with confirmation dialogs
+    - ✅ No console errors during testing
+    - ✅ All other action buttons present (View, Print, Download, Delete)
+  - **Success Rate**: 100% (All payment toggle functionality tests passed)
+
+### Key Verification Points
+- ✅ **Payment Toggle Buttons**: CheckCircle (green) for unpaid bills, XCircle (red) for paid bills
+- ✅ **Icon Changes**: Buttons correctly change icons based on payment status
+- ✅ **Status Changes**: Payment status correctly toggles between PAID and UNPAID
+- ✅ **Confirmation Dialogs**: Proper confirmation prompts before status changes
+- ✅ **Visual Feedback**: Proper color coding and badge styling for payment status
+- ✅ **Data Persistence**: Status changes persist after page reload
+
+### Screenshots Captured
+1. service_bills_initial.png - Initial Service Bills page showing unpaid bills
+2. service_bills_before_paid.png - Before marking bill as paid
+3. service_bills_after_paid.png - After marking bill as paid (status changed to PAID)
+4. service_bills_before_unpaid.png - Before marking bill as unpaid
+5. service_bills_after_unpaid.png - After marking bill as unpaid (status changed to UNPAID)
+6. service_bills_final_state.png - Final state of Service Bills page
+
+### Code Implementation Verification
+The payment toggle feature is properly implemented in Services.js:
+- **handleTogglePaymentStatus** function handles API calls to `/api/service-bills/{id}/status`
+- **Confirmation dialogs** using `window.confirm()` before status changes
+- **Icon rendering**: CheckCircle for unpaid bills, XCircle for paid bills
+- **Status logic**: Toggles between 'paid' and 'unpaid' status values
+- **Toast notifications** for success/error feedback
+
+### Conclusion
+**The Mark as Paid/Unpaid feature is fully functional and working correctly**: All payment status toggle functionality works as expected with proper visual feedback, confirmation dialogs, and data persistence. The feature meets all requirements specified in the test request.
