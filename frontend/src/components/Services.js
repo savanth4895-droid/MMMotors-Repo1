@@ -891,14 +891,14 @@ const ViewRegistration = () => {
   };
 
   const handleDeleteRegistration = async (registration) => {
-    if (!window.confirm(`Are you sure you want to delete service registration for "${registration.customer_name}" (${registration.vehicle_reg_no})? This action cannot be undone.`)) {
+    if (!window.confirm(`Are you sure you want to delete registration for "${registration.customer_name}" (${registration.vehicle_reg_no})? This action cannot be undone.`)) {
       return;
     }
 
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      await axios.delete(`${API}/services/${registration.id}`, {
+      await axios.delete(`${API}/registrations/${registration.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -906,9 +906,9 @@ const ViewRegistration = () => {
       const updatedRegistrations = registrations.filter(reg => reg.id !== registration.id);
       setRegistrations(updatedRegistrations);
       
-      toast.success('Service registration deleted successfully!');
+      toast.success('Registration deleted successfully!');
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to delete service registration');
+      toast.error(error.response?.data?.detail || 'Failed to delete registration');
     } finally {
       setLoading(false);
     }
