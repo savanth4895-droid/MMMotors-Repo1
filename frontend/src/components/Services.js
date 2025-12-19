@@ -4519,7 +4519,7 @@ const CreateBillContent = ({
   );
 };
 
-const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, onDeleteBill }) => {
+const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, onDeleteBill, setServiceBills }) => {
   const [selectedBill, setSelectedBill] = React.useState(null);
   const [showViewModal, setShowViewModal] = React.useState(false);
 
