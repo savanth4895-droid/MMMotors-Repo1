@@ -422,15 +422,17 @@ const NewService = () => {
         }
 
         // Auto-populate form with found data
-        setServiceData(prev => ({
+        setRegistrationData(prev => ({
           ...prev,
           customer_name: customerInfo?.name || '',
           phone_number: customerInfo?.mobile || '',
+          customer_address: customerInfo?.address || '',
           vehicle_brand: matchingVehicle.brand || '',
           vehicle_model: matchingVehicle.model || '',
-          vehicle_year: new Date().getFullYear().toString(), // Default to current year if not available
+          vehicle_year: new Date().getFullYear().toString(),
           chassis_number: matchingVehicle.chassis_number || '',
-          vehicle_reg_no: '' // Keep vehicle reg separate from chassis
+          engine_number: matchingVehicle.engine_number || '',
+          vehicle_reg_no: matchingVehicle.vehicle_number || ''
         }));
 
         toast.success('Vehicle details found and populated!');
@@ -459,17 +461,16 @@ const NewService = () => {
   );
 
   const resetForm = () => {
-    setServiceData({
+    setRegistrationData({
       customer_name: '',
       phone_number: '',
+      customer_address: '',
       vehicle_brand: '',
       vehicle_model: '',
       vehicle_year: '',
       vehicle_reg_no: '',
       chassis_number: '',
-      service_type: '',
-      description: '',
-      estimated_amount: ''
+      engine_number: ''
     });
     setChassisOptions([]);
   };
