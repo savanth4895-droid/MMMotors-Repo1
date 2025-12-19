@@ -261,6 +261,9 @@ class ServiceCreate(BaseModel):
     customer_id: str
     vehicle_id: Optional[str] = None
     vehicle_number: str  # Registration number (standardized)
+    vehicle_brand: Optional[str] = None
+    vehicle_model: Optional[str] = None
+    vehicle_year: Optional[str] = None
     service_type: str
     description: str
     amount: float
