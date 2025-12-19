@@ -2034,7 +2034,105 @@ const JobCards = () => {
   };
 
   const handleAddNewJob = () => {
+    // Reset form
+    setNewJobCardData({
+      customer_id: '',
+      customer_name: '',
+      customer_mobile: '',
+      vehicle_number: '',
+      vehicle_brand: '',
+      vehicle_model: '',
+      vehicle_year: '',
+      service_type: '',
+      complaint: '',
+      estimated_amount: ''
+    });
     setShowAddModal(true);
+  };
+
+  const handleCustomerSelect = (customerId) => {
+    const customer = customers.find(c => c.id === customerId);
+    if (customer) {
+      setNewJobCardData({
+        ...newJobCardData,
+        customer_id: customerId,
+        customer_name: customer.name,
+        customer_mobile: customer.mobile || customer.phone || ''
+      });
+    }
+  };
+
+  const handleSaveNewJobCard = async () => {
+    // Validation
+    if (!newJobCardData.customer_id && !newJobCardData.customer_name) {
+      toast.error('Please select a customer or enter customer name');
+      return;
+    }
+    if (!newJobCardData.vehicle_number) {
+      toast.error('Please enter vehicle registration number');
+      return;
+    }
+    if (!newJobCardData.service_type) {
+      toast.error('Please select a service type');
+      return;
+    }
+    if (!newJobCardData.complaint) {
+      toast.error('Please enter the complaint/issue');
+      return;
+    }
+
+    setSavingJobCard(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      // If no customer selected but name provided, create/find customer
+      let customerId = newJobCardData.customer_id;
+      if (!customerId && newJobCardData.customer_name) {
+        // Try to find existing customer by mobile
+        const existingCustomer = customers.find(c => 
+          c.mobile === newJobCardData.customer_mobile || 
+          c.phone === newJobCardData.customer_mobile
+        );
+        
+        if (existingCustomer) {
+          customerId = existingCustomer.id;
+        } else {
+          // Create new customer
+          const customerResponse = await axios.post(`${API}/customers`, {
+            name: newJobCardData.customer_name,
+            mobile: newJobCardData.customer_mobile,
+            address: ''
+          }, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          customerId = customerResponse.data.id;
+        }
+      }
+
+      // Create service/job card
+      const jobCardData = {
+        customer_id: customerId,
+        vehicle_number: newJobCardData.vehicle_number,
+        vehicle_brand: newJobCardData.vehicle_brand,
+        vehicle_model: newJobCardData.vehicle_model,
+        vehicle_year: newJobCardData.vehicle_year,
+        service_type: newJobCardData.service_type,
+        description: newJobCardData.complaint,
+        amount: parseFloat(newJobCardData.estimated_amount) || 0
+      };
+
+      await axios.post(`${API}/services`, jobCardData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast.success('Job card created successfully!');
+      setShowAddModal(false);
+      fetchAllData(); // Refresh the data
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to create job card');
+    } finally {
+      setSavingJobCard(false);
+    }
   };
 
   const updateJobStatus = async (jobId, newStatus) => {
