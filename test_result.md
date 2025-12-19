@@ -3,10 +3,10 @@
 ## Current Test Session
 
 ### Test Plan
-1. Test Job Cards page - Vehicle details (Phone, Brand, Model, Year) display
-2. Test bulk selection with checkboxes
-3. Test bulk status update modal
-4. Test bulk delete functionality
+1. Test New Registration form - Create a new customer/vehicle registration
+2. Test View Registrations page - Verify it fetches from /api/registrations
+3. Test Job Cards page - Verify it still shows job cards from /api/services
+4. Verify registration data does NOT appear in job cards and vice versa
 
 ### Test Credentials
 - Username: admin
@@ -14,31 +14,35 @@
 
 ### Test Focus Areas
 
-#### Feature 1: Vehicle Details Display
-- Phone Number should display from customer's mobile field
-- Vehicle Brand should display from service.vehicle_brand
-- Vehicle Model should display from service.vehicle_model
-- Vehicle Year should display from service.vehicle_year
+#### Feature 1: New Registration Form
+- Navigate to Services > New Registration
+- Form should have Customer Information (name, mobile, address)
+- Form should have Vehicle Information (reg no, brand, model, year, chassis, engine)
+- Form should NOT have service-related fields (service type, amount, description)
+- Submitting form should save to /api/registrations endpoint
 
-#### Feature 2: Bulk Selection
-- Checkbox column in table
-- Select All checkbox in header
-- Row highlighting when selected
-- Selection counter display
+#### Feature 2: View Registrations
+- Navigate to Services > View Registrations
+- Page title should show "Customer & Vehicle Registrations"
+- Data should come from /api/registrations endpoint (not /api/services)
+- Stats cards should show Total Registrations, Unique Customers, Filtered Results
+- Table should display registration data: date, customer name, phone, vehicle details
 
-#### Feature 3: Bulk Status Update
-- "Update Status (N)" button appears when items selected
-- Modal opens with status dropdown
-- Status options: Pending, In Progress, Completed, Cancelled
-- Cancel and Update buttons
+#### Feature 3: Job Cards Page
+- Navigate to Services > Job Cards
+- Data should come from /api/services endpoint
+- Job cards should have status (pending, in_progress, completed)
+- Bulk actions (select, delete, status update) should still work
 
-#### Feature 4: Bulk Delete
-- "Delete Selected (N)" button appears when items selected
-- Confirmation dialog before deletion
+#### Feature 4: Data Separation
+- Registration entries should ONLY appear in View Registrations
+- Job card entries should ONLY appear in Job Cards page
+- No duplicate data between the two lists
 
 ### Incorporate User Feedback
-- Data should now be fetched directly from service model fields
-- Bulk actions should work for both status update and delete
+- Registration should be a one-time process for customer/vehicle
+- Multiple job cards can be created for the same registered customer/vehicle
+- Job card data should not show in registration table
 
 ## Test Results Summary
 
