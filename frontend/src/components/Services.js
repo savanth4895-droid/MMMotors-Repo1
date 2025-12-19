@@ -526,8 +526,8 @@ const NewService = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>New Service Registration</CardTitle>
-        <CardDescription>Register a new vehicle for service with complete details</CardDescription>
+        <CardTitle>New Customer & Vehicle Registration</CardTitle>
+        <CardDescription>Register a customer and their vehicle (one-time). You can then create job cards for this registration.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSave} className="space-y-6">
@@ -538,7 +538,7 @@ const NewService = () => {
               <div>
                 <h4 className="text-sm font-medium text-blue-800">Auto-fill Feature</h4>
                 <p className="text-xs text-blue-600">
-                  Enter mobile number or chassis/registration number to automatically fill customer and vehicle details from existing sales records.
+                  Enter mobile number or chassis number to automatically fill customer and vehicle details from existing sales records.
                 </p>
               </div>
             </div>
@@ -553,7 +553,7 @@ const NewService = () => {
                 <Input
                   id="customer_name"
                   placeholder="Enter customer name"
-                  value={serviceData.customer_name}
+                  value={registrationData.customer_name}
                   onChange={(e) => handleInputChange('customer_name', e.target.value)}
                   required
                 />
@@ -566,7 +566,7 @@ const NewService = () => {
                 <Input
                   id="phone_number"
                   placeholder="Enter mobile number to auto-fill details"
-                  value={serviceData.phone_number}
+                  value={registrationData.phone_number}
                   onChange={(e) => {
                     const value = e.target.value;
                     handleInputChange('phone_number', value);
@@ -576,16 +576,35 @@ const NewService = () => {
                   required
                 />
               </div>
+              <div className="md:col-span-2">
+                <Label htmlFor="customer_address">Address</Label>
+                <Input
+                  id="customer_address"
+                  placeholder="Enter customer address"
+                  value={registrationData.customer_address}
+                  onChange={(e) => handleInputChange('customer_address', e.target.value)}
+                />
+              </div>
             </div>
           </div>
 
           {/* Vehicle Information Section */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-blue-600 border-b pb-2">Vehicle Information</h3>
+            <h3 className="text-lg font-semibold text-green-600 border-b pb-2">Vehicle Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
+                <Label htmlFor="vehicle_reg_no">Vehicle Registration No</Label>
+                <Input
+                  id="vehicle_reg_no"
+                  placeholder="Enter vehicle registration number"
+                  value={registrationData.vehicle_reg_no}
+                  onChange={(e) => handleInputChange('vehicle_reg_no', e.target.value)}
+                  required
+                />
+              </div>
+              <div>
                 <Label htmlFor="vehicle_brand">Vehicle Brand</Label>
-                <Select value={serviceData.vehicle_brand} onValueChange={(value) => handleInputChange('vehicle_brand', value)}>
+                <Select value={registrationData.vehicle_brand} onValueChange={(value) => handleInputChange('vehicle_brand', value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select vehicle brand" />
                   </SelectTrigger>
@@ -603,9 +622,8 @@ const NewService = () => {
                 <Input
                   id="vehicle_model"
                   placeholder="Enter vehicle model"
-                  value={serviceData.vehicle_model}
+                  value={registrationData.vehicle_model}
                   onChange={(e) => handleInputChange('vehicle_model', e.target.value)}
-                  required
                 />
               </div>
               <div>
@@ -613,33 +631,22 @@ const NewService = () => {
                 <Input
                   id="vehicle_year"
                   placeholder="Enter vehicle year (e.g., 2024)"
-                  value={serviceData.vehicle_year}
+                  value={registrationData.vehicle_year}
                   onChange={(e) => handleInputChange('vehicle_year', e.target.value)}
                   type="number"
                   min="1990"
                   max="2030"
-                  required
                 />
               </div>
-              <div>
-                <Label htmlFor="vehicle_reg_no">Vehicle Registration No</Label>
-                <Input
-                  id="vehicle_reg_no"
-                  placeholder="Enter vehicle registration number"
-                  value={serviceData.vehicle_reg_no}
-                  onChange={(e) => handleInputChange('vehicle_reg_no', e.target.value)}
-                  required
-                />
-              </div>
-              <div className="md:col-span-2 relative">
+              <div className="relative">
                 <Label htmlFor="chassis_number">
                   Chassis Number
                   {searchLoading && <span className="ml-2 text-blue-600 text-sm">Searching...</span>}
                 </Label>
                 <Input
                   id="chassis_number"
-                  placeholder="Enter chassis number for auto-complete and auto-fill"
-                  value={serviceData.chassis_number}
+                  placeholder="Enter chassis number"
+                  value={registrationData.chassis_number}
                   onChange={(e) => {
                     const value = e.target.value;
                     handleInputChange('chassis_number', value);
@@ -649,7 +656,6 @@ const NewService = () => {
                     }
                   }}
                   className={searchLoading ? "border-blue-300" : ""}
-                  required
                 />
                 
                 {/* Chassis Number Dropdown Suggestions */}
@@ -668,49 +674,15 @@ const NewService = () => {
                   </div>
                 )}
               </div>
-            </div>
-          </div>
-
-          {/* Service Information Section */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-blue-600 border-b pb-2">Service Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="service_type">Service Type</Label>
-                <Select value={serviceData.service_type} onValueChange={(value) => handleInputChange('service_type', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select service type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {serviceTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="estimated_amount">Estimated Amount (₹)</Label>
+                <Label htmlFor="engine_number">Engine Number</Label>
                 <Input
-                  id="estimated_amount"
-                  type="number"
-                  placeholder="Enter estimated amount"
-                  value={serviceData.estimated_amount}
-                  onChange={(e) => handleInputChange('estimated_amount', e.target.value)}
+                  id="engine_number"
+                  placeholder="Enter engine number"
+                  value={registrationData.engine_number}
+                  onChange={(e) => handleInputChange('engine_number', e.target.value)}
                 />
               </div>
-            </div>
-            <div>
-              <Label htmlFor="description">Service Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Describe the service work required or issues reported"
-                value={serviceData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                rows={4}
-                required
-              />
             </div>
           </div>
 
@@ -721,7 +693,7 @@ const NewService = () => {
               disabled={loading} 
               className="flex-1 sm:flex-none sm:px-8"
             >
-              {loading ? 'Saving Service Registration...' : 'Save Service Registration'}
+              {loading ? 'Saving Registration...' : 'Save Registration'}
             </Button>
             <Button 
               type="button" 
