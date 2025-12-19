@@ -1644,6 +1644,21 @@ const JobCards = () => {
   const [editingJobCard, setEditingJobCard] = useState(null);
   const [editFormData, setEditFormData] = useState({});
   
+  // New Job Card form state
+  const [newJobCardData, setNewJobCardData] = useState({
+    customer_id: '',
+    customer_name: '',
+    customer_mobile: '',
+    vehicle_number: '',
+    vehicle_brand: '',
+    vehicle_model: '',
+    vehicle_year: '',
+    service_type: '',
+    complaint: '',
+    estimated_amount: ''
+  });
+  const [savingJobCard, setSavingJobCard] = useState(false);
+  
   // Bulk selection state
   const [selectedIds, setSelectedIds] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
@@ -1657,6 +1672,22 @@ const JobCards = () => {
   const [itemsPerPage] = useState(25);
   const [sortBy, setSortBy] = useState('service_date');
   const [sortOrder, setSortOrder] = useState('desc');
+
+  const vehicleBrands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO'];
+  const serviceTypes = [
+    { value: 'regular_service', label: 'Regular Service' },
+    { value: 'oil_change', label: 'Oil Change' },
+    { value: 'brake_service', label: 'Brake Service' },
+    { value: 'engine_repair', label: 'Engine Repair' },
+    { value: 'electrical_work', label: 'Electrical Work' },
+    { value: 'body_work', label: 'Body Work' },
+    { value: 'tire_replacement', label: 'Tire Replacement' },
+    { value: 'chain_sprocket', label: 'Chain & Sprocket' },
+    { value: 'clutch_service', label: 'Clutch Service' },
+    { value: 'suspension_service', label: 'Suspension Service' },
+    { value: 'general_checkup', label: 'General Checkup' },
+    { value: 'other', label: 'Other' }
+  ];
 
   useEffect(() => {
     fetchAllData();
