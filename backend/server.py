@@ -1692,6 +1692,23 @@ async def get_service_bill(bill_id: str, current_user: User = Depends(get_curren
         raise HTTPException(status_code=404, detail="Service bill not found")
     return bill
 
+@api_router.put("/service-bills/{bill_id}/status")
+async def update_service_bill_status(bill_id: str, status_update: dict, current_user: User = Depends(get_current_user)):
+    existing_bill = await db.service_bills.find_one({"id": bill_id})
+    if not existing_bill:
+        raise HTTPException(status_code=404, detail="Service bill not found")
+    
+    new_status = status_update.get("status", "unpaid")
+    if new_status not in ["paid", "unpaid"]:
+        raise HTTPException(status_code=400, detail="Invalid status. Must be 'paid' or 'unpaid'")
+    
+    await db.service_bills.update_one(
+        {"id": bill_id},
+        {"$set": {"status": new_status}}
+    )
+    
+    return {"message": f"Bill status updated to {new_status}", "bill_id": bill_id, "status": new_status}
+
 @api_router.delete("/service-bills/{bill_id}")
 async def delete_service_bill(bill_id: str, current_user: User = Depends(get_current_user)):
     existing_bill = await db.service_bills.find_one({"id": bill_id})
