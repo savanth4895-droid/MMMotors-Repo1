@@ -4928,7 +4928,7 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
       ['Bill Information'],
       ['Bill Number', bill.bill_number || bill.job_card_number || 'N/A'],
       ['Bill Date', bill.created_at || bill.bill_date ? new Date(bill.created_at || bill.bill_date).toLocaleDateString('en-IN') : 'N/A'],
-      ['Status', bill.status ? bill.status.replace('_', ' ').toUpperCase() : 'PENDING'],
+      ['Payment Status', bill.status === 'paid' || bill.status === 'completed' ? 'PAID' : 'UNPAID'],
       [''],
       ['Customer Details'],
       ['Name', bill.customer_name || 'N/A'],
