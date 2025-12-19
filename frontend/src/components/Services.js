@@ -5126,11 +5126,10 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
                       </td>
                       <td className="p-3 text-sm">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          bill.status === 'completed' ? 'bg-green-100 text-green-800' :
-                          bill.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-gray-100 text-gray-800'
+                          bill.status === 'paid' || bill.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          'bg-red-100 text-red-800'
                         }`}>
-                          {bill.status ? bill.status.replace('_', ' ').toUpperCase() : 'PENDING'}
+                          {bill.status === 'paid' || bill.status === 'completed' ? 'PAID' : 'UNPAID'}
                         </span>
                       </td>
                       <td className="p-3 text-sm text-gray-600">
