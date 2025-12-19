@@ -3888,6 +3888,7 @@ const ServicesBilling = () => {
           setSearchTerm={setSearchTerm}
           loading={loading}
           onDeleteBill={handleDeleteServiceBill}
+          setServiceBills={setServiceBills}
         />
       )}
 
