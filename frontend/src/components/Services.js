@@ -1056,8 +1056,8 @@ const ViewRegistration = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">View Service Registrations</h2>
-          <p className="text-gray-600">View and manage all service registrations</p>
+          <h2 className="text-2xl font-bold text-gray-900">Customer & Vehicle Registrations</h2>
+          <p className="text-gray-600">View and manage all customer/vehicle registrations. Create job cards from here.</p>
         </div>
         <div className="flex gap-2">
           {selectedIds.length > 0 && (
