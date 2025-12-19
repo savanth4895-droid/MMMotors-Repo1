@@ -256,6 +256,36 @@ class Service(BaseModel):
     amount: float
     created_by: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    is_registration: bool = False  # Flag to identify registration vs job card
+
+# Customer + Vehicle Registration Model (One-time registration)
+class Registration(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    registration_number: str  # REG-000001
+    customer_id: str
+    customer_name: str
+    customer_mobile: str
+    customer_address: Optional[str] = None
+    vehicle_number: str
+    vehicle_brand: Optional[str] = None
+    vehicle_model: Optional[str] = None
+    vehicle_year: Optional[str] = None
+    chassis_number: Optional[str] = None
+    engine_number: Optional[str] = None
+    registration_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_by: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class RegistrationCreate(BaseModel):
+    customer_name: str
+    customer_mobile: str
+    customer_address: Optional[str] = None
+    vehicle_number: str
+    vehicle_brand: Optional[str] = None
+    vehicle_model: Optional[str] = None
+    vehicle_year: Optional[str] = None
+    chassis_number: Optional[str] = None
+    engine_number: Optional[str] = None
 
 class ServiceCreate(BaseModel):
     customer_id: str
