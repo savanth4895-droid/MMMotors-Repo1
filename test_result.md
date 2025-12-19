@@ -48,7 +48,19 @@
 
 ### ✅ PASSED TESTS
 
-#### Test 1: Vehicle Details Display
+#### Test 1: Registration vs Job Card Separation Feature - Backend API Testing
+- **Status**: PASSED ✅
+- **Details**: 
+  - **Authentication**: Successfully authenticated with admin/admin123 credentials
+  - **API Endpoints**: Both /api/registrations and /api/services endpoints are available and responding correctly
+  - **Registration Creation**: Successfully created customer/vehicle registration with correct fields (NO service-related fields)
+  - **Service Creation**: Successfully created job card with correct service fields
+  - **Data Separation**: Verified complete separation between registration and service data
+  - **Field Validation**: Registration contains only customer/vehicle fields, Service contains only job card fields
+  - **No Data Overlap**: Registration data does NOT appear in services, Service data does NOT appear in registrations
+  - **Success Rate**: 100% (8/8 tests passed)
+
+#### Test 2: Vehicle Details Display (Previous Test)
 - **Status**: PASSED ✅
 - **Details**: 
   - Successfully found 345 job card records in the table
@@ -58,7 +70,7 @@
   - Vehicle years show 2025 consistently
   - No N/A values found in critical vehicle data fields
 
-#### Test 2: Bulk Selection and Actions
+#### Test 3: Bulk Selection and Actions (Previous Test)
 - **Status**: PASSED ✅
 - **Details**:
   - Select All checkbox present in table header
@@ -68,7 +80,7 @@
   - "Update Status (3)" button appears when items selected
   - "Delete Selected (3)" button appears when items selected
 
-#### Test 3: Bulk Status Update Modal
+#### Test 4: Bulk Status Update Modal (Previous Test)
 - **Status**: PASSED ✅
 - **Details**:
   - Modal opens successfully with title "Update Status for 3 Job Card(s)"
