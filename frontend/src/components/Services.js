@@ -5165,6 +5165,19 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
                           <Button 
                             size="sm" 
                             variant="outline"
+                            onClick={() => handleTogglePaymentStatus(bill)}
+                            className={bill.status === 'paid' || bill.status === 'completed' ? 'text-red-600 hover:text-red-700' : 'text-green-600 hover:text-green-700'}
+                            title={bill.status === 'paid' || bill.status === 'completed' ? 'Mark as Unpaid' : 'Mark as Paid'}
+                          >
+                            {bill.status === 'paid' || bill.status === 'completed' ? (
+                              <XCircle className="w-4 h-4" />
+                            ) : (
+                              <CheckCircle className="w-4 h-4" />
+                            )}
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
                             onClick={() => handleViewBill(bill)}
                           >
                             <Eye className="w-4 h-4" />
