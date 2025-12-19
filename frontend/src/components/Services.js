@@ -877,15 +877,15 @@ const ViewRegistration = () => {
   const handleEditRegistration = (registration) => {
     setEditingRegistration(registration);
     setEditFormData({
-      customer_id: customers.find(c => c.name === registration.customer_name)?.id || '',
-      vehicle_number: registration.vehicle_reg_no,
+      customer_name: registration.customer_name || '',
+      customer_mobile: registration.phone_number !== 'N/A' ? registration.phone_number : '',
+      customer_address: registration.customer_address !== 'N/A' ? registration.customer_address : '',
+      vehicle_number: registration.vehicle_reg_no !== 'N/A' ? registration.vehicle_reg_no : '',
       vehicle_brand: registration.vehicle_brand !== 'N/A' ? registration.vehicle_brand : '',
       vehicle_model: registration.vehicle_model !== 'N/A' ? registration.vehicle_model : '',
       vehicle_year: registration.vehicle_year !== 'N/A' ? registration.vehicle_year : '',
-      service_type: registration.service_type,
-      description: registration.description,
-      amount: registration.amount,
-      service_date: registration.registration_date ? new Date(registration.registration_date).toISOString().split('T')[0] : ''
+      chassis_number: registration.chassis_number !== 'N/A' ? registration.chassis_number : '',
+      engine_number: registration.engine_number !== 'N/A' ? registration.engine_number : ''
     });
     setShowEditModal(true);
   };
