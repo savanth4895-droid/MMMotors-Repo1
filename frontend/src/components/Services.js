@@ -479,68 +479,45 @@ const NewService = () => {
     e.preventDefault();
     setLoading(true);
 
+    // Validation
+    if (!registrationData.customer_name) {
+      toast.error('Please enter customer name');
+      setLoading(false);
+      return;
+    }
+    if (!registrationData.phone_number) {
+      toast.error('Please enter phone number');
+      setLoading(false);
+      return;
+    }
+    if (!registrationData.vehicle_reg_no) {
+      toast.error('Please enter vehicle registration number');
+      setLoading(false);
+      return;
+    }
+
     try {
-      // First, try to find existing customer or create new one
-      let customerId = null;
-      
-      try {
-        const token = localStorage.getItem('token');
-        const customersResponse = await axios.get(`${API}/customers`, {
-          params: {
-            page: 1,
-            limit: 10000,
-            sort: 'created_at',
-            order: 'desc'
-          },
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        const customers = customersResponse.data.data || customersResponse.data;
-        const existingCustomer = customers.find(
-          customer => customer.mobile === serviceData.phone_number
-        );
-        
-        if (existingCustomer) {
-          customerId = existingCustomer.id;
-        } else {
-          // Create new customer
-          const customerResponse = await axios.post(`${API}/customers`, {
-            name: serviceData.customer_name,
-            mobile: serviceData.phone_number,
-            address: 'Service Registration'
-          }, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          customerId = customerResponse.data.id;
-        }
-      } catch (error) {
-        // Create customer if customer API fails  
-        const customerResponse = await axios.post(`${API}/customers`, {
-          name: serviceData.customer_name,
-          mobile: serviceData.phone_number,
-          address: 'Service Registration'
-        }, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        customerId = customerResponse.data.id;
-      }
-
-      // Create service record
       const token = localStorage.getItem('token');
-      await axios.post(`${API}/services`, {
-        customer_id: customerId,
-        vehicle_number: serviceData.vehicle_reg_no,
-        service_type: serviceData.service_type.toLowerCase().replace(' ', '_'),
-        description: `${serviceData.vehicle_brand} ${serviceData.vehicle_model} (${serviceData.vehicle_year}) - Chassis: ${serviceData.chassis_number} - ${serviceData.description}`,
-        amount: parseFloat(serviceData.estimated_amount) || 0
+      
+      // Create registration record
+      await axios.post(`${API}/registrations`, {
+        customer_name: registrationData.customer_name,
+        customer_mobile: registrationData.phone_number,
+        customer_address: registrationData.customer_address,
+        vehicle_number: registrationData.vehicle_reg_no,
+        vehicle_brand: registrationData.vehicle_brand,
+        vehicle_model: registrationData.vehicle_model,
+        vehicle_year: registrationData.vehicle_year,
+        chassis_number: registrationData.chassis_number,
+        engine_number: registrationData.engine_number
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      toast.success('Service registration completed successfully!');
+      toast.success('Customer & Vehicle registration completed successfully!');
       resetForm();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to register service');
+      toast.error(error.response?.data?.detail || 'Failed to complete registration');
     } finally {
       setLoading(false);
     }
