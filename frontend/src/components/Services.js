@@ -5217,13 +5217,12 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
                     <h4 className="font-semibold text-blue-600 border-b pb-1">Bill Information</h4>
                     <p><strong>Bill Number:</strong> {selectedBill.job_card_number || 'N/A'}</p>
                     <p><strong>Bill Date:</strong> {selectedBill.created_at ? new Date(selectedBill.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</p>
-                    <p><strong>Status:</strong> 
+                    <p><strong>Payment Status:</strong> 
                       <span className={`ml-2 px-2 py-1 rounded text-xs ${
-                        selectedBill.status === 'completed' ? 'bg-green-100 text-green-800' :
-                        selectedBill.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
+                        selectedBill.status === 'paid' || selectedBill.status === 'completed' ? 'bg-green-100 text-green-800' :
+                        'bg-red-100 text-red-800'
                       }`}>
-                        {selectedBill.status ? selectedBill.status.replace('_', ' ').toUpperCase() : 'PENDING'}
+                        {selectedBill.status === 'paid' || selectedBill.status === 'completed' ? 'PAID' : 'UNPAID'}
                       </span>
                     </p>
                   </div>
