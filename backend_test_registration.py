@@ -278,7 +278,7 @@ class TwoWheelerAPITester:
         
         service_data = {
             "customer_id": created_customer_id,
-            "vehicle_number": "KA01AB1234",
+            "vehicle_number": registration_data["vehicle_number"],
             "vehicle_brand": "TVS",
             "vehicle_model": "Jupiter",
             "vehicle_year": "2024",
