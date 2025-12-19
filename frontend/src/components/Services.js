@@ -96,10 +96,6 @@ const ServicesOverview = () => {
     inProgress: 0
   });
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
   const fetchStats = async () => {
     try {
       const [pending, inProgress, completed] = await Promise.all([
@@ -119,6 +115,10 @@ const ServicesOverview = () => {
       toast.error('Failed to fetch service statistics');
     }
   };
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
 
   return (
     <div className="space-y-6">
