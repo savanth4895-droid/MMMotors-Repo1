@@ -319,15 +319,17 @@ const NewService = () => {
         }
 
         // Auto-populate form with found data
-        setServiceData(prev => ({
+        setRegistrationData(prev => ({
           ...prev,
           customer_name: matchingCustomer.name || '',
           phone_number: matchingCustomer.mobile || '',
+          customer_address: matchingCustomer.address || '',
           vehicle_brand: vehicleInfo?.brand || matchingCustomer.vehicle_info?.brand || '',
           vehicle_model: vehicleInfo?.model || matchingCustomer.vehicle_info?.model || '',
-          vehicle_year: new Date().getFullYear().toString(), // Default to current year if not available
+          vehicle_year: new Date().getFullYear().toString(),
           vehicle_reg_no: vehicleInfo?.vehicle_number || matchingCustomer.vehicle_info?.vehicle_number || '',
-          chassis_number: vehicleInfo?.chassis_number || matchingCustomer.vehicle_info?.chassis_number || ''
+          chassis_number: vehicleInfo?.chassis_number || matchingCustomer.vehicle_info?.chassis_number || '',
+          engine_number: vehicleInfo?.engine_number || ''
         }));
 
         toast.success('Customer details found and populated!');
