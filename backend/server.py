@@ -1305,6 +1305,92 @@ async def bulk_delete_sales(request: BulkDeleteRequest, current_user: User = Dep
         "failed": failed
     }
 
+# Registration endpoints (One-time customer + vehicle registration)
+@api_router.post("/registrations", response_model=Registration)
+async def create_registration(reg_data: RegistrationCreate, current_user: User = Depends(get_current_user)):
+    # Check if customer already exists by mobile
+    existing_customer = await db.customers.find_one({"mobile": reg_data.customer_mobile})
+    
+    if existing_customer:
+        customer_id = existing_customer["id"]
+        # Update customer name if different
+        if existing_customer.get("name") != reg_data.customer_name:
+            await db.customers.update_one(
+                {"id": customer_id},
+                {"$set": {"name": reg_data.customer_name}}
+            )
+    else:
+        # Create new customer
+        customer_id = str(uuid.uuid4())
+        customer = {
+            "id": customer_id,
+            "name": reg_data.customer_name,
+            "mobile": reg_data.customer_mobile,
+            "address": reg_data.customer_address or "",
+            "created_at": datetime.now(timezone.utc)
+        }
+        await db.customers.insert_one(customer)
+    
+    # Generate registration number
+    count = await db.registrations.count_documents({})
+    registration_number = f"REG-{count + 1:06d}"
+    
+    registration = Registration(
+        registration_number=registration_number,
+        customer_id=customer_id,
+        customer_name=reg_data.customer_name,
+        customer_mobile=reg_data.customer_mobile,
+        customer_address=reg_data.customer_address,
+        vehicle_number=reg_data.vehicle_number,
+        vehicle_brand=reg_data.vehicle_brand,
+        vehicle_model=reg_data.vehicle_model,
+        vehicle_year=reg_data.vehicle_year,
+        chassis_number=reg_data.chassis_number,
+        engine_number=reg_data.engine_number,
+        created_by=current_user.id
+    )
+    
+    await db.registrations.insert_one(registration.dict())
+    return registration
+
+@api_router.get("/registrations")
+async def get_registrations(current_user: User = Depends(get_current_user)):
+    registrations = await db.registrations.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return registrations
+
+@api_router.get("/registrations/{reg_id}")
+async def get_registration(reg_id: str, current_user: User = Depends(get_current_user)):
+    registration = await db.registrations.find_one({"id": reg_id}, {"_id": 0})
+    if not registration:
+        raise HTTPException(status_code=404, detail="Registration not found")
+    return registration
+
+@api_router.put("/registrations/{reg_id}")
+async def update_registration(reg_id: str, reg_data: RegistrationCreate, current_user: User = Depends(get_current_user)):
+    existing = await db.registrations.find_one({"id": reg_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Registration not found")
+    
+    update_data = reg_data.dict()
+    update_data["id"] = reg_id
+    update_data["registration_number"] = existing["registration_number"]
+    update_data["customer_id"] = existing["customer_id"]
+    update_data["created_by"] = existing["created_by"]
+    update_data["created_at"] = existing["created_at"]
+    update_data["registration_date"] = existing.get("registration_date", datetime.now(timezone.utc))
+    
+    await db.registrations.replace_one({"id": reg_id}, update_data)
+    return update_data
+
+@api_router.delete("/registrations/{reg_id}")
+async def delete_registration(reg_id: str, current_user: User = Depends(get_current_user)):
+    existing = await db.registrations.find_one({"id": reg_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Registration not found")
+    
+    await db.registrations.delete_one({"id": reg_id})
+    return {"message": "Registration deleted successfully"}
+
 # Service endpoints
 @api_router.post("/services", response_model=Service)
 async def create_service(service_data: ServiceCreate, current_user: User = Depends(get_current_user)):
