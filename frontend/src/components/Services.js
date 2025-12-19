@@ -1114,7 +1114,7 @@ const ViewRegistration = () => {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -1129,24 +1129,11 @@ const ViewRegistration = () => {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
-              <Clock className="h-8 w-8 text-yellow-600" />
+              <Users className="h-8 w-8 text-green-600" />
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Pending</p>
-                <p className="text-2xl font-bold text-yellow-600">
-                  {registrations.filter(r => r.status === 'pending').length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <CheckCircle className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Completed</p>
+                <p className="text-sm font-medium text-gray-600">Unique Customers</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {registrations.filter(r => r.status === 'completed').length}
+                  {new Set(registrations.map(r => r.phone_number)).size}
                 </p>
               </div>
             </div>
@@ -1155,7 +1142,7 @@ const ViewRegistration = () => {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
-              <Users className="h-8 w-8 text-purple-600" />
+              <Car className="h-8 w-8 text-purple-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Filtered Results</p>
                 <p className="text-2xl font-bold text-purple-600">{filteredRegistrations.length}</p>
