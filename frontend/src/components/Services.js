@@ -771,60 +771,41 @@ const ViewRegistration = () => {
 
   const fetchAllData = async () => {
     try {
-      const [servicesRes, customersRes, vehiclesRes] = await Promise.all([
-        axios.get(`${API}/services`),
+      const token = localStorage.getItem('token');
+      const [registrationsRes, customersRes] = await Promise.all([
+        axios.get(`${API}/registrations`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
         axios.get(`${API}/customers`, {
           params: {
             page: 1,
             limit: 10000,
             sort: 'created_at',
             order: 'desc'
-          }
-        }),
-        axios.get(`${API}/vehicles`)
+          },
+          headers: { Authorization: `Bearer ${token}` }
+        })
       ]);
 
-      const services = servicesRes.data;
+      const registrationsData = registrationsRes.data;
       const customers = customersRes.data.data || customersRes.data;
-      const vehicles = vehiclesRes.data;
 
-      // Combine service, customer, and vehicle data to create registration records
-      const combined = services.map(service => {
-        const customer = customers.find(c => c.id === service.customer_id);
-        const vehicle = vehicles.find(v => v.id === service.vehicle_id);
-
-        // Get vehicle details from linked vehicle OR from service record (for imported services)
-        let vehicleBrand = 'N/A';
-        let vehicleModel = 'N/A';
-        let vehicleYear = 'N/A';
-        
-        if (vehicle) {
-          // Direct service with vehicle_id - get from vehicle record
-          vehicleBrand = vehicle.brand || 'N/A';
-          vehicleModel = vehicle.model || 'N/A';
-          vehicleYear = vehicle.year || 'N/A';
-        } else if (service.vehicle_brand || service.vehicle_model) {
-          // Imported service without vehicle_id - get from service record
-          vehicleBrand = service.vehicle_brand || 'N/A';
-          vehicleModel = service.vehicle_model || 'N/A';
-          vehicleYear = service.vehicle_year || 'N/A';
-        }
-
+      // Map registration data for display
+      const combined = registrationsData.map(reg => {
         return {
-          id: service.id,
-          registration_date: service.service_date,
-          customer_name: customer?.name || 'Unknown',
-          phone_number: customer?.mobile || customer?.phone || 'N/A',
-          vehicle_brand: vehicleBrand,
-          vehicle_model: vehicleModel,
-          vehicle_year: vehicleYear,
-          vehicle_reg_no: service.vehicle_number || vehicle?.vehicle_number || 'N/A',
-          service_type: service.service_type,
-          amount: service.amount,
-          status: service.status,
-          job_card_number: service.job_card_number,
-          description: service.description,
-          customer_address: customer?.address || 'N/A'
+          id: reg.id,
+          registration_number: reg.registration_number,
+          registration_date: reg.registration_date || reg.created_at,
+          customer_name: reg.customer_name || 'Unknown',
+          phone_number: reg.customer_mobile || 'N/A',
+          vehicle_brand: reg.vehicle_brand || 'N/A',
+          vehicle_model: reg.vehicle_model || 'N/A',
+          vehicle_year: reg.vehicle_year || 'N/A',
+          vehicle_reg_no: reg.vehicle_number || 'N/A',
+          chassis_number: reg.chassis_number || 'N/A',
+          engine_number: reg.engine_number || 'N/A',
+          customer_address: reg.customer_address || 'N/A',
+          customer_id: reg.customer_id
         };
       });
 
