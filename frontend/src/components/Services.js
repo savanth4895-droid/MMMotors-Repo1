@@ -5021,8 +5021,14 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
+      // Update local state immediately for instant UI feedback
+      setServiceBills(prevBills => 
+        prevBills.map(b => 
+          b.id === bill.id ? { ...b, status: newStatus } : b
+        )
+      );
+      
       toast.success(`Bill marked as ${newStatus.toUpperCase()}`);
-      fetchServiceBills(); // Refresh the list
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to update payment status');
     }
