@@ -98,7 +98,7 @@
 - Network requests complete successfully
 
 ### Test Environment
-- **Frontend URL**: https://twowheeler-system.preview.emergentagent.com
+- **Frontend URL**: https://auto-shop-system-1.preview.emergentagent.com
 - **Login**: Successfully authenticated with admin/admin123
 - **Navigation**: Services > Job Cards working correctly
 - **Browser**: Playwright automation (Desktop 1920x1080)

@@ -1,56 +1,82 @@
-<analysis>**original_problem_statement:** The user's engagement began with minor bug reports and evolved into a series of critical fixes and feature enhancements. Key requests included fixing a recurring Vehicle not found error, improving bulk deletion, adding  to vehicle imports, hardening the application for production deployment, and resolving numerous bugs in the Create Invoice workflow. The user then requested the addition of 'YAMAHA' and 'PIAGGIO' brands, real-time dashboard updates, and an improved invoice printing experience.
+<analysis>**original_problem_statement:** The user's engagement began with minor bug reports and evolved into a series of critical fixes and feature enhancements. The initial goal was to harden the application and improve the user experience across various modules.
 
-In the current session, the user's requests expanded to include:
-1.  Implementing pagination and sorting across all major list views for UI consistency.
-2.  Adding a real-time notification system, triggered by a bell icon in the header, to provide updates on key application events.
-3.  Enhancing the spare parts search functionality to include compatible models.
-
-**PRODUCT REQUIREMENTS**:
-- Ensure data consistency and integrity across the application, especially for vehicle status and unique identifiers.
-- Harden the application for production deployment by addressing security vulnerabilities, implementing health checks, and ensuring robust database connectivity.
-- Improve the user experience by providing clear error feedback, consistent UI patterns (like pagination and sorting), and real-time notifications.
-- Enhance core features by adding new data points (vehicle brands, import dates) and improving interactivity (real-time dashboards, better print previews, advanced search).
+In the current session, the user's requests expanded significantly:
+1.  Add  to the CSV import template for services.
+2.  Enhance the Edit Service Registration modal to make all fields editable.
+3.  Add bulk delete functionality to the service registration and job card pages.
+4.  Implement an autocomplete feature for the Description of Goods in the service bill, fetching suggestions from the spare parts inventory.
+5.  On the Job Cards page, fetch and display previously missing vehicle details: Phone Number, Vehicle Brand, Vehicle Model, and Vehicle Year.
+6.  Implement bulk status updates for job cards.
+7.  Add and implement an Edit button for the Quick Add Service Items list in the billing section, allowing users to modify predefined service items.
+8.  Transform the service bill view into a detailed, itemized format, both in the UI modal and the print preview.
+9.  Implement the backend logic to save and retrieve fully itemized service bills, transitioning away from storing a single summary line.
+10. Fix a bug where editing a vehicle's details in the Vehicle Stock page did not update the information displayed in the table.
+11. Replace the simple Add Job Card redirect with a comprehensive, dedicated form for creating a new job card from scratch.
+12. Restructure the service workflow to separate Registration (a one-time customer/vehicle entry) from Job Cards (multiple service instances for a registered entity). Job card entries should no longer appear in the registration list.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a full-stack solution (React/FastAPI/MongoDB) for managing a two-wheeler business. It features modules for a Dashboard, Customers, Vehicles, Sales, Services, and Spare Parts. The codebase has been significantly improved with production-readiness fixes, UI consistency enhancements, and new real-time features.
+The application is a comprehensive full-stack solution for managing a two-wheeler business. This session introduced significant enhancements, making the application more robust and user-friendly.
 
-Key recent implementations include:
-- Reusable pagination and sorting components have been applied to the Vehicle Stock, Service Registrations, Service Job Cards, and Sales Invoices pages.
-- A complete, real-time notification system has been implemented. This includes backend endpoints to track activities (new sales, service updates, vehicle additions), a notification dropdown in the UI triggered by a bell icon, and a Recent Activity feed on the dashboard.
-- The search functionality on the Spare Parts page has been updated to include searching within a part's compatible models.
+Key functionalities now include:
+- **Itemized Billing:** The system now saves, displays, and prints fully itemized service bills, including a detailed breakdown of parts, quantities, rates, and taxes.
+- **Bulk Actions:** Bulk delete has been added to the View Registration page. Bulk delete and bulk status updates are now available on the Job Cards page.
+- **Enhanced Forms:** A dedicated, feature-rich form for creating new job cards has been implemented. The Edit Vehicle modal is now fully functional, correctly saving all fields.
+- **Editable Quick-Add Items:** The predefined list of service items in the billing section is now fully editable through a new modal.
+- **Separation of Concerns (In Progress):** A major refactoring effort has begun to logically separate one-time Registrations from recurring Job Cards. New backend models and API endpoints have been created for this purpose.
 
 **Last working item**:
--   **Last item agent was working**: The agent enhanced the search functionality for spare parts. It modified the  function in  to allow searching by a part's name, number, brand, and now also its . The search input's placeholder text was updated accordingly.
--   **Status**: USER VERIFICATION PENDING
+-   **Last item agent was working**: The agent was performing a major refactoring to separate the Registration and Job Card functionalities. The goal is to establish Registration as a one-time process for a customer/vehicle, against which multiple Job Cards can be created. The agent had just started updating the frontend after successfully creating the necessary backend infrastructure.
+-   **Status**: IN PROGRESS
 -   **Agent Testing Done**: N
--   **Which testing method agent to use?**: Frontend testing agent. The test should navigate to the Spare Parts page, search using a model name that exists in a part's  list, and verify that the correct part is displayed in the results.
+-   **Which testing method agent to use?**: both. After the refactoring is complete, the new registration flow, the updated job card creation process, and the separation of data in their respective list views must be thoroughly tested.
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   None.
+-   **Issue 1: Complete the Registration vs. Job Card Separation Refactor (P0)**
+    -   This is the highest priority task and is currently in progress.
 
 **Issues Detail**:
--   None.
+-   **Issue 1: Complete the Registration vs. Job Card Separation Refactor**
+    -   **Attempted fixes**: The agent has successfully created the backend infrastructure, including new  models and  endpoints in . On the frontend, it has started refactoring the  component in  into a  component that correctly posts to the new endpoint.
+    -   **Next debug checklist**:
+        1.  **File**: .
+        2.  **Component**: . Update its data fetching logic to call  instead of . This will ensure only one-time registrations appear in this list.
+        3.  **Component**: . Modify the Open New Job Card form to select a pre-existing customer/vehicle from the new  collection, rather than creating a new service record with duplicate customer data.
+        4.  **Verification**: Confirm that creating a new job card does NOT add an entry to the View Registration table.
+    -   **Why fix this issue and what will be achieved with the fix?**: This will resolve the user's core request to separate one-time registrations from recurring job cards, leading to a cleaner data model, reduced data duplication, and a more intuitive workflow for the end-user.
+    -   **Status**: IN PROGRESS
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: both
+    -   **Blocked on other issue**: None.
 
 **In progress Task List**:
--   None.
+-   The Registration vs. Job Card refactor is the only in-progress task. See details above.
 
 **Upcoming and Future Tasks**
 -   **Future Tasks:**
-    -   **(P1) Refactor large components:** Files like  and  are monolithic and handle too many responsibilities. They should be broken down into smaller, single-responsibility components to improve maintainability and reduce complexity.
+    -   **(P1) Refactor large components:** Files like  and  are monolithic.  in particular has grown significantly and should be broken down into smaller, single-responsibility components (e.g., , , , etc.) to improve maintainability.
 
 **Completed work in this session**
 - **List of all completed tasks with file and method name**:
 
 - **Recently completed:**
-  - **Feature**: Implemented pagination and sorting across multiple modules (, , ) using reusable  and  components.
-  - **Feature**: Created a comprehensive real-time notification system.
-    -   Backend: Added an  model and endpoints (, ) in . Integrated activity logging for creating sales, updating services, and adding vehicles.
-    -   Frontend: Created  and integrated it into . Implemented polling to fetch and display notifications.
-  - **Feature**: Upgraded the Recent Activity section on the  to display real-time data from the new notification system.
-  - **Feature**: Enhanced spare parts search in  to include .
+  - **Feature (Billing):** Implemented fully itemized service bills.
+    -   Backend (): Added  model and  endpoints.
+    -   Frontend (): Updated  to post itemized data and  to retrieve it.
+  - **Feature (Billing):** Enhanced the bill print preview to show the detailed itemized breakdown (, ).
+  - **Feature (Billing):** Added an editable Quick Add Service Items list with a new modal and state management ().
+  - **Feature (Job Cards):** Created a dedicated, comprehensive Open New Job Card form.
+    -   Backend (): Updated  model to include , , .
+    -   Frontend (): Replaced the Add Job Card modal with a new form and associated state/handlers.
+  - **Feature (Job Cards):** Added bulk-selection checkboxes, bulk delete, and bulk status update functionality ().
+  - **Feature (Job Cards):** Fixed data display to show correct Phone Number, Vehicle Brand, Model, and Year.
+  - **Feature (Services):** Added bulk delete functionality to the View Registration page ().
+  - **Bugfix (Vehicle Stock):** Fixed a bug where UI did not update after editing a vehicle.
+    -   Backend (): Created  model and updated the  endpoint.
+    -   Frontend (): Updated  in  to use the correct endpoint and send all edited data.
+  - **Feature (Import):** Added  to the service CSV import template ( and ).
 
 **Earlier issues found/mentioned but not fixed**
 -   None.
@@ -62,77 +88,78 @@ Key recent implementations include:
 
 
 **Key Technical Concepts**
--   **Frontend**: React with hooks, Axios for API calls. Reusable components (, ) are now used for UI consistency. Frontend polling () is used for real-time notifications and dashboard stats.
--   **Backend**: FastAPI, Pydantic, Motor. A new  model and corresponding endpoints have been added to facilitate the notification system.
--   **Database**: MongoDB. A new  collection has been introduced.
+-   **Frontend**: React with hooks for state management. Extensive use of modals, conditional rendering, and dynamic forms.  was added for search performance.
+-   **Backend**: FastAPI, Pydantic, Motor. The main change was the introduction of new data models (, ) and their corresponding API endpoints to enforce a better separation of concerns.
+-   **Database**: MongoDB. New collections  and  have been logically introduced via the new backend models.
 
 **key DB schema**
--   **customers**: 
+-   **registrations**: 
+-   **service_bills**: 
+-   **services**:  (Now represents a Job Card)
 -   **vehicles**: 
--   **sales**: 
--   **services**: 
+-   **customers**: 
 -   **spare_parts**: 
--   **activities**: 
 
 **changes in tech stack**
--   None.
+-   Added  to the frontend dependencies for its  function.
 
 **All files of reference**
--   **Created:**
-    -   : A new UI component to display a list of recent activities/notifications.
+-   **Heavily Updated:**
+    -   : Major architectural changes. Added new models (, , , , ) and their corresponding CRUD API endpoints. This separates business logic for registrations, bills, and job cards.
+    -   : This has become a monolithic component responsible for registrations, job cards, and billing. It was the site of most of the session's work, including new forms, modals, bulk actions, and the start of the ongoing refactor. This is the most critical file for the next agent.
 -   **Updated:**
-    -   : Added the  Pydantic model, created  endpoints for fetching and marking notifications as read, and integrated activity logging into the , , and  functions.
-    -   : Integrated  and  components to manage the vehicle list.
-    -   : Integrated  and  into the View Registrations and Job Cards sub-components.
-    -   : Integrated  and  into the View Invoices sub-component.
-    -   : Imported and rendered the  component, connecting it to the bell icon in the header.
-    -   : Replaced the hardcoded Recent Activity list with a dynamic feed that polls the  endpoint.
-    -   : Updated the search filter logic to include  and modified the search input's placeholder text.
+    -   : Refactored the 's submit handler to fix a major bug, ensuring all edited fields are saved.
+    -   : Modified the service import template definition.
+    -   : Updated to include the  dependency.
 
 **Areas that need refactoring**:
--    and  are still large and complex. Refactoring them into smaller, more manageable components remains an important future task.
+-    is now critically overloaded. It urgently needs to be broken down into smaller, more manageable components (e.g., , , ,  etc.) to improve maintainability and prevent future regressions.
 
 **key api endpoints**
--   : Fetches recent activities for the notification system.
--   : Marks specified activities as read.
+-   **New:**
+    -   : Creates a new one-time customer/vehicle registration.
+    -   : Fetches all registrations.
+    -   : Saves a new itemized service bill.
+    -   : Fetches all saved service bills.
+-   **Updated:**
+    -   : Now uses a new  model to save all editable vehicle fields.
+    -   : Updated to accept , , and  to correctly create detailed job cards.
 
 **Critical Info for New Agent**
--   **User Testing Preference**: The user has previously opted to perform testing manually, skipping agent-led automated tests. Always confirm the testing approach with the user before proceeding.
--   **Notification System**: A centralized notification system is now in place. When implementing new features that involve key user actions (e.g., creating new records, changing statuses), consider adding a call to log an activity in the corresponding backend endpoint.
--   **Reusable Components**: The  and  components should be used for any new data tables or lists to maintain UI consistency across the application.
+-   **Primary Goal**: Your immediate and highest priority is to complete the refactoring of the service workflow. The user wants a clear separation between a one-time Registration and multiple Job Cards.
+-   **File to Focus On**: Almost all of your initial work will be in . Understand its structure before making changes.
+-   **Refactor Path**: The backend changes for the registration/job card split are mostly complete. The frontend  form correctly saves to the new endpoint. Your main task is to update the  list to fetch from  and adapt the  creation process to link to an existing registration.
 
-**documents created in this job**
--   None.
+**documents and test_reports created in this job**
+-    was created and updated multiple times to coordinate with the testing agent.
 
-**Last 10 User Messages and any pending user messages**
-1.  **User Message:** 
-    - **Summary:** The user decided to manually test the previously implemented invoice print preview, instructing the agent to not run automated tests.
-    - **Status:** Acknowledged.
-2.  **User Message:** 
-    - **Summary:** The user instructed the agent to begin work on implementing pagination and sorting.
-    - **Status:** Completed.
-3.  **User Message:** 
-    - **Summary:** The user requested a real-time notification system accessible via the bell icon in the header.
-    - **Status:** Completed.
-4.  **User Message:** 
-    - **Summary:** The user requested to enhance the spare parts search to include matching against compatible models.
-    - **Status:** Completed, pending user verification.
+**Last 10 User Messages and any pending HUMAN messages**
+1.  
+2.  
+3.  
+4.  
+5.  
+6.  
+7.  
+8.  
+9.  
+10. 
 
 **Project Health Check:**
 -   **Broken**: None.
 -   **Mocked**: None.
 
 **3rd Party Integrations**
--   None.
+-   **lodash**:  (Used for  functionality in search inputs).
 
 **Testing status**
--   **Testing agent used after significant changes**: NO
+-   **Testing agent used after significant changes**: YES
 -   **Troubleshoot agent used after agent stuck in loop**: NO
--   **Test files created**: []
+-   **Test files created**: 
 -   **Known regressions**: None.
 
 **Credentials to test flow:**
--   N/A
+-   The application uses a default username/password for login. The agent has been successfully logging in to test.
 
 **What agent forgot to execute**
--   The agent correctly followed all user requests in this session. The initial task to test the invoice print preview was explicitly cancelled by the user. The refactoring of large components remains a documented future task.</analysis>
+-   The agent is in the middle of executing a large, user-requested refactor to separate Registrations and Job Cards. The work is incomplete but not forgotten. All other direct requests and bug fixes from the user in this session were addressed.</analysis>
