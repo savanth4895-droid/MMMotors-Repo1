@@ -124,3 +124,35 @@
 1. job_cards_table.png - Main table showing vehicle details
 2. bulk_selection.png - Selected items with bulk action buttons
 3. bulk_status_modal.png - Status update modal with dropdown options
+
+## Backend API Test Results - Registration vs Job Card Separation
+
+### Test Execution Details
+- **Test Date**: December 15, 2024
+- **Test Type**: Backend API Testing
+- **Authentication**: admin/admin123
+- **Backend URL**: https://auto-shop-system-1.preview.emergentagent.com/api
+
+### API Endpoints Tested
+1. **POST /api/auth/login** - Authentication ✅
+2. **GET /api/registrations** - Registration data retrieval ✅
+3. **GET /api/services** - Service data retrieval ✅
+4. **POST /api/customers** - Customer creation ✅
+5. **POST /api/registrations** - Registration creation ✅
+6. **POST /api/services** - Service creation ✅
+
+### Key Verification Points
+- ✅ Registration contains customer/vehicle fields only (NO service fields)
+- ✅ Service contains job card fields (service_type, amount, description, etc.)
+- ✅ Complete data separation between /api/registrations and /api/services
+- ✅ Registration data does NOT leak into services endpoint
+- ✅ Service data does NOT leak into registrations endpoint
+- ✅ Proper field validation and data structure
+
+### Test Data Created
+- **Customer**: Test User (Mobile: 9876540716)
+- **Registration**: REG-000001 (TVS Jupiter 2024, KA01AB0716)
+- **Service**: JOB-000007 (Periodic Service, ₹1500)
+
+### Conclusion
+The Registration vs Job Card separation feature is working correctly at the backend API level. All endpoints are properly separated, data integrity is maintained, and there is no cross-contamination between registration and service data.
