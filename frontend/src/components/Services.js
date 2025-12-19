@@ -5081,12 +5081,12 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="p-3 text-left text-sm font-medium text-gray-500">Job Card #</th>
+                  <th className="p-3 text-left text-sm font-medium text-gray-500">Bill #</th>
                   <th className="p-3 text-left text-sm font-medium text-gray-500">Customer</th>
                   <th className="p-3 text-left text-sm font-medium text-gray-500">Vehicle</th>
                   <th className="p-3 text-left text-sm font-medium text-gray-500">Service Type</th>
                   <th className="p-3 text-left text-sm font-medium text-gray-500">Amount</th>
-                  <th className="p-3 text-left text-sm font-medium text-gray-500">Status</th>
+                  <th className="p-3 text-left text-sm font-medium text-gray-500">Payment</th>
                   <th className="p-3 text-left text-sm font-medium text-gray-500">Date</th>
                   <th className="p-3 text-left text-sm font-medium text-gray-500">Actions</th>
                 </tr>
