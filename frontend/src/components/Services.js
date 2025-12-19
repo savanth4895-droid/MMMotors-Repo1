@@ -1157,7 +1157,7 @@ const ViewRegistration = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>
-              Service Registrations ({filteredRegistrations.length} records)
+              Registrations ({filteredRegistrations.length} records)
             </CardTitle>
             {selectedIds.length > 0 && (
               <div className="text-sm text-blue-600 font-medium">
