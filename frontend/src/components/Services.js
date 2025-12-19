@@ -1322,7 +1322,7 @@ const ViewRegistration = () => {
           <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">Service Registration Details</h2>
+                <h2 className="text-2xl font-bold">Registration Details</h2>
                 <Button 
                   variant="outline" 
                   onClick={() => setShowViewModal(false)}
@@ -1336,18 +1336,8 @@ const ViewRegistration = () => {
                 <div className="border rounded-lg p-4">
                   <h3 className="text-lg font-semibold mb-3 text-blue-600">Registration Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><strong>Registration Number:</strong> {selectedRegistration.registration_number || 'N/A'}</div>
                     <div><strong>Registration Date:</strong> {new Date(selectedRegistration.registration_date).toLocaleDateString('en-IN')}</div>
-                    <div><strong>Job Card Number:</strong> {selectedRegistration.job_card_number}</div>
-                    <div><strong>Service Type:</strong> {selectedRegistration.service_type?.replace('_', ' ')}</div>
-                    <div><strong>Status:</strong> 
-                      <span className={`ml-2 px-2 py-1 rounded text-xs ${
-                        selectedRegistration.status === 'completed' ? 'bg-green-100 text-green-800' :
-                        selectedRegistration.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {selectedRegistration.status?.replace('_', ' ')}
-                      </span>
-                    </div>
                   </div>
                 </div>
 
@@ -1363,25 +1353,14 @@ const ViewRegistration = () => {
 
                 {/* Vehicle Information */}
                 <div className="border rounded-lg p-4">
-                  <h3 className="text-lg font-semibold mb-3 text-blue-600">Vehicle Information</h3>
+                  <h3 className="text-lg font-semibold mb-3 text-green-600">Vehicle Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><strong>Registration No:</strong> {selectedRegistration.vehicle_reg_no}</div>
                     <div><strong>Brand:</strong> {selectedRegistration.vehicle_brand}</div>
                     <div><strong>Model:</strong> {selectedRegistration.vehicle_model}</div>
                     <div><strong>Year:</strong> {selectedRegistration.vehicle_year}</div>
-                    <div><strong>Registration No:</strong> {selectedRegistration.vehicle_reg_no}</div>
-                  </div>
-                </div>
-
-                {/* Service Details */}
-                <div className="border rounded-lg p-4">
-                  <h3 className="text-lg font-semibold mb-3 text-blue-600">Service Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><strong>Estimated Amount:</strong> ₹{selectedRegistration.amount?.toLocaleString() || '0'}</div>
-                    <div><strong>Service Type:</strong> {selectedRegistration.service_type?.replace('_', ' ')}</div>
-                    <div className="md:col-span-2">
-                      <strong>Description:</strong>
-                      <p className="mt-1 text-gray-600">{selectedRegistration.description || 'No description provided'}</p>
-                    </div>
+                    <div><strong>Chassis Number:</strong> {selectedRegistration.chassis_number}</div>
+                    <div><strong>Engine Number:</strong> {selectedRegistration.engine_number}</div>
                   </div>
                 </div>
               </div>
