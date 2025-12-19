@@ -990,7 +990,7 @@ const ViewRegistration = () => {
       return;
     }
 
-    const confirmMessage = `Are you sure you want to delete ${selectedIds.length} service registration(s)? This action cannot be undone.`;
+    const confirmMessage = `Are you sure you want to delete ${selectedIds.length} registration(s)? This action cannot be undone.`;
     if (!window.confirm(confirmMessage)) {
       return;
     }
@@ -1003,21 +1003,21 @@ const ViewRegistration = () => {
 
       for (const id of selectedIds) {
         try {
-          await axios.delete(`${API}/services/${id}`, {
+          await axios.delete(`${API}/registrations/${id}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           successCount++;
         } catch (error) {
           failCount++;
-          console.error(`Failed to delete service ${id}:`, error);
+          console.error(`Failed to delete registration ${id}:`, error);
         }
       }
 
       if (successCount > 0) {
-        toast.success(`Successfully deleted ${successCount} service registration(s)`);
+        toast.success(`Successfully deleted ${successCount} registration(s)`);
       }
       if (failCount > 0) {
-        toast.error(`Failed to delete ${failCount} service registration(s)`);
+        toast.error(`Failed to delete ${failCount} registration(s)`);
       }
 
       // Clear selection and refresh data
