@@ -212,14 +212,14 @@ class TwoWheelerAPITester:
         
         registration_data = {
             "customer_name": "Test User",
-            "customer_mobile": "9876543210",
+            "customer_mobile": unique_mobile,
             "customer_address": "123 Test Street, Test City",
-            "vehicle_number": "KA01AB1234",
+            "vehicle_number": f"KA01AB{datetime.now().strftime('%H%M')}",
             "vehicle_brand": "TVS",
             "vehicle_model": "Jupiter",
             "vehicle_year": "2024",
-            "chassis_number": "TEST_CHASSIS_001",
-            "engine_number": "TEST_ENGINE_001"
+            "chassis_number": f"TEST_CHASSIS_{datetime.now().strftime('%H%M%S')}",
+            "engine_number": f"TEST_ENGINE_{datetime.now().strftime('%H%M%S')}"
         }
         
         print("   Creating registration with:")
