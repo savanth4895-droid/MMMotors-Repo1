@@ -189,9 +189,11 @@ class TwoWheelerAPITester:
         print("\n👤 4. CREATING TEST CUSTOMER FOR REGISTRATION")
         print("-" * 50)
         
+        # Generate unique mobile number using timestamp
+        unique_mobile = f"987654{datetime.now().strftime('%H%M')}"
         success, customer_response = self.test_create_customer(
             "Test User",
-            "9876543210",
+            unique_mobile,
             "testuser@example.com",
             "123 Test Street, Test City"
         )
