@@ -2576,35 +2576,201 @@ const JobCards = () => {
       {/* Add New Job Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">Add New Job Card</h2>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Open New Job Card</h2>
+                  <p className="text-gray-600">Enter the service details to create a new job card</p>
+                </div>
                 <Button 
                   variant="outline" 
+                  size="sm"
                   onClick={() => setShowAddModal(false)}
                 >
-                  Close
+                  <X className="w-4 h-4" />
                 </Button>
               </div>
 
-              <div className="text-center py-8">
-                <ClipboardList className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Add New Job Card</h3>
-                <p className="text-gray-500 mb-4">
-                  To add a new job card, please use the "New Service" registration form.
-                  This will automatically create a job card with all necessary details.
-                </p>
-                <div className="flex gap-2 justify-center">
-                  <Link to="/services/new">
-                    <Button onClick={() => setShowAddModal(false)}>
-                      Go to New Service
-                    </Button>
-                  </Link>
-                  <Button variant="outline" onClick={() => setShowAddModal(false)}>
-                    Close
-                  </Button>
+              <div className="space-y-6">
+                {/* Customer Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-blue-600 border-b pb-2 flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    Customer Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="customer_select">Select Existing Customer</Label>
+                      <Select 
+                        value={newJobCardData.customer_id} 
+                        onValueChange={handleCustomerSelect}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select customer..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {customers.map((customer) => (
+                            <SelectItem key={customer.id} value={customer.id}>
+                              {customer.name} - {customer.mobile || customer.phone}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center text-gray-500 text-sm">
+                      <span className="bg-gray-100 px-3 py-2 rounded">OR enter new customer details below</span>
+                    </div>
+                    <div>
+                      <Label htmlFor="customer_name">Customer Name *</Label>
+                      <Input
+                        id="customer_name"
+                        placeholder="Enter customer name"
+                        value={newJobCardData.customer_name}
+                        onChange={(e) => setNewJobCardData({...newJobCardData, customer_name: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="customer_mobile">Mobile Number</Label>
+                      <Input
+                        id="customer_mobile"
+                        placeholder="Enter mobile number"
+                        value={newJobCardData.customer_mobile}
+                        onChange={(e) => setNewJobCardData({...newJobCardData, customer_mobile: e.target.value})}
+                      />
+                    </div>
+                  </div>
                 </div>
+
+                {/* Vehicle Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-green-600 border-b pb-2 flex items-center gap-2">
+                    <Car className="w-5 h-5" />
+                    Vehicle Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="vehicle_number">Vehicle Registration Number *</Label>
+                      <Input
+                        id="vehicle_number"
+                        placeholder="e.g., KA01AB1234"
+                        value={newJobCardData.vehicle_number}
+                        onChange={(e) => setNewJobCardData({...newJobCardData, vehicle_number: e.target.value.toUpperCase()})}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="vehicle_brand">Vehicle Brand</Label>
+                      <Select 
+                        value={newJobCardData.vehicle_brand} 
+                        onValueChange={(value) => setNewJobCardData({...newJobCardData, vehicle_brand: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select brand..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {vehicleBrands.map((brand) => (
+                            <SelectItem key={brand} value={brand}>
+                              {brand}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="vehicle_model">Vehicle Model</Label>
+                      <Input
+                        id="vehicle_model"
+                        placeholder="e.g., Apache RTR 160"
+                        value={newJobCardData.vehicle_model}
+                        onChange={(e) => setNewJobCardData({...newJobCardData, vehicle_model: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="vehicle_year">Vehicle Year</Label>
+                      <Input
+                        id="vehicle_year"
+                        type="number"
+                        placeholder="e.g., 2024"
+                        min="1990"
+                        max="2030"
+                        value={newJobCardData.vehicle_year}
+                        onChange={(e) => setNewJobCardData({...newJobCardData, vehicle_year: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Service Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-purple-600 border-b pb-2 flex items-center gap-2">
+                    <Wrench className="w-5 h-5" />
+                    Service Details
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="service_type">Service Type *</Label>
+                      <Select 
+                        value={newJobCardData.service_type} 
+                        onValueChange={(value) => setNewJobCardData({...newJobCardData, service_type: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select service type..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {serviceTypes.map((type) => (
+                            <SelectItem key={type.value} value={type.value}>
+                              {type.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="estimated_amount">Estimated Amount (₹)</Label>
+                      <Input
+                        id="estimated_amount"
+                        type="number"
+                        step="0.01"
+                        placeholder="Enter estimated amount"
+                        value={newJobCardData.estimated_amount}
+                        onChange={(e) => setNewJobCardData({...newJobCardData, estimated_amount: e.target.value})}
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label htmlFor="complaint">Complaint / Issue Description *</Label>
+                      <Textarea
+                        id="complaint"
+                        placeholder="Describe the customer's complaint or the service required..."
+                        rows={4}
+                        value={newJobCardData.complaint}
+                        onChange={(e) => setNewJobCardData({...newJobCardData, complaint: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-2 border-t pt-4">
+                <Button variant="outline" onClick={() => setShowAddModal(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleSaveNewJobCard} 
+                  disabled={savingJobCard}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {savingJobCard ? (
+                    <>
+                      <Clock className="w-4 h-4 mr-2 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Job Card
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
           </div>
