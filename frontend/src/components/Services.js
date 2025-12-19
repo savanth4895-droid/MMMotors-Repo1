@@ -45,8 +45,8 @@ const Services = () => {
   
   const navigationItems = [
     { name: 'Overview', path: '/services', icon: Wrench },
-    { name: 'New Service', path: '/services/new', icon: Plus },
-    { name: 'View Registration', path: '/services/registrations', icon: Eye },
+    { name: 'New Registration', path: '/services/new', icon: Plus },
+    { name: 'View Registrations', path: '/services/registrations', icon: Eye },
     { name: 'Job Cards', path: '/services/job-cards', icon: ClipboardList },
     { name: 'Service Bills', path: '/services/billing', icon: FileText },
     { name: 'Service Due', path: '/services/due', icon: Calendar }
