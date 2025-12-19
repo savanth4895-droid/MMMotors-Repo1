@@ -517,7 +517,9 @@ async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(secur
         if user is None:
             raise HTTPException(status_code=401, detail="User not found")
         
-        return {"user_id": user["id"], "username": user["username"], "role": user["role"]}
+        # Handle both 'id' and '_id' fields for user identification
+        user_id = user.get("id") or str(user.get("_id", ""))
+        return {"user_id": user_id, "username": user["username"], "role": user.get("role", "user")}
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid authentication credentials")
 
