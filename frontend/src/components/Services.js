@@ -4814,8 +4814,8 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
                   <span class="info-value">${bill.created_at || bill.bill_date ? new Date(bill.created_at || bill.bill_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</span>
                 </div>
                 <div class="info-row">
-                  <span class="info-label">Status:</span>
-                  <span class="info-value">${bill.status ? bill.status.replace('_', ' ').toUpperCase() : 'PENDING'}</span>
+                  <span class="info-label">Payment Status:</span>
+                  <span class="info-value">${bill.status === 'paid' || bill.status === 'completed' ? 'PAID' : 'UNPAID'}</span>
                 </div>
               </div>
               
