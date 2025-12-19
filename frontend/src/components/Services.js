@@ -1411,42 +1411,44 @@ const ViewRegistration = () => {
           <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">Edit Service Registration</h2>
+                <h2 className="text-2xl font-bold">Edit Registration</h2>
                 <Button variant="outline" onClick={handleCancelEdit}>
                   Cancel
                 </Button>
               </div>
 
               <div className="space-y-6">
-                {/* Customer & Registration Info Section */}
+                {/* Customer Information Section */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-blue-600 border-b pb-2">Customer & Registration Info</h3>
+                  <h3 className="text-lg font-semibold text-blue-600 border-b pb-2">Customer Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="customer_id">Customer</Label>
-                      <Select 
-                        value={editFormData.customer_id} 
-                        onValueChange={(value) => setEditFormData({...editFormData, customer_id: value})}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select customer" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {customers.map((customer) => (
-                            <SelectItem key={customer.id} value={customer.id}>
-                              {customer.name} - {customer.mobile || customer.phone}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Label htmlFor="customer_name">Customer Name</Label>
+                      <Input
+                        id="customer_name"
+                        placeholder="Enter customer name"
+                        value={editFormData.customer_name || ''}
+                        onChange={(e) => setEditFormData({...editFormData, customer_name: e.target.value})}
+                        required
+                      />
                     </div>
                     <div>
-                      <Label htmlFor="service_date">Registration Date</Label>
+                      <Label htmlFor="customer_mobile">Mobile Number</Label>
                       <Input
-                        id="service_date"
-                        type="date"
-                        value={editFormData.service_date || ''}
-                        onChange={(e) => setEditFormData({...editFormData, service_date: e.target.value})}
+                        id="customer_mobile"
+                        placeholder="Enter mobile number"
+                        value={editFormData.customer_mobile || ''}
+                        onChange={(e) => setEditFormData({...editFormData, customer_mobile: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label htmlFor="customer_address">Address</Label>
+                      <Input
+                        id="customer_address"
+                        placeholder="Enter customer address"
+                        value={editFormData.customer_address || ''}
+                        onChange={(e) => setEditFormData({...editFormData, customer_address: e.target.value})}
                       />
                     </div>
                   </div>
@@ -1505,59 +1507,24 @@ const ViewRegistration = () => {
                         max="2030"
                       />
                     </div>
-                  </div>
-                </div>
-
-                {/* Service Details Section */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-purple-600 border-b pb-2">Service Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="service_type">Service Type</Label>
-                      <Select 
-                        value={editFormData.service_type} 
-                        onValueChange={(value) => setEditFormData({...editFormData, service_type: value})}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select service type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="regular_service">Regular Service</SelectItem>
-                          <SelectItem value="oil_change">Oil Change</SelectItem>
-                          <SelectItem value="brake_service">Brake Service</SelectItem>
-                          <SelectItem value="engine_repair">Engine Repair</SelectItem>
-                          <SelectItem value="electrical_work">Electrical Work</SelectItem>
-                          <SelectItem value="body_work">Body Work</SelectItem>
-                          <SelectItem value="tire_replacement">Tire Replacement</SelectItem>
-                          <SelectItem value="chain_sprocket">Chain & Sprocket</SelectItem>
-                          <SelectItem value="clutch_service">Clutch Service</SelectItem>
-                          <SelectItem value="suspension_service">Suspension Service</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="amount">Amount (₹)</Label>
+                      <Label htmlFor="chassis_number">Chassis Number</Label>
                       <Input
-                        id="amount"
-                        type="number"
-                        step="0.01"
-                        placeholder="Enter service amount"
-                        value={editFormData.amount || ''}
-                        onChange={(e) => setEditFormData({...editFormData, amount: parseFloat(e.target.value)})}
-                        required
+                        id="chassis_number"
+                        placeholder="Enter chassis number"
+                        value={editFormData.chassis_number || ''}
+                        onChange={(e) => setEditFormData({...editFormData, chassis_number: e.target.value})}
                       />
                     </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      placeholder="Enter service description"
-                      value={editFormData.description || ''}
-                      onChange={(e) => setEditFormData({...editFormData, description: e.target.value})}
-                      rows={4}
-                    />
+                    <div>
+                      <Label htmlFor="engine_number">Engine Number</Label>
+                      <Input
+                        id="engine_number"
+                        placeholder="Enter engine number"
+                        value={editFormData.engine_number || ''}
+                        onChange={(e) => setEditFormData({...editFormData, engine_number: e.target.value})}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
