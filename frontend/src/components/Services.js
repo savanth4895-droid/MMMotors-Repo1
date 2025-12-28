@@ -1520,6 +1520,12 @@ const JobCards = () => {
   const [showBulkStatusModal, setShowBulkStatusModal] = useState(false);
   const [bulkStatus, setBulkStatus] = useState('');
   
+  // Customer search state for Job Card form
+  const [customerSearchTerm, setCustomerSearchTerm] = useState('');
+  const [customerSuggestions, setCustomerSuggestions] = useState([]);
+  const [searchingCustomers, setSearchingCustomers] = useState(false);
+  const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
+  
   // Pagination & Sorting
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(25);
