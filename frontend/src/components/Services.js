@@ -3570,7 +3570,8 @@ const ServicesBilling = () => {
           cgst_amount: item.cgst_amount,
           sgst_amount: item.sgst_amount,
           total_tax: item.total_tax,
-          amount: item.amount
+          amount: item.amount,
+          spare_part_id: item.spare_part_id || null  // Include spare part ID for inventory deduction
         })),
         subtotal: totals.subtotal,
         total_discount: totals.totalDiscount,
