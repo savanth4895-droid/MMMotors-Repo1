@@ -2551,25 +2551,70 @@ const JobCards = () => {
                     Customer Information
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="customer_select">Select Existing Customer</Label>
-                      <Select 
-                        value={newJobCardData.customer_id} 
-                        onValueChange={handleCustomerSelect}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select customer..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {customers.map((customer) => (
-                            <SelectItem key={customer.id} value={customer.id}>
-                              {customer.name} - {customer.mobile || customer.phone}
-                            </SelectItem>
+                    <div className="relative md:col-span-2">
+                      <Label htmlFor="customer_search">Search Existing Customer</Label>
+                      <div className="relative">
+                        <Input
+                          id="customer_search"
+                          placeholder="Search by name or mobile number..."
+                          value={customerSearchTerm}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setCustomerSearchTerm(value);
+                            debouncedCustomerSearch(value);
+                            // Clear customer selection if user is typing new value
+                            if (newJobCardData.customer_id && value !== newJobCardData.customer_name) {
+                              setNewJobCardData(prev => ({
+                                ...prev,
+                                customer_id: '',
+                                customer_name: '',
+                                customer_mobile: '',
+                                vehicle_number: '',
+                                vehicle_brand: '',
+                                vehicle_model: '',
+                                vehicle_year: ''
+                              }));
+                            }
+                          }}
+                          onFocus={() => customerSuggestions.length > 0 && setShowCustomerSuggestions(true)}
+                          className={searchingCustomers ? "border-blue-300 pr-10" : "pr-10"}
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          {searchingCustomers ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-200 border-t-blue-600"></div>
+                          ) : (
+                            <Search className="w-4 h-4 text-gray-400" />
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Customer Suggestions Dropdown */}
+                      {showCustomerSuggestions && customerSuggestions.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-60 overflow-y-auto mt-1">
+                          <div className="p-2 text-xs text-blue-600 font-medium border-b bg-blue-50">
+                            Select a customer to auto-fill vehicle info
+                          </div>
+                          {customerSuggestions.map((customer) => (
+                            <div
+                              key={customer.id}
+                              className="p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                              onClick={() => handleCustomerSelect(customer.id)}
+                            >
+                              <div className="font-medium text-sm">{customer.name}</div>
+                              <div className="text-xs text-gray-500">📱 {customer.mobile || customer.phone || 'No phone'}</div>
+                            </div>
                           ))}
-                        </SelectContent>
-                      </Select>
+                        </div>
+                      )}
+                      
+                      {newJobCardData.customer_id && (
+                        <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
+                          <CheckCircle className="w-4 h-4" />
+                          <span>Customer selected - vehicle info will be loaded</span>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex items-center text-gray-500 text-sm">
+                    <div className="md:col-span-2 flex items-center text-gray-500 text-sm">
                       <span className="bg-gray-100 px-3 py-2 rounded">OR enter new customer details below</span>
                     </div>
                     <div>
