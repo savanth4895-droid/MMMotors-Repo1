@@ -1906,6 +1906,9 @@ const JobCards = () => {
       complaint: '',
       estimated_amount: ''
     });
+    setCustomerSearchTerm('');
+    setCustomerSuggestions([]);
+    setShowCustomerSuggestions(false);
     setShowAddModal(true);
   };
 
