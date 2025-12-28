@@ -3090,11 +3090,13 @@ const ServicesBilling = () => {
       part.part_number?.toLowerCase().includes(lowerSearch) ||
       part.brand?.toLowerCase().includes(lowerSearch)
     ).map(part => ({
+      id: part.id,  // Include spare part ID for inventory tracking
       name: part.name,
       hsn_sac: part.hsn_sac || '',
       unit: part.unit || 'Nos',
       rate: part.unit_price || 0,
       gst_percent: part.gst_percentage || 18,
+      quantity: part.quantity || 0,  // Include available quantity
       source: 'spare_parts'
     }));
 
@@ -3102,6 +3104,7 @@ const ServicesBilling = () => {
       item.name.toLowerCase().includes(lowerSearch)
     ).map(item => ({
       ...item,
+      id: null,  // Predefined items don't have inventory IDs
       source: 'predefined'
     }));
 
