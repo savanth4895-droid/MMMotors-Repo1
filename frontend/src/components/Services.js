@@ -4469,7 +4469,9 @@ const CreateBillContent = ({
                           {sparePartSuggestions.map((part, idx) => (
                             <div
                               key={idx}
-                              className="p-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                              className={`p-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 ${
+                                part.source === 'spare_parts' && part.quantity === 0 ? 'opacity-50' : ''
+                              }`}
                               onMouseDown={() => handleSelectSparePart(index, part)}
                             >
                               <div className="font-medium text-sm text-gray-900">{part.name}</div>
@@ -4478,6 +4480,11 @@ const CreateBillContent = ({
                                 <span>₹{part.rate}</span>
                                 <span>{part.unit}</span>
                                 <span className="text-green-600">GST: {part.gst_percent}%</span>
+                                {part.source === 'spare_parts' && (
+                                  <span className={`font-medium ${part.quantity > 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                                    Stock: {part.quantity}
+                                  </span>
+                                )}
                                 <Badge variant="outline" className="text-xs py-0">
                                   {part.source === 'spare_parts' ? 'Inventory' : 'Service'}
                                 </Badge>
