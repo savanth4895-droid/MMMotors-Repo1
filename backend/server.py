@@ -1658,6 +1658,33 @@ async def create_service_bill(bill_data: ServiceBillCreate, current_user: User =
         except:
             pass
     
+    # Reduce spare part quantities for items that have spare_part_id
+    spare_part_updates = []
+    if bill_data.items:
+        for item in bill_data.items:
+            if isinstance(item, dict) and item.get("spare_part_id"):
+                spare_part_id = item["spare_part_id"]
+                qty_used = item.get("qty", 1)
+                
+                # Check if spare part exists and has enough quantity
+                spare_part = await db.spare_parts.find_one({"id": spare_part_id})
+                if spare_part:
+                    current_qty = spare_part.get("quantity", 0)
+                    new_qty = max(0, current_qty - qty_used)  # Don't go below 0
+                    
+                    # Update spare part quantity
+                    await db.spare_parts.update_one(
+                        {"id": spare_part_id},
+                        {"$set": {"quantity": new_qty}}
+                    )
+                    spare_part_updates.append({
+                        "part_id": spare_part_id,
+                        "part_name": spare_part.get("name", "Unknown"),
+                        "qty_used": qty_used,
+                        "old_qty": current_qty,
+                        "new_qty": new_qty
+                    })
+    
     bill = ServiceBill(
         bill_number=bill_data.bill_number,
         job_card_number=bill_data.job_card_number,
@@ -1680,6 +1707,11 @@ async def create_service_bill(bill_data: ServiceBillCreate, current_user: User =
     )
     
     await db.service_bills.insert_one(bill.dict())
+    
+    # Log spare part inventory updates
+    if spare_part_updates:
+        print(f"Spare part inventory updated for bill {bill.bill_number}: {spare_part_updates}")
+    
     return bill
 
 @api_router.get("/service-bills")
