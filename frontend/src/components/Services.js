@@ -1693,7 +1693,7 @@ const JobCards = () => {
 
       for (const id of selectedIds) {
         try {
-          await axios.patch(`${API}/services/${id}/status`, 
+          await axios.put(`${API}/services/${id}/status`, 
             { status: bulkStatus },
             { headers: { Authorization: `Bearer ${token}` } }
           );
