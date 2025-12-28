@@ -3449,7 +3449,9 @@ const ServicesBilling = () => {
       hsn_sac: part.hsn_sac,
       unit: part.unit,
       rate: part.rate,
-      gst_percent: part.gst_percent
+      gst_percent: part.gst_percent,
+      spare_part_id: part.id || null,  // Track spare part ID for inventory deduction
+      source: part.source || 'manual'
     };
     
     // Recalculate amounts
