@@ -4180,15 +4180,6 @@ const CreateBillContent = ({
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-start gap-3">
-                            <div className="p-1.5 bg-green-100 rounded-lg">
-                              <IndianRupee className="w-4 h-4 text-green-600" />
-                            </div>
-                            <div>
-                              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Amount</p>
-                              <p className="font-bold text-green-600 text-lg">₹{serviceDetails.amount.toLocaleString()}</p>
-                            </div>
-                          </div>
                         </div>
                       </div>
                       
