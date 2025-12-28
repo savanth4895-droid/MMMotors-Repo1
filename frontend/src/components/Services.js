@@ -5459,7 +5459,15 @@ const ServiceDue = () => {
         if (service && service.customer_id && service.vehicle_number) {
           const customer = customers.find(c => c && c.id === service.customer_id);
           const customerName = customer?.name || service.customer_name || 'Unknown';
-          const serviceDate = new Date(service.completion_date || service.created_at || new Date());
+          
+          // Skip services without valid dates
+          const serviceDateStr = service.completion_date || service.service_date || service.created_at;
+          if (!serviceDateStr) return;
+          
+          const serviceDate = new Date(serviceDateStr);
+          
+          // Skip if date is invalid
+          if (isNaN(serviceDate.getTime())) return;
           
           // Create a unique key for each customer-vehicle combination
           const vehicleKey = `${service.customer_id}-${service.vehicle_number}`;
