@@ -1909,7 +1909,7 @@ const JobCards = () => {
     setShowAddModal(true);
   };
 
-  const handleCustomerSelect = (customerId) => {
+  const handleCustomerSelect = async (customerId) => {
     const customer = customers.find(c => c.id === customerId);
     if (customer) {
       setNewJobCardData({
@@ -1918,8 +1918,100 @@ const JobCards = () => {
         customer_name: customer.name,
         customer_mobile: customer.mobile || customer.phone || ''
       });
+      setCustomerSearchTerm(customer.name);
+      setShowCustomerSuggestions(false);
+      
+      // Fetch vehicle info from sales for this customer
+      await fetchVehicleFromSales(customerId);
     }
   };
+
+  // Search customers by name or mobile
+  const searchCustomers = async (searchTerm) => {
+    if (!searchTerm || searchTerm.length < 2) {
+      setCustomerSuggestions([]);
+      setShowCustomerSuggestions(false);
+      return;
+    }
+
+    setSearchingCustomers(true);
+    try {
+      const lowerSearch = searchTerm.toLowerCase();
+      const filtered = customers.filter(c => 
+        c.name?.toLowerCase().includes(lowerSearch) ||
+        c.mobile?.includes(searchTerm) ||
+        c.phone?.includes(searchTerm)
+      ).slice(0, 10);
+      
+      setCustomerSuggestions(filtered);
+      setShowCustomerSuggestions(filtered.length > 0);
+    } catch (error) {
+      console.error('Error searching customers:', error);
+    } finally {
+      setSearchingCustomers(false);
+    }
+  };
+
+  // Fetch vehicle info from sales records for a customer
+  const fetchVehicleFromSales = async (customerId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const salesResponse = await axios.get(`${API}/sales`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const sales = salesResponse.data;
+      // Find sales for this customer
+      const customerSales = sales.filter(sale => sale.customer_id === customerId);
+      
+      if (customerSales.length > 0) {
+        // Get the most recent sale
+        const latestSale = customerSales.sort((a, b) => 
+          new Date(b.created_at) - new Date(a.created_at)
+        )[0];
+        
+        // If we have vehicle info in the sale, populate the form
+        if (latestSale.vehicle_id) {
+          // Fetch vehicle details
+          const vehicleResponse = await axios.get(`${API}/vehicles/${latestSale.vehicle_id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          }).catch(() => null);
+          
+          if (vehicleResponse && vehicleResponse.data) {
+            const vehicle = vehicleResponse.data;
+            setNewJobCardData(prev => ({
+              ...prev,
+              vehicle_number: vehicle.vehicle_number || vehicle.registration_number || '',
+              vehicle_brand: vehicle.brand || '',
+              vehicle_model: vehicle.model || '',
+              vehicle_year: vehicle.year?.toString() || ''
+            }));
+            toast.success('Vehicle info loaded from sales record');
+            return;
+          }
+        }
+        
+        // Try to get vehicle info from sale record itself
+        if (latestSale.vehicle_brand || latestSale.vehicle_model || latestSale.chassis_number) {
+          setNewJobCardData(prev => ({
+            ...prev,
+            vehicle_brand: latestSale.vehicle_brand || prev.vehicle_brand,
+            vehicle_model: latestSale.vehicle_model || prev.vehicle_model,
+            vehicle_number: latestSale.vehicle_number || latestSale.chassis_number || prev.vehicle_number
+          }));
+          toast.success('Vehicle info loaded from sales record');
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching vehicle from sales:', error);
+    }
+  };
+
+  // Debounced customer search
+  const debouncedCustomerSearch = useCallback(
+    debounce((term) => searchCustomers(term), 300),
+    [customers]
+  );
 
   const handleSaveNewJobCard = async () => {
     // Validation
