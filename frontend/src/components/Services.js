@@ -3193,13 +3193,13 @@ const ServicesBilling = () => {
   };
 
   const handleDeleteServiceBill = async (bill) => {
-    if (!window.confirm(`Are you sure you want to delete service bill "${bill.job_card_number}"? This action cannot be undone.`)) {
+    if (!window.confirm(`Are you sure you want to delete service bill "${bill.bill_number || bill.job_card_number}"? This action cannot be undone.`)) {
       return;
     }
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${API}/services/${bill.id}`, {
+      await axios.delete(`${API}/service-bills/${bill.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
