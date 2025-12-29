@@ -4947,7 +4947,7 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
                 Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130<br>
                 Phone: 7026263123 | Email: mmmotors3123@gmail.com
               </div>
-              <div class="gstin">GSTIN: 29XXXXXXXXXXXXXXX</div>
+              <div class="gstin">GSTIN: 29CUJPM6814P1ZQ</div>
             </div>
             
             <!-- Bill Title -->
@@ -5075,7 +5075,7 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
       ['Bengaluru main road, behind Ruchi Bakery'],
       ['Malur, Karnataka 563130'],
       ['Phone: 7026263123 | Email: mmmotors3123@gmail.com'],
-      ['GSTIN: 29XXXXXXXXXXXXXXX'],
+      ['GSTIN: 29CUJPM6814P1ZQ'],
       [''],
       ['Bill Information'],
       ['Bill Number', bill.bill_number || bill.job_card_number || 'N/A'],
@@ -5404,7 +5404,7 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
                   <p className="text-gray-600">Service Department</p>
                   <p className="text-gray-600">Bengaluru main road, behind Ruchi Bakery</p>
                   <p className="text-gray-600">Malur, Karnataka 563130</p>
-                  <p className="text-gray-600 mt-2">GSTIN: 29XXXXXXXXXXXXXXX</p>
+                  <p className="text-gray-600 mt-2">GSTIN: 29CUJPM6814P1ZQ</p>
                 </div>
 
                 {/* Bill Information Grid */}
