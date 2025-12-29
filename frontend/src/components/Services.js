@@ -5067,59 +5067,7 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
     // Check if bill has itemized data
     const hasItems = bill.items && bill.items.length > 0;
     
-    // Generate CSV content for the service bill
-    let csvRows = [
-      ['SERVICE BILL / TAX INVOICE'],
-      [''],
-      ['M M MOTORS'],
-      ['Bengaluru main road, behind Ruchi Bakery'],
-      ['Malur, Karnataka 563130'],
-      ['Phone: 7026263123 | Email: mmmotors3123@gmail.com'],
-      ['GSTIN: 29CUJPM6814P1ZQ'],
-      [''],
-      ['Bill Information'],
-      ['Bill Number', bill.bill_number || bill.job_card_number || 'N/A'],
-      ['Bill Date', bill.created_at || bill.bill_date ? new Date(bill.created_at || bill.bill_date).toLocaleDateString('en-IN') : 'N/A'],
-      ['Payment Status', bill.status === 'paid' || bill.status === 'completed' ? 'PAID' : 'UNPAID'],
-      [''],
-      ['Customer Details'],
-      ['Name', bill.customer_name || 'N/A'],
-      ['Mobile', bill.customer_mobile || bill.customer_phone || 'N/A'],
-      ['Vehicle', bill.vehicle_reg_no || bill.vehicle_number || 'N/A'],
-      [''],
-      ['PARTS & SERVICES BREAKDOWN'],
-      ['Sl No', 'Description', 'HSN/SAC', 'Qty', 'Unit', 'Rate', 'CGST', 'SGST', 'Amount']
-    ];
-
-    if (hasItems) {
-      bill.items.forEach((item, index) => {
-        csvRows.push([
-          index + 1,
-          item.description || item.name || 'Service Item',
-          item.hsn_sac || '-',
-          item.qty || 1,
-          item.unit || 'Nos',
-          (item.rate || 0).toFixed(2),
-          (item.cgst_amount || 0).toFixed(2),
-          (item.sgst_amount || 0).toFixed(2),
-          (item.amount || 0).toFixed(2)
-        ]);
-      });
-    } else {
-      csvRows.push([
-        1,
-        bill.description || 'Service Charge',
-        '9987',
-        1,
-        'Nos',
-        ((bill.amount || 0) / 1.18).toFixed(2),
-        ((bill.amount || 0) * 0.09 / 1.18).toFixed(2),
-        ((bill.amount || 0) * 0.09 / 1.18).toFixed(2),
-        (bill.amount || 0).toFixed(2)
-      ]);
-    }
-
-    // Add summary
+    // Calculate totals
     const subtotal = hasItems 
       ? bill.items.reduce((sum, item) => sum + ((item.rate || 0) * (item.qty || 1)), 0)
       : (bill.amount || 0) / 1.18;
@@ -5131,27 +5079,294 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
       : (bill.amount || 0) * 0.09 / 1.18;
     const grandTotal = bill.total_amount || bill.amount || 0;
 
-    csvRows.push(['']);
-    csvRows.push(['', '', '', '', '', '', '', 'Subtotal:', subtotal.toFixed(2)]);
-    csvRows.push(['', '', '', '', '', '', '', 'CGST:', totalCgst.toFixed(2)]);
-    csvRows.push(['', '', '', '', '', '', '', 'SGST:', totalSgst.toFixed(2)]);
-    csvRows.push(['', '', '', '', '', '', '', 'GRAND TOTAL:', grandTotal.toFixed(2)]);
-    csvRows.push(['']);
-    csvRows.push(['Thank you for your business!']);
+    // Generate items rows for the table
+    let itemsHtml = '';
+    if (hasItems) {
+      bill.items.forEach((item, index) => {
+        itemsHtml += `
+          <tr>
+            <td style="text-align: center;">${index + 1}</td>
+            <td>${item.description || item.name || 'Service Item'}</td>
+            <td style="text-align: center;">${item.hsn_sac || '-'}</td>
+            <td style="text-align: center;">${item.qty || 1} ${item.unit || 'Nos'}</td>
+            <td style="text-align: right;">₹${(item.rate || 0).toFixed(2)}</td>
+            <td style="text-align: right;">₹${(item.cgst_amount || 0).toFixed(2)}</td>
+            <td style="text-align: right;">₹${(item.sgst_amount || 0).toFixed(2)}</td>
+            <td style="text-align: right;">₹${(item.amount || 0).toFixed(2)}</td>
+          </tr>
+        `;
+      });
+    } else {
+      itemsHtml = `
+        <tr>
+          <td style="text-align: center;">1</td>
+          <td>${bill.description || 'Service Charge'}</td>
+          <td style="text-align: center;">9987</td>
+          <td style="text-align: center;">1 Nos</td>
+          <td style="text-align: right;">₹${((bill.amount || 0) / 1.18).toFixed(2)}</td>
+          <td style="text-align: right;">₹${((bill.amount || 0) * 0.09 / 1.18).toFixed(2)}</td>
+          <td style="text-align: right;">₹${((bill.amount || 0) * 0.09 / 1.18).toFixed(2)}</td>
+          <td style="text-align: right;">₹${(bill.amount || 0).toFixed(2)}</td>
+        </tr>
+      `;
+    }
 
-    const csvContent = csvRows.map(row => row.join(',')).join('\n');
+    // Generate PDF-like HTML content
+    const pdfContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Service Bill - ${bill.bill_number || bill.job_card_number || 'N/A'}</title>
+        <style>
+          @page { size: A4; margin: 10mm; }
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body { 
+            font-family: Arial, sans-serif; 
+            font-size: 12px; 
+            line-height: 1.4; 
+            color: #333;
+            padding: 20px;
+          }
+          .bill-container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            border: 2px solid #333; 
+            padding: 20px;
+          }
+          .header { 
+            text-align: center; 
+            border-bottom: 2px solid #333; 
+            padding-bottom: 15px; 
+            margin-bottom: 15px; 
+          }
+          .company-name { 
+            font-size: 24px; 
+            font-weight: bold; 
+            color: #1a365d; 
+            margin-bottom: 5px; 
+          }
+          .company-address { 
+            font-size: 11px; 
+            color: #666; 
+            margin-bottom: 3px; 
+          }
+          .gstin { 
+            font-weight: bold; 
+            color: #333; 
+            margin-top: 5px; 
+          }
+          .bill-title { 
+            font-size: 16px; 
+            font-weight: bold; 
+            text-align: center; 
+            background: #1a365d; 
+            color: white; 
+            padding: 8px; 
+            margin: 15px 0; 
+          }
+          .info-section { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 15px; 
+            gap: 20px;
+          }
+          .info-box { 
+            flex: 1; 
+            border: 1px solid #ddd; 
+            padding: 10px; 
+            background: #f9f9f9; 
+          }
+          .info-box h4 { 
+            font-size: 12px; 
+            color: #1a365d; 
+            border-bottom: 1px solid #ddd; 
+            padding-bottom: 5px; 
+            margin-bottom: 8px; 
+          }
+          .info-row { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 4px; 
+          }
+          .info-label { 
+            color: #666; 
+            font-size: 11px; 
+          }
+          .info-value { 
+            font-weight: bold; 
+            font-size: 11px; 
+          }
+          .items-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 15px 0; 
+          }
+          .items-table th { 
+            background: #1a365d; 
+            color: white; 
+            padding: 8px 5px; 
+            font-size: 10px; 
+            text-align: center; 
+            border: 1px solid #333; 
+          }
+          .items-table td { 
+            padding: 6px 5px; 
+            border: 1px solid #ddd; 
+            font-size: 10px; 
+          }
+          .items-table tr:nth-child(even) { 
+            background: #f9f9f9; 
+          }
+          .totals-section { 
+            display: flex; 
+            justify-content: flex-end; 
+            margin-top: 15px; 
+          }
+          .totals-box { 
+            width: 250px; 
+            border: 1px solid #333; 
+          }
+          .totals-row { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 5px 10px; 
+            border-bottom: 1px solid #ddd; 
+          }
+          .totals-row.grand-total { 
+            background: #1a365d; 
+            color: white; 
+            font-weight: bold; 
+            font-size: 14px; 
+          }
+          .footer { 
+            text-align: center; 
+            margin-top: 20px; 
+            padding-top: 15px; 
+            border-top: 1px solid #ddd; 
+            color: #666; 
+            font-size: 11px; 
+          }
+          .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 10px;
+          }
+          .status-paid { background: #c6f6d5; color: #22543d; }
+          .status-unpaid { background: #fed7d7; color: #822727; }
+          @media print {
+            body { padding: 0; }
+            .bill-container { border: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="bill-container">
+          <div class="header">
+            <div class="company-name">M M MOTORS</div>
+            <div class="company-address">Bengaluru main road, behind Ruchi Bakery</div>
+            <div class="company-address">Malur, Karnataka 563130</div>
+            <div class="company-address">Phone: 7026263123 | Email: mmmotors3123@gmail.com</div>
+            <div class="gstin">GSTIN: 29CUJPM6814P1ZQ</div>
+          </div>
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Service_Bill_${bill.bill_number || bill.job_card_number || 'N_A'}_${bill.customer_name || 'Customer'}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+          <div class="bill-title">SERVICE BILL / TAX INVOICE</div>
+
+          <div class="info-section">
+            <div class="info-box">
+              <h4>Bill Information</h4>
+              <div class="info-row">
+                <span class="info-label">Bill Number:</span>
+                <span class="info-value">${bill.bill_number || bill.job_card_number || 'N/A'}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Bill Date:</span>
+                <span class="info-value">${bill.created_at || bill.bill_date ? new Date(bill.created_at || bill.bill_date).toLocaleDateString('en-IN') : 'N/A'}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Payment Status:</span>
+                <span class="status-badge ${bill.status === 'paid' || bill.status === 'completed' ? 'status-paid' : 'status-unpaid'}">
+                  ${bill.status === 'paid' || bill.status === 'completed' ? 'PAID' : 'UNPAID'}
+                </span>
+              </div>
+            </div>
+            <div class="info-box">
+              <h4>Customer Details</h4>
+              <div class="info-row">
+                <span class="info-label">Name:</span>
+                <span class="info-value">${bill.customer_name || 'N/A'}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Mobile:</span>
+                <span class="info-value">${bill.customer_mobile || bill.customer_phone || 'N/A'}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Vehicle:</span>
+                <span class="info-value">${bill.vehicle_reg_no || bill.vehicle_number || 'N/A'}</span>
+              </div>
+            </div>
+          </div>
+
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th style="width: 5%;">Sl</th>
+                <th style="width: 35%;">Description</th>
+                <th style="width: 10%;">HSN/SAC</th>
+                <th style="width: 10%;">Qty</th>
+                <th style="width: 10%;">Rate</th>
+                <th style="width: 10%;">CGST</th>
+                <th style="width: 10%;">SGST</th>
+                <th style="width: 10%;">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsHtml}
+            </tbody>
+          </table>
+
+          <div class="totals-section">
+            <div class="totals-box">
+              <div class="totals-row">
+                <span>Subtotal:</span>
+                <span>₹${subtotal.toFixed(2)}</span>
+              </div>
+              <div class="totals-row">
+                <span>CGST (9%):</span>
+                <span>₹${totalCgst.toFixed(2)}</span>
+              </div>
+              <div class="totals-row">
+                <span>SGST (9%):</span>
+                <span>₹${totalSgst.toFixed(2)}</span>
+              </div>
+              <div class="totals-row grand-total">
+                <span>GRAND TOTAL:</span>
+                <span>₹${grandTotal.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="footer">
+            <p><strong>Thank you for your business!</strong></p>
+            <p>This is a computer-generated invoice.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Create a new window for printing/saving as PDF
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(pdfContent);
+    printWindow.document.close();
     
-    toast.success('Service bill downloaded successfully!');
+    // Wait for content to load then trigger print (which allows saving as PDF)
+    printWindow.onload = () => {
+      printWindow.print();
+    };
+    
+    toast.success('PDF ready! Use "Save as PDF" in the print dialog to download.');
   };
 
   // Toggle payment status (paid/unpaid)
