@@ -48,6 +48,63 @@
 
 ### ✅ PASSED TESTS
 
+#### Test: View Invoices Vehicle Details Display and Editing - Backend API Testing
+- **Status**: PASSED ✅
+- **Test Date**: December 28, 2024
+- **Test Type**: Backend API Testing
+- **Authentication**: admin/admin123
+- **Backend URL**: https://auto-shop-system-1.preview.emergentagent.com/api
+- **Details**: 
+  - **Authentication**: Successfully authenticated with admin/admin123 credentials
+  - **Sales Data Structure Check**: GET /api/sales endpoint working correctly with 389 existing sales records
+  - **Vehicle Fields Verification**: All required vehicle fields exist in sales data structure:
+    - ✅ vehicle_brand
+    - ✅ vehicle_model  
+    - ✅ vehicle_color
+    - ✅ vehicle_registration
+    - ✅ vehicle_chassis
+    - ✅ vehicle_engine
+  - **Test Customer Creation**: Successfully created test customer (ID: a970f708...)
+  - **Sale Creation with Vehicle Info**: Successfully created sale with complete vehicle details
+    - Invoice Number: INV-000390
+    - Vehicle: HONDA Activa 6G, Pearl White
+    - Registration: KA01AB9999
+    - Chassis: TEST-CHASSIS-001, Engine: TEST-ENGINE-001
+  - **Vehicle Details Editing**: Successfully updated sale with modified vehicle information
+    - Brand: HONDA → YAMAHA
+    - Model: Activa 6G → Fascino 125
+    - Color: Pearl White → Metallic Blue
+    - Registration: KA01AB9999 → KA01AB8888
+    - Chassis: TEST-CHASSIS-001 → TEST-CHASSIS-002
+    - Engine: TEST-ENGINE-001 → TEST-ENGINE-002
+  - **Data Persistence Verification**: All vehicle edits persisted correctly in database
+  - **Success Rate**: 100% (6/6 API tests passed, 9/9 verification checks passed)
+
+### Key Verification Points
+- ✅ **GET /api/sales**: Returns sales data with complete vehicle field structure
+- ✅ **POST /api/sales**: Accepts and stores vehicle information correctly
+- ✅ **PUT /api/sales/{id}**: Allows editing of all vehicle details
+- ✅ **Data Persistence**: Vehicle edits are reflected in subsequent GET requests
+- ✅ **Field Completeness**: All required vehicle fields present and editable
+- ✅ **Edit Functionality**: Vehicle details can be modified and changes persist
+
+### API Endpoints Tested
+1. **POST /api/auth/login** - Authentication ✅
+2. **GET /api/sales** - Sales data retrieval ✅
+3. **POST /api/customers** - Customer creation ✅
+4. **POST /api/sales** - Sale creation with vehicle info ✅
+5. **PUT /api/sales/{id}** - Sale update with vehicle edits ✅
+6. **GET /api/sales** - Updated sales data verification ✅
+
+### Test Data Summary
+- **Test Customer**: Vehicle Test Customer (Mobile: 9876543210)
+- **Test Sale**: Invoice INV-000390 (Amount: ₹75,000)
+- **Vehicle Details**: Complete vehicle information including brand, model, color, registration, chassis, engine
+- **Edit Verification**: All vehicle fields successfully updated and persisted
+
+### Conclusion
+The View Invoices vehicle details functionality is working correctly at the backend API level. All vehicle fields are properly stored, editable, and persist correctly when modified. The sales records contain complete vehicle information that can be displayed and edited through the View Invoices page.
+
 #### Test 1: Registration vs Job Card Separation Feature - Backend API Testing
 - **Status**: PASSED ✅
 - **Details**: 
