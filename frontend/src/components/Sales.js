@@ -1581,9 +1581,21 @@ const ViewInvoices = () => {
     return customer ? customer.name : 'Unknown Customer';
   };
 
-  const getVehicleModel = (vehicleId) => {
-    const vehicle = vehicles.find(v => v.id === vehicleId);
-    return vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Unknown Vehicle';
+  const getVehicleModel = (invoice) => {
+    // First try to get from invoice/sale record directly (for imported or manually entered data)
+    if (invoice.vehicle_brand || invoice.vehicle_model) {
+      return `${invoice.vehicle_brand || ''} ${invoice.vehicle_model || ''}`.trim() || 'Unknown Vehicle';
+    }
+    
+    // Fall back to looking up by vehicle_id
+    if (invoice.vehicle_id) {
+      const vehicle = vehicles.find(v => v.id === invoice.vehicle_id);
+      if (vehicle) {
+        return `${vehicle.brand || ''} ${vehicle.model || ''}`.trim() || 'Unknown Vehicle';
+      }
+    }
+    
+    return 'Unknown Vehicle';
   };
 
   const getStatusBadge = (status) => {
