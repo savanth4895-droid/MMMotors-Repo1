@@ -3083,7 +3083,7 @@ const ViewInvoices = () => {
                           </div>
                         </td>
                         <td className="p-3 text-gray-600">
-                          {getVehicleModel(invoice.vehicle_id)}
+                          {getVehicleModel(invoice)}
                         </td>
                         <td className="p-3">
                           <span className="font-semibold text-gray-900">
