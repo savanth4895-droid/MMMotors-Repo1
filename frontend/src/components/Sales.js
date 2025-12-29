@@ -1718,11 +1718,36 @@ const ViewInvoices = () => {
       };
       
       await axios.put(`${API}/sales/${editingInvoice.id}`, updatePayload);
+      
+      // Update local state immediately for instant UI feedback
+      setInvoices(prevInvoices => 
+        prevInvoices.map(inv => 
+          inv.id === editingInvoice.id 
+            ? {
+                ...inv,
+                customer_id: updatePayload.customer_id,
+                vehicle_id: updatePayload.vehicle_id,
+                sale_date: updatePayload.sale_date,
+                amount: updatePayload.amount,
+                payment_method: updatePayload.payment_method,
+                hypothecation: updatePayload.hypothecation,
+                vehicle_brand: updatePayload.vehicle_brand,
+                vehicle_model: updatePayload.vehicle_model,
+                vehicle_color: updatePayload.vehicle_color,
+                vehicle_registration: updatePayload.vehicle_registration,
+                vehicle_chassis: updatePayload.vehicle_chassis,
+                vehicle_engine: updatePayload.vehicle_engine,
+                insurance_details: updatePayload.insurance_details,
+                source: updatePayload.source
+              }
+            : inv
+        )
+      );
+      
       toast.success('Invoice updated successfully!');
       setShowEditModal(false);
       setEditingInvoice(null);
       setEditFormData({});
-      fetchInvoices(); // Refresh the list
     } catch (error) {
       toast.error(getErrorMessage(error) || 'Failed to update invoice');
     } finally {
