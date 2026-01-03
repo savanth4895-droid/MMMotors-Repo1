@@ -257,6 +257,8 @@ class Service(BaseModel):
     created_by: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     is_registration: bool = False  # Flag to identify registration vs job card
+    service_number: Optional[str] = None  # User-defined service number
+    kms_driven: Optional[int] = None  # Kilometers driven at time of service
 
 # Customer + Vehicle Registration Model (One-time registration)
 class Registration(BaseModel):
