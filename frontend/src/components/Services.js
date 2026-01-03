@@ -2857,6 +2857,29 @@ const JobCards = () => {
                   />
                 </div>
 
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="service_number">Service Number</Label>
+                    <Input
+                      id="service_number"
+                      placeholder="e.g., SRV-001"
+                      value={editFormData.service_number || ''}
+                      onChange={(e) => setEditFormData({...editFormData, service_number: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="kms_driven">Kilometers Driven</Label>
+                    <Input
+                      id="kms_driven"
+                      type="number"
+                      placeholder="e.g., 15000"
+                      min="0"
+                      value={editFormData.kms_driven || ''}
+                      onChange={(e) => setEditFormData({...editFormData, kms_driven: e.target.value ? parseInt(e.target.value) : null})}
+                    />
+                  </div>
+                </div>
+
                 <div>
                   <Label htmlFor="service_type">Service Type</Label>
                   <Select 
