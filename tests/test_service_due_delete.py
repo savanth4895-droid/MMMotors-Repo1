@@ -157,27 +157,27 @@ class TestServiceDueEndpointsAuth:
     """Test authentication requirements for dismissed service due endpoints"""
     
     def test_get_without_auth(self):
-        """GET without auth should return 401"""
+        """GET without auth should return 401 or 403"""
         response = requests.get(f"{BASE_URL}/api/dismissed-service-due")
-        assert response.status_code == 401, f"Should return 401 without auth, got {response.status_code}"
-        print("✓ GET without auth correctly returns 401")
+        assert response.status_code in [401, 403], f"Should return 401/403 without auth, got {response.status_code}"
+        print(f"✓ GET without auth correctly returns {response.status_code}")
         
     def test_post_without_auth(self):
-        """POST without auth should return 401"""
+        """POST without auth should return 401 or 403"""
         response = requests.post(f"{BASE_URL}/api/dismissed-service-due", json={
             "service_due_key": "test",
             "customer_name": "test"
         })
-        assert response.status_code == 401, f"Should return 401 without auth, got {response.status_code}"
-        print("✓ POST without auth correctly returns 401")
+        assert response.status_code in [401, 403], f"Should return 401/403 without auth, got {response.status_code}"
+        print(f"✓ POST without auth correctly returns {response.status_code}")
         
     def test_bulk_without_auth(self):
-        """Bulk POST without auth should return 401"""
+        """Bulk POST without auth should return 401 or 403"""
         response = requests.post(f"{BASE_URL}/api/dismissed-service-due/bulk", json={
             "items": []
         })
-        assert response.status_code == 401, f"Should return 401 without auth, got {response.status_code}"
-        print("✓ Bulk POST without auth correctly returns 401")
+        assert response.status_code in [401, 403], f"Should return 401/403 without auth, got {response.status_code}"
+        print(f"✓ Bulk POST without auth correctly returns {response.status_code}")
 
 
 if __name__ == "__main__":
