@@ -6194,7 +6194,7 @@ const ServiceDue = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">Overdue Services</p>
                 <p className="text-2xl font-bold text-red-600">
-                  {dueServices.filter(s => s.is_overdue).length}
+                  {dueServices.filter(s => s.is_overdue && !dismissedKeys.has(s.id)).length}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
                   {activeFilter === 'overdue' ? 'Currently filtered' : 'Click to filter'}
@@ -6218,7 +6218,7 @@ const ServiceDue = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">Due This Week</p>
                 <p className="text-2xl font-bold text-yellow-600">
-                  {dueServices.filter(s => s.is_due_soon && !s.is_overdue).length}
+                  {dueServices.filter(s => s.is_due_soon && !s.is_overdue && !dismissedKeys.has(s.id)).length}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
                   {activeFilter === 'due_soon' ? 'Currently filtered' : 'Click to filter'}
@@ -6242,7 +6242,7 @@ const ServiceDue = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Tracked</p>
                 <p className="text-2xl font-bold text-blue-600">
-                  {dueServices.length}
+                  {dueServices.filter(s => !dismissedKeys.has(s.id)).length}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
                   {activeFilter === 'all' ? 'Showing all' : 'Click to show all'}
