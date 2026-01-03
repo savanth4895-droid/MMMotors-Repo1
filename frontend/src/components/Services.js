@@ -1582,6 +1582,8 @@ const JobCards = () => {
         return {
           id: service.id,
           job_card_id: service.job_card_number || `JOB-${service.id.slice(-6)}`,
+          service_number: service.service_number || null,
+          kms_driven: service.kms_driven || null,
           customer_name: customer?.name || 'Unknown',
           phone_number: customer?.mobile || customer?.phone || 'N/A',
           vehicle_brand: service.vehicle_brand || 'N/A',
