@@ -2456,6 +2456,7 @@ const JobCards = () => {
                   <h3 className="text-lg font-semibold mb-3 text-blue-600">Job Card Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><strong>Job Card ID:</strong> {selectedJobCard.job_card_id}</div>
+                    <div><strong>Service Number:</strong> <span className={selectedJobCard.service_number ? 'text-purple-600 font-medium' : 'text-gray-400'}>{selectedJobCard.service_number || 'Not assigned'}</span></div>
                     <div><strong>Service Date:</strong> {new Date(selectedJobCard.service_date).toLocaleDateString('en-IN')}</div>
                     <div><strong>Service Type:</strong> {selectedJobCard.service_type?.replace('_', ' ')}</div>
                     <div><strong>Status:</strong> {getStatusBadge(selectedJobCard.status)}</div>
@@ -2484,6 +2485,7 @@ const JobCards = () => {
                     <div><strong>Model:</strong> {selectedJobCard.vehicle_model}</div>
                     <div><strong>Year:</strong> {selectedJobCard.vehicle_year}</div>
                     <div><strong>Registration No:</strong> {selectedJobCard.vehicle_reg_no}</div>
+                    <div><strong>Kilometers Driven:</strong> <span className={selectedJobCard.kms_driven ? 'text-green-600 font-medium' : 'text-gray-400'}>{selectedJobCard.kms_driven ? `${selectedJobCard.kms_driven.toLocaleString()} km` : 'Not recorded'}</span></div>
                   </div>
                 </div>
 
