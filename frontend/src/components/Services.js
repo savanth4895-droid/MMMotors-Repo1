@@ -1508,7 +1508,9 @@ const JobCards = () => {
     vehicle_year: '',
     service_type: '',
     complaint: '',
-    estimated_amount: ''
+    estimated_amount: '',
+    service_number: '',
+    kms_driven: ''
   });
   const [savingJobCard, setSavingJobCard] = useState(false);
   
