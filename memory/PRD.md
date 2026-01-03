@@ -29,18 +29,28 @@ A full-stack application for managing a vehicle service business including:
 - Job Card workflow (recurring service instances)
 - Service billing with payment status tracking
 - Spare parts inventory management with automatic stock reduction
+- **NEW**: Service Number and Kilometers Driven fields in Job Card form
 
-### Bug Fixes Completed (Jan 2025)
+### Recent Changes (Jan 2025)
+
+#### Bug Fixes
 1. **Invoice UI Refresh Bug** - Fixed issue where edited invoices didn't reflect in UI without manual page refresh
    - Root cause: Array mutation in `filterInvoices` function
    - Fix: Used spread operator `[...invoices]` to create immutable copy
    - File: `/app/frontend/src/components/Sales.js` (line 1525)
 
-2. Authentication token verification error (KeyError: 'id')
-3. Bulk status updates on job card page
-4. Service bill deletion
-5. Service Due Schedule date defaults
-6. Vehicle details not displaying in View Invoices
+#### New Features
+1. **Service Number field** - Added to Job Card form (Service Details section)
+   - Allows user to enter custom service reference number
+   - Optional field (string)
+   
+2. **Kilometers Driven field** - Added to Job Card form (Vehicle Information section)
+   - Tracks odometer reading at time of service
+   - Optional field (integer)
+
+Files modified:
+- `/app/frontend/src/components/Services.js` - Form state, UI components
+- `/app/backend/server.py` - Service, ServiceCreate, ServiceUpdate models
 
 ## Architecture
 
@@ -66,6 +76,7 @@ A full-stack application for managing a vehicle service business including:
 - `PUT /api/sales/{id}` - Update invoice
 - `GET/POST /api/customers` - Customer management
 - `GET/POST /api/vehicles` - Vehicle inventory
+- `GET/POST /api/services` - Job Cards (now includes service_number, kms_driven)
 - `GET/POST /api/service-bills` - Service billing
 - `PUT /api/service-bills/{id}/status` - Update bill payment status
 
@@ -81,6 +92,8 @@ A full-stack application for managing a vehicle service business including:
 
 ## Test Reports
 - `/app/test_reports/iteration_1.json` - Invoice edit UI refresh bug fix verification
+- `/app/test_reports/iteration_2.json` - Service Number and Kilometers Driven fields verification
+- `/app/tests/test_job_card_new_fields.py` - Backend API tests for new fields
 
 ---
 Last Updated: January 3, 2025
