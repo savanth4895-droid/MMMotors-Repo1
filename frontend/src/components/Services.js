@@ -6010,9 +6010,10 @@ const ServiceDue = () => {
   };
 
   const filterServices = () => {
-    let filtered = dueServices;
+    // First, filter out dismissed records
+    let filtered = dueServices.filter(service => !dismissedKeys.has(service.id));
 
-    // Apply status filter first
+    // Apply status filter
     if (activeFilter === 'overdue') {
       filtered = filtered.filter(service => service.is_overdue);
     } else if (activeFilter === 'due_soon') {
