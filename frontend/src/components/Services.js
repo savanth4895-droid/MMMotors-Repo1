@@ -2316,11 +2316,12 @@ const JobCards = () => {
                     />
                   </th>
                   <th className="text-left p-3 font-semibold">Job Card ID</th>
+                  <th className="text-left p-3 font-semibold">Service No.</th>
                   <th className="text-left p-3 font-semibold">Customer Name</th>
                   <th className="text-left p-3 font-semibold">Phone Number</th>
                   <th className="text-left p-3 font-semibold">Vehicle Brand</th>
                   <th className="text-left p-3 font-semibold">Vehicle Model</th>
-                  <th className="text-left p-3 font-semibold">Vehicle Year</th>
+                  <th className="text-left p-3 font-semibold">KMs Driven</th>
                   <th className="text-left p-3 font-semibold">Vehicle Reg. No</th>
                   <th className="text-left p-3 font-semibold">Complaint</th>
                   <th className="text-left p-3 font-semibold">Status</th>
