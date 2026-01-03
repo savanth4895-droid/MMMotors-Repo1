@@ -621,6 +621,57 @@ async def api_readiness_check():
 async def root():
     return {"message": "Two Wheeler Business Management API is running"}
 
+# Dismissed Service Due endpoints
+@api_router.get("/dismissed-service-due")
+async def get_dismissed_service_due(current_user: User = Depends(get_current_user)):
+    """Get all dismissed service due records"""
+    dismissed = await db.dismissed_service_due.find({}, {"_id": 0}).to_list(10000)
+    return dismissed
+
+@api_router.post("/dismissed-service-due")
+async def dismiss_service_due(data: dict, current_user: User = Depends(get_current_user)):
+    """Dismiss a single service due record"""
+    dismissed = DismissedServiceDue(
+        service_due_key=data.get("service_due_key"),
+        customer_id=data.get("customer_id"),
+        customer_name=data.get("customer_name"),
+        vehicle_reg_no=data.get("vehicle_reg_no"),
+        dismissed_by=current_user.id,
+        reason=data.get("reason", "Manually dismissed")
+    )
+    await db.dismissed_service_due.insert_one(dismissed.dict())
+    return {"message": "Service due record dismissed successfully", "id": dismissed.id}
+
+@api_router.post("/dismissed-service-due/bulk")
+async def bulk_dismiss_service_due(data: dict, current_user: User = Depends(get_current_user)):
+    """Bulk dismiss service due records"""
+    items = data.get("items", [])
+    if not items:
+        raise HTTPException(status_code=400, detail="No items provided for bulk dismiss")
+    
+    dismissed_count = 0
+    for item in items:
+        dismissed = DismissedServiceDue(
+            service_due_key=item.get("service_due_key"),
+            customer_id=item.get("customer_id"),
+            customer_name=item.get("customer_name"),
+            vehicle_reg_no=item.get("vehicle_reg_no"),
+            dismissed_by=current_user.id,
+            reason=item.get("reason", "Bulk dismissed")
+        )
+        await db.dismissed_service_due.insert_one(dismissed.dict())
+        dismissed_count += 1
+    
+    return {"message": f"Successfully dismissed {dismissed_count} service due records", "count": dismissed_count}
+
+@api_router.delete("/dismissed-service-due/{key}")
+async def restore_service_due(key: str, current_user: User = Depends(get_current_user)):
+    """Restore a dismissed service due record (remove from dismissed list)"""
+    result = await db.dismissed_service_due.delete_one({"service_due_key": key})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Dismissed record not found")
+    return {"message": "Service due record restored successfully"}
+
 # Authentication endpoints
 @api_router.post("/auth/register")
 async def register_user(user_data: UserCreate):
