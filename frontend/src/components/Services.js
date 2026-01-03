@@ -2331,7 +2331,7 @@ const JobCards = () => {
               <tbody>
                 {filteredJobCards.length === 0 ? (
                   <tr>
-                    <td colSpan="11" className="p-8 text-center text-gray-500">
+                    <td colSpan="13" className="p-8 text-center text-gray-500">
                       {searchTerm ? 'No job cards found matching your search' : 'No job cards found'}
                     </td>
                   </tr>
@@ -2352,6 +2352,11 @@ const JobCards = () => {
                           <span className="font-medium text-blue-600">{jobCard.job_card_id}</span>
                         </td>
                         <td className="p-3">
+                          <span className={`font-medium ${jobCard.service_number ? 'text-purple-600' : 'text-gray-400'}`}>
+                            {jobCard.service_number || '-'}
+                          </span>
+                        </td>
+                        <td className="p-3">
                           <div className="font-medium text-gray-900">{jobCard.customer_name}</div>
                         </td>
                         <td className="p-3 text-gray-600">{jobCard.phone_number}</td>
@@ -2361,7 +2366,11 @@ const JobCards = () => {
                           </span>
                         </td>
                         <td className="p-3 text-gray-600">{jobCard.vehicle_model}</td>
-                        <td className="p-3 text-gray-600">{jobCard.vehicle_year}</td>
+                        <td className="p-3">
+                          <span className={`font-medium ${jobCard.kms_driven ? 'text-green-600' : 'text-gray-400'}`}>
+                            {jobCard.kms_driven ? `${jobCard.kms_driven.toLocaleString()} km` : '-'}
+                          </span>
+                        </td>
                         <td className="p-3 text-gray-600 font-mono">{jobCard.vehicle_reg_no}</td>
                         <td className="p-3 max-w-xs">
                           <div className="truncate" title={jobCard.complaint}>
