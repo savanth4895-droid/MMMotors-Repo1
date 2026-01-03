@@ -6260,7 +6260,24 @@ const ServiceDue = () => {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Service Due Schedule</CardTitle>
+            <div className="flex items-center gap-4">
+              <CardTitle>Service Due Schedule</CardTitle>
+              {selectedIds.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">{selectedIds.length} selected</span>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={handleBulkDelete}
+                    disabled={bulkDeleting}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    {bulkDeleting ? 'Deleting...' : 'Delete Selected'}
+                  </Button>
+                </div>
+              )}
+            </div>
             {activeFilter !== 'all' && (
               <div className="flex items-center gap-2">
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${
@@ -6286,6 +6303,15 @@ const ServiceDue = () => {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="p-3 text-left text-sm font-medium text-gray-500 w-10">
+                    <input
+                      type="checkbox"
+                      checked={selectAll && filteredServices.length > 0}
+                      onChange={handleSelectAll}
+                      disabled={filteredServices.length === 0}
+                      className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </th>
                   <th className="p-3 text-left text-sm font-medium text-gray-500">Customer</th>
                   <th className="p-3 text-left text-sm font-medium text-gray-500">Vehicle</th>
                   <th className="p-3 text-left text-sm font-medium text-gray-500">Base Date</th>
@@ -6298,19 +6324,27 @@ const ServiceDue = () => {
               <tbody className="divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan="7" className="p-6 text-center text-gray-500">
+                    <td colSpan="8" className="p-6 text-center text-gray-500">
                       Loading service due information...
                     </td>
                   </tr>
                 ) : filteredServices.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="p-6 text-center text-gray-500">
+                    <td colSpan="8" className="p-6 text-center text-gray-500">
                       No services due found
                     </td>
                   </tr>
                 ) : (
                   filteredServices.map((service) => (
-                    <tr key={service.id} className="hover:bg-gray-50">
+                    <tr key={service.id} className={`hover:bg-gray-50 ${selectedIds.includes(service.id) ? 'bg-blue-50' : ''}`}>
+                      <td className="p-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(service.id)}
+                          onChange={() => handleSelectItem(service.id)}
+                          className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                      </td>
                       <td className="p-3 text-sm font-medium text-gray-900">
                         {service.customer_name || 'N/A'}
                       </td>
