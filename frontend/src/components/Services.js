@@ -1867,7 +1867,9 @@ const JobCards = () => {
       vehicle_number: jobCard.vehicle_reg_no,
       service_type: jobCard.service_type,
       description: jobCard.complaint,
-      amount: jobCard.amount
+      amount: jobCard.amount,
+      service_number: jobCard.service_number || '',
+      kms_driven: jobCard.kms_driven || ''
     });
     setShowEditModal(true);
   };
