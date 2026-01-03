@@ -2074,7 +2074,9 @@ const JobCards = () => {
         vehicle_year: newJobCardData.vehicle_year,
         service_type: newJobCardData.service_type,
         description: newJobCardData.complaint,
-        amount: parseFloat(newJobCardData.estimated_amount) || 0
+        amount: parseFloat(newJobCardData.estimated_amount) || 0,
+        service_number: newJobCardData.service_number,
+        kms_driven: newJobCardData.kms_driven ? parseInt(newJobCardData.kms_driven) : null
       };
 
       await axios.post(`${API}/services`, jobCardData, {
