@@ -6047,43 +6047,97 @@ const ServiceDue = () => {
   };
 
   const handleDeleteServiceDue = async (service) => {
-    if (!window.confirm(`Are you sure you want to delete service due record for ${service.customer_name} (${service.vehicle_reg_no})? This action cannot be undone.`)) {
+    if (!window.confirm(`Are you sure you want to remove this service due reminder for ${service.customer_name} (${service.vehicle_reg_no})?`)) {
       return;
     }
 
     try {
       const token = localStorage.getItem('token');
       
-      // Since service due records are derived from sales and services data,
-      // we need to identify what to delete. If it's based on a service record, delete the service
-      // If it's based on a sale record, we might want to just mark it as serviced
-      
-      // For now, let's try to find and delete any matching service record
-      const servicesResponse = await axios.get(`${API}/services`, {
+      // Dismiss the service due record
+      await axios.post(`${API}/dismissed-service-due`, {
+        service_due_key: service.id,
+        customer_id: service.customer_id,
+        customer_name: service.customer_name,
+        vehicle_reg_no: service.vehicle_reg_no,
+        reason: 'Manually dismissed'
+      }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      const matchingService = servicesResponse.data.find(s => 
-        s.vehicle_number === service.vehicle_reg_no && 
-        s.customer_id && 
-        s.customer_id === service.customer_id
-      );
+      // Update local state immediately
+      setDismissedKeys(prev => new Set([...prev, service.id]));
+      setSelectedIds(prev => prev.filter(id => id !== service.id));
       
-      if (matchingService) {
-        await axios.delete(`${API}/services/${matchingService.id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        toast.success('Service due record deleted successfully!');
-      } else {
-        // If no service record found, just remove from local state
-        toast.info('Service due record removed from view');
-      }
-      
-      // Refresh the due services list
-      fetchDueServices();
+      toast.success('Service due record removed from view');
       
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to delete service due record');
+    }
+  };
+
+  // Bulk selection handlers
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredServices.map(s => s.id));
+    }
+    setSelectAll(!selectAll);
+  };
+
+  const handleSelectItem = (id) => {
+    setSelectedIds(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(i => i !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) {
+      toast.error('No items selected');
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to remove ${selectedIds.length} service due reminder(s)?`)) {
+      return;
+    }
+
+    setBulkDeleting(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Get the selected services data
+      const itemsToDelete = filteredServices
+        .filter(s => selectedIds.includes(s.id))
+        .map(s => ({
+          service_due_key: s.id,
+          customer_id: s.customer_id,
+          customer_name: s.customer_name,
+          vehicle_reg_no: s.vehicle_reg_no,
+          reason: 'Bulk dismissed'
+        }));
+      
+      await axios.post(`${API}/dismissed-service-due/bulk`, {
+        items: itemsToDelete
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Update local state immediately
+      setDismissedKeys(prev => new Set([...prev, ...selectedIds]));
+      setSelectedIds([]);
+      setSelectAll(false);
+      
+      toast.success(`Successfully removed ${itemsToDelete.length} service due record(s)`);
+      
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to delete service due records');
+    } finally {
+      setBulkDeleting(false);
     }
   };
 
