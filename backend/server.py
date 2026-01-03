@@ -299,6 +299,8 @@ class ServiceCreate(BaseModel):
     service_type: str
     description: str
     amount: float
+    service_number: Optional[str] = None
+    kms_driven: Optional[int] = None
 
 class ServiceUpdate(BaseModel):
     customer_id: str
