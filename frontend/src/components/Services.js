@@ -5837,18 +5837,38 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
 
 const ServiceDue = () => {
   const [dueServices, setDueServices] = useState([]);
+  const [dismissedKeys, setDismissedKeys] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredServices, setFilteredServices] = useState([]);
   const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'overdue', 'due_soon'
+  
+  // Bulk selection state
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   useEffect(() => {
     fetchDueServices();
+    fetchDismissedRecords();
   }, []);
 
   useEffect(() => {
     filterServices();
-  }, [dueServices, searchTerm, activeFilter]);
+  }, [dueServices, searchTerm, activeFilter, dismissedKeys]);
+
+  const fetchDismissedRecords = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/dismissed-service-due`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const keys = new Set(response.data.map(d => d.service_due_key));
+      setDismissedKeys(keys);
+    } catch (error) {
+      console.error('Failed to fetch dismissed records:', error);
+    }
+  };
 
   const fetchDueServices = async () => {
     try {
