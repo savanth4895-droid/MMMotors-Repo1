@@ -6,7 +6,7 @@ Standalone test for vehicle and service import fixes
 import requests
 import json
 
-BASE_URL = "https://auto-shop-system-1.preview.emergentagent.com/api"
+BASE_URL = "https://autofix-system-9.preview.emergentagent.com/api"
 token = None
 
 def login():
