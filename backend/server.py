@@ -313,6 +313,8 @@ class ServiceUpdate(BaseModel):
     description: str
     amount: float
     service_date: Optional[datetime] = None  # Registration date
+    service_number: Optional[str] = None
+    kms_driven: Optional[int] = None
 
 class SparePart(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
