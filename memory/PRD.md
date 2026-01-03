@@ -29,7 +29,7 @@ A full-stack application for managing a vehicle service business including:
 - Job Card workflow (recurring service instances)
 - Service billing with payment status tracking
 - Spare parts inventory management with automatic stock reduction
-- **NEW**: Service Number and Kilometers Driven fields in Job Card form
+- Service Number and Kilometers Driven tracking in Job Cards
 
 ### Recent Changes (Jan 2025)
 
@@ -40,16 +40,25 @@ A full-stack application for managing a vehicle service business including:
    - File: `/app/frontend/src/components/Sales.js` (line 1525)
 
 #### New Features
-1. **Service Number field** - Added to Job Card form (Service Details section)
+1. **Service Number field** - Added to Job Card form, list view, view modal, and edit modal
    - Allows user to enter custom service reference number
    - Optional field (string)
+   - Displayed in purple color when set
    
-2. **Kilometers Driven field** - Added to Job Card form (Vehicle Information section)
+2. **Kilometers Driven field** - Added to Job Card form, list view, view modal, and edit modal
    - Tracks odometer reading at time of service
    - Optional field (integer)
+   - Displayed in green with "km" suffix when set
+
+**Implementation details:**
+- **New Job Card form**: Both fields added (Service Details & Vehicle Information sections)
+- **Job Cards table**: Service No. and KMs Driven columns added (replaced Vehicle Year)
+- **View Job Card modal**: Service Number shown in Job Card Info, KMs in Vehicle Info
+- **Edit Job Card modal**: Both fields editable
+- **CSV Export**: Updated to include both new fields
 
 Files modified:
-- `/app/frontend/src/components/Services.js` - Form state, UI components
+- `/app/frontend/src/components/Services.js` - Complete UI implementation
 - `/app/backend/server.py` - Service, ServiceCreate, ServiceUpdate models
 
 ## Architecture
@@ -76,23 +85,25 @@ Files modified:
 - `PUT /api/sales/{id}` - Update invoice
 - `GET/POST /api/customers` - Customer management
 - `GET/POST /api/vehicles` - Vehicle inventory
-- `GET/POST /api/services` - Job Cards (now includes service_number, kms_driven)
+- `GET/POST /api/services` - Job Cards (includes service_number, kms_driven)
+- `PUT /api/services/{id}` - Update job card
 - `GET/POST /api/service-bills` - Service billing
 - `PUT /api/service-bills/{id}/status` - Update bill payment status
 
 ## Known Technical Debt
-- **Monolithic Components**: `Sales.js` and `Services.js` are very large files handling multiple responsibilities
+- **Monolithic Components**: `Sales.js` (~6500 lines) and `Services.js` (~5000+ lines) are very large
 - Recommended: Break into smaller, single-responsibility components
 
 ## Backlog / Future Tasks
-1. **(P1)** Refactor `Sales.js` into smaller components (ViewInvoices, EditInvoiceModal, etc.)
-2. **(P1)** Refactor `Services.js` into smaller components (ViewRegistration, JobCards, etc.)
-3. **(P2)** Add comprehensive error handling across all forms
-4. **(P2)** Add loading states for all async operations
+1. **(P1)** Refactor `Sales.js` into smaller components (ViewInvoices, CreateInvoice, EditInvoiceModal, etc.)
+2. **(P1)** Refactor `Services.js` into smaller components (JobCards, Registrations, ServiceBilling, etc.)
+3. **(P2)** Add comprehensive error handling and loading states across all forms
+4. **(P2)** Add form validation feedback
 
 ## Test Reports
 - `/app/test_reports/iteration_1.json` - Invoice edit UI refresh bug fix verification
-- `/app/test_reports/iteration_2.json` - Service Number and Kilometers Driven fields verification
+- `/app/test_reports/iteration_2.json` - Service Number and Kilometers Driven fields in New Job Card form
+- `/app/test_reports/iteration_3.json` - Service Number and KMs Driven in Job Card list, view, and edit
 - `/app/tests/test_job_card_new_fields.py` - Backend API tests for new fields
 
 ---
