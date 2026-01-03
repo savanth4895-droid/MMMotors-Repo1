@@ -1521,10 +1521,11 @@ const ViewInvoices = () => {
   };
 
   const filterInvoices = () => {
-    let filtered = invoices;
+    // Create a copy to avoid mutating original array (important for React state updates)
+    let filtered = [...invoices];
 
     if (searchTerm) {
-      filtered = invoices.filter(invoice => {
+      filtered = filtered.filter(invoice => {
         const customer = customers.find(c => c.id === invoice.customer_id);
         const vehicle = vehicles.find(v => v.id === invoice.vehicle_id);
         
@@ -1538,7 +1539,7 @@ const ViewInvoices = () => {
       });
     }
 
-    // Apply sorting
+    // Apply sorting (on the copy, not original)
     filtered.sort((a, b) => {
       let aVal, bVal;
       
