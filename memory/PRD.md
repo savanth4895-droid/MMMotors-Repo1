@@ -119,7 +119,9 @@ Files modified:
 - `/app/test_reports/iteration_1.json` - Invoice edit UI refresh bug fix verification
 - `/app/test_reports/iteration_2.json` - Service Number and Kilometers Driven fields in New Job Card form
 - `/app/test_reports/iteration_3.json` - Service Number and KMs Driven in Job Card list, view, and edit
-- `/app/tests/test_job_card_new_fields.py` - Backend API tests for new fields
+- `/app/test_reports/iteration_4.json` - Service Due delete and bulk delete functionality
+- `/app/tests/test_job_card_new_fields.py` - Backend API tests for job card fields
+- `/app/tests/test_service_due_delete.py` - Backend API tests for service due delete
 
 ---
 Last Updated: January 3, 2025
