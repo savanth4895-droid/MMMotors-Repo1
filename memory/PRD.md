@@ -39,6 +39,12 @@ A full-stack application for managing a vehicle service business including:
    - Fix: Used spread operator `[...invoices]` to create immutable copy
    - File: `/app/frontend/src/components/Sales.js` (line 1525)
 
+2. **Service Due Delete Bug** - Fixed inability to delete records from Service Due Schedule table
+   - Root cause: Delete function tried to delete underlying service records which didn't work for derived data
+   - Fix: Implemented `dismissed_service_due` collection to track dismissed records
+   - Records are now filtered out from view rather than truly deleted
+   - File: `/app/backend/server.py`, `/app/frontend/src/components/Services.js`
+
 #### New Features
 1. **Service Number field** - Added to Job Card form, list view, view modal, and edit modal
    - Allows user to enter custom service reference number
@@ -49,6 +55,12 @@ A full-stack application for managing a vehicle service business including:
    - Tracks odometer reading at time of service
    - Optional field (integer)
    - Displayed in green with "km" suffix when set
+
+3. **Service Due Bulk Delete** - Added bulk delete option for Service Due Schedule table
+   - Checkbox selection for multiple records
+   - "Delete Selected" button appears when records selected
+   - Both single delete (trash icon) and bulk delete supported
+   - Summary cards update immediately after deletions
 
 **Implementation details:**
 - **New Job Card form**: Both fields added (Service Details & Vehicle Information sections)
