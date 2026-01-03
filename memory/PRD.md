@@ -101,6 +101,9 @@ Files modified:
 - `PUT /api/services/{id}` - Update job card
 - `GET/POST /api/service-bills` - Service billing
 - `PUT /api/service-bills/{id}/status` - Update bill payment status
+- `GET/POST /api/dismissed-service-due` - Dismissed service due records
+- `POST /api/dismissed-service-due/bulk` - Bulk dismiss service due records
+- `DELETE /api/dismissed-service-due/{key}` - Restore dismissed record
 
 ## Known Technical Debt
 - **Monolithic Components**: `Sales.js` (~6500 lines) and `Services.js` (~5000+ lines) are very large
