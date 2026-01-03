@@ -482,6 +482,17 @@ class ImportResult(BaseModel):
     cross_reference_stats: Optional[Dict[str, int]] = {}  # Linking statistics
     incomplete_records: List[Dict[str, Any]] = []  # Records needing completion
 
+# Dismissed Service Due Model - track service due records that have been dismissed/deleted
+class DismissedServiceDue(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    service_due_key: str  # Unique key: customer_id-vehicle_number
+    customer_id: Optional[str] = None
+    customer_name: Optional[str] = None
+    vehicle_reg_no: Optional[str] = None
+    dismissed_by: str
+    dismissed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    reason: Optional[str] = None
+
 # Utility functions
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
