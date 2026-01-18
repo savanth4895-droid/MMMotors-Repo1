@@ -1499,6 +1499,10 @@ const JobCards = () => {
   const [editingJobCard, setEditingJobCard] = useState(null);
   const [editFormData, setEditFormData] = useState({});
   
+  // Inline edit state for service date in view modal
+  const [editingServiceDate, setEditingServiceDate] = useState(false);
+  const [editServiceDateValue, setEditServiceDateValue] = useState('');
+  
   // New Job Card form state
   const [newJobCardData, setNewJobCardData] = useState({
     customer_id: '',
