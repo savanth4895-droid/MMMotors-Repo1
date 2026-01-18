@@ -62,6 +62,13 @@ A full-stack application for managing a vehicle service business including:
    - Both single delete (trash icon) and bulk delete supported
    - Summary cards update immediately after deletions
 
+4. **Editable Base Date** - Base Date column in Service Due Schedule is now editable
+   - Click on any Base Date cell to edit
+   - Date picker appears with save (✓) and cancel (✗) buttons
+   - Custom dates stored in `service_due_base_date_overrides` collection
+   - Due Date and Status automatically recalculate on change
+   - Custom dates shown in purple with "Custom Date" label
+
 **Implementation details:**
 - **New Job Card form**: Both fields added (Service Details & Vehicle Information sections)
 - **Job Cards table**: Service No. and KMs Driven columns added (replaced Vehicle Year)
