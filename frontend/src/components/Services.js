@@ -5838,6 +5838,7 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
 const ServiceDue = () => {
   const [dueServices, setDueServices] = useState([]);
   const [dismissedKeys, setDismissedKeys] = useState(new Set());
+  const [baseDateOverrides, setBaseDateOverrides] = useState({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredServices, setFilteredServices] = useState([]);
@@ -5847,15 +5848,36 @@ const ServiceDue = () => {
   const [selectedIds, setSelectedIds] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  
+  // Edit base date state
+  const [editingBaseDateId, setEditingBaseDateId] = useState(null);
+  const [editBaseDateValue, setEditBaseDateValue] = useState('');
 
   useEffect(() => {
     fetchDueServices();
     fetchDismissedRecords();
+    fetchBaseDateOverrides();
   }, []);
 
   useEffect(() => {
     filterServices();
-  }, [dueServices, searchTerm, activeFilter, dismissedKeys]);
+  }, [dueServices, searchTerm, activeFilter, dismissedKeys, baseDateOverrides]);
+
+  const fetchBaseDateOverrides = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/service-due-base-date`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const overridesMap = {};
+      response.data.forEach(o => {
+        overridesMap[o.service_due_key] = o.custom_base_date;
+      });
+      setBaseDateOverrides(overridesMap);
+    } catch (error) {
+      console.error('Failed to fetch base date overrides:', error);
+    }
+  };
 
   const fetchDismissedRecords = async () => {
     try {
