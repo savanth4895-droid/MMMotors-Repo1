@@ -1863,7 +1863,69 @@ const JobCards = () => {
 
   const handleViewJobCard = (jobCard) => {
     setSelectedJobCard(jobCard);
+    setEditingServiceDate(false);
+    setEditServiceDateValue('');
     setShowViewModal(true);
+  };
+
+  const handleEditServiceDate = () => {
+    if (selectedJobCard) {
+      const currentDate = new Date(selectedJobCard.service_date);
+      setEditServiceDateValue(currentDate.toISOString().split('T')[0]);
+      setEditingServiceDate(true);
+    }
+  };
+
+  const handleSaveServiceDate = async () => {
+    if (!selectedJobCard || !editServiceDateValue) {
+      toast.error('Please select a date');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Update the service date via API
+      await axios.put(`${API}/services/${selectedJobCard.id}`, {
+        customer_id: selectedJobCard.customer_id,
+        vehicle_number: selectedJobCard.vehicle_reg_no,
+        service_type: selectedJobCard.service_type,
+        description: selectedJobCard.complaint,
+        amount: selectedJobCard.amount,
+        service_number: selectedJobCard.service_number,
+        kms_driven: selectedJobCard.kms_driven,
+        service_date: new Date(editServiceDateValue).toISOString()
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Update local state immediately
+      const newServiceDate = new Date(editServiceDateValue);
+      
+      setSelectedJobCard(prev => ({
+        ...prev,
+        service_date: newServiceDate
+      }));
+      
+      // Update the job cards list
+      setJobCards(prev => prev.map(jc => 
+        jc.id === selectedJobCard.id 
+          ? { ...jc, service_date: newServiceDate }
+          : jc
+      ));
+      
+      setEditingServiceDate(false);
+      setEditServiceDateValue('');
+      toast.success('Service date updated successfully');
+      
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update service date');
+    }
+  };
+
+  const handleCancelServiceDateEdit = () => {
+    setEditingServiceDate(false);
+    setEditServiceDateValue('');
   };
 
   const handleEditJobCard = (jobCard) => {
