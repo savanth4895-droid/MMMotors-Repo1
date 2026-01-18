@@ -493,6 +493,15 @@ class DismissedServiceDue(BaseModel):
     dismissed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     reason: Optional[str] = None
 
+# Service Due Base Date Override Model - store custom base dates
+class ServiceDueBaseDateOverride(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    service_due_key: str  # Unique key: customer_id-vehicle_number
+    custom_base_date: datetime
+    updated_by: str
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    notes: Optional[str] = None
+
 # Utility functions
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
