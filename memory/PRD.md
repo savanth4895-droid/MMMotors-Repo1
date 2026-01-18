@@ -111,6 +111,8 @@ Files modified:
 - `GET/POST /api/dismissed-service-due` - Dismissed service due records
 - `POST /api/dismissed-service-due/bulk` - Bulk dismiss service due records
 - `DELETE /api/dismissed-service-due/{key}` - Restore dismissed record
+- `GET/POST /api/service-due-base-date` - Base date overrides for service due
+- `DELETE /api/service-due-base-date/{key}` - Remove base date override
 
 ## Known Technical Debt
 - **Monolithic Components**: `Sales.js` (~6500 lines) and `Services.js` (~5000+ lines) are very large
