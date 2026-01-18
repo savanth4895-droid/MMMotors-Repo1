@@ -6445,15 +6445,58 @@ const ServiceDue = () => {
                       <td className="p-3 text-sm text-gray-600">
                         {service.vehicle_reg_no || 'N/A'}
                       </td>
-                      <td className="p-3 text-sm text-gray-600">
-                        {service.base_date ? 
-                          new Date(service.base_date).toLocaleDateString() : 
-                          'N/A'
-                        }
-                        <br />
-                        <span className="text-xs text-gray-400">
-                          {service.last_service_date ? 'Last Service' : 'Purchase Date'}
-                        </span>
+                      <td className="p-3 text-sm">
+                        {editingBaseDateId === service.id ? (
+                          <div className="flex flex-col gap-1">
+                            <Input
+                              type="date"
+                              value={editBaseDateValue}
+                              onChange={(e) => setEditBaseDateValue(e.target.value)}
+                              className="w-36 text-sm"
+                            />
+                            <div className="flex gap-1">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleSaveBaseDate(service)}
+                                className="text-green-600 hover:bg-green-50 px-2 py-1 h-7"
+                              >
+                                <Check className="w-3 h-3" />
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={handleCancelEditBaseDate}
+                                className="text-red-600 hover:bg-red-50 px-2 py-1 h-7"
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div 
+                            className="cursor-pointer hover:bg-gray-100 rounded p-1 -m-1 group"
+                            onClick={() => handleEditBaseDate(service)}
+                            title="Click to edit base date"
+                          >
+                            <div className="flex items-center gap-1">
+                              <span className={baseDateOverrides[service.id] ? 'text-purple-600 font-medium' : ''}>
+                                {service.base_date ? 
+                                  new Date(service.base_date).toLocaleDateString('en-IN') : 
+                                  'N/A'
+                                }
+                              </span>
+                              <Edit2 className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                            <span className="text-xs text-gray-400">
+                              {baseDateOverrides[service.id] ? (
+                                <span className="text-purple-500">Custom Date</span>
+                              ) : (
+                                service.last_service_date ? 'Last Service' : 'Purchase Date'
+                              )}
+                            </span>
+                          </div>
+                        )}
                       </td>
                       <td className="p-3 text-sm">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
