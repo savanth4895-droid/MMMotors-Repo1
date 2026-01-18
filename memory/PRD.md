@@ -136,6 +136,7 @@ Files modified:
 - `/app/test_reports/iteration_3.json` - Service Number and KMs Driven in Job Card list, view, and edit
 - `/app/test_reports/iteration_4.json` - Service Due delete and bulk delete functionality
 - `/app/test_reports/iteration_5.json` - Editable Base Date in Service Due Schedule
+- `/app/test_reports/iteration_6.json` - Editable Service Date in Job Card Details modal
 - `/app/tests/test_job_card_new_fields.py` - Backend API tests for job card fields
 - `/app/tests/test_service_due_delete.py` - Backend API tests for service due delete
 - `/app/tests/test_service_due_base_date.py` - Backend API tests for base date editing
