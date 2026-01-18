@@ -6055,6 +6055,78 @@ const ServiceDue = () => {
     setFilteredServices(filtered);
   };
 
+  const handleEditBaseDate = (service) => {
+    setEditingBaseDateId(service.id);
+    // Format date for input (YYYY-MM-DD)
+    const currentDate = baseDateOverrides[service.id] 
+      ? new Date(baseDateOverrides[service.id])
+      : new Date(service.base_date);
+    setEditBaseDateValue(currentDate.toISOString().split('T')[0]);
+  };
+
+  const handleSaveBaseDate = async (service) => {
+    if (!editBaseDateValue) {
+      toast.error('Please select a date');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      await axios.post(`${API}/service-due-base-date`, {
+        service_due_key: service.id,
+        custom_base_date: new Date(editBaseDateValue).toISOString(),
+        notes: 'Manually updated'
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Update local state immediately
+      const newBaseDate = new Date(editBaseDateValue);
+      setBaseDateOverrides(prev => ({
+        ...prev,
+        [service.id]: newBaseDate.toISOString()
+      }));
+      
+      // Recalculate the due services with the new base date
+      setDueServices(prev => prev.map(s => {
+        if (s.id === service.id) {
+          const dueDate = new Date(newBaseDate);
+          // Apply the same logic: 90 days for regular service, 30 days for first service
+          if (s.last_service_date) {
+            dueDate.setDate(newBaseDate.getDate() + 90);
+          } else {
+            dueDate.setDate(newBaseDate.getDate() + 30);
+          }
+          const today = new Date();
+          const daysDifference = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+          
+          return {
+            ...s,
+            base_date: newBaseDate,
+            due_date: dueDate,
+            days_until_due: daysDifference,
+            is_overdue: daysDifference < 0,
+            is_due_soon: daysDifference >= 0 && daysDifference <= 7
+          };
+        }
+        return s;
+      }));
+      
+      setEditingBaseDateId(null);
+      setEditBaseDateValue('');
+      toast.success('Base date updated successfully');
+      
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update base date');
+    }
+  };
+
+  const handleCancelEditBaseDate = () => {
+    setEditingBaseDateId(null);
+    setEditBaseDateValue('');
+  };
+
   const handleFilterClick = (filterType) => {
     setActiveFilter(filterType);
     // Clear search when changing filters for better UX
