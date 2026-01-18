@@ -681,6 +681,65 @@ async def restore_service_due(key: str, current_user: User = Depends(get_current
         raise HTTPException(status_code=404, detail="Dismissed record not found")
     return {"message": "Service due record restored successfully"}
 
+# Service Due Base Date Override endpoints
+@api_router.get("/service-due-base-date")
+async def get_base_date_overrides(current_user: User = Depends(get_current_user)):
+    """Get all base date overrides"""
+    overrides = await db.service_due_base_date_overrides.find({}, {"_id": 0}).to_list(10000)
+    return overrides
+
+@api_router.post("/service-due-base-date")
+async def set_base_date_override(data: dict, current_user: User = Depends(get_current_user)):
+    """Set or update a base date override for a service due record"""
+    service_due_key = data.get("service_due_key")
+    custom_base_date = data.get("custom_base_date")
+    
+    if not service_due_key or not custom_base_date:
+        raise HTTPException(status_code=400, detail="service_due_key and custom_base_date are required")
+    
+    # Parse the date
+    try:
+        if isinstance(custom_base_date, str):
+            parsed_date = datetime.fromisoformat(custom_base_date.replace('Z', '+00:00'))
+        else:
+            parsed_date = custom_base_date
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid date format: {str(e)}")
+    
+    # Check if override already exists
+    existing = await db.service_due_base_date_overrides.find_one({"service_due_key": service_due_key})
+    
+    if existing:
+        # Update existing override
+        await db.service_due_base_date_overrides.update_one(
+            {"service_due_key": service_due_key},
+            {"$set": {
+                "custom_base_date": parsed_date,
+                "updated_by": current_user.id,
+                "updated_at": datetime.now(timezone.utc),
+                "notes": data.get("notes")
+            }}
+        )
+        return {"message": "Base date override updated successfully", "service_due_key": service_due_key}
+    else:
+        # Create new override
+        override = ServiceDueBaseDateOverride(
+            service_due_key=service_due_key,
+            custom_base_date=parsed_date,
+            updated_by=current_user.id,
+            notes=data.get("notes")
+        )
+        await db.service_due_base_date_overrides.insert_one(override.dict())
+        return {"message": "Base date override created successfully", "id": override.id}
+
+@api_router.delete("/service-due-base-date/{key}")
+async def delete_base_date_override(key: str, current_user: User = Depends(get_current_user)):
+    """Delete a base date override (revert to calculated date)"""
+    result = await db.service_due_base_date_overrides.delete_one({"service_due_key": key})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Base date override not found")
+    return {"message": "Base date override removed successfully"}
+
 # Authentication endpoints
 @api_router.post("/auth/register")
 async def register_user(user_data: UserCreate):
