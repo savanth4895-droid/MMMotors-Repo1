@@ -69,6 +69,12 @@ A full-stack application for managing a vehicle service business including:
    - Due Date and Status automatically recalculate on change
    - Custom dates shown in purple with "Custom Date" label
 
+5. **Editable Service Date in Job Card Details** - Service Date in Job Card modal is now editable
+   - Click on Service Date in Job Card Details modal to edit
+   - Date picker with save/cancel buttons for confirmation
+   - Updates immediately in UI and persists to database
+   - File: `/app/frontend/src/components/Services.js`
+
 **Implementation details:**
 - **New Job Card form**: Both fields added (Service Details & Vehicle Information sections)
 - **Job Cards table**: Service No. and KMs Driven columns added (replaced Vehicle Year)
