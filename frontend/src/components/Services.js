@@ -2526,7 +2526,44 @@ const JobCards = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><strong>Job Card ID:</strong> {selectedJobCard.job_card_id}</div>
                     <div><strong>Service Number:</strong> <span className={selectedJobCard.service_number ? 'text-purple-600 font-medium' : 'text-gray-400'}>{selectedJobCard.service_number || 'Not assigned'}</span></div>
-                    <div><strong>Service Date:</strong> {new Date(selectedJobCard.service_date).toLocaleDateString('en-IN')}</div>
+                    <div>
+                      <strong>Service Date:</strong>{' '}
+                      {editingServiceDate ? (
+                        <span className="inline-flex items-center gap-2">
+                          <Input
+                            type="date"
+                            value={editServiceDateValue}
+                            onChange={(e) => setEditServiceDateValue(e.target.value)}
+                            className="w-40 h-8 text-sm inline-block"
+                          />
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={handleSaveServiceDate}
+                            className="text-green-600 hover:bg-green-50 px-2 py-1 h-7"
+                          >
+                            <Check className="w-3 h-3" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={handleCancelServiceDateEdit}
+                            className="text-red-600 hover:bg-red-50 px-2 py-1 h-7"
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </span>
+                      ) : (
+                        <span 
+                          className="cursor-pointer hover:bg-gray-100 rounded px-1 -mx-1 inline-flex items-center gap-1 group"
+                          onClick={handleEditServiceDate}
+                          title="Click to edit service date"
+                        >
+                          {new Date(selectedJobCard.service_date).toLocaleDateString('en-IN')}
+                          <Edit2 className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </span>
+                      )}
+                    </div>
                     <div><strong>Service Type:</strong> {selectedJobCard.service_type?.replace('_', ' ')}</div>
                     <div><strong>Status:</strong> {getStatusBadge(selectedJobCard.status)}</div>
                     {selectedJobCard.completion_date && (
