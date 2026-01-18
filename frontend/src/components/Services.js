@@ -34,7 +34,9 @@ import {
   X,
   Car,
   User,
-  IndianRupee
+  IndianRupee,
+  Check,
+  Edit2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
