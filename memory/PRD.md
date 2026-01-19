@@ -75,6 +75,13 @@ A full-stack application for managing a vehicle service business including:
    - Updates immediately in UI and persists to database
    - File: `/app/frontend/src/components/Services.js`
 
+6. **Enhanced Edit Job Card Modal** - All fields from Job Card Details now available in Edit modal
+   - Organized in 3 sections: Customer Information, Vehicle Information, Service Details
+   - Vehicle Information: Registration Number, Brand, Model, Year, Kilometers Driven
+   - Service Details: Service Number, Service Date, Service Type, Amount, Description
+   - Changes reflect immediately in the Job Cards table after save
+   - File: `/app/frontend/src/components/Services.js`
+
 **Implementation details:**
 - **New Job Card form**: Both fields added (Service Details & Vehicle Information sections)
 - **Job Cards table**: Service No. and KMs Driven columns added (replaced Vehicle Year)
