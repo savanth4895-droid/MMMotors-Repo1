@@ -1933,7 +1933,11 @@ const JobCards = () => {
     setEditFormData({
       customer_id: customers.find(c => c.name === jobCard.customer_name)?.id || '',
       vehicle_number: jobCard.vehicle_reg_no,
+      vehicle_brand: jobCard.vehicle_brand || '',
+      vehicle_model: jobCard.vehicle_model || '',
+      vehicle_year: jobCard.vehicle_year || '',
       service_type: jobCard.service_type,
+      service_date: jobCard.service_date ? new Date(jobCard.service_date).toISOString().split('T')[0] : '',
       description: jobCard.complaint,
       amount: jobCard.amount,
       service_number: jobCard.service_number || '',
