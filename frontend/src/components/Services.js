@@ -1951,7 +1951,12 @@ const JobCards = () => {
     
     try {
       setLoading(true);
-      await axios.put(`${API}/services/${editingJobCard.id}`, editFormData);
+      const updateData = {
+        ...editFormData,
+        service_date: editFormData.service_date ? new Date(editFormData.service_date).toISOString() : null,
+        kms_driven: editFormData.kms_driven ? parseInt(editFormData.kms_driven) : null
+      };
+      await axios.put(`${API}/services/${editingJobCard.id}`, updateData);
       toast.success('Job card updated successfully!');
       setShowEditModal(false);
       setEditingJobCard(null);
