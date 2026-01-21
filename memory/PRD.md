@@ -90,6 +90,17 @@ A full-stack application for managing a vehicle service business including:
    - Backend `ServiceCreate` model updated to accept service_date
    - File: `/app/frontend/src/components/Services.js`, `/app/backend/server.py`
 
+8. **Comprehensive Error Handling & Loading States (P2)** - Enhanced UX across all tables
+   - **New UI Components**: Created `/app/frontend/src/components/ui/loading.jsx`
+     - `LoadingSpinner` - Animated spinner with size variants
+     - `TableSkeleton` - Animated table skeleton for loading states
+     - `PageLoader` - Full page loading state
+     - `EmptyState` - Friendly empty state with icon, title, description
+     - `ErrorState` - Error state with retry button
+   - **Tables with loading skeletons**: Job Cards, View Invoices, Customers, Service Due
+   - **Buttons with loading spinners**: Save Registration, Generate Invoice, Create Job Card, Save Bill
+   - File: `/app/frontend/src/components/ui/loading.jsx`, `Services.js`, `Sales.js`
+
 **Implementation details:**
 - **New Job Card form**: Both fields added (Service Details & Vehicle Information sections)
 - **Job Cards table**: Service No. and KMs Driven columns added (replaced Vehicle Year)
