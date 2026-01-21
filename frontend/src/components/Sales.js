@@ -3074,10 +3074,19 @@ const ViewInvoices = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredInvoices.length === 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan="8" className="p-0">
+                      <TableSkeleton rows={5} columns={8} />
+                    </td>
+                  </tr>
+                ) : filteredInvoices.length === 0 ? (
                   <tr>
                     <td colSpan="8" className="p-8 text-center text-gray-500">
-                      {searchTerm ? 'No invoices found matching your search' : 'No invoices found'}
+                      <EmptyState 
+                        title={searchTerm ? 'No invoices found' : 'No invoices yet'}
+                        description={searchTerm ? 'Try adjusting your search terms' : 'Create a new invoice to get started'}
+                      />
                     </td>
                   </tr>
                 ) : (
