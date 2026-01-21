@@ -82,6 +82,14 @@ A full-stack application for managing a vehicle service business including:
    - Changes reflect immediately in the Job Cards table after save
    - File: `/app/frontend/src/components/Services.js`
 
+7. **Service Date Field in All Job Card Views** - Service Date now available everywhere
+   - **New Job Card form**: Service Date field with today's date as default
+   - **Job Cards table**: Service Date column after Service No.
+   - **Edit Job Card modal**: Service Date is editable
+   - **CSV Export**: Service Date included
+   - Backend `ServiceCreate` model updated to accept service_date
+   - File: `/app/frontend/src/components/Services.js`, `/app/backend/server.py`
+
 **Implementation details:**
 - **New Job Card form**: Both fields added (Service Details & Vehicle Information sections)
 - **Job Cards table**: Service No. and KMs Driven columns added (replaced Vehicle Year)
