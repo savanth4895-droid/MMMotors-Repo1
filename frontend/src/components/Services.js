@@ -6617,14 +6617,17 @@ const ServiceDue = () => {
               <tbody className="divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan="8" className="p-6 text-center text-gray-500">
-                      Loading service due information...
+                    <td colSpan="8" className="p-0">
+                      <TableSkeleton rows={5} columns={8} />
                     </td>
                   </tr>
                 ) : filteredServices.length === 0 ? (
                   <tr>
                     <td colSpan="8" className="p-6 text-center text-gray-500">
-                      No services due found
+                      <EmptyState 
+                        title="No services due"
+                        description="All vehicles are up to date with their service schedules"
+                      />
                     </td>
                   </tr>
                 ) : (
