@@ -1441,7 +1441,12 @@ const CreateInvoice = () => {
 
           <div className="flex gap-4">
             <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? 'Generating Invoice...' : 'Generate Invoice'}
+              {loading ? (
+                <>
+                  <LoadingSpinner size="sm" className="mr-2" />
+                  Generating Invoice...
+                </>
+              ) : 'Generate Invoice'}
             </Button>
             <Button type="button" variant="outline" onClick={resetForm}>
               Reset Form
