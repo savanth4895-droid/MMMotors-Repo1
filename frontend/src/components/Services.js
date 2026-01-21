@@ -2402,6 +2402,7 @@ const JobCards = () => {
                   </th>
                   <th className="text-left p-3 font-semibold">Job Card ID</th>
                   <th className="text-left p-3 font-semibold">Service No.</th>
+                  <th className="text-left p-3 font-semibold">Service Date</th>
                   <th className="text-left p-3 font-semibold">Customer Name</th>
                   <th className="text-left p-3 font-semibold">Phone Number</th>
                   <th className="text-left p-3 font-semibold">Vehicle Brand</th>
@@ -2416,7 +2417,7 @@ const JobCards = () => {
               <tbody>
                 {filteredJobCards.length === 0 ? (
                   <tr>
-                    <td colSpan="13" className="p-8 text-center text-gray-500">
+                    <td colSpan="14" className="p-8 text-center text-gray-500">
                       {searchTerm ? 'No job cards found matching your search' : 'No job cards found'}
                     </td>
                   </tr>
