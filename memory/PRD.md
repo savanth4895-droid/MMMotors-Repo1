@@ -151,10 +151,10 @@ Files modified:
 - Recommended: Break into smaller, single-responsibility components
 
 ## Backlog / Future Tasks
-1. **(P1)** Refactor `Sales.js` into smaller components (ViewInvoices, CreateInvoice, EditInvoiceModal, etc.)
-2. **(P1)** Refactor `Services.js` into smaller components (JobCards, Registrations, ServiceBilling, etc.)
-3. **(P2)** Add comprehensive error handling and loading states across all forms
-4. **(P2)** Add form validation feedback
+1. **(P1)** Refactor `Sales.js` into smaller components (module structure created, full extraction pending)
+2. **(P1)** Refactor `Services.js` into smaller components (module structure created, full extraction pending)
+3. **(P3)** Add form validation feedback with inline error messages
+4. **(P3)** Add network error handling with retry functionality
 
 ## Test Reports
 - `/app/test_reports/iteration_1.json` - Invoice edit UI refresh bug fix verification
