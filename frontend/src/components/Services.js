@@ -2417,10 +2417,19 @@ const JobCards = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredJobCards.length === 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan="14" className="p-0">
+                      <TableSkeleton rows={5} columns={14} />
+                    </td>
+                  </tr>
+                ) : filteredJobCards.length === 0 ? (
                   <tr>
                     <td colSpan="14" className="p-8 text-center text-gray-500">
-                      {searchTerm ? 'No job cards found matching your search' : 'No job cards found'}
+                      <EmptyState 
+                        title={searchTerm ? 'No job cards found' : 'No job cards yet'}
+                        description={searchTerm ? 'Try adjusting your search terms' : 'Create a new job card to get started'}
+                      />
                     </td>
                   </tr>
                 ) : (
