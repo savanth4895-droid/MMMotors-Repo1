@@ -1540,6 +1540,11 @@ async def create_service(service_data: ServiceCreate, current_user: User = Depen
     service_dict = service_data.dict()
     service_dict['job_card_number'] = job_card_number
     service_dict['created_by'] = current_user.id
+    
+    # If service_date is provided, use it; otherwise default will be applied by Service model
+    if service_dict.get('service_date') is None:
+        service_dict['service_date'] = datetime.now(timezone.utc)
+    
     service = Service(**service_dict)
     
     await db.services.insert_one(service.dict())
