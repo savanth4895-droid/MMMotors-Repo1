@@ -2192,10 +2192,11 @@ const JobCards = () => {
   const exportJobCards = () => {
     try {
       const csvContent = [
-        ['Job Card ID', 'Service Number', 'Customer Name', 'Phone Number', 'Vehicle Brand', 'Vehicle Model', 'KMs Driven', 'Vehicle Reg No', 'Complaint', 'Status', 'Amount'].join(','),
+        ['Job Card ID', 'Service Number', 'Service Date', 'Customer Name', 'Phone Number', 'Vehicle Brand', 'Vehicle Model', 'KMs Driven', 'Vehicle Reg No', 'Complaint', 'Status', 'Amount'].join(','),
         ...filteredJobCards.map(job => [
           job.job_card_id || '',
           job.service_number || '',
+          job.service_date ? new Date(job.service_date).toLocaleDateString('en-IN') : '',
           job.customer_name || '',
           job.phone_number || '',
           job.vehicle_brand || '',
