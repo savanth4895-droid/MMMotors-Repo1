@@ -6239,6 +6239,45 @@ const ServiceDue = () => {
     }
   };
 
+  // Apply base date overrides to due services when overrides are loaded
+  useEffect(() => {
+    if (Object.keys(baseDateOverrides).length > 0 && dueServices.length > 0) {
+      const today = new Date();
+      const updatedServices = dueServices.map(service => {
+        if (baseDateOverrides[service.id]) {
+          const newBaseDate = new Date(baseDateOverrides[service.id]);
+          const dueDate = new Date(newBaseDate);
+          // Apply the same logic: 90 days for regular service, 30 days for first service
+          if (service.last_service_date) {
+            dueDate.setDate(newBaseDate.getDate() + 90);
+          } else {
+            dueDate.setDate(newBaseDate.getDate() + 30);
+          }
+          const daysDifference = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+          
+          return {
+            ...service,
+            base_date: newBaseDate,
+            due_date: dueDate,
+            days_until_due: daysDifference,
+            is_overdue: daysDifference < 0,
+            is_due_soon: daysDifference >= 0 && daysDifference <= 7
+          };
+        }
+        return service;
+      });
+      
+      // Only update if there are actual changes
+      const hasChanges = updatedServices.some((s, i) => 
+        s.base_date !== dueServices[i].base_date
+      );
+      
+      if (hasChanges) {
+        setDueServices(updatedServices);
+      }
+    }
+  }, [baseDateOverrides]);
+
   const filterServices = () => {
     // First, filter out dismissed records
     let filtered = dueServices.filter(service => !dismissedKeys.has(service.id));
