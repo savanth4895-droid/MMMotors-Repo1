@@ -1516,7 +1516,8 @@ const JobCards = () => {
     complaint: '',
     estimated_amount: '',
     service_number: '',
-    kms_driven: ''
+    kms_driven: '',
+    service_date: new Date().toISOString().split('T')[0] // Default to today
   });
   const [savingJobCard, setSavingJobCard] = useState(false);
   
