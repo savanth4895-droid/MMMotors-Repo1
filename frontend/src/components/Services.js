@@ -2443,6 +2443,11 @@ const JobCards = () => {
                           </span>
                         </td>
                         <td className="p-3">
+                          <span className="text-gray-600">
+                            {jobCard.service_date ? new Date(jobCard.service_date).toLocaleDateString('en-IN') : '-'}
+                          </span>
+                        </td>
+                        <td className="p-3">
                           <div className="font-medium text-gray-900">{jobCard.customer_name}</div>
                         </td>
                         <td className="p-3 text-gray-600">{jobCard.phone_number}</td>
