@@ -4591,10 +4591,19 @@ const CustomersManagement = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredCustomers.length === 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan="6" className="p-0">
+                      <TableSkeleton rows={5} columns={6} />
+                    </td>
+                  </tr>
+                ) : filteredCustomers.length === 0 ? (
                   <tr>
                     <td colSpan="6" className="p-8 text-center text-gray-500">
-                      {searchTerm ? 'No customers found matching your search' : 'No customers found'}
+                      <EmptyState 
+                        title={searchTerm ? 'No customers found' : 'No customers yet'}
+                        description={searchTerm ? 'Try adjusting your search terms' : 'Add a customer to get started'}
+                      />
                     </td>
                   </tr>
                 ) : (
