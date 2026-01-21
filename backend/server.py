@@ -301,6 +301,7 @@ class ServiceCreate(BaseModel):
     amount: float
     service_number: Optional[str] = None
     kms_driven: Optional[int] = None
+    service_date: Optional[datetime] = None  # Service date (defaults to now if not provided)
 
 class ServiceUpdate(BaseModel):
     customer_id: str
