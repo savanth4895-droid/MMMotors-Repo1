@@ -2867,6 +2867,15 @@ const JobCards = () => {
                       />
                     </div>
                     <div>
+                      <Label htmlFor="service_date">Service Date</Label>
+                      <Input
+                        id="service_date"
+                        type="date"
+                        value={newJobCardData.service_date}
+                        onChange={(e) => setNewJobCardData({...newJobCardData, service_date: e.target.value})}
+                      />
+                    </div>
+                    <div>
                       <Label htmlFor="service_type">Service Type *</Label>
                       <Select 
                         value={newJobCardData.service_type} 
