@@ -1,0 +1,75 @@
+{
+  "summary": "Bug fix verification PASSED: Service Due Schedule table changes (base date edits and dismissed records) now persist correctly after page refresh. Tested both scenarios successfully.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/frontend/src/components/Services.js"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Bug fix correctly implemented: Added useEffect (lines 6243-6279) that applies stored baseDateOverrides to dueServices after they are loaded",
+    "The fix properly recalculates due dates when base date overrides are applied (90 days for regular service, 30 days for first service)",
+    "Dismissed records are correctly filtered out using dismissedKeys Set in filterServices function (line 6283)",
+    "Both baseDateOverrides and dismissedKeys are fetched on component mount via fetchBaseDateOverrides() and fetchDismissedRecords()"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend only testing)",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "username": "admin",
+    "password": "admin123"
+  },
+  "seed_data_creation": "Modified Lakshmappa's base date from 11/1/2025 to 15/2/2025; Dismissed Rakshitha N (MD626AK3XR2F09885) record",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Bug fix for Service Due Schedule persistence is verified and working. Base date edits show 'Custom Date' indicator and persist after refresh. Dismissed records stay hidden after refresh. Total tracked count correctly reflects dismissed records (199 instead of 200).",
+  "test_details": {
+    "bug_description": "Changes made in Service Due Schedule table (base date edits, dismissed records) were reverting back to original after page refresh",
+    "fix_verification": {
+      "base_date_edit_persistence": {
+        "status": "PASSED",
+        "test_record": "Lakshmappa - KA07EL3060",
+        "original_base_date": "11/1/2025 (Last Service)",
+        "new_base_date": "15/2/2025 (Custom Date)",
+        "original_due_date": "4/11/2025",
+        "new_due_date": "5/16/2025",
+        "persisted_after_refresh": true,
+        "notes": "Base date change persisted correctly. Due date recalculated to 90 days from new base date. 'Custom Date' indicator displayed."
+      },
+      "dismissed_record_persistence": {
+        "status": "PASSED",
+        "test_record": "Rakshitha N - MD626AK3XR2F09885",
+        "total_before_dismiss": 200,
+        "total_after_dismiss": 199,
+        "persisted_after_refresh": true,
+        "notes": "Dismissed record stays hidden after page refresh. Total Tracked count correctly shows 199."
+      }
+    },
+    "api_calls_verified": [
+      "POST /api/service-due-base-date - saves custom base date",
+      "GET /api/service-due-base-date - fetches stored base date overrides",
+      "POST /api/dismissed-service-due - saves dismissed record",
+      "GET /api/dismissed-service-due - fetches dismissed records"
+    ],
+    "screenshots_taken": [
+      "01_service_due_initial.png - Initial Service Due page",
+      "02_service_due_loaded.png - Table loaded with 200 records",
+      "06_edit_mode_activated.png - Date input shown for editing",
+      "07_date_entered.png - New date entered (02/15/2025)",
+      "08_after_save.png - Success toast 'Base date updated successfully'",
+      "09_after_refresh.png - Base date persisted after refresh",
+      "10_after_dismiss.png - Success toast 'Service due record removed from view'",
+      "11_final_state.png - Dismissed record hidden, count at 199",
+      "12_final_verification.png - Final verification showing persistence"
+    ]
+  }
+}
