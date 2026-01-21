@@ -697,7 +697,12 @@ const NewService = () => {
               disabled={loading} 
               className="flex-1 sm:flex-none sm:px-8"
             >
-              {loading ? 'Saving Registration...' : 'Save Registration'}
+              {loading ? (
+                <>
+                  <LoadingSpinner size="sm" className="mr-2" />
+                  Saving Registration...
+                </>
+              ) : 'Save Registration'}
             </Button>
             <Button 
               type="button" 
