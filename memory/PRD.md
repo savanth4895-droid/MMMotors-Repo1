@@ -101,6 +101,12 @@ A full-stack application for managing a vehicle service business including:
    - **Buttons with loading spinners**: Save Registration, Generate Invoice, Create Job Card, Save Bill
    - File: `/app/frontend/src/components/ui/loading.jsx`, `Services.js`, `Sales.js`
 
+9. **Bug Fix: Service Due Schedule Persistence** - Fixed data not persisting after refresh
+   - Base date edits now persist after page refresh
+   - Dismissed records stay hidden after page refresh
+   - Added useEffect to apply stored baseDateOverrides to dueServices on load
+   - File: `/app/frontend/src/components/Services.js` (lines 6243-6279)
+
 **Implementation details:**
 - **New Job Card form**: Both fields added (Service Details & Vehicle Information sections)
 - **Job Cards table**: Service No. and KMs Driven columns added (replaced Vehicle Year)
