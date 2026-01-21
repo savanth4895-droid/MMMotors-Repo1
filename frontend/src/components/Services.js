@@ -4468,8 +4468,17 @@ const CreateBillContent = ({
             Print Bill
           </Button>
           <Button onClick={handleSaveBill} disabled={loading} className="flex items-center gap-2">
-            <Calculator className="w-4 h-4" />
-            {loading ? 'Saving...' : 'Save Bill'}
+            {loading ? (
+              <>
+                <LoadingSpinner size="sm" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Calculator className="w-4 h-4" />
+                Save Bill
+              </>
+            )}
           </Button>
         </div>
       </div>
