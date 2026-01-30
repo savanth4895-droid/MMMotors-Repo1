@@ -178,6 +178,7 @@ class VehicleCreate(BaseModel):
     key_number: Optional[str] = None  # Standardized from key_no
     inbound_location: Optional[str] = None
     page_number: Optional[str] = None
+    date_received: Optional[datetime] = None
 
 class VehicleUpdate(BaseModel):
     brand: Optional[str] = None
