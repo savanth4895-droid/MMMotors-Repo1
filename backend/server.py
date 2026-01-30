@@ -152,7 +152,7 @@ class CustomerCreate(BaseModel):
 
 class Vehicle(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    brand: Optional[str] = None  # TVS, BAJAJ, HERO, HONDA, TRIUMPH, KTM, SUZUKI, APRILIA, YAMAHA, PIAGGIO
+    brand: Optional[str] = None  # TVS, BAJAJ, HERO, HONDA, TRIUMPH, KTM, SUZUKI, APRILIA, YAMAHA, PIAGGIO, ROYAL ENFIELD
     model: Optional[str] = None
     chassis_number: Optional[str] = None  # Standardized from chassis_no
     engine_number: Optional[str] = None  # Standardized from engine_no
@@ -1046,7 +1046,7 @@ async def get_vehicles(brand: Optional[str] = None, status: Optional[VehicleStat
 
 @api_router.get("/vehicles/brands")
 async def get_vehicle_brands(current_user: User = Depends(get_current_user)):
-    brands = ["TVS", "BAJAJ", "HERO", "HONDA", "TRIUMPH", "KTM", "SUZUKI", "APRILIA", "YAMAHA", "PIAGGIO"]
+    brands = ["TVS", "BAJAJ", "HERO", "HONDA", "TRIUMPH", "KTM", "SUZUKI", "APRILIA", "YAMAHA", "PIAGGIO", "ROYAL ENFIELD"]
     return brands
 
 @api_router.put("/vehicles/{vehicle_id}", response_model=Vehicle)
@@ -2534,7 +2534,7 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
         'sales_created': 0
     }
     
-    valid_brands = ["TVS", "BAJAJ", "HERO", "HONDA", "TRIUMPH", "KTM", "SUZUKI", "APRILIA", "YAMAHA", "PIAGGIO"]
+    valid_brands = ["TVS", "BAJAJ", "HERO", "HONDA", "TRIUMPH", "KTM", "SUZUKI", "APRILIA", "YAMAHA", "PIAGGIO", "ROYAL ENFIELD"]
     
     for idx, row in enumerate(data):
         try:
