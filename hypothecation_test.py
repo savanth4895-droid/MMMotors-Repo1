@@ -5,7 +5,7 @@ from datetime import datetime
 import uuid
 
 class HypothecationTester:
-    def __init__(self, base_url="https://autofix-system-9.preview.emergentagent.com/api"):
+    def __init__(self, base_url="https://servicebay-app.preview.emergentagent.com/api"):
         self.base_url = base_url
         self.token = None
         self.tests_run = 0

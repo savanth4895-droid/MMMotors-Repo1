@@ -53,7 +53,7 @@
 - **Test Date**: December 28, 2024
 - **Test Type**: Backend API Testing
 - **Authentication**: admin/admin123
-- **Backend URL**: https://autofix-system-9.preview.emergentagent.com/api
+- **Backend URL**: https://servicebay-app.preview.emergentagent.com/api
 - **Details**: 
   - **Authentication**: Successfully authenticated with admin/admin123 credentials
   - **Sales Data Structure Check**: GET /api/sales endpoint working correctly with 389 existing sales records
@@ -203,7 +203,7 @@ The View Invoices vehicle details functionality is working correctly at the back
 - Network requests complete successfully
 
 ### Test Environment
-- **Frontend URL**: https://autofix-system-9.preview.emergentagent.com
+- **Frontend URL**: https://servicebay-app.preview.emergentagent.com
 - **Login**: Successfully authenticated with admin/admin123
 - **Navigation**: Services > Job Cards working correctly
 - **Browser**: Playwright automation (Desktop 1920x1080)
@@ -220,7 +220,7 @@ The View Invoices vehicle details functionality is working correctly at the back
 - **Test Date**: December 15, 2024
 - **Test Type**: Backend API Testing
 - **Authentication**: admin/admin123
-- **Backend URL**: https://autofix-system-9.preview.emergentagent.com/api
+- **Backend URL**: https://servicebay-app.preview.emergentagent.com/api
 
 ### API Endpoints Tested
 1. **POST /api/auth/login** - Authentication ✅
@@ -252,7 +252,7 @@ The Registration vs Job Card separation feature is working correctly at the back
 - **Test Date**: December 19, 2024
 - **Test Type**: Frontend UI Testing - Service Bills Page
 - **Authentication**: admin/admin123
-- **Frontend URL**: https://autofix-system-9.preview.emergentagent.com
+- **Frontend URL**: https://servicebay-app.preview.emergentagent.com
 - **Browser**: Playwright automation (Desktop 1920x1080)
 
 ### Test Objective
@@ -306,7 +306,7 @@ Verify that the Service Bills page no longer shows job cards (JOB-*) and only di
 - **Test Date**: December 19, 2024
 - **Test Type**: Code Analysis & Frontend UI Testing
 - **Authentication**: admin/admin123
-- **Frontend URL**: https://autofix-system-9.preview.emergentagent.com
+- **Frontend URL**: https://servicebay-app.preview.emergentagent.com
 - **Browser**: Playwright automation (Desktop 1920x1080)
 
 ### Test Objective
@@ -368,7 +368,7 @@ The ViewBillsContent component in Services.js (lines 5084-5133) correctly implem
 - **Test Date**: December 19, 2024
 - **Test Type**: Frontend UI Testing - Payment Status Toggle Feature
 - **Authentication**: admin/admin123
-- **Frontend URL**: https://autofix-system-9.preview.emergentagent.com
+- **Frontend URL**: https://servicebay-app.preview.emergentagent.com
 - **Browser**: Playwright automation (Desktop 1920x1080)
 
 ### Test Objective
@@ -451,7 +451,7 @@ The payment toggle feature is properly implemented in Services.js:
 - **Test Date**: December 19, 2024
 - **Test Type**: Frontend UI Testing - Payment Status Toggle Instant Update Verification
 - **Authentication**: admin/admin123
-- **Frontend URL**: https://autofix-system-9.preview.emergentagent.com
+- **Frontend URL**: https://servicebay-app.preview.emergentagent.com
 - **Browser**: Playwright automation (Desktop 1920x1080)
 
 ### Test Objective
@@ -518,7 +518,7 @@ The instant update functionality is properly implemented through:
 - **Test Date**: December 19, 2024
 - **Test Type**: Frontend UI Testing - Payment Status Toggle Error-Free Operation Verification
 - **Authentication**: admin/admin123
-- **Frontend URL**: https://autofix-system-9.preview.emergentagent.com
+- **Frontend URL**: https://servicebay-app.preview.emergentagent.com
 - **Browser**: Playwright automation (Desktop 1920x1080)
 
 ### Test Objective

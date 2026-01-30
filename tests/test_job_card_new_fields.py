@@ -6,7 +6,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://autofix-system-9.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://servicebay-app.preview.emergentagent.com')
 
 class TestJobCardNewFields:
     """Test the new service_number and kms_driven fields in Job Cards"""

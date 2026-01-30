@@ -7,7 +7,7 @@ import requests
 import os
 import uuid
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://autofix-system-9.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://servicebay-app.preview.emergentagent.com').rstrip('/')
 
 class TestServiceDueDelete:
     """Test dismissed service due endpoints"""
