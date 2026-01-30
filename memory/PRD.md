@@ -107,6 +107,17 @@ A full-stack application for managing a vehicle service business including:
    - Added useEffect to apply stored baseDateOverrides to dueServices on load
    - File: `/app/frontend/src/components/Services.js` (lines 6243-6279)
 
+10. **Bug Fix: Import Error with Float Values** - Fixed `'float' object has no attribute 'strip'` error
+    - Added `safe_str()` function to handle NaN, None, and float values from Excel/pandas
+    - Properly handles empty cells, numeric values, and string values
+    - Applied to `import_vehicles_data` and `import_customers_data` functions
+    - File: `/app/backend/server.py`
+
+11. **Added ROYAL ENFIELD Brand** - New brand available throughout the application
+    - Backend: Updated `valid_brands` arrays in server.py
+    - Frontend: Updated brand dropdowns in Sales.js, Services.js, VehicleStock.js
+    - Import: Accepts ROYAL ENFIELD in vehicle imports
+
 **Implementation details:**
 - **New Job Card form**: Both fields added (Service Details & Vehicle Information sections)
 - **Job Cards table**: Service No. and KMs Driven columns added (replaced Vehicle Year)
