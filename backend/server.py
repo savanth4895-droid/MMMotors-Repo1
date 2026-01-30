@@ -192,6 +192,7 @@ class VehicleUpdate(BaseModel):
     page_number: Optional[str] = None
     outbound_location: Optional[str] = None
     status: Optional[str] = None
+    date_received: Optional[datetime] = None
     date_returned: Optional[str] = None
 
 class Sale(BaseModel):
