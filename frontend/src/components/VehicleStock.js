@@ -298,6 +298,11 @@ const EditVehicleModal = ({ vehicle, isOpen, onClose, onUpdate }) => {
         status: editData.status
       };
 
+      // Add date_received if provided
+      if (editData.date_received) {
+        updateData.date_received = new Date(editData.date_received).toISOString();
+      }
+
       // Add return date if status is 'returned' and date is provided
       if (editData.status === 'returned' && editData.date_returned) {
         updateData.date_returned = editData.date_returned;
