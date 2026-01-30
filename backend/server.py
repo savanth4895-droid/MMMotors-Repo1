@@ -2538,22 +2538,22 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
     
     for idx, row in enumerate(data):
         try:
-            # Get fields with fallback values
-            brand = row.get('brand', '').upper().strip() or 'UNKNOWN'
+            # Get fields with fallback values - use safe_str to handle float/NaN values
+            brand = safe_str(row.get('brand', '')).upper() or 'UNKNOWN'
             if brand != 'UNKNOWN' and brand not in valid_brands:
                 brand = 'UNKNOWN'
             
             # Support both old and new field names for backward compatibility
-            chassis_number = (row.get('chassis_number', '').strip() or 
-                            row.get('chassis_no', '').strip())
-            engine_number = (row.get('engine_number', '').strip() or 
-                           row.get('engine_no', '').strip())
-            key_number = (row.get('key_number', '').strip() or 
-                        row.get('key_no', '').strip())
-            vehicle_number = row.get('vehicle_number', '').strip()
+            chassis_number = (safe_str(row.get('chassis_number', '')) or 
+                            safe_str(row.get('chassis_no', '')))
+            engine_number = (safe_str(row.get('engine_number', '')) or 
+                           safe_str(row.get('engine_no', '')))
+            key_number = (safe_str(row.get('key_number', '')) or 
+                        safe_str(row.get('key_no', '')))
+            vehicle_number = safe_str(row.get('vehicle_number', ''))
             
             # Handle status field with validation
-            status = row.get('status', '').strip().lower()
+            status = safe_str(row.get('status', '')).lower()
             valid_statuses = ['available', 'in_stock', 'sold', 'returned']
             if status not in valid_statuses:
                 status = 'available'
@@ -2568,14 +2568,14 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
             
             vehicle_data = VehicleCreate(
                 brand=brand,
-                model=row.get('model', '').strip() or 'Unknown Model',
+                model=safe_str(row.get('model', '')) or 'Unknown Model',
                 chassis_number=chassis_number or 'Unknown Chassis',
                 engine_number=engine_number or 'Unknown Engine',
-                color=row.get('color', '').strip() or 'Unknown Color',
+                color=safe_str(row.get('color', '')) or 'Unknown Color',
                 vehicle_number=vehicle_number or None,
                 key_number=key_number or 'Unknown Key',
-                inbound_location=row.get('inbound_location', '').strip() or 'Unknown Location',
-                page_number=row.get('page_number', '').strip() or None
+                inbound_location=safe_str(row.get('inbound_location', '')) or 'Unknown Location',
+                page_number=safe_str(row.get('page_number', '')) or None
             )
             
             # Create vehicle with proper status
@@ -2583,7 +2583,7 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
             vehicle_dict['status'] = status
             
             # Handle date_received field
-            date_received_str = row.get('date_received', '').strip()
+            date_received_str = safe_str(row.get('date_received', ''))
             if date_received_str:
                 try:
                     # Try to parse the date in various formats
@@ -2598,8 +2598,8 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
             vehicle = Vehicle(**vehicle_dict)
             
             # CROSS-REFERENCE: Check if customer mobile is provided
-            customer_mobile = (row.get('customer_mobile') or '').strip()
-            customer_name = (row.get('customer_name') or '').strip()
+            customer_mobile = safe_str(row.get('customer_mobile', ''))
+            customer_name = safe_str(row.get('customer_name', ''))
             customer_id = None
             
             if customer_mobile:
@@ -2614,8 +2614,8 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
             await db.vehicles.insert_one(vehicle.dict())
             
             # CROSS-REFERENCE: Create sales record if sale data is provided
-            sale_amount = (row.get('sale_amount') or '').strip()
-            payment_method = (row.get('payment_method') or '').strip()
+            sale_amount = safe_str(row.get('sale_amount', ''))
+            payment_method = safe_str(row.get('payment_method', ''))
             
             if sale_amount and customer_id:
                 try:
