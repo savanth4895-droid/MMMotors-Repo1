@@ -1017,7 +1017,12 @@ async def create_vehicle(vehicle_data: VehicleCreate, current_user: User = Depen
     if vehicle_data.chassis_number and await check_vehicle_duplicate(vehicle_data.chassis_number):
         raise HTTPException(status_code=400, detail=f"Vehicle with chassis number '{vehicle_data.chassis_number}' already exists")
     
-    vehicle = Vehicle(**vehicle_data.dict())
+    # Create vehicle dict and handle date_received
+    vehicle_dict = vehicle_data.dict()
+    if vehicle_dict.get('date_received') is None:
+        vehicle_dict['date_received'] = datetime.now(timezone.utc)
+    
+    vehicle = Vehicle(**vehicle_dict)
     await db.vehicles.insert_one(vehicle.dict())
     
     # Create activity notification
