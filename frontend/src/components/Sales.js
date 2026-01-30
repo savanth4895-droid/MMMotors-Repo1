@@ -366,7 +366,7 @@ const CreateInvoice = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
 
-  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO'];
+  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO', 'ROYAL ENFIELD'];
 
   // Vehicle search functionality
   const searchVehiclesByChassisNo = async (chassisQuery) => {
@@ -3883,7 +3883,7 @@ const CustomersManagement = () => {
     age: ''
   });
 
-  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO'];
+  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO', 'ROYAL ENFIELD'];
   const relations = ['father', 'mother', 'spouse', 'son', 'daughter', 'brother', 'sister', 'other'];
 
   useEffect(() => {

@@ -247,7 +247,7 @@ const EditVehicleModal = ({ vehicle, isOpen, onClose, onUpdate }) => {
   });
   const [loading, setLoading] = useState(false);
 
-  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO'];
+  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO', 'ROYAL ENFIELD'];
   const statusOptions = [
     { value: 'in_stock', label: 'In Stock' },
     { value: 'sold', label: 'Sold' },
@@ -830,7 +830,7 @@ const AddVehicle = () => {
   });
   const [loading, setLoading] = useState(false);
 
-  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO'];
+  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO', 'ROYAL ENFIELD'];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -998,7 +998,7 @@ const StockView = () => {
   const [sortBy, setSortBy] = useState('date_received');
   const [sortOrder, setSortOrder] = useState('desc');
 
-  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO'];
+  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO', 'ROYAL ENFIELD'];
 
   useEffect(() => {
     fetchVehicles();

@@ -244,7 +244,7 @@ const NewService = () => {
     };
   }, []);
 
-  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO'];
+  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO', 'ROYAL ENFIELD'];
 
   const handleInputChange = (field, value) => {
     setRegistrationData(prev => ({
@@ -1758,7 +1758,7 @@ const JobCards = () => {
   }, [currentPage, filteredJobCards, selectedIds, itemsPerPage]);
 
   const extractVehicleInfo = (description, vehicleNumber) => {
-    const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO'];
+    const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO', 'ROYAL ENFIELD'];
     let brand = 'N/A';
     let model = 'N/A';
     let year = 'N/A';
