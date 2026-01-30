@@ -98,7 +98,8 @@ const BrandOverview = () => {
     { name: 'SUZUKI', color: 'from-pink-500 to-pink-600' },
     { name: 'APRILIA', color: 'from-indigo-500 to-indigo-600' },
     { name: 'YAMAHA', color: 'from-teal-500 to-teal-600' },
-    { name: 'PIAGGIO', color: 'from-cyan-500 to-cyan-600' }
+    { name: 'PIAGGIO', color: 'from-cyan-500 to-cyan-600' },
+    { name: 'ROYAL ENFIELD', color: 'from-amber-500 to-amber-600' }
   ];
 
   useEffect(() => {
