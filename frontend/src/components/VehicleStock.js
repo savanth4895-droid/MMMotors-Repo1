@@ -974,6 +974,16 @@ const AddVehicle = () => {
                 onChange={(e) => setVehicleData({...vehicleData, page_number: e.target.value})}
               />
             </div>
+
+            <div>
+              <Label htmlFor="date_received">Date Received</Label>
+              <Input
+                id="date_received"
+                type="date"
+                value={vehicleData.date_received}
+                onChange={(e) => setVehicleData({...vehicleData, date_received: e.target.value})}
+              />
+            </div>
           </div>
 
           <Button type="submit" disabled={loading} className="w-full">
