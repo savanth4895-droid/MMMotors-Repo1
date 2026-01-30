@@ -827,7 +827,8 @@ const AddVehicle = () => {
     vehicle_number: '',
     key_number: '',
     inbound_location: '',
-    page_number: ''
+    page_number: '',
+    date_received: new Date().toISOString().split('T')[0]
   });
   const [loading, setLoading] = useState(false);
 
@@ -838,7 +839,12 @@ const AddVehicle = () => {
     setLoading(true);
 
     try {
-      await axios.post(`${API}/vehicles`, vehicleData);
+      // Convert date_received to ISO format for API
+      const submitData = {
+        ...vehicleData,
+        date_received: vehicleData.date_received ? new Date(vehicleData.date_received).toISOString() : null
+      };
+      await axios.post(`${API}/vehicles`, submitData);
       toast.success('Vehicle added successfully!');
       setVehicleData({
         brand: '',
@@ -849,7 +855,8 @@ const AddVehicle = () => {
         vehicle_number: '',
         key_number: '',
         inbound_location: '',
-        page_number: ''
+        page_number: '',
+        date_received: new Date().toISOString().split('T')[0]
       });
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to add vehicle');
