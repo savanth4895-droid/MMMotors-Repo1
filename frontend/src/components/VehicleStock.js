@@ -348,6 +348,16 @@ const EditVehicleModal = ({ vehicle, isOpen, onClose, onUpdate }) => {
             </div>
 
             <div>
+              <Label htmlFor="edit-date-received">Date Received</Label>
+              <Input
+                id="edit-date-received"
+                type="date"
+                value={editData.date_received}
+                onChange={(e) => setEditData({...editData, date_received: e.target.value})}
+              />
+            </div>
+
+            <div>
               <Label htmlFor="edit-model">Model</Label>
               <Input
                 id="edit-model"
