@@ -2261,18 +2261,18 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
     
     for idx, row in enumerate(data):
         try:
-            # Get phone number from either 'mobile' or 'phone' field
-            phone_number = row.get('mobile', '').strip() or row.get('phone', '').strip()
+            # Get phone number from either 'mobile' or 'phone' field - use safe_str
+            phone_number = safe_str(row.get('mobile', '')) or safe_str(row.get('phone', ''))
             
             # Get name and phone with fallbacks (no longer required)
-            name = row.get('name', '').strip()
+            name = safe_str(row.get('name', ''))
             if not name:
                 name = "Customer"
             if not phone_number:
                 phone_number = "0000000000"  # Default phone number
             
             # Get address with fallback to empty string if not provided
-            address = row.get('address', '').strip()
+            address = safe_str(row.get('address', ''))
             if not address:
                 address = "Address not provided"
             
@@ -2288,9 +2288,9 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
             customer_data = CustomerCreate(
                 name=name,
                 mobile=phone_number,
-                email=row.get('email', '').strip() or None,
+                email=safe_str(row.get('email', '')) or None,
                 address=address,
-                care_of=row.get('care_of', '').strip() or None
+                care_of=safe_str(row.get('care_of', '')) or None
             )
             
             customer = Customer(**customer_data.dict())
@@ -2305,42 +2305,42 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                 row.get('vehicle_no') or row.get('vehicle_number') or 
                 row.get('chassis_no') or row.get('chassis_number')):
                 vehicle_info = {
-                    'brand': row.get('brand', '').strip(),
-                    'model': row.get('model', '').strip(), 
-                    'color': row.get('color', '').strip(),
-                    'vehicle_number': (row.get('vehicle_number', '').strip() or 
-                                     row.get('vehicle_no', '').strip()),
-                    'chassis_number': (row.get('chassis_number', '').strip() or 
-                                     row.get('chassis_no', '').strip()),
-                    'engine_number': (row.get('engine_number', '').strip() or 
-                                    row.get('engine_no', '').strip())
+                    'brand': safe_str(row.get('brand', '')),
+                    'model': safe_str(row.get('model', '')), 
+                    'color': safe_str(row.get('color', '')),
+                    'vehicle_number': (safe_str(row.get('vehicle_number', '')) or 
+                                     safe_str(row.get('vehicle_no', ''))),
+                    'chassis_number': (safe_str(row.get('chassis_number', '')) or 
+                                     safe_str(row.get('chassis_no', ''))),
+                    'engine_number': (safe_str(row.get('engine_number', '')) or 
+                                    safe_str(row.get('engine_no', '')))
                 }
             
             # Map insurance nominee fields (using actual CSV column names)
             if row.get('nominee_name') or row.get('relation') or row.get('age'):
                 insurance_info = {
-                    'nominee_name': row.get('nominee_name', '').strip(),
-                    'relation': row.get('relation', '').strip(),
-                    'age': row.get('age', '').strip()
+                    'nominee_name': safe_str(row.get('nominee_name', '')),
+                    'relation': safe_str(row.get('relation', '')),
+                    'age': safe_str(row.get('age', ''))
                 }
             
             # Map sales information if available
             if row.get('sale_amount') or row.get('payment_method'):
                 sales_info = {
-                    'amount': row.get('sale_amount', '').strip(),
-                    'payment_method': row.get('payment_method', '').strip(),
-                    'hypothecation': row.get('hypothecation', '').strip(),
-                    'sale_date': row.get('sale_date', '').strip(),
-                    'invoice_number': row.get('invoice_number', '').strip()
+                    'amount': safe_str(row.get('sale_amount', '')),
+                    'payment_method': safe_str(row.get('payment_method', '')),
+                    'hypothecation': safe_str(row.get('hypothecation', '')),
+                    'sale_date': safe_str(row.get('sale_date', '')),
+                    'invoice_number': safe_str(row.get('invoice_number', ''))
                 }
             
             # Create basic customer record
             customer_data = CustomerCreate(
                 name=name,
                 mobile=phone_number,
-                email=row.get('email', '').strip() or None,
+                email=safe_str(row.get('email', '')) or None,
                 address=address,
-                care_of=row.get('care_of', '').strip() or None
+                care_of=safe_str(row.get('care_of', '')) or None
             )
             
             customer = Customer(**customer_data.dict())
