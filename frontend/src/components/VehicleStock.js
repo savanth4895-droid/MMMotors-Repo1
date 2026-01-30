@@ -244,6 +244,7 @@ const EditVehicleModal = ({ vehicle, isOpen, onClose, onUpdate }) => {
     page_number: '',
     outbound_location: '',
     status: 'in_stock',
+    date_received: '',
     date_returned: ''
   });
   const [loading, setLoading] = useState(false);
@@ -269,6 +270,7 @@ const EditVehicleModal = ({ vehicle, isOpen, onClose, onUpdate }) => {
         page_number: vehicle.page_number || '',
         outbound_location: vehicle.outbound_location || '',
         status: vehicle.status || 'in_stock',
+        date_received: vehicle.date_received ? new Date(vehicle.date_received).toISOString().split('T')[0] : '',
         date_returned: vehicle.date_returned ? new Date(vehicle.date_returned).toISOString().split('T')[0] : ''
       });
     }
