@@ -1,194 +1,112 @@
-# M M Motors - Vehicle Service Business Management System
+# M M Motors - Vehicle Service Management System
 
 ## Original Problem Statement
-A full-stack application for managing a vehicle service business including:
-- Customer management
-- Vehicle inventory management
-- Sales invoicing
-- Service billing and job cards
-- Insurance tracking
-- Spare parts inventory
-
-## Tech Stack
-- **Frontend**: React with Shadcn/UI components
-- **Backend**: FastAPI (Python)
-- **Database**: MongoDB
+Build a comprehensive vehicle service management application for a motor dealership business. The system manages vehicle inventory, sales, services, and spare parts across multiple vehicle brands.
 
 ## Core Features Implemented
 
-### Sales Module
-- Create Sales Invoice with customer and vehicle details
-- View/Edit/Delete Invoices
-- Vehicle search by chassis number with auto-fill
-- PDF invoice generation and download
+### 1. Vehicle Stock Management
+- Brand-based inventory organization (TVS, BAJAJ, HERO, HONDA, TRIUMPH, KTM, SUZUKI, APRILIA, YAMAHA, PIAGGIO, ROYAL ENFIELD)
+- Add/Edit/Delete vehicles with full details
+- Bulk delete with force cascade option
+- Date Received tracking and display
+- Export data to CSV
+- Search and filter capabilities
+
+### 2. Sales Management
+- Invoice creation and management
 - Customer management
-- Insurance nominee tracking
+- Payment tracking (cash, finance)
+- Invoice editing with real-time UI updates
 
-### Service Module
-- Registration workflow (one-time customer/vehicle entry)
-- Job Card workflow (recurring service instances)
-- Service billing with payment status tracking
-- Spare parts inventory management with automatic stock reduction
-- Service Number and Kilometers Driven tracking in Job Cards
+### 3. Services Module
+- Service Registration
+- Job Cards with Service Number, KMs Driven, Service Date
+- Service Due Schedule with dismissal and base date override
+- Service Billing
 
-### Recent Changes (Jan 2025)
+### 4. Data Import
+- Excel/CSV import for vehicles and customers
+- Robust data sanitization (safe_str function)
+- Flexible date parsing
 
-#### Bug Fixes
-1. **Invoice UI Refresh Bug** - Fixed issue where edited invoices didn't reflect in UI without manual page refresh
-   - Root cause: Array mutation in `filterInvoices` function
-   - Fix: Used spread operator `[...invoices]` to create immutable copy
-   - File: `/app/frontend/src/components/Sales.js` (line 1525)
-
-2. **Service Due Delete Bug** - Fixed inability to delete records from Service Due Schedule table
-   - Root cause: Delete function tried to delete underlying service records which didn't work for derived data
-   - Fix: Implemented `dismissed_service_due` collection to track dismissed records
-   - Records are now filtered out from view rather than truly deleted
-   - File: `/app/backend/server.py`, `/app/frontend/src/components/Services.js`
-
-#### New Features
-1. **Service Number field** - Added to Job Card form, list view, view modal, and edit modal
-   - Allows user to enter custom service reference number
-   - Optional field (string)
-   - Displayed in purple color when set
-   
-2. **Kilometers Driven field** - Added to Job Card form, list view, view modal, and edit modal
-   - Tracks odometer reading at time of service
-   - Optional field (integer)
-   - Displayed in green with "km" suffix when set
-
-3. **Service Due Bulk Delete** - Added bulk delete option for Service Due Schedule table
-   - Checkbox selection for multiple records
-   - "Delete Selected" button appears when records selected
-   - Both single delete (trash icon) and bulk delete supported
-   - Summary cards update immediately after deletions
-
-4. **Editable Base Date** - Base Date column in Service Due Schedule is now editable
-   - Click on any Base Date cell to edit
-   - Date picker appears with save (✓) and cancel (✗) buttons
-   - Custom dates stored in `service_due_base_date_overrides` collection
-   - Due Date and Status automatically recalculate on change
-   - Custom dates shown in purple with "Custom Date" label
-
-5. **Editable Service Date in Job Card Details** - Service Date in Job Card modal is now editable
-   - Click on Service Date in Job Card Details modal to edit
-   - Date picker with save/cancel buttons for confirmation
-   - Updates immediately in UI and persists to database
-   - File: `/app/frontend/src/components/Services.js`
-
-6. **Enhanced Edit Job Card Modal** - All fields from Job Card Details now available in Edit modal
-   - Organized in 3 sections: Customer Information, Vehicle Information, Service Details
-   - Vehicle Information: Registration Number, Brand, Model, Year, Kilometers Driven
-   - Service Details: Service Number, Service Date, Service Type, Amount, Description
-   - Changes reflect immediately in the Job Cards table after save
-   - File: `/app/frontend/src/components/Services.js`
-
-7. **Service Date Field in All Job Card Views** - Service Date now available everywhere
-   - **New Job Card form**: Service Date field with today's date as default
-   - **Job Cards table**: Service Date column after Service No.
-   - **Edit Job Card modal**: Service Date is editable
-   - **CSV Export**: Service Date included
-   - Backend `ServiceCreate` model updated to accept service_date
-   - File: `/app/frontend/src/components/Services.js`, `/app/backend/server.py`
-
-8. **Comprehensive Error Handling & Loading States (P2)** - Enhanced UX across all tables
-   - **New UI Components**: Created `/app/frontend/src/components/ui/loading.jsx`
-     - `LoadingSpinner` - Animated spinner with size variants
-     - `TableSkeleton` - Animated table skeleton for loading states
-     - `PageLoader` - Full page loading state
-     - `EmptyState` - Friendly empty state with icon, title, description
-     - `ErrorState` - Error state with retry button
-   - **Tables with loading skeletons**: Job Cards, View Invoices, Customers, Service Due
-   - **Buttons with loading spinners**: Save Registration, Generate Invoice, Create Job Card, Save Bill
-   - File: `/app/frontend/src/components/ui/loading.jsx`, `Services.js`, `Sales.js`
-
-9. **Bug Fix: Service Due Schedule Persistence** - Fixed data not persisting after refresh
-   - Base date edits now persist after page refresh
-   - Dismissed records stay hidden after page refresh
-   - Added useEffect to apply stored baseDateOverrides to dueServices on load
-   - File: `/app/frontend/src/components/Services.js` (lines 6243-6279)
-
-10. **Bug Fix: Import Error with Float Values** - Fixed `'float' object has no attribute 'strip'` error
-    - Added `safe_str()` function to handle NaN, None, and float values from Excel/pandas
-    - Properly handles empty cells, numeric values, and string values
-    - Applied to `import_vehicles_data` and `import_customers_data` functions
-    - File: `/app/backend/server.py`
-
-11. **Added ROYAL ENFIELD Brand** - New brand available throughout the application
-    - Backend: Updated `valid_brands` arrays in server.py
-    - Frontend: Updated brand dropdowns in Sales.js, Services.js, VehicleStock.js
-    - Import: Accepts ROYAL ENFIELD in vehicle imports
-
-**Implementation details:**
-- **New Job Card form**: Both fields added (Service Details & Vehicle Information sections)
-- **Job Cards table**: Service No. and KMs Driven columns added (replaced Vehicle Year)
-- **View Job Card modal**: Service Number shown in Job Card Info, KMs in Vehicle Info
-- **Edit Job Card modal**: Both fields editable
-- **CSV Export**: Updated to include both new fields
-
-Files modified:
-- `/app/frontend/src/components/Services.js` - Complete UI implementation
-- `/app/backend/server.py` - Service, ServiceCreate, ServiceUpdate models
-
-## Architecture
+## Technical Architecture
 
 ```
 /app/
 ├── backend/
-│   ├── server.py              # FastAPI main app
-│   └── .env                   # Backend environment variables
+│   ├── server.py              # FastAPI backend (monolithic)
+│   └── .env
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── Sales.js       # Sales management (invoices, customers)
-│   │   │   ├── Services.js    # Service management (registrations, job cards, billing)
+│   │   │   ├── Sales.js       # ~7000 lines (needs refactoring)
+│   │   │   ├── Services.js    # ~7400 lines (needs refactoring)
+│   │   │   ├── VehicleStock.js
 │   │   │   └── ui/            # Shadcn components
 │   │   └── ...
-│   └── .env                   # Frontend environment variables
+│   └── .env
 └── memory/
-    └── PRD.md                 # This file
+    └── PRD.md
 ```
 
 ## Key API Endpoints
-- `GET/POST /api/sales` - Sales/Invoice operations
-- `PUT /api/sales/{id}` - Update invoice
-- `GET/POST /api/customers` - Customer management
-- `GET/POST /api/vehicles` - Vehicle inventory
-- `GET/POST /api/services` - Job Cards (includes service_number, kms_driven)
-- `PUT /api/services/{id}` - Update job card
-- `GET/POST /api/service-bills` - Service billing
-- `PUT /api/service-bills/{id}/status` - Update bill payment status
-- `GET/POST /api/dismissed-service-due` - Dismissed service due records
-- `POST /api/dismissed-service-due/bulk` - Bulk dismiss service due records
-- `DELETE /api/dismissed-service-due/{key}` - Restore dismissed record
-- `GET/POST /api/service-due-base-date` - Base date overrides for service due
-- `DELETE /api/service-due-base-date/{key}` - Remove base date override
+- `GET/POST/PUT/DELETE /api/vehicles` - Vehicle CRUD
+- `POST /api/dismiss-service-due` - Dismiss service due items
+- `POST /api/bulk-dismiss-service-due` - Bulk dismiss
+- `POST /api/base-date-overrides` - Custom service base dates
+- `GET /api/dismissed-service-dues` - Fetch dismissed items
+- `POST /api/import/vehicles` - Bulk vehicle import
 
-## Known Technical Debt
-- **Monolithic Components**: `Sales.js` (~6500 lines) and `Services.js` (~5000+ lines) are very large
-- Recommended: Break into smaller, single-responsibility components
+## Database Collections (MongoDB)
+- vehicles
+- customers
+- sales
+- services
+- job_cards
+- dismissed_service_dues
+- base_date_overrides
 
-## Backlog / Future Tasks
-1. **(P1)** Refactor `Sales.js` into smaller components (module structure created, full extraction pending)
-2. **(P1)** Refactor `Services.js` into smaller components (module structure created, full extraction pending)
-3. **(P3)** Add form validation feedback with inline error messages
-4. **(P3)** Add network error handling with retry functionality
+## Completed Work (Latest Session - Jan 2026)
+- ✅ UI bug fix: Invoice list update on edit
+- ✅ Job Card enhancements (Service Number, KMs Driven, editable Service Date)
+- ✅ Service Due Schedule delete functionality (single/bulk)
+- ✅ Editable Base Date for service calculations
+- ✅ Data persistence fix for Service Due Schedule
+- ✅ Loading states and error handling improvements
+- ✅ Backend import crash fix (safe_str function)
+- ✅ Added ROYAL ENFIELD brand
+- ✅ Date Received field in Add Vehicle form
+- ✅ Date Received displayed in Vehicle Stock tables
 
-## Test Reports
-- `/app/test_reports/iteration_1.json` - Invoice edit UI refresh bug fix verification
-- `/app/test_reports/iteration_2.json` - Service Number and Kilometers Driven fields in New Job Card form
-- `/app/test_reports/iteration_3.json` - Service Number and KMs Driven in Job Card list, view, and edit
-- `/app/test_reports/iteration_4.json` - Service Due delete and bulk delete functionality
-- `/app/test_reports/iteration_5.json` - Editable Base Date in Service Due Schedule
-- `/app/test_reports/iteration_6.json` - Editable Service Date in Job Card Details modal
-- `/app/test_reports/iteration_7.json` - Enhanced Edit Job Card Modal with all fields
-- `/app/test_reports/iteration_8.json` - Service Date field in New Job Card form and table
-- `/app/test_reports/iteration_9.json` - Loading states and error handling (P2)
-- `/app/test_reports/iteration_10.json` - Service Due Schedule persistence bug fix
-- `/app/tests/test_job_card_new_fields.py` - Backend API tests for job card fields
-- `/app/tests/test_service_due_delete.py` - Backend API tests for service due delete
-- `/app/tests/test_service_due_base_date.py` - Backend API tests for base date editing
-- `/app/tests/test_edit_job_card_modal.py` - Backend API tests for edit job card modal
-- `/app/tests/test_service_date_field.py` - Backend API tests for service date field
+## Prioritized Backlog
 
----
-Last Updated: January 3, 2025
+### P0 (Critical)
+- None currently
+
+### P1 (High Priority)
+- **Refactor Sales.js** - Break down ~7000 line monolithic component
+- **Refactor Services.js** - Break down ~7400 line monolithic component
+
+### P2 (Medium Priority)
+- Form validation with inline error messages
+- Enhanced user feedback for form submissions
+
+### P3 (Low Priority)
+- Network retry logic for failed API calls
+- Additional export options
+
+## Tech Stack
+- **Frontend**: React, Tailwind CSS, Shadcn/UI
+- **Backend**: FastAPI, Python
+- **Database**: MongoDB
+- **Libraries**: lodash, lucide-react, axios, sonner
+
+## Authentication
+- JWT-based authentication
+- Default admin user: admin/admin123
+
+## Notes
+- All vehicle stock tables now display date_received in Date column
+- Service Due Schedule uses persistent collections for dismissals and date overrides
+- Data import handles malformed Excel data gracefully
