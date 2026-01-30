@@ -1425,7 +1425,7 @@ const ViewRegistration = () => {
                           <SelectValue placeholder="Select vehicle brand" />
                         </SelectTrigger>
                         <SelectContent>
-                          {['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO'].map((brand) => (
+                          {['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO', 'ROYAL ENFIELD'].map((brand) => (
                             <SelectItem key={brand} value={brand}>
                               {brand}
                             </SelectItem>
@@ -1547,7 +1547,7 @@ const JobCards = () => {
   const [sortBy, setSortBy] = useState('service_date');
   const [sortOrder, setSortOrder] = useState('desc');
 
-  const vehicleBrands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO'];
+  const vehicleBrands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO', 'ROYAL ENFIELD'];
   const serviceTypes = [
     { value: 'regular_service', label: 'Regular Service' },
     { value: 'oil_change', label: 'Oil Change' },
