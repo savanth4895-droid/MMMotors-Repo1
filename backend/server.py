@@ -594,6 +594,25 @@ def parse_date_flexible(date_str: str) -> datetime:
         except:
             return datetime.now(timezone.utc)
 
+def safe_str(value) -> str:
+    """Safely convert a value to string, handling NaN, None, and floats from Excel/pandas"""
+    import math
+    if value is None:
+        return ''
+    if isinstance(value, float):
+        # Check for NaN
+        if math.isnan(value):
+            return ''
+        # If it's a whole number, convert without decimal
+        if value == int(value):
+            return str(int(value))
+        return str(value)
+    if isinstance(value, (int, bool)):
+        return str(value)
+    if isinstance(value, str):
+        return value.strip()
+    return str(value).strip() if value else ''
+
 # Health check endpoints for Kubernetes (both root and /api paths for compatibility)
 @app.get("/health")
 async def health_check():
