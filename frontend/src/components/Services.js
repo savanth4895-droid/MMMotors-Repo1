@@ -4891,7 +4891,20 @@ const CreateBillContent = ({
                     <td className="border border-gray-300 p-2 text-right font-medium">₹{item.cgst_amount}</td>
                     <td className="border border-gray-300 p-2 text-right font-medium">₹{item.sgst_amount}</td>
                     <td className="border border-gray-300 p-2 text-right font-medium">₹{item.total_tax}</td>
-                    <td className="border border-gray-300 p-2 text-right font-bold">₹{item.amount}</td>
+                    <td className="border border-gray-300 p-2">
+                      <div className="flex items-center justify-end">
+                        <span className="mr-1">₹</span>
+                        <Input
+                          type="number"
+                          value={item.amount}
+                          onChange={(e) => updateBillItemAmount(index, e.target.value)}
+                          className="border-0 p-1 w-24 text-right font-bold"
+                          min="0"
+                          step="0.01"
+                          data-testid={`bill-item-amount-${index}`}
+                        />
+                      </div>
+                    </td>
                     <td className="border border-gray-300 p-2 text-center no-print">
                       <Button
                         size="sm"
