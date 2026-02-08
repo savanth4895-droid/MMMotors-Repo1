@@ -3739,6 +3739,49 @@ const ServicesBilling = () => {
     setBillItems(updatedItems);
   };
 
+  // Back-calculate Rate when Amount is directly edited
+  const updateBillItemAmount = (index, newAmount) => {
+    const updatedItems = [...billItems];
+    const item = updatedItems[index];
+    
+    // Parse the new amount
+    const targetAmount = parseFloat(newAmount) || 0;
+    
+    if (targetAmount <= 0) {
+      // If amount is 0 or negative, just set rate to 0
+      updatedItems[index] = { 
+        ...item, 
+        rate: 0,
+        amount: 0,
+        cgst_amount: 0,
+        sgst_amount: 0,
+        total_tax: 0
+      };
+    } else {
+      // Back-calculate: Amount -> taxableAmount -> baseAmount -> rate
+      // finalAmount = taxableAmount * (1 + gst_percent/100)
+      const gstMultiplier = 1 + (item.gst_percent / 100);
+      const taxableAmount = targetAmount / gstMultiplier;
+      
+      // taxableAmount = baseAmount * (1 - disc_percent/100)
+      const discountMultiplier = 1 - (item.disc_percent / 100);
+      const baseAmount = discountMultiplier > 0 ? taxableAmount / discountMultiplier : taxableAmount;
+      
+      // baseAmount = (qty * rate) + labor
+      // rate = (baseAmount - labor) / qty
+      const qty = item.qty || 1;
+      const labor = item.labor || 0;
+      const calculatedRate = qty > 0 ? Math.max(0, (baseAmount - labor) / qty) : 0;
+      
+      // Update the rate and recalculate all amounts
+      updatedItems[index] = { ...item, rate: parseFloat(calculatedRate.toFixed(2)) };
+      const calculatedAmounts = calculateItemAmounts(updatedItems[index]);
+      updatedItems[index] = { ...updatedItems[index], ...calculatedAmounts };
+    }
+    
+    setBillItems(updatedItems);
+  };
+
   const handleDescriptionChange = (index, value) => {
     updateBillItem(index, 'description', value);
     setActiveDescriptionIndex(index);
