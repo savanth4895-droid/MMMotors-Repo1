@@ -4316,6 +4316,7 @@ const ServicesBilling = () => {
           calculateItemAmounts={calculateItemAmounts}
           calculateTotals={calculateTotals}
           updateBillItem={updateBillItem}
+          updateBillItemAmount={updateBillItemAmount}
           addBillItem={addBillItem}
           removeBillItem={removeBillItem}
           addPredefinedItem={addPredefinedItem}
