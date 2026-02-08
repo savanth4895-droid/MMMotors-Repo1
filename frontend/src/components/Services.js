@@ -4489,7 +4489,7 @@ const ServicesBilling = () => {
 const CreateBillContent = ({ 
   customers, billItems, setBillItems, selectedCustomer, setSelectedCustomer,
   billNumber, setBillNumber, billDate, setBillDate, loading,
-  calculateItemAmounts, calculateTotals, updateBillItem, addBillItem, removeBillItem,
+  calculateItemAmounts, calculateTotals, updateBillItem, updateBillItemAmount, addBillItem, removeBillItem,
   addPredefinedItem, addServicePackage, handleSaveBill, handlePrintBill, units, gstRates,
   serviceItems, jobCardNumber, setJobCardNumber, serviceDetails, fetchingService,
   handleJobCardSearch, handleJobCardBlur, clearServiceDetails, jobCardSuggestions, handleJobCardSelection,
