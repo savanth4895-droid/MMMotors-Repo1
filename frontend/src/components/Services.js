@@ -37,7 +37,9 @@ import {
   User,
   IndianRupee,
   Check,
-  Edit2
+  Edit2,
+  Edit,
+  Save
 } from 'lucide-react';
 import { toast } from 'sonner';
 
