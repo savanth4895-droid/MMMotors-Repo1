@@ -6299,6 +6299,264 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
           </div>
         </div>
       )}
+
+      {/* Edit Service Bill Modal */}
+      {showEditModal && editingBill && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold">Edit Service Bill</h2>
+                  <p className="text-gray-600">Modify bill details and line items</p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingBill(null);
+                  }}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+
+              {/* Bill Information */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div>
+                  <Label htmlFor="edit-bill-number">Bill Number</Label>
+                  <Input
+                    id="edit-bill-number"
+                    value={editingBill.bill_number}
+                    onChange={(e) => setEditingBill({...editingBill, bill_number: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-customer-name">Customer Name</Label>
+                  <Input
+                    id="edit-customer-name"
+                    value={editingBill.customer_name}
+                    onChange={(e) => setEditingBill({...editingBill, customer_name: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-vehicle-reg">Vehicle Reg No</Label>
+                  <Input
+                    id="edit-vehicle-reg"
+                    value={editingBill.vehicle_reg_no}
+                    onChange={(e) => setEditingBill({...editingBill, vehicle_reg_no: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-status">Payment Status</Label>
+                  <Select value={editingBill.status} onValueChange={(value) => setEditingBill({...editingBill, status: value})}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unpaid">Unpaid</SelectItem>
+                      <SelectItem value="paid">Paid</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Bill Items Table */}
+              <div className="overflow-x-auto mb-4">
+                <table className="w-full border-collapse border border-gray-300 text-sm">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="border border-gray-300 p-2 text-left">Sl.</th>
+                      <th className="border border-gray-300 p-2 text-left">Description</th>
+                      <th className="border border-gray-300 p-2 text-left">HSN/SAC</th>
+                      <th className="border border-gray-300 p-2 text-left">Qty</th>
+                      <th className="border border-gray-300 p-2 text-left">Unit</th>
+                      <th className="border border-gray-300 p-2 text-left">Rate</th>
+                      <th className="border border-gray-300 p-2 text-left">Labor</th>
+                      <th className="border border-gray-300 p-2 text-left">Disc%</th>
+                      <th className="border border-gray-300 p-2 text-left">GST%</th>
+                      <th className="border border-gray-300 p-2 text-left">CGST</th>
+                      <th className="border border-gray-300 p-2 text-left">SGST</th>
+                      <th className="border border-gray-300 p-2 text-left">Amount</th>
+                      <th className="border border-gray-300 p-2 text-left">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {editBillItems.map((item, index) => (
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="border border-gray-300 p-1 text-center">{item.sl_no}</td>
+                        <td className="border border-gray-300 p-1">
+                          <Input
+                            value={item.description}
+                            onChange={(e) => updateEditBillItem(index, 'description', e.target.value)}
+                            className="border-0 p-1 text-sm"
+                            placeholder="Description"
+                          />
+                        </td>
+                        <td className="border border-gray-300 p-1">
+                          <Input
+                            value={item.hsn_sac}
+                            onChange={(e) => updateEditBillItem(index, 'hsn_sac', e.target.value)}
+                            className="border-0 p-1 w-20 text-sm"
+                          />
+                        </td>
+                        <td className="border border-gray-300 p-1">
+                          <Input
+                            type="number"
+                            value={item.qty}
+                            onChange={(e) => updateEditBillItem(index, 'qty', parseFloat(e.target.value) || 0)}
+                            className="border-0 p-1 w-16 text-sm"
+                            min="0"
+                          />
+                        </td>
+                        <td className="border border-gray-300 p-1">
+                          <Select value={item.unit} onValueChange={(value) => updateEditBillItem(index, 'unit', value)}>
+                            <SelectTrigger className="border-0 p-1 h-8 text-sm">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {units.map((unit) => (
+                                <SelectItem key={unit} value={unit}>{unit}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td className="border border-gray-300 p-1">
+                          <Input
+                            type="number"
+                            value={item.rate}
+                            onChange={(e) => updateEditBillItem(index, 'rate', parseFloat(e.target.value) || 0)}
+                            className="border-0 p-1 w-20 text-sm"
+                            min="0"
+                          />
+                        </td>
+                        <td className="border border-gray-300 p-1">
+                          <Input
+                            type="number"
+                            value={item.labor}
+                            onChange={(e) => updateEditBillItem(index, 'labor', parseFloat(e.target.value) || 0)}
+                            className="border-0 p-1 w-16 text-sm"
+                            min="0"
+                          />
+                        </td>
+                        <td className="border border-gray-300 p-1">
+                          <Input
+                            type="number"
+                            value={item.disc_percent}
+                            onChange={(e) => updateEditBillItem(index, 'disc_percent', parseFloat(e.target.value) || 0)}
+                            className="border-0 p-1 w-14 text-sm"
+                            min="0"
+                            max="100"
+                          />
+                        </td>
+                        <td className="border border-gray-300 p-1">
+                          <Select value={item.gst_percent.toString()} onValueChange={(value) => updateEditBillItem(index, 'gst_percent', parseFloat(value))}>
+                            <SelectTrigger className="border-0 p-1 h-8 w-16 text-sm">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {gstRates.map((rate) => (
+                                <SelectItem key={rate} value={rate.toString()}>{rate}%</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td className="border border-gray-300 p-1 text-right">₹{item.cgst_amount}</td>
+                        <td className="border border-gray-300 p-1 text-right">₹{item.sgst_amount}</td>
+                        <td className="border border-gray-300 p-1">
+                          <div className="flex items-center">
+                            <span className="mr-1">₹</span>
+                            <Input
+                              type="number"
+                              value={item.amount}
+                              onChange={(e) => updateEditBillItemAmount(index, e.target.value)}
+                              className="border-0 p-1 w-20 text-right font-bold text-sm"
+                              min="0"
+                            />
+                          </div>
+                        </td>
+                        <td className="border border-gray-300 p-1 text-center">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => removeEditBillItem(index)}
+                            disabled={editBillItems.length === 1}
+                            className="w-7 h-7 p-0"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Add Item Button */}
+              <Button 
+                variant="outline" 
+                onClick={addEditBillItem}
+                className="mb-4"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Item
+              </Button>
+
+              {/* Bill Totals */}
+              <div className="flex justify-end mb-6">
+                <div className="w-80 space-y-2 border rounded-lg p-4 bg-gray-50">
+                  <div className="flex justify-between py-1 border-b">
+                    <span className="text-gray-600">Subtotal:</span>
+                    <span className="font-medium">₹{calculateEditTotals().subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b text-sm">
+                    <span className="text-gray-600">CGST:</span>
+                    <span>₹{calculateEditTotals().totalCgst.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b text-sm">
+                    <span className="text-gray-600">SGST:</span>
+                    <span>₹{calculateEditTotals().totalSgst.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between py-2 text-lg font-bold text-green-600 border-t-2">
+                    <span>Grand Total:</span>
+                    <span>₹{calculateEditTotals().grandTotal.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingBill(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleSaveEditBill}
+                  disabled={editLoading}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {editLoading ? (
+                    <>
+                      <div className="spinner w-4 h-4 mr-2"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Changes
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
