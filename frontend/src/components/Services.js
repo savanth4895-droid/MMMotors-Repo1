@@ -5006,10 +5006,201 @@ const CreateBillContent = ({
 const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, onDeleteBill, setServiceBills }) => {
   const [selectedBill, setSelectedBill] = React.useState(null);
   const [showViewModal, setShowViewModal] = React.useState(false);
+  const [showEditModal, setShowEditModal] = React.useState(false);
+  const [editingBill, setEditingBill] = React.useState(null);
+  const [editBillItems, setEditBillItems] = React.useState([]);
+  const [editLoading, setEditLoading] = React.useState(false);
+
+  const units = ['Nos', 'Kgs', 'Ltrs', 'Hrs', 'Days', 'Pcs'];
+  const gstRates = [0, 5, 12, 18, 28];
 
   const handleViewBill = (bill) => {
     setSelectedBill(bill);
     setShowViewModal(true);
+  };
+
+  const handleEditBill = (bill) => {
+    setEditingBill({
+      ...bill,
+      bill_number: bill.bill_number || bill.job_card_number || '',
+      customer_name: bill.customer_name || '',
+      vehicle_reg_no: bill.vehicle_reg_no || '',
+      status: bill.status || 'unpaid'
+    });
+    // Initialize edit items from bill
+    if (bill.items && bill.items.length > 0) {
+      setEditBillItems(bill.items.map((item, idx) => ({
+        sl_no: idx + 1,
+        description: item.description || item.name || '',
+        hsn_sac: item.hsn_sac || '',
+        qty: item.qty || 1,
+        unit: item.unit || 'Nos',
+        rate: item.rate || 0,
+        labor: item.labor || 0,
+        disc_percent: item.disc_percent || 0,
+        gst_percent: item.gst_percent || 18,
+        cgst_amount: item.cgst_amount || 0,
+        sgst_amount: item.sgst_amount || 0,
+        total_tax: item.total_tax || 0,
+        amount: item.amount || 0
+      })));
+    } else {
+      // Create a single item from bill total if no items
+      const baseAmount = (bill.amount || 0) / 1.18;
+      const gstAmount = baseAmount * 0.18;
+      setEditBillItems([{
+        sl_no: 1,
+        description: bill.description || 'Service Charge',
+        hsn_sac: '99820',
+        qty: 1,
+        unit: 'Nos',
+        rate: parseFloat(baseAmount.toFixed(2)),
+        labor: 0,
+        disc_percent: 0,
+        gst_percent: 18,
+        cgst_amount: parseFloat((gstAmount / 2).toFixed(2)),
+        sgst_amount: parseFloat((gstAmount / 2).toFixed(2)),
+        total_tax: parseFloat(gstAmount.toFixed(2)),
+        amount: bill.amount || 0
+      }]);
+    }
+    setShowEditModal(true);
+  };
+
+  const calculateEditItemAmounts = (item) => {
+    const baseAmount = (item.qty * item.rate) + item.labor;
+    const discountAmount = (baseAmount * item.disc_percent) / 100;
+    const taxableAmount = baseAmount - discountAmount;
+    const gstAmount = (taxableAmount * item.gst_percent) / 100;
+    const cgstAmount = gstAmount / 2;
+    const sgstAmount = gstAmount / 2;
+    const totalTax = cgstAmount + sgstAmount;
+    const finalAmount = taxableAmount + totalTax;
+
+    return {
+      cgst_amount: parseFloat(cgstAmount.toFixed(2)),
+      sgst_amount: parseFloat(sgstAmount.toFixed(2)),
+      total_tax: parseFloat(totalTax.toFixed(2)),
+      amount: parseFloat(finalAmount.toFixed(2))
+    };
+  };
+
+  const updateEditBillItem = (index, field, value) => {
+    const updatedItems = [...editBillItems];
+    updatedItems[index] = { ...updatedItems[index], [field]: value };
+    const calculatedAmounts = calculateEditItemAmounts(updatedItems[index]);
+    updatedItems[index] = { ...updatedItems[index], ...calculatedAmounts };
+    setEditBillItems(updatedItems);
+  };
+
+  const updateEditBillItemAmount = (index, newAmount) => {
+    const updatedItems = [...editBillItems];
+    const item = updatedItems[index];
+    const targetAmount = parseFloat(newAmount) || 0;
+    
+    if (targetAmount <= 0) {
+      updatedItems[index] = { ...item, rate: 0, amount: 0, cgst_amount: 0, sgst_amount: 0, total_tax: 0 };
+    } else {
+      const gstMultiplier = 1 + (item.gst_percent / 100);
+      const taxableAmount = targetAmount / gstMultiplier;
+      const discountMultiplier = 1 - (item.disc_percent / 100);
+      const baseAmount = discountMultiplier > 0 ? taxableAmount / discountMultiplier : taxableAmount;
+      const qty = item.qty || 1;
+      const labor = item.labor || 0;
+      const calculatedRate = qty > 0 ? Math.max(0, (baseAmount - labor) / qty) : 0;
+      
+      updatedItems[index] = { ...item, rate: parseFloat(calculatedRate.toFixed(2)) };
+      const calculatedAmounts = calculateEditItemAmounts(updatedItems[index]);
+      updatedItems[index] = { ...updatedItems[index], ...calculatedAmounts };
+    }
+    setEditBillItems(updatedItems);
+  };
+
+  const addEditBillItem = () => {
+    setEditBillItems([...editBillItems, {
+      sl_no: editBillItems.length + 1,
+      description: '',
+      hsn_sac: '',
+      qty: 1,
+      unit: 'Nos',
+      rate: 0,
+      labor: 0,
+      disc_percent: 0,
+      gst_percent: 18,
+      cgst_amount: 0,
+      sgst_amount: 0,
+      total_tax: 0,
+      amount: 0
+    }]);
+  };
+
+  const removeEditBillItem = (index) => {
+    if (editBillItems.length > 1) {
+      const updatedItems = editBillItems.filter((_, i) => i !== index)
+        .map((item, idx) => ({ ...item, sl_no: idx + 1 }));
+      setEditBillItems(updatedItems);
+    }
+  };
+
+  const calculateEditTotals = () => {
+    const subtotal = editBillItems.reduce((sum, item) => sum + ((item.qty * item.rate) + item.labor - ((item.qty * item.rate + item.labor) * item.disc_percent / 100)), 0);
+    const totalCgst = editBillItems.reduce((sum, item) => sum + item.cgst_amount, 0);
+    const totalSgst = editBillItems.reduce((sum, item) => sum + item.sgst_amount, 0);
+    const totalTax = totalCgst + totalSgst;
+    const grandTotal = editBillItems.reduce((sum, item) => sum + item.amount, 0);
+    return { subtotal, totalCgst, totalSgst, totalTax, grandTotal };
+  };
+
+  const handleSaveEditBill = async () => {
+    if (!editingBill) return;
+    
+    setEditLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const editTotals = calculateEditTotals();
+      
+      const updateData = {
+        bill_number: editingBill.bill_number,
+        customer_name: editingBill.customer_name,
+        vehicle_reg_no: editingBill.vehicle_reg_no,
+        status: editingBill.status,
+        amount: editTotals.grandTotal,
+        items: editBillItems.map(item => ({
+          description: item.description,
+          hsn_sac: item.hsn_sac,
+          qty: item.qty,
+          unit: item.unit,
+          rate: item.rate,
+          labor: item.labor,
+          disc_percent: item.disc_percent,
+          gst_percent: item.gst_percent,
+          cgst_amount: item.cgst_amount,
+          sgst_amount: item.sgst_amount,
+          total_tax: item.total_tax,
+          amount: item.amount
+        }))
+      };
+
+      await axios.put(`${API}/service-bills/${editingBill.id}`, updateData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // Update local state
+      const updatedBills = serviceBills.map(bill => 
+        bill.id === editingBill.id 
+          ? { ...bill, ...updateData, job_card_number: updateData.bill_number }
+          : bill
+      );
+      setServiceBills(updatedBills);
+      
+      toast.success('Service bill updated successfully!');
+      setShowEditModal(false);
+      setEditingBill(null);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update service bill');
+    } finally {
+      setEditLoading(false);
+    }
   };
 
   const handlePrintBill = (bill) => {
