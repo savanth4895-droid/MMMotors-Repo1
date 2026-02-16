@@ -3480,6 +3480,9 @@ const ServicesBilling = () => {
       // Auto-populate customer selection
       setSelectedCustomer(service.customer_id);
       
+      // Set bill number to match job card number
+      setBillNumber(jobCard);
+      
       // Auto-populate first bill item with service details
       const serviceItem = {
         sl_no: 1,
