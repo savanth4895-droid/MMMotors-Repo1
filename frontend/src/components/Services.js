@@ -3482,8 +3482,10 @@ const ServicesBilling = () => {
       // Auto-populate customer selection
       setSelectedCustomer(service.customer_id);
       
-      // Set bill number to match job card number
-      setBillNumber(jobCard);
+      // Set bill number with SB- prefix using only the numeric part from job card
+      // Extract numbers from job card (e.g., "JOB-000294" -> "000294")
+      const jobCardNumber = jobCard.replace(/[^0-9]/g, '');
+      setBillNumber(`SB-${jobCardNumber}`);
       
       // Auto-populate first bill item with service details
       const serviceItem = {
