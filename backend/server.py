@@ -1911,6 +1911,46 @@ async def update_service_bill_status(bill_id: str, status_update: dict, current_
     
     return {"message": f"Bill status updated to {new_status}", "bill_id": bill_id, "status": new_status}
 
+@api_router.put("/service-bills/{bill_id}")
+async def update_service_bill(bill_id: str, bill_update: dict, current_user: User = Depends(get_current_user)):
+    """Full update of service bill including items"""
+    existing_bill = await db.service_bills.find_one({"id": bill_id})
+    if not existing_bill:
+        raise HTTPException(status_code=404, detail="Service bill not found")
+    
+    # Build update data
+    update_data = {}
+    
+    if "bill_number" in bill_update:
+        update_data["bill_number"] = bill_update["bill_number"]
+        update_data["job_card_number"] = bill_update["bill_number"]  # Keep both in sync
+    
+    if "customer_name" in bill_update:
+        update_data["customer_name"] = bill_update["customer_name"]
+    
+    if "vehicle_reg_no" in bill_update:
+        update_data["vehicle_reg_no"] = bill_update["vehicle_reg_no"]
+    
+    if "status" in bill_update:
+        update_data["status"] = bill_update["status"]
+    
+    if "amount" in bill_update:
+        update_data["amount"] = bill_update["amount"]
+    
+    if "items" in bill_update:
+        update_data["items"] = bill_update["items"]
+    
+    update_data["updated_at"] = datetime.now(timezone.utc)
+    
+    await db.service_bills.update_one(
+        {"id": bill_id},
+        {"$set": update_data}
+    )
+    
+    # Return updated bill
+    updated_bill = await db.service_bills.find_one({"id": bill_id}, {"_id": 0})
+    return updated_bill
+
 @api_router.delete("/service-bills/{bill_id}")
 async def delete_service_bill(bill_id: str, current_user: User = Depends(get_current_user)):
     existing_bill = await db.service_bills.find_one({"id": bill_id})
