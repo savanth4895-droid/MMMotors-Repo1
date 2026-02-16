@@ -6083,6 +6083,15 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
                           <Button 
                             size="sm" 
                             variant="outline"
+                            onClick={() => handleEditBill(bill)}
+                            className="text-blue-600 hover:text-blue-700"
+                            data-testid={`edit-bill-${bill.id}`}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
                             onClick={() => handlePrintBill(bill)}
                           >
                             <Printer className="w-4 h-4" />
