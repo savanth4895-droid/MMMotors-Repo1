@@ -58,6 +58,17 @@ if is_atlas:
 client = AsyncIOMotorClient(mongo_url, **client_options)
 db = client[os.environ['DB_NAME']]
 
+async def next_sequence(name: str) -> int:
+    """Atomically increment a named counter — prevents duplicate invoice/job numbers."""
+    result = await db.counters.find_one_and_update(
+        {"_id": name},
+        {"$inc": {"seq": 1}},
+        upsert=True,
+        return_document=True
+    )
+    return result["seq"]
+
+
 # JWT Configuration
 SECRET_KEY = os.environ['JWT_SECRET_KEY']
 ALGORITHM = "HS256"
@@ -72,16 +83,29 @@ api_router = APIRouter(prefix="/api")
 # Startup event to verify MongoDB connection
 @app.on_event("startup")
 async def startup_db_client():
-    """Test MongoDB connection on startup"""
+    """Test MongoDB connection and create indexes on startup"""
     try:
-        # Test the connection
         await client.admin.command('ping')
         print("✅ Successfully connected to MongoDB Atlas")
     except Exception as e:
         print(f"❌ Failed to connect to MongoDB: {str(e)}")
-        print(f"   Error type: {type(e).__name__}")
         print(f"   Make sure MONGO_URL is correctly configured for Atlas")
-        # Don't raise exception - let the app start and show errors via /ready endpoint
+
+    # Create indexes for frequently queried fields
+    try:
+        await db.vehicles.create_index("chassis_number", sparse=True)
+        await db.vehicles.create_index("vehicle_number", sparse=True)
+        await db.vehicles.create_index("status")
+        await db.customers.create_index("mobile", sparse=True)
+        await db.services.create_index("job_card_number", sparse=True)
+        await db.services.create_index("status")
+        await db.sales.create_index("invoice_number", sparse=True)
+        await db.sales.create_index("customer_id")
+        await db.spare_parts.create_index("part_number", sparse=True)
+        await db.activities.create_index([("created_at", -1)])
+        print("✅ MongoDB indexes created")
+    except Exception as e:
+        print(f"⚠️ Index creation warning: {e}")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
@@ -1089,8 +1113,13 @@ async def get_vehicle(vehicle_id: str, current_user: User = Depends(get_current_
         raise HTTPException(status_code=404, detail="Vehicle not found")
     return Vehicle(**vehicle)
 
+class VehicleStatusUpdate(BaseModel):
+    status: str
+    return_date: Optional[str] = None
+    outbound_location: Optional[str] = None
+
 @api_router.put("/vehicles/{vehicle_id}/status")
-async def update_vehicle_status(vehicle_id: str, status_data: dict, current_user: User = Depends(get_current_user)):
+async def update_vehicle_status(vehicle_id: str, status_data: VehicleStatusUpdate, current_user: User = Depends(get_current_user)):
     """Update vehicle status with optional return date"""
     # Check if vehicle exists
     existing_vehicle = await db.vehicles.find_one({"id": vehicle_id})
@@ -1098,7 +1127,7 @@ async def update_vehicle_status(vehicle_id: str, status_data: dict, current_user
         raise HTTPException(status_code=404, detail="Vehicle not found")
     
     # Validate status
-    new_status = status_data.get("status")
+    new_status = status_data.status
     if not new_status:
         raise HTTPException(status_code=400, detail="Status is required")
     
@@ -1117,7 +1146,7 @@ async def update_vehicle_status(vehicle_id: str, status_data: dict, current_user
         update_data["date_returned"] = None
     elif new_status == "returned":
         # Set return date
-        return_date = status_data.get("return_date")
+        return_date = status_data.return_date
         if return_date:
             try:
                 # Parse the return date if provided
@@ -1128,7 +1157,7 @@ async def update_vehicle_status(vehicle_id: str, status_data: dict, current_user
             update_data["date_returned"] = datetime.now(timezone.utc)
         
         # Set outbound location if provided
-        outbound_location = status_data.get("outbound_location")
+        outbound_location = status_data.outbound_location
         if outbound_location:
             update_data["outbound_location"] = outbound_location
     elif new_status == "in_stock":
@@ -1258,9 +1287,9 @@ async def create_sale(sale_data: SaleCreate, current_user: User = Depends(get_cu
     if sale_data.payment_method not in valid_payment_methods:
         raise HTTPException(status_code=400, detail=f"Invalid payment method. Must be one of: {', '.join(valid_payment_methods)}")
     
-    # Generate invoice number
-    count = await db.sales.count_documents({})
-    invoice_number = f"INV-{count + 1:06d}"
+    # Generate invoice number (atomic — prevents duplicates under concurrent load)
+    seq = await next_sequence("sales")
+    invoice_number = f"INV-{seq:06d}"
     
     sale_dict = sale_data.dict()
     sale_dict['invoice_number'] = invoice_number
@@ -1497,8 +1526,8 @@ async def create_registration(reg_data: RegistrationCreate, current_user: User =
         await db.customers.insert_one(customer)
     
     # Generate registration number
-    count = await db.registrations.count_documents({})
-    registration_number = f"REG-{count + 1:06d}"
+    seq = await next_sequence("registrations")
+    registration_number = f"REG-{seq:06d}"
     
     registration = Registration(
         registration_number=registration_number,
@@ -1559,9 +1588,9 @@ async def delete_registration(reg_id: str, current_user: User = Depends(get_curr
 # Service endpoints
 @api_router.post("/services", response_model=Service)
 async def create_service(service_data: ServiceCreate, current_user: User = Depends(get_current_user)):
-    # Generate job card number
-    count = await db.services.count_documents({})
-    job_card_number = f"JOB-{count + 1:06d}"
+    # Generate job card number (atomic)
+    seq = await next_sequence("services")
+    job_card_number = f"JOB-{seq:06d}"
     
     service_dict = service_data.dict()
     service_dict['job_card_number'] = job_card_number
@@ -1724,9 +1753,9 @@ async def get_spare_parts(low_stock: bool = False, current_user: User = Depends(
 
 @api_router.post("/spare-parts/bills", response_model=SparePartBill)
 async def create_spare_part_bill(bill_data: SparePartBillCreate, current_user: User = Depends(get_current_user)):
-    # Generate bill number
-    count = await db.spare_part_bills.count_documents({})
-    bill_number = f"SPB-{count + 1:06d}"
+    # Generate bill number (atomic)
+    seq = await next_sequence("spare_part_bills")
+    bill_number = f"SPB-{seq:06d}"
     
     bill_dict = bill_data.dict()
     bill_dict['bill_number'] = bill_number
@@ -1805,8 +1834,8 @@ async def delete_spare_part_bill(bill_id: str, current_user: User = Depends(get_
 async def create_service_bill(bill_data: ServiceBillCreate, current_user: User = Depends(get_current_user)):
     # Generate bill number if not provided
     if not bill_data.bill_number:
-        count = await db.service_bills.count_documents({})
-        bill_data.bill_number = f"SB-{count + 1:06d}"
+        seq = await next_sequence("service_bills")
+        bill_data.bill_number = f"SB-{seq:06d}"
     
     # Get customer info if customer_id is provided
     customer_name = bill_data.customer_name
