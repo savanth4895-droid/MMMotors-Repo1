@@ -121,8 +121,8 @@ const numberToWords = (num) => {
 
 // Custom Motorcycle Icon Component
 import { toast } from 'sonner';
-import { 
 import MotorcycleIcon from './ui/MotorcycleIcon';
+import { 
   LineChart, 
   Line, 
   XAxis, 
