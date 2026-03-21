@@ -31,21 +31,17 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    console.log('Login attempt started with:', loginData);
 
     try {
-      console.log('Making API call to:', `${API}/auth/login`);
       
       const response = await axios.post(`${API}/auth/login`, {
         username: loginData.username,
         password: loginData.password
       });
       
-      console.log('Login API response received:', response.status, response.data);
       
       if (response.data.access_token && response.data.user) {
         const { access_token, user } = response.data;
-        console.log('Login successful, calling login function');
         
         login(user, access_token);
         toast.success('Login successful! Redirecting...');
@@ -57,7 +53,6 @@ const Login = () => {
       const errorMessage = error.response?.data?.detail || error.message || 'Login failed';
       toast.error(errorMessage);
     } finally {
-      console.log('Setting loading to false');
       setIsLoading(false);
     }
   };

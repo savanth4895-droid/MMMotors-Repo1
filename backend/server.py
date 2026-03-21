@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -27,6 +27,26 @@ from fastapi import UploadFile, File
 import csv
 import io
 import re
+from collections import defaultdict
+
+
+# ── C3: In-memory rate limiter ─────────────────────────────────────────────
+class RateLimiter:
+    def __init__(self, max_requests: int = 5, window_seconds: int = 60):
+        self.max_requests = max_requests
+        self.window = timedelta(seconds=window_seconds)
+        self._hits: Dict[str, list] = defaultdict(list)
+
+    def is_allowed(self, key: str) -> bool:
+        now = datetime.now(timezone.utc)
+        cutoff = now - self.window
+        self._hits[key] = [t for t in self._hits[key] if t > cutoff]
+        if len(self._hits[key]) >= self.max_requests:
+            return False
+        self._hits[key].append(now)
+        return True
+
+login_limiter = RateLimiter(max_requests=5, window_seconds=60)
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -530,6 +550,28 @@ class ServiceDueBaseDateOverride(BaseModel):
     notes: Optional[str] = None
 
 # Utility functions
+
+def recalculate_bill_totals(items: list) -> dict:
+    subtotal = total_discount = total_cgst = total_sgst = 0.0
+    for item in items:
+        if not isinstance(item, dict): continue
+        rate = float(item.get("rate", item.get("unit_price", 0)))
+        qty = float(item.get("qty", item.get("quantity", 1)))
+        disc_pct = float(item.get("discount", item.get("discount_percent", 0)))
+        gst_pct = float(item.get("gst_percentage", item.get("gst", 18)))
+        base_amt = round(rate * qty, 2)
+        disc_amt = round(base_amt * disc_pct / 100, 2)
+        taxable = round(base_amt - disc_amt, 2)
+        total_cgst += round(taxable * (gst_pct / 2) / 100, 2)
+        total_sgst += round(taxable * (gst_pct / 2) / 100, 2)
+        subtotal += base_amt
+        total_discount += disc_amt
+    total_tax = round(total_cgst + total_sgst, 2)
+    return {"subtotal": round(subtotal, 2), "total_discount": round(total_discount, 2),
+            "total_cgst": round(total_cgst, 2), "total_sgst": round(total_sgst, 2),
+            "total_tax": total_tax, "total_amount": round(subtotal - total_discount + total_tax, 2)}
+
+
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
@@ -617,7 +659,7 @@ def parse_date_flexible(date_str: str) -> datetime:
         try:
             from dateutil import parser
             return parser.parse(date_str).replace(tzinfo=timezone.utc)
-        except:
+        except (ValueError, TypeError, OverflowError):
             return datetime.now(timezone.utc)
 
 def safe_str(value) -> str:
@@ -788,8 +830,15 @@ async def delete_base_date_override(key: str, current_user: User = Depends(get_c
 
 # Authentication endpoints
 @api_router.post("/auth/register")
-async def register_user(user_data: UserCreate):
-    # Check if user exists
+async def register_user(user_data: UserCreate, current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can register new users")
+    if len(user_data.password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can register new users")
+    if len(user_data.password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
     existing_user = await db.users.find_one({"$or": [{"username": user_data.username}, {"email": user_data.email}]})
     if existing_user:
         raise HTTPException(status_code=400, detail="Username or email already registered")
@@ -808,8 +857,32 @@ async def register_user(user_data: UserCreate):
     await db.users.insert_one(user_dict)
     return {"message": "User registered successfully", "user_id": user_dict['id']}
 
+@api_router.post("/auth/bootstrap")
+async def bootstrap_admin(user_data: UserCreate):
+    user_count = await db.users.count_documents({})
+    if user_count > 0:
+        raise HTTPException(status_code=403, detail="Bootstrap not allowed — users already exist.")
+    if len(user_data.password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+    hashed_password = hash_password(user_data.password)
+    user_dict = user_data.dict()
+    user_dict.pop('password')
+    user_dict['hashed_password'] = hashed_password
+    user_dict['id'] = str(uuid.uuid4())
+    user_dict['is_active'] = True
+    user_dict['role'] = UserRole.ADMIN
+    user_dict['created_at'] = datetime.now(timezone.utc)
+    await db.users.insert_one(user_dict)
+    return {"message": "Admin user bootstrapped successfully", "user_id": user_dict['id']}
+
 @api_router.post("/auth/login")
-async def login_user(user_credentials: UserLogin):
+async def login_user(user_credentials: UserLogin, request: Request):
+    client_ip = request.client.host if request.client else "unknown"
+    if not login_limiter.is_allowed(client_ip):
+        raise HTTPException(status_code=429, detail="Too many login attempts. Please try again later.")
+    client_ip = request.client.host if request.client else "unknown"
+    if not login_limiter.is_allowed(client_ip):
+        raise HTTPException(status_code=429, detail="Too many login attempts. Try again later.")
     user = await db.users.find_one({"username": user_credentials.username})
     if not user or not verify_password(user_credentials.password, user['hashed_password']):
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -1064,16 +1137,16 @@ async def create_vehicle(vehicle_data: VehicleCreate, current_user: User = Depen
     
     return vehicle
 
-@api_router.get("/vehicles", response_model=List[Vehicle])
-async def get_vehicles(brand: Optional[str] = None, status: Optional[VehicleStatus] = None, current_user: User = Depends(get_current_user)):
+@api_router.get("/vehicles")
+async def get_vehicles(brand: Optional[str] = None, status: Optional[VehicleStatus] = None, page: int = 1, limit: int = 100, sort: str = "date_received", order: str = "desc", current_user: User = Depends(get_current_user)):
     filter_dict = {}
-    if brand:
-        filter_dict["brand"] = brand
-    if status:
-        filter_dict["status"] = status
-    
-    vehicles = await db.vehicles.find(filter_dict).to_list(1000)
-    return [Vehicle(**vehicle) for vehicle in vehicles]
+    if brand: filter_dict["brand"] = brand
+    if status: filter_dict["status"] = status
+    skip = (page - 1) * limit
+    sort_dir = 1 if order == "asc" else -1
+    vehicles = await db.vehicles.find(filter_dict).sort(sort, sort_dir).skip(skip).limit(limit).to_list(None)
+    total = await db.vehicles.count_documents(filter_dict)
+    return {"data": [Vehicle(**v).dict() for v in vehicles], "meta": {"total": total, "page": page, "limit": limit, "totalPages": (total + limit - 1) // limit}}
 
 @api_router.get("/vehicles/brands")
 async def get_vehicle_brands(current_user: User = Depends(get_current_user)):
@@ -1096,7 +1169,7 @@ async def update_vehicle(vehicle_id: str, vehicle_data: VehicleUpdate, current_u
         try:
             from dateutil import parser as date_parser
             update_data["date_returned"] = date_parser.parse(update_data["date_returned"])
-        except:
+        except (ValueError, TypeError):
             pass
     
     # Merge existing data with updates
@@ -1330,10 +1403,13 @@ async def create_sale(sale_data: SaleCreate, current_user: User = Depends(get_cu
     
     return sale
 
-@api_router.get("/sales", response_model=List[Sale])
-async def get_sales(current_user: User = Depends(get_current_user)):
-    sales = await db.sales.find().to_list(1000)
-    return [Sale(**sale) for sale in sales]
+@api_router.get("/sales")
+async def get_sales(page: int = 1, limit: int = 100, sort: str = "created_at", order: str = "desc", current_user: User = Depends(get_current_user)):
+    skip = (page - 1) * limit
+    sort_dir = 1 if order == "asc" else -1
+    sales = await db.sales.find().sort(sort, sort_dir).skip(skip).limit(limit).to_list(None)
+    total = await db.sales.count_documents({})
+    return {"data": [Sale(**s).dict() for s in sales], "meta": {"total": total, "page": page, "limit": limit, "totalPages": (total + limit - 1) // limit}}
 
 @api_router.get("/sales/summary/chart")
 async def get_sales_summary(
@@ -1548,9 +1624,11 @@ async def create_registration(reg_data: RegistrationCreate, current_user: User =
     return registration
 
 @api_router.get("/registrations")
-async def get_registrations(current_user: User = Depends(get_current_user)):
-    registrations = await db.registrations.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
-    return registrations
+async def get_registrations(page: int = 1, limit: int = 100, current_user: User = Depends(get_current_user)):
+    skip = (page - 1) * limit
+    regs = await db.registrations.find({}, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(None)
+    total = await db.registrations.count_documents({})
+    return {"data": regs, "meta": {"total": total, "page": page, "limit": limit, "totalPages": (total + limit - 1) // limit}}
 
 @api_router.get("/registrations/{reg_id}")
 async def get_registration(reg_id: str, current_user: User = Depends(get_current_user)):
@@ -1605,14 +1683,15 @@ async def create_service(service_data: ServiceCreate, current_user: User = Depen
     await db.services.insert_one(service.dict())
     return service
 
-@api_router.get("/services", response_model=List[Service])
-async def get_services(status: Optional[ServiceStatus] = None, current_user: User = Depends(get_current_user)):
+@api_router.get("/services")
+async def get_services(status: Optional[ServiceStatus] = None, page: int = 1, limit: int = 100, sort: str = "created_at", order: str = "desc", current_user: User = Depends(get_current_user)):
     filter_dict = {}
-    if status:
-        filter_dict["status"] = status
-    
-    services = await db.services.find(filter_dict).to_list(1000)
-    return [Service(**service) for service in services]
+    if status: filter_dict["status"] = status
+    skip = (page - 1) * limit
+    sort_dir = 1 if order == "asc" else -1
+    services = await db.services.find(filter_dict).sort(sort, sort_dir).skip(skip).limit(limit).to_list(None)
+    total = await db.services.count_documents(filter_dict)
+    return {"data": [Service(**s).dict() for s in services], "meta": {"total": total, "page": page, "limit": limit, "totalPages": (total + limit - 1) // limit}}
 
 @api_router.get("/services/{service_id}", response_model=Service)
 async def get_service(service_id: str, current_user: User = Depends(get_current_user)):
@@ -1729,27 +1808,22 @@ async def create_spare_part(spare_part_data: SparePartCreate, current_user: User
     await db.spare_parts.insert_one(spare_part.dict())
     return spare_part
 
-@api_router.get("/spare-parts", response_model=List[SparePart])
-async def get_spare_parts(low_stock: bool = False, current_user: User = Depends(get_current_user)):
+@api_router.get("/spare-parts")
+async def get_spare_parts(low_stock: bool = False, page: int = 1, limit: int = 100, sort: str = "created_at", order: str = "desc", current_user: User = Depends(get_current_user)):
     filter_dict = {}
-    if low_stock:
-        filter_dict = {"$expr": {"$lte": ["$quantity", "$low_stock_threshold"]}}
-    
-    spare_parts = await db.spare_parts.find(filter_dict).to_list(1000)
-    # Handle legacy spare parts that don't have GST fields
-    processed_parts = []
+    if low_stock: filter_dict = {"$expr": {"$lte": ["$quantity", "$low_stock_threshold"]}}
+    skip = (page - 1) * limit
+    sort_dir = 1 if order == "asc" else -1
+    spare_parts = await db.spare_parts.find(filter_dict).sort(sort, sort_dir).skip(skip).limit(limit).to_list(None)
+    total = await db.spare_parts.count_documents(filter_dict)
+    processed = []
     for part in spare_parts:
-        # Add default values for missing GST fields
-        if 'hsn_sac' not in part:
-            part['hsn_sac'] = None
-        if 'gst_percentage' not in part:
-            part['gst_percentage'] = 18.0
-        if 'unit' not in part:
-            part['unit'] = 'Nos'
-        if 'compatible_models' not in part:
-            part['compatible_models'] = None
-        processed_parts.append(SparePart(**part))
-    return processed_parts
+        if 'hsn_sac' not in part: part['hsn_sac'] = None
+        if 'gst_percentage' not in part: part['gst_percentage'] = 18.0
+        if 'unit' not in part: part['unit'] = 'Nos'
+        if 'compatible_models' not in part: part['compatible_models'] = None
+        processed.append(SparePart(**part).dict())
+    return {"data": processed, "meta": {"total": total, "page": page, "limit": limit, "totalPages": (total + limit - 1) // limit}}
 
 @api_router.post("/spare-parts/bills", response_model=SparePartBill)
 async def create_spare_part_bill(bill_data: SparePartBillCreate, current_user: User = Depends(get_current_user)):
@@ -1761,59 +1835,34 @@ async def create_spare_part_bill(bill_data: SparePartBillCreate, current_user: U
     bill_dict['bill_number'] = bill_number
     bill_dict['created_by'] = current_user.id
     
-    # Handle customer data - prioritize customer_data over customer_id
     if bill_dict.get('customer_data'):
-        # Use the new customer data format
-        bill_dict['customer_id'] = None  # Clear legacy field
+        bill_dict['customer_id'] = None
     elif bill_dict.get('customer_id'):
-        # For backwards compatibility, keep customer_id if no customer_data
         pass
     else:
         raise HTTPException(status_code=400, detail="Customer information is required")
-    
-    # Ensure all GST fields are present with defaults if not provided
-    if 'subtotal' not in bill_dict:
-        bill_dict['subtotal'] = 0
-    if 'total_discount' not in bill_dict:
-        bill_dict['total_discount'] = 0
-    if 'total_cgst' not in bill_dict:
-        bill_dict['total_cgst'] = 0
-    if 'total_sgst' not in bill_dict:
-        bill_dict['total_sgst'] = 0
-    if 'total_tax' not in bill_dict:
-        bill_dict['total_tax'] = 0
-    if 'total_amount' not in bill_dict:
-        bill_dict['total_amount'] = bill_dict['subtotal'] + bill_dict['total_tax'] - bill_dict['total_discount']
+    totals = recalculate_bill_totals(bill_dict.get('items', []))
+    bill_dict.update(totals)
     
     bill = SparePartBill(**bill_dict)
     
     await db.spare_part_bills.insert_one(bill.dict())
     return bill
 
-@api_router.get("/spare-parts/bills", response_model=List[SparePartBill])
-async def get_spare_part_bills(current_user: User = Depends(get_current_user)):
-    bills = await db.spare_part_bills.find().to_list(1000)
-    # Handle legacy bills that don't have GST fields or customer data
-    processed_bills = []
+@api_router.get("/spare-parts/bills")
+async def get_spare_part_bills(page: int = 1, limit: int = 100, current_user: User = Depends(get_current_user)):
+    skip = (page - 1) * limit
+    bills = await db.spare_part_bills.find().sort("created_at", -1).skip(skip).limit(limit).to_list(None)
+    total = await db.spare_part_bills.count_documents({})
+    processed = []
     for bill in bills:
-        # Add default values for missing GST fields
-        if 'subtotal' not in bill:
-            bill['subtotal'] = bill.get('total_amount', 0)
-        if 'total_discount' not in bill:
-            bill['total_discount'] = 0
-        if 'total_cgst' not in bill:
-            bill['total_cgst'] = 0
-        if 'total_sgst' not in bill:
-            bill['total_sgst'] = 0
-        if 'total_tax' not in bill:
-            bill['total_tax'] = 0
-        # Handle customer data backwards compatibility
-        if 'customer_data' not in bill:
-            bill['customer_data'] = None
-        if 'customer_id' not in bill:
-            bill['customer_id'] = None
-        processed_bills.append(SparePartBill(**bill))
-    return processed_bills
+        if 'subtotal' not in bill: bill['subtotal'] = bill.get('total_amount', 0)
+        for k in ['total_discount','total_cgst','total_sgst','total_tax']:
+            if k not in bill: bill[k] = 0
+        if 'customer_data' not in bill: bill['customer_data'] = None
+        if 'customer_id' not in bill: bill['customer_id'] = None
+        processed.append(SparePartBill(**bill).dict())
+    return {"data": processed, "meta": {"total": total, "page": page, "limit": limit, "totalPages": (total + limit - 1) // limit}}
 
 @api_router.delete("/spare-parts/bills/{bill_id}")
 async def delete_spare_part_bill(bill_id: str, current_user: User = Depends(get_current_user)):
@@ -1852,8 +1901,8 @@ async def create_service_bill(bill_data: ServiceBillCreate, current_user: User =
     if bill_data.bill_date:
         try:
             bill_date = datetime.fromisoformat(bill_data.bill_date.replace('Z', '+00:00'))
-        except:
-            pass
+        except (ValueError, TypeError) as e:
+            logging.warning(f"Could not parse bill_date: {e}")
     
     # Reduce spare part quantities for items that have spare_part_id
     spare_part_updates = []
@@ -1882,6 +1931,7 @@ async def create_service_bill(bill_data: ServiceBillCreate, current_user: User =
                         "new_qty": new_qty
                     })
     
+    totals = recalculate_bill_totals(bill_data.items)
     bill = ServiceBill(
         bill_number=bill_data.bill_number,
         job_card_number=bill_data.job_card_number,
@@ -1892,12 +1942,12 @@ async def create_service_bill(bill_data: ServiceBillCreate, current_user: User =
         vehicle_brand=bill_data.vehicle_brand,
         vehicle_model=bill_data.vehicle_model,
         items=bill_data.items,
-        subtotal=bill_data.subtotal,
-        total_discount=bill_data.total_discount,
-        total_cgst=bill_data.total_cgst,
-        total_sgst=bill_data.total_sgst,
-        total_tax=bill_data.total_tax,
-        total_amount=bill_data.total_amount,
+        subtotal=totals['subtotal'],
+        total_discount=totals['total_discount'],
+        total_cgst=totals['total_cgst'],
+        total_sgst=totals['total_sgst'],
+        total_tax=totals['total_tax'],
+        total_amount=totals['total_amount'],
         bill_date=bill_date,
         status=bill_data.status,
         created_by=current_user.username
@@ -1907,14 +1957,16 @@ async def create_service_bill(bill_data: ServiceBillCreate, current_user: User =
     
     # Log spare part inventory updates
     if spare_part_updates:
-        print(f"Spare part inventory updated for bill {bill.bill_number}: {spare_part_updates}")
+        logging.info(f"Spare part inventory updated for bill {bill.bill_number}: {spare_part_updates}")
     
     return bill
 
 @api_router.get("/service-bills")
-async def get_service_bills(current_user: User = Depends(get_current_user)):
-    bills = await db.service_bills.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
-    return bills
+async def get_service_bills(page: int = 1, limit: int = 100, current_user: User = Depends(get_current_user)):
+    skip = (page - 1) * limit
+    bills = await db.service_bills.find({}, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(None)
+    total = await db.service_bills.count_documents({})
+    return {"data": bills, "meta": {"total": total, "page": page, "limit": limit, "totalPages": (total + limit - 1) // limit}}
 
 @api_router.get("/service-bills/{bill_id}")
 async def get_service_bill(bill_id: str, current_user: User = Depends(get_current_user)):
@@ -2467,7 +2519,7 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                                     if excel_date > 60:
                                         excel_date -= 1
                                     sale_date = datetime(1900, 1, 1) + timedelta(days=excel_date - 2)
-                                except:
+                                except (ValueError, TypeError, OverflowError):
                                     pass
                             
                             # Try various string date formats
@@ -3281,7 +3333,7 @@ class BackupService:
                             try:
                                 if len(str(cell.value)) > max_length:
                                     max_length = len(str(cell.value))
-                            except:
+                            except (TypeError, AttributeError):
                                 pass
                         adjusted_width = min(max_length + 2, 50)
                         sheet.column_dimensions[column_letter].width = adjusted_width
@@ -3681,7 +3733,7 @@ app.include_router(api_router)
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=["*"],
+    allow_origins=os.environ.get("CORS_ORIGINS", "http://localhost:3000").split(","),
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
 )
@@ -3692,7 +3744,3 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()

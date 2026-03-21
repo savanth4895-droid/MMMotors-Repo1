@@ -1,3 +1,0 @@
-date_received,brand,model,chassis_number,engine_number,color,vehicle_number,key_number,inbound_location,page_number,status,customer_mobile,customer_name,sale_amount,payment_method
-2025-01-15,TVS,Apache RTR 160,ABC123456789,ENG987654321,Red,KA01AB1234,KEY001,Warehouse A,Page 1,in_stock,9876543210,John Doe,75000,cash
-2025-01-16,BAJAJ,Pulsar 150,DEF123456789,ENG987654322,Blue,KA02CD5678,KEY002,Warehouse B,Page 2,in_stock,9876543211,Jane Smith,65000,finance
