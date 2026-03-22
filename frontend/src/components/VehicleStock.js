@@ -241,9 +241,6 @@ const EditVehicleModal = ({ vehicle, isOpen, onClose, onUpdate }) => {
     date_received: '',
     date_returned: ''
   });
-  const [vsDraftRestored, setVsDraftRestored] = useState(false);
-  const vsEmpty = {brand:'',model:'',chassis_number:'',engine_number:'',color:'',vehicle_number:'',key_number:'',inbound_location:'',page_number:'',date_received:new Date().toISOString().split('T')[0]};
-  const { clearDraft: clearVsDraft } = useDraft('draft_add_vehicle', vehicleData, setVehicleData, vsEmpty, () => setVsDraftRestored(true));
   const [loading, setLoading] = useState(false);
 
   const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO', 'ROYAL ENFIELD'];
@@ -327,12 +324,6 @@ const EditVehicleModal = ({ vehicle, isOpen, onClose, onUpdate }) => {
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          {vsDraftRestored && (
-            <div className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 text-sm">
-              <span className="text-amber-800 font-medium">&#128196; Draft restored — your previous entries have been loaded.</span>
-              <button type="button" onClick={() => { clearVsDraft(); setVehicleData(vsEmpty); setVsDraftRestored(false); }} className="text-amber-700 underline ml-4">Clear draft</button>
-            </div>
-          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="edit-brand">Brand</Label>
@@ -850,6 +841,9 @@ const AddVehicle = () => {
     page_number: '',
     date_received: new Date().toISOString().split('T')[0]
   });
+  const [vsDraftRestored, setVsDraftRestored] = useState(false);
+  const vsEmpty = {brand:'',model:'',chassis_number:'',engine_number:'',color:'',vehicle_number:'',key_number:'',inbound_location:'',page_number:'',date_received:new Date().toISOString().split('T')[0]};
+  const { clearDraft: clearVsDraft } = useDraft('draft_add_vehicle', vehicleData, setVehicleData, vsEmpty, () => setVsDraftRestored(true));
   const [loading, setLoading] = useState(false);
 
   const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO', 'ROYAL ENFIELD'];
@@ -894,6 +888,12 @@ const AddVehicle = () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {vsDraftRestored && (
+            <div className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 text-sm">
+              <span className="text-amber-800 font-medium">&#128196; Draft restored — your previous entries have been loaded.</span>
+              <button type="button" onClick={() => { clearVsDraft(); setVehicleData(vsEmpty); setVsDraftRestored(false); }} className="text-amber-700 underline ml-4">Clear draft</button>
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="brand">Brand</Label>
