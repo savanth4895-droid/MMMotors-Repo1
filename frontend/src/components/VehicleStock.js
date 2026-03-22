@@ -509,7 +509,7 @@ const BrandDetails = () => {
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(25);
+  const [itemsPerPage] = useState(100);
 
   useEffect(() => {
     fetchBrandVehicles();
