@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
@@ -120,6 +120,7 @@ const numberToWords = (num) => {
 };
 
 import { toast } from 'sonner';
+import { useDraft } from '../hooks/useDraft';
 import MotorcycleIcon from './ui/MotorcycleIcon';
 import { 
   LineChart, 
@@ -351,6 +352,12 @@ const CreateInvoice = () => {
     payment_method: '',
     hypothecation: ''
   });
+  const [draftRestored, setDraftRestored] = useState(false);
+  const [returningCustomer, setReturningCustomer] = useState(null);
+  const [previousSales, setPreviousSales] = useState([]);
+  const [checkingMobile, setCheckingMobile] = useState(false);
+  const invoiceEmpty = {date: new Date().toISOString().split('T')[0], name:'',care_of:'',mobile:'',address:'',brand:'',model:'',color:'',chassis_number:'',engine_number:'',vehicle_no:'',insurance_nominee:'',relation:'',age:'',amount:'',payment_method:'',hypothecation:''};
+  const { clearDraft: clearInvoiceDraft } = useDraft('draft_create_invoice', invoiceData, setInvoiceData, invoiceEmpty, () => setDraftRestored(true));
   const [loading, setLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [generatedInvoice, setGeneratedInvoice] = useState(null);
@@ -400,6 +407,11 @@ const CreateInvoice = () => {
       [field]: value
     }));
 
+    // Trigger customer lookup when mobile reaches 10 digits
+    if (field === 'mobile') {
+      if (value.length === 10) checkExistingCustomer(value);
+      else if (value.length < 10) { setReturningCustomer(null); setPreviousSales([]); }
+    }
     // Trigger vehicle search when chassis number changes
     if (field === 'chassis_number') {
       debouncedVehicleSearch(value);
@@ -423,6 +435,40 @@ const CreateInvoice = () => {
     setVehicleSuggestions([]);
     
     toast.success(`Vehicle details loaded: ${vehicle.brand} ${vehicle.model}`);
+  };
+
+  const checkExistingCustomer = async (mobile) => {
+    if (!mobile || mobile.length !== 10) {
+      setReturningCustomer(null);
+      setPreviousSales([]);
+      return;
+    }
+    setCheckingMobile(true);
+    try {
+      const res = await axios.get(`${API}/customers/by-mobile/${mobile}`);
+      const customer = res.data;
+      setReturningCustomer(customer);
+      setInvoiceData(prev => ({
+        ...prev,
+        name: customer.name || prev.name,
+        care_of: customer.care_of || prev.care_of,
+        address: customer.address || prev.address,
+        insurance_nominee: customer.insurance_info?.nominee_name || prev.insurance_nominee,
+        relation: customer.insurance_info?.relation || prev.relation,
+        age: customer.insurance_info?.age || prev.age,
+        // Clear vehicle fields so user enters new bike
+        brand: '', model: '', color: '', chassis_number: '', engine_number: '', vehicle_no: '',
+      }));
+      try {
+        const salesRes = await axios.get(`${API}/sales`);
+        const allSales = salesRes.data || [];
+        setPreviousSales(allSales.filter(s => s.customer_id === customer.id));
+      } catch { setPreviousSales([]); }
+    } catch (e) {
+      if (e.response?.status === 404) { setReturningCustomer(null); setPreviousSales([]); }
+    } finally {
+      setCheckingMobile(false);
+    }
   };
 
   const generateInvoiceNumber = () => {
@@ -482,25 +528,46 @@ const CreateInvoice = () => {
     setLoading(true);
 
     try {
-      // Create customer first with insurance nominee details
-      const customerData = {
+      // Build customer payload
+      const customerPayload = {
         name: invoiceData.name,
         mobile: invoiceData.mobile,
         care_of: invoiceData.care_of,
         email: null,
         address: invoiceData.address
       };
-
-      // Add insurance nominee details if provided
       if (invoiceData.insurance_nominee || invoiceData.relation || invoiceData.age) {
-        customerData.insurance_info = {
+        customerPayload.insurance_info = {
           nominee_name: invoiceData.insurance_nominee || '',
           relation: invoiceData.relation || '',
           age: invoiceData.age || ''
         };
       }
 
-      const customerResponse = await axios.post(`${API}/customers`, customerData);
+      // Check if customer already exists by mobile — if so, use existing record
+      let customerResponse;
+      let existingCustomer = null;
+      try {
+        const lookupRes = await axios.get(`${API}/customers/by-mobile/${invoiceData.mobile}`);
+        existingCustomer = lookupRes.data;
+      } catch (e) {
+        // 404 = customer doesn't exist yet, that's fine
+        if (e.response?.status !== 404) throw e;
+      }
+
+      if (existingCustomer) {
+        // Update insurance info if provided, then use existing customer
+        if (customerPayload.insurance_info) {
+          await axios.put(`${API}/customers/${existingCustomer.id}`, {
+            ...existingCustomer,
+            insurance_info: customerPayload.insurance_info
+          }).catch(() => {}); // non-fatal
+        }
+        customerResponse = { data: existingCustomer };
+      } else {
+        // Create new customer
+        customerResponse = await axios.post(`${API}/customers`, customerPayload);
+      }
 
       let vehicleResponse;
       
@@ -569,6 +636,8 @@ const CreateInvoice = () => {
       };
 
       setGeneratedInvoice(invoice);
+      clearInvoiceDraft();
+      setDraftRestored(false);
       setShowPreview(true);
       toast.success('Invoice generated successfully!');
     } catch (error) {
@@ -960,7 +1029,46 @@ const CreateInvoice = () => {
                   </div>
                 </div>
 
-                {/* Vehicle Details */}
+                {/* Returning Customer Banner */}
+          {returningCustomer && (
+            <div className="border border-blue-200 rounded-lg overflow-hidden">
+              <div className="bg-blue-600 text-white px-4 py-2 flex items-center justify-between">
+                <span className="font-semibold text-sm">
+                  &#128100; Returning Customer — {returningCustomer.name}
+                  {checkingMobile && <span className="ml-2 text-xs opacity-75">checking...</span>}
+                </span>
+                <span className="text-xs bg-blue-500 px-2 py-0.5 rounded-full">
+                  {previousSales.length} previous purchase{previousSales.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+              <div className="bg-blue-50 px-4 py-3">
+                <p className="text-xs text-blue-700 mb-2">
+                  Customer details pre-filled. You are creating a <strong>new invoice with a different vehicle</strong> for this customer.
+                </p>
+                {previousSales.length > 0 && (
+                  <div className="space-y-1 mb-2">
+                    <p className="text-xs font-semibold text-blue-800">Previous purchases:</p>
+                    {previousSales.slice(0, 3).map((sale, idx) => (
+                      <div key={idx} className="flex items-center justify-between bg-white rounded px-3 py-1.5 text-xs border border-blue-100 gap-2 flex-wrap">
+                        <span className="font-mono text-blue-700">{sale.invoice_number}</span>
+                        <span className="text-gray-600">{sale.vehicle_brand} {sale.vehicle_model}</span>
+                        <span className="text-green-700 font-semibold">₹{sale.amount?.toLocaleString()}</span>
+                        <span className="text-gray-400">{new Date(sale.sale_date).toLocaleDateString('en-IN')}</span>
+                      </div>
+                    ))}
+                    {previousSales.length > 3 && (
+                      <p className="text-xs text-blue-500 text-right">+{previousSales.length - 3} more</p>
+                    )}
+                  </div>
+                )}
+                <p className="text-xs text-amber-700 font-medium">
+                  &#9888;&#65039; Vehicle fields have been cleared — enter the new bike details below.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Vehicle Details */}
                 <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg border border-emerald-200 overflow-hidden">
                   <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 px-2 py-1">
                     <h3 className="text-white font-bold flex items-center text-xs">
