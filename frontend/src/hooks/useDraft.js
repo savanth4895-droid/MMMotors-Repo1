@@ -30,7 +30,6 @@ export function useDraft(key, state, setState, emptyState, onRestore) {
       }
     } catch (e) { /* ignore corrupt drafts */ }
     isMounted.current = true;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // On state change: save to localStorage (skip first render)
@@ -47,7 +46,6 @@ export function useDraft(key, state, setState, emptyState, onRestore) {
         localStorage.setItem(key, JSON.stringify(state));
       }
     } catch (e) { /* ignore storage errors */ }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
   // clearDraft — call this after successful submit or explicit cancel
@@ -75,7 +73,6 @@ export function useDraftArray(key, items, setItems) {
       }
     } catch (e) {}
     isMounted.current = true;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -87,7 +84,6 @@ export function useDraftArray(key, items, setItems) {
         localStorage.setItem(key, JSON.stringify(items));
       }
     } catch (e) {}
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items]);
 
   const clearDraft = () => localStorage.removeItem(key);
