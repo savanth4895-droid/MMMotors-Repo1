@@ -580,130 +580,193 @@ const CreateInvoice = () => {
 
   const handlePrint = () => {
     if (!generatedInvoice) return;
-
-    // Get the invoice preview content
-    const invoiceElement = document.getElementById('invoice-preview');
-    if (invoiceElement) {
-      const printWindow = window.open('', '_blank', 'width=900,height=800');
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Invoice Preview - ${generatedInvoice.invoice_number}</title>
-            <style>
-              body { 
-                font-family: Arial, sans-serif; 
-                margin: 0; 
-                padding: 0;
-                background-color: #f5f5f5;
-              }
-              .toolbar {
-                background-color: #2563eb;
-                color: white;
-                padding: 15px 20px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-              }
-              .toolbar h2 {
-                margin: 0;
-                font-size: 18px;
-              }
-              .toolbar-buttons {
-                display: flex;
-                gap: 10px;
-              }
-              .toolbar button {
-                background-color: white;
-                color: #2563eb;
-                border: none;
-                padding: 10px 20px;
-                border-radius: 5px;
-                cursor: pointer;
-                font-weight: 600;
-                font-size: 14px;
-                transition: all 0.2s;
-              }
-              .toolbar button:hover {
-                background-color: #f0f0f0;
-                transform: translateY(-1px);
-              }
-              .toolbar button.print-btn {
-                background-color: #10b981;
-                color: white;
-              }
-              .toolbar button.print-btn:hover {
-                background-color: #059669;
-              }
-              .preview-container {
-                max-width: 21cm;
-                margin: 20px auto;
-                background-color: white;
-                padding: 20px;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                border-radius: 8px;
-              }
-              .invoice-container { 
-                max-width: 100%;
-                margin: 0 auto;
-              }
-              .header { text-align: center; margin-bottom: 12px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-              .header h1 { margin: 0; font-size: 18px; color: #2563eb; font-weight: bold; }
-              .header p { margin: 3px 0; font-size: 11px; }
-              .section { margin-bottom: 12px; border: 2px solid #ccc; padding: 10px; border-radius: 6px; page-break-inside: avoid; }
-              .section h3 { margin: 0 0 8px 0; font-size: 12px; color: #2563eb; border-bottom: 1px solid #ccc; padding-bottom: 3px; }
-              .field { margin-bottom: 4px; font-size: 10px; }
-              .label { font-weight: bold; display: inline-block; min-width: 80px; }
-              .payment-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 8px; }
-              .amount-words { margin-top: 6px; font-style: italic; padding: 6px; background-color: #f8f8f8; border-radius: 3px; border-top: 1px solid #ccc; font-size: 10px; }
-              .total { font-size: 14px; font-weight: bold; text-align: right; }
-              table { width: 100%; border-collapse: collapse; margin-top: 6px; }
-              th, td { padding: 4px; text-align: left; border: 1px solid #333; font-size: 9px; }
-              th { background-color: #f0f0f0; font-weight: bold; }
-              .service-header { text-align: center; font-weight: bold; margin-bottom: 8px; font-size: 12px; }
-              .customer-msg { margin-bottom: 8px; padding: 6px; background-color: #f8f8f8; border-radius: 3px; }
-              .customer-msg p { margin: 0; font-size: 9px; }
-              .service-footer { text-align: center; padding: 4px; background-color: #f0f0f0; border: 2px solid #333; border-top: none; font-weight: bold; font-size: 9px; }
-              .footer { text-align: center; margin-top: 15px; border-top: 1px solid #ccc; padding-top: 8px; }
-              .grid { display: flex; justify-content: space-between; margin-top: 8px; }
-              
-              @media print { 
-                body { 
-                  margin: 0; 
-                  padding: 0;
-                  background-color: white;
-                }
-                .toolbar { display: none !important; }
-                .preview-container {
-                  margin: 0;
-                  padding: 10px;
-                  box-shadow: none;
-                  border-radius: 0;
-                }
-                .section { page-break-inside: avoid; }
-                @page { size: A4; margin: 0.5cm; }
-              }
-            </style>
-          </head>
-          <body>
-            <div class="toolbar">
-              <h2>📄 Invoice Preview - ${generatedInvoice.invoice_number}</h2>
-              <div class="toolbar-buttons">
-                <button onclick="window.print()" class="print-btn">🖨️ Print Invoice</button>
-                <button onclick="window.close()">✖ Close</button>
+    const inv = generatedInvoice;
+    const printWindow = window.open('', '_blank', 'width=900,height=700');
+    printWindow.document.write(`
+      <!DOCTYPE html><html><head>
+        <title>Invoice Preview - ${inv.invoice_number}</title>
+        <style>
+          * { margin:0; padding:0; box-sizing:border-box; }
+          body { font-family:Arial,sans-serif; background:#f1f5f9; font-size:11px; color:#1e293b; }
+          .toolbar { background:#2563eb; color:white; padding:10px 18px; display:flex; justify-content:space-between; align-items:center; }
+          .toolbar h2 { font-size:15px; }
+          .toolbar-btns { display:flex; gap:8px; }
+          .btn { padding:7px 16px; border:none; border-radius:5px; cursor:pointer; font-weight:600; font-size:12px; }
+          .btn-print { background:#10b981; color:white; }
+          .btn-close { background:white; color:#2563eb; }
+          .page { max-width:210mm; margin:16px auto; background:white; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+          .header { background:linear-gradient(to right,#1e3a8a,#2563eb); color:white; padding:12px 16px; display:flex; justify-content:space-between; align-items:flex-start; }
+          .co-name { font-size:20px; font-weight:bold; letter-spacing:1px; margin-bottom:2px; }
+          .co-tag { font-size:11px; color:#bfdbfe; margin-bottom:6px; }
+          .co-addr p { font-size:10px; color:#bfdbfe; display:flex; align-items:center; margin:1px 0; }
+          .dot { width:5px; height:5px; background:#93c5fd; border-radius:50%; margin-right:6px; flex-shrink:0; display:inline-block; }
+          .inv-box { background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.3); border-radius:8px; padding:10px 14px; text-align:right; min-width:170px; }
+          .inv-title { font-size:13px; font-weight:bold; margin-bottom:6px; }
+          .inv-row { display:flex; justify-content:space-between; gap:12px; font-size:10px; margin-bottom:3px; }
+          .inv-row span:last-child { font-weight:bold; }
+          .body { padding:12px 16px; }
+          .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+          .card { border-radius:8px; overflow:hidden; border:1px solid; }
+          .card-blue { border-color:#bfdbfe; background:linear-gradient(135deg,#f8faff,#eff6ff); }
+          .card-green { border-color:#a7f3d0; background:linear-gradient(135deg,#f0fdf4,#ecfdf5); }
+          .card-purple { border-color:#ddd6fe; background:linear-gradient(135deg,#faf5ff,#f3e8ff); }
+          .card-pay { border-color:#bbf7d0; background:linear-gradient(135deg,#f0fdf4,#dcfce7); }
+          .card-svc { border-color:#bfdbfe; background:linear-gradient(135deg,#f8faff,#eff6ff); }
+          .card-hdr { padding:5px 10px; color:white; font-size:10px; font-weight:bold; }
+          .hdr-blue { background:linear-gradient(to right,#1d4ed8,#2563eb); }
+          .hdr-green { background:linear-gradient(to right,#047857,#059669); }
+          .hdr-purple { background:linear-gradient(to right,#6d28d9,#7c3aed); }
+          .hdr-pay { background:linear-gradient(to right,#047857,#059669); }
+          .hdr-svc { background:linear-gradient(to right,#1d4ed8,#2563eb); }
+          .card-body { padding:8px 10px; }
+          .row { display:flex; align-items:flex-start; border-bottom:1px solid #e2e8f0; padding:3px 0; font-size:10px; }
+          .row:last-child { border-bottom:none; }
+          .lbl { color:#475569; font-weight:600; width:52px; flex-shrink:0; }
+          .val { color:#0f172a; font-weight:500; }
+          .vgrid { display:grid; grid-template-columns:1fr 1fr; gap:4px 8px; }
+          .vitem { border-bottom:1px solid #d1fae5; padding:3px 0; }
+          .vitem:nth-last-child(-n+2) { border-bottom:none; }
+          .vlbl { font-size:9px; color:#065f46; font-weight:600; }
+          .vval { font-size:10px; color:#0f172a; font-weight:700; }
+          .vfull { display:flex; justify-content:space-between; font-size:10px; padding:2px 0; border-bottom:1px solid #d1fae5; }
+          .vfull:last-child { border-bottom:none; }
+          .vlbl2 { color:#065f46; font-weight:600; }
+          .ins-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; text-align:center; padding:4px 0; }
+          .ins-lbl { font-size:9px; color:#6d28d9; font-weight:600; margin-bottom:2px; }
+          .ins-val { font-size:10px; font-weight:700; color:#1e293b; }
+          .pay-grid { display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center; margin-bottom:8px; }
+          .pay-row { display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid #bbf7d0; font-size:10px; }
+          .pay-row:last-child { border-bottom:none; }
+          .pay-badge { background:#bbf7d0; color:#065f46; font-weight:bold; padding:2px 8px; border-radius:20px; font-size:10px; }
+          .amt-box { background:white; border:1px solid #86efac; border-radius:8px; padding:8px 14px; text-align:center; }
+          .amt-lbl { font-size:9px; color:#047857; font-weight:600; margin-bottom:2px; }
+          .amt-val { font-size:18px; font-weight:bold; color:#15803d; }
+          .words-box { background:linear-gradient(to right,#fefce8,#fef9c3); border:1px solid #fde047; border-radius:6px; padding:6px 10px; font-size:10px; }
+          .words-lbl { color:#92400e; font-weight:600; margin-bottom:1px; }
+          .words-val { color:#1e293b; font-style:italic; font-weight:500; }
+          .svc-msg { background:linear-gradient(to right,#dbeafe,#bfdbfe); border:1px solid #60a5fa; border-radius:6px; padding:8px; margin-bottom:8px; }
+          .svc-msg p { font-size:9px; color:#1e40af; }
+          .greet { font-weight:bold; margin-bottom:2px; font-size:10px; }
+          table.svc { width:100%; border-collapse:collapse; font-size:9px; border-radius:6px; overflow:hidden; }
+          table.svc th { background:linear-gradient(to right,#1d4ed8,#2563eb); color:white; padding:5px 8px; text-align:left; font-weight:bold; }
+          table.svc td { padding:4px 8px; border-bottom:1px solid #e2e8f0; background:#f8fafc; }
+          table.svc tr:last-child td { border-bottom:none; }
+          .svc-type { font-weight:bold; color:#1d4ed8; }
+          .svc-note { background:linear-gradient(to right,#fef3c7,#fde68a); text-align:center; font-weight:bold; color:#92400e; font-size:9px; padding:5px; border:1px solid #f59e0b; border-radius:0 0 6px 6px; }
+          .footer { background:linear-gradient(135deg,#f1f5f9,#e2e8f0); border:1px solid #cbd5e1; border-radius:8px; padding:10px; text-align:center; margin-top:10px; }
+          .badges { display:flex; justify-content:center; gap:20px; margin-bottom:6px; font-size:9px; color:#475569; }
+          .footer-title { font-weight:bold; font-size:13px; color:#1e293b; margin-bottom:2px; }
+          .footer-sub { font-size:9px; color:#64748b; margin-bottom:4px; }
+          .footer-legal { font-size:8px; color:#94a3b8; border-top:1px solid #cbd5e1; padding-top:5px; margin-top:4px; }
+          @media print { .toolbar{display:none!important;} body{background:white;} .page{margin:0;box-shadow:none;border-radius:0;} @page{size:A4;margin:8mm;} }
+        </style>
+      </head><body>
+        <div class="toolbar">
+          <h2>&#128196; Invoice Preview - ${inv.invoice_number}</h2>
+          <div class="toolbar-btns">
+            <button class="btn btn-print" onclick="window.print()">&#128424; Print Invoice</button>
+            <button class="btn btn-close" onclick="window.close()">&#10006; Close</button>
+          </div>
+        </div>
+        <div class="page">
+          <div class="header">
+            <div>
+              <div class="co-name">M M MOTORS</div>
+              <div class="co-tag">Premium Two Wheeler Sales &amp; Service</div>
+              <div class="co-addr">
+                <p><span class="dot"></span>Bengaluru main road, behind Ruchi Bakery</p>
+                <p><span class="dot"></span>Malur, Karnataka 563130</p>
+                <p><span class="dot"></span>Phone: 7026263123 | Email: mmmotors3123@gmail.com</p>
               </div>
             </div>
-            <div class="preview-container">
-              <div class="invoice-container">
-                ${invoiceElement.innerHTML}
+            <div class="inv-box">
+              <div class="inv-title">SALES INVOICE</div>
+              <div class="inv-row"><span>Invoice No:</span><span>${inv.invoice_number}</span></div>
+              <div class="inv-row"><span>Date:</span><span>${inv.date || new Date().toLocaleDateString('en-IN')}</span></div>
+            </div>
+          </div>
+          <div class="body">
+            <div class="grid2">
+              <div class="card card-blue">
+                <div class="card-hdr hdr-blue">CUSTOMER DETAILS</div>
+                <div class="card-body">
+                  <div class="row"><span class="lbl">Name:</span><span class="val">${inv.customer?.name || 'N/A'}</span></div>
+                  <div class="row"><span class="lbl">C/O:</span><span class="val">${inv.customer?.care_of || 'N/A'}</span></div>
+                  <div class="row"><span class="lbl">Mobile:</span><span class="val">${inv.customer?.mobile || 'N/A'}</span></div>
+                  <div class="row"><span class="lbl">Address:</span><span class="val">${inv.customer?.address || 'N/A'}</span></div>
+                </div>
+              </div>
+              <div class="card card-green">
+                <div class="card-hdr hdr-green">VEHICLE DETAILS</div>
+                <div class="card-body">
+                  <div class="vgrid">
+                    <div class="vitem"><div class="vlbl">Brand</div><div class="vval">${inv.vehicle?.brand || 'N/A'}</div></div>
+                    <div class="vitem"><div class="vlbl">Model</div><div class="vval">${inv.vehicle?.model || 'N/A'}</div></div>
+                    <div class="vitem"><div class="vlbl">Color</div><div class="vval">${inv.vehicle?.color || 'N/A'}</div></div>
+                    <div class="vitem"><div class="vlbl">Vehicle No</div><div class="vval">${inv.vehicle?.vehicle_no || 'N/A'}</div></div>
+                  </div>
+                  <div class="vfull"><span class="vlbl2">Chassis No:</span><span>${inv.vehicle?.chassis_number || 'N/A'}</span></div>
+                  <div class="vfull"><span class="vlbl2">Engine No:</span><span>${inv.vehicle?.engine_number || 'N/A'}</span></div>
+                </div>
               </div>
             </div>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-      printWindow.focus();
-    }
+            <div class="card card-purple" style="margin-bottom:10px">
+              <div class="card-hdr hdr-purple">INSURANCE NOMINEE DETAILS</div>
+              <div class="card-body">
+                <div class="ins-grid">
+                  <div><div class="ins-lbl">Nominee Name</div><div class="ins-val">${inv.insurance?.nominee || 'N/A'}</div></div>
+                  <div><div class="ins-lbl">Relation</div><div class="ins-val" style="text-transform:capitalize">${inv.insurance?.relation || 'N/A'}</div></div>
+                  <div><div class="ins-lbl">Age</div><div class="ins-val">${inv.insurance?.age || 'N/A'} years</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="card card-pay" style="margin-bottom:10px">
+              <div class="card-hdr hdr-pay">PAYMENT SUMMARY</div>
+              <div class="card-body">
+                <div class="pay-grid">
+                  <div>
+                    <div class="pay-row"><span style="color:#047857;font-weight:600">Payment Method:</span><span class="pay-badge">${inv.payment_method || 'CASH'}</span></div>
+                    <div class="pay-row"><span style="color:#047857;font-weight:600">Hypothecation:</span><span style="font-weight:bold">${inv.hypothecation || 'Cash'}</span></div>
+                  </div>
+                  <div class="amt-box">
+                    <div class="amt-lbl">TOTAL AMOUNT</div>
+                    <div class="amt-val">&#8377;${inv.amount?.toLocaleString() || '0'}</div>
+                  </div>
+                </div>
+                <div class="words-box">
+                  <div class="words-lbl">Amount in Words:</div>
+                  <div class="words-val">${numberToWords(inv.amount || 0)} Rupees Only</div>
+                </div>
+              </div>
+            </div>
+            <div class="card card-svc" style="margin-bottom:10px">
+              <div class="card-hdr hdr-svc">SERVICE SCHEDULE</div>
+              <div class="card-body">
+                <div class="svc-msg"><p class="greet">DEAR VALUED CUSTOMER,</p><p>To ensure optimal performance, please follow the service schedule below.</p></div>
+                <table class="svc">
+                  <thead><tr><th style="width:25%">SERVICE DATE</th><th style="width:35%">SERVICE TYPE</th><th>RECOMMENDED SCHEDULE</th></tr></thead>
+                  <tbody>
+                    <tr><td>____/____/____</td><td class="svc-type">FIRST SERVICE</td><td>500-700 kms or 15-30 days</td></tr>
+                    <tr><td>____/____/____</td><td class="svc-type">SECOND SERVICE</td><td>3000-3500 kms or 30-90 days</td></tr>
+                    <tr><td>____/____/____</td><td class="svc-type">THIRD SERVICE</td><td>6000-6500 kms or 90-180 days</td></tr>
+                    <tr><td>____/____/____</td><td class="svc-type">FOURTH SERVICE</td><td>9000-9500 kms or 180-270 days</td></tr>
+                  </tbody>
+                </table>
+                <div class="svc-note">&#9888;&#65039; IMPORTANT: Follow whichever milestone comes first</div>
+              </div>
+            </div>
+            <div class="footer">
+              <div class="badges"><span>&#127942; Authorized Dealer</span><span>&#128336; 24/7 Support</span><span>&#9989; Quality Guaranteed</span></div>
+              <div class="footer-title">Thank You for Choosing M M Motors!</div>
+              <div class="footer-sub">Your trust drives our excellence in two-wheeler sales and service.</div>
+              <div class="footer-legal">Computer-generated invoice. Queries: mmmotors3123@gmail.com | 7026263123</div>
+            </div>
+          </div>
+        </div>
+      </body></html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
   };
 
   const handleDownload = () => {
@@ -2704,130 +2767,193 @@ const CreateInvoice = () => {
 
   const handlePrint = () => {
     if (!generatedInvoice) return;
-
-    // Get the invoice preview content
-    const invoiceElement = document.getElementById('invoice-preview');
-    if (invoiceElement) {
-      const printWindow = window.open('', '_blank', 'width=900,height=800');
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Invoice Preview - ${generatedInvoice.invoice_number}</title>
-            <style>
-              body { 
-                font-family: Arial, sans-serif; 
-                margin: 0; 
-                padding: 0;
-                background-color: #f5f5f5;
-              }
-              .toolbar {
-                background-color: #2563eb;
-                color: white;
-                padding: 15px 20px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-              }
-              .toolbar h2 {
-                margin: 0;
-                font-size: 18px;
-              }
-              .toolbar-buttons {
-                display: flex;
-                gap: 10px;
-              }
-              .toolbar button {
-                background-color: white;
-                color: #2563eb;
-                border: none;
-                padding: 10px 20px;
-                border-radius: 5px;
-                cursor: pointer;
-                font-weight: 600;
-                font-size: 14px;
-                transition: all 0.2s;
-              }
-              .toolbar button:hover {
-                background-color: #f0f0f0;
-                transform: translateY(-1px);
-              }
-              .toolbar button.print-btn {
-                background-color: #10b981;
-                color: white;
-              }
-              .toolbar button.print-btn:hover {
-                background-color: #059669;
-              }
-              .preview-container {
-                max-width: 21cm;
-                margin: 20px auto;
-                background-color: white;
-                padding: 20px;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                border-radius: 8px;
-              }
-              .invoice-container { 
-                max-width: 100%;
-                margin: 0 auto;
-              }
-              .header { text-align: center; margin-bottom: 12px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-              .header h1 { margin: 0; font-size: 18px; color: #2563eb; font-weight: bold; }
-              .header p { margin: 3px 0; font-size: 11px; }
-              .section { margin-bottom: 12px; border: 2px solid #ccc; padding: 10px; border-radius: 6px; page-break-inside: avoid; }
-              .section h3 { margin: 0 0 8px 0; font-size: 12px; color: #2563eb; border-bottom: 1px solid #ccc; padding-bottom: 3px; }
-              .field { margin-bottom: 4px; font-size: 10px; }
-              .label { font-weight: bold; display: inline-block; min-width: 80px; }
-              .payment-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 8px; }
-              .amount-words { margin-top: 6px; font-style: italic; padding: 6px; background-color: #f8f8f8; border-radius: 3px; border-top: 1px solid #ccc; font-size: 10px; }
-              .total { font-size: 14px; font-weight: bold; text-align: right; }
-              table { width: 100%; border-collapse: collapse; margin-top: 6px; }
-              th, td { padding: 4px; text-align: left; border: 1px solid #333; font-size: 9px; }
-              th { background-color: #f0f0f0; font-weight: bold; }
-              .service-header { text-align: center; font-weight: bold; margin-bottom: 8px; font-size: 12px; }
-              .customer-msg { margin-bottom: 8px; padding: 6px; background-color: #f8f8f8; border-radius: 3px; }
-              .customer-msg p { margin: 0; font-size: 9px; }
-              .service-footer { text-align: center; padding: 4px; background-color: #f0f0f0; border: 2px solid #333; border-top: none; font-weight: bold; font-size: 9px; }
-              .footer { text-align: center; margin-top: 15px; border-top: 1px solid #ccc; padding-top: 8px; }
-              .grid { display: flex; justify-content: space-between; margin-top: 8px; }
-              
-              @media print { 
-                body { 
-                  margin: 0; 
-                  padding: 0;
-                  background-color: white;
-                }
-                .toolbar { display: none !important; }
-                .preview-container {
-                  margin: 0;
-                  padding: 10px;
-                  box-shadow: none;
-                  border-radius: 0;
-                }
-                .section { page-break-inside: avoid; }
-                @page { size: A4; margin: 0.5cm; }
-              }
-            </style>
-          </head>
-          <body>
-            <div class="toolbar">
-              <h2>📄 Invoice Preview - ${generatedInvoice.invoice_number}</h2>
-              <div class="toolbar-buttons">
-                <button onclick="window.print()" class="print-btn">🖨️ Print Invoice</button>
-                <button onclick="window.close()">✖ Close</button>
+    const inv = generatedInvoice;
+    const printWindow = window.open('', '_blank', 'width=900,height=700');
+    printWindow.document.write(`
+      <!DOCTYPE html><html><head>
+        <title>Invoice Preview - ${inv.invoice_number}</title>
+        <style>
+          * { margin:0; padding:0; box-sizing:border-box; }
+          body { font-family:Arial,sans-serif; background:#f1f5f9; font-size:11px; color:#1e293b; }
+          .toolbar { background:#2563eb; color:white; padding:10px 18px; display:flex; justify-content:space-between; align-items:center; }
+          .toolbar h2 { font-size:15px; }
+          .toolbar-btns { display:flex; gap:8px; }
+          .btn { padding:7px 16px; border:none; border-radius:5px; cursor:pointer; font-weight:600; font-size:12px; }
+          .btn-print { background:#10b981; color:white; }
+          .btn-close { background:white; color:#2563eb; }
+          .page { max-width:210mm; margin:16px auto; background:white; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+          .header { background:linear-gradient(to right,#1e3a8a,#2563eb); color:white; padding:12px 16px; display:flex; justify-content:space-between; align-items:flex-start; }
+          .co-name { font-size:20px; font-weight:bold; letter-spacing:1px; margin-bottom:2px; }
+          .co-tag { font-size:11px; color:#bfdbfe; margin-bottom:6px; }
+          .co-addr p { font-size:10px; color:#bfdbfe; display:flex; align-items:center; margin:1px 0; }
+          .dot { width:5px; height:5px; background:#93c5fd; border-radius:50%; margin-right:6px; flex-shrink:0; display:inline-block; }
+          .inv-box { background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.3); border-radius:8px; padding:10px 14px; text-align:right; min-width:170px; }
+          .inv-title { font-size:13px; font-weight:bold; margin-bottom:6px; }
+          .inv-row { display:flex; justify-content:space-between; gap:12px; font-size:10px; margin-bottom:3px; }
+          .inv-row span:last-child { font-weight:bold; }
+          .body { padding:12px 16px; }
+          .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+          .card { border-radius:8px; overflow:hidden; border:1px solid; }
+          .card-blue { border-color:#bfdbfe; background:linear-gradient(135deg,#f8faff,#eff6ff); }
+          .card-green { border-color:#a7f3d0; background:linear-gradient(135deg,#f0fdf4,#ecfdf5); }
+          .card-purple { border-color:#ddd6fe; background:linear-gradient(135deg,#faf5ff,#f3e8ff); }
+          .card-pay { border-color:#bbf7d0; background:linear-gradient(135deg,#f0fdf4,#dcfce7); }
+          .card-svc { border-color:#bfdbfe; background:linear-gradient(135deg,#f8faff,#eff6ff); }
+          .card-hdr { padding:5px 10px; color:white; font-size:10px; font-weight:bold; }
+          .hdr-blue { background:linear-gradient(to right,#1d4ed8,#2563eb); }
+          .hdr-green { background:linear-gradient(to right,#047857,#059669); }
+          .hdr-purple { background:linear-gradient(to right,#6d28d9,#7c3aed); }
+          .hdr-pay { background:linear-gradient(to right,#047857,#059669); }
+          .hdr-svc { background:linear-gradient(to right,#1d4ed8,#2563eb); }
+          .card-body { padding:8px 10px; }
+          .row { display:flex; align-items:flex-start; border-bottom:1px solid #e2e8f0; padding:3px 0; font-size:10px; }
+          .row:last-child { border-bottom:none; }
+          .lbl { color:#475569; font-weight:600; width:52px; flex-shrink:0; }
+          .val { color:#0f172a; font-weight:500; }
+          .vgrid { display:grid; grid-template-columns:1fr 1fr; gap:4px 8px; }
+          .vitem { border-bottom:1px solid #d1fae5; padding:3px 0; }
+          .vitem:nth-last-child(-n+2) { border-bottom:none; }
+          .vlbl { font-size:9px; color:#065f46; font-weight:600; }
+          .vval { font-size:10px; color:#0f172a; font-weight:700; }
+          .vfull { display:flex; justify-content:space-between; font-size:10px; padding:2px 0; border-bottom:1px solid #d1fae5; }
+          .vfull:last-child { border-bottom:none; }
+          .vlbl2 { color:#065f46; font-weight:600; }
+          .ins-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; text-align:center; padding:4px 0; }
+          .ins-lbl { font-size:9px; color:#6d28d9; font-weight:600; margin-bottom:2px; }
+          .ins-val { font-size:10px; font-weight:700; color:#1e293b; }
+          .pay-grid { display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center; margin-bottom:8px; }
+          .pay-row { display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid #bbf7d0; font-size:10px; }
+          .pay-row:last-child { border-bottom:none; }
+          .pay-badge { background:#bbf7d0; color:#065f46; font-weight:bold; padding:2px 8px; border-radius:20px; font-size:10px; }
+          .amt-box { background:white; border:1px solid #86efac; border-radius:8px; padding:8px 14px; text-align:center; }
+          .amt-lbl { font-size:9px; color:#047857; font-weight:600; margin-bottom:2px; }
+          .amt-val { font-size:18px; font-weight:bold; color:#15803d; }
+          .words-box { background:linear-gradient(to right,#fefce8,#fef9c3); border:1px solid #fde047; border-radius:6px; padding:6px 10px; font-size:10px; }
+          .words-lbl { color:#92400e; font-weight:600; margin-bottom:1px; }
+          .words-val { color:#1e293b; font-style:italic; font-weight:500; }
+          .svc-msg { background:linear-gradient(to right,#dbeafe,#bfdbfe); border:1px solid #60a5fa; border-radius:6px; padding:8px; margin-bottom:8px; }
+          .svc-msg p { font-size:9px; color:#1e40af; }
+          .greet { font-weight:bold; margin-bottom:2px; font-size:10px; }
+          table.svc { width:100%; border-collapse:collapse; font-size:9px; border-radius:6px; overflow:hidden; }
+          table.svc th { background:linear-gradient(to right,#1d4ed8,#2563eb); color:white; padding:5px 8px; text-align:left; font-weight:bold; }
+          table.svc td { padding:4px 8px; border-bottom:1px solid #e2e8f0; background:#f8fafc; }
+          table.svc tr:last-child td { border-bottom:none; }
+          .svc-type { font-weight:bold; color:#1d4ed8; }
+          .svc-note { background:linear-gradient(to right,#fef3c7,#fde68a); text-align:center; font-weight:bold; color:#92400e; font-size:9px; padding:5px; border:1px solid #f59e0b; border-radius:0 0 6px 6px; }
+          .footer { background:linear-gradient(135deg,#f1f5f9,#e2e8f0); border:1px solid #cbd5e1; border-radius:8px; padding:10px; text-align:center; margin-top:10px; }
+          .badges { display:flex; justify-content:center; gap:20px; margin-bottom:6px; font-size:9px; color:#475569; }
+          .footer-title { font-weight:bold; font-size:13px; color:#1e293b; margin-bottom:2px; }
+          .footer-sub { font-size:9px; color:#64748b; margin-bottom:4px; }
+          .footer-legal { font-size:8px; color:#94a3b8; border-top:1px solid #cbd5e1; padding-top:5px; margin-top:4px; }
+          @media print { .toolbar{display:none!important;} body{background:white;} .page{margin:0;box-shadow:none;border-radius:0;} @page{size:A4;margin:8mm;} }
+        </style>
+      </head><body>
+        <div class="toolbar">
+          <h2>&#128196; Invoice Preview - ${inv.invoice_number}</h2>
+          <div class="toolbar-btns">
+            <button class="btn btn-print" onclick="window.print()">&#128424; Print Invoice</button>
+            <button class="btn btn-close" onclick="window.close()">&#10006; Close</button>
+          </div>
+        </div>
+        <div class="page">
+          <div class="header">
+            <div>
+              <div class="co-name">M M MOTORS</div>
+              <div class="co-tag">Premium Two Wheeler Sales &amp; Service</div>
+              <div class="co-addr">
+                <p><span class="dot"></span>Bengaluru main road, behind Ruchi Bakery</p>
+                <p><span class="dot"></span>Malur, Karnataka 563130</p>
+                <p><span class="dot"></span>Phone: 7026263123 | Email: mmmotors3123@gmail.com</p>
               </div>
             </div>
-            <div class="preview-container">
-              <div class="invoice-container">
-                ${invoiceElement.innerHTML}
+            <div class="inv-box">
+              <div class="inv-title">SALES INVOICE</div>
+              <div class="inv-row"><span>Invoice No:</span><span>${inv.invoice_number}</span></div>
+              <div class="inv-row"><span>Date:</span><span>${inv.date || new Date().toLocaleDateString('en-IN')}</span></div>
+            </div>
+          </div>
+          <div class="body">
+            <div class="grid2">
+              <div class="card card-blue">
+                <div class="card-hdr hdr-blue">CUSTOMER DETAILS</div>
+                <div class="card-body">
+                  <div class="row"><span class="lbl">Name:</span><span class="val">${inv.customer?.name || 'N/A'}</span></div>
+                  <div class="row"><span class="lbl">C/O:</span><span class="val">${inv.customer?.care_of || 'N/A'}</span></div>
+                  <div class="row"><span class="lbl">Mobile:</span><span class="val">${inv.customer?.mobile || 'N/A'}</span></div>
+                  <div class="row"><span class="lbl">Address:</span><span class="val">${inv.customer?.address || 'N/A'}</span></div>
+                </div>
+              </div>
+              <div class="card card-green">
+                <div class="card-hdr hdr-green">VEHICLE DETAILS</div>
+                <div class="card-body">
+                  <div class="vgrid">
+                    <div class="vitem"><div class="vlbl">Brand</div><div class="vval">${inv.vehicle?.brand || 'N/A'}</div></div>
+                    <div class="vitem"><div class="vlbl">Model</div><div class="vval">${inv.vehicle?.model || 'N/A'}</div></div>
+                    <div class="vitem"><div class="vlbl">Color</div><div class="vval">${inv.vehicle?.color || 'N/A'}</div></div>
+                    <div class="vitem"><div class="vlbl">Vehicle No</div><div class="vval">${inv.vehicle?.vehicle_no || 'N/A'}</div></div>
+                  </div>
+                  <div class="vfull"><span class="vlbl2">Chassis No:</span><span>${inv.vehicle?.chassis_number || 'N/A'}</span></div>
+                  <div class="vfull"><span class="vlbl2">Engine No:</span><span>${inv.vehicle?.engine_number || 'N/A'}</span></div>
+                </div>
               </div>
             </div>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-      printWindow.focus();
-    }
+            <div class="card card-purple" style="margin-bottom:10px">
+              <div class="card-hdr hdr-purple">INSURANCE NOMINEE DETAILS</div>
+              <div class="card-body">
+                <div class="ins-grid">
+                  <div><div class="ins-lbl">Nominee Name</div><div class="ins-val">${inv.insurance?.nominee || 'N/A'}</div></div>
+                  <div><div class="ins-lbl">Relation</div><div class="ins-val" style="text-transform:capitalize">${inv.insurance?.relation || 'N/A'}</div></div>
+                  <div><div class="ins-lbl">Age</div><div class="ins-val">${inv.insurance?.age || 'N/A'} years</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="card card-pay" style="margin-bottom:10px">
+              <div class="card-hdr hdr-pay">PAYMENT SUMMARY</div>
+              <div class="card-body">
+                <div class="pay-grid">
+                  <div>
+                    <div class="pay-row"><span style="color:#047857;font-weight:600">Payment Method:</span><span class="pay-badge">${inv.payment_method || 'CASH'}</span></div>
+                    <div class="pay-row"><span style="color:#047857;font-weight:600">Hypothecation:</span><span style="font-weight:bold">${inv.hypothecation || 'Cash'}</span></div>
+                  </div>
+                  <div class="amt-box">
+                    <div class="amt-lbl">TOTAL AMOUNT</div>
+                    <div class="amt-val">&#8377;${inv.amount?.toLocaleString() || '0'}</div>
+                  </div>
+                </div>
+                <div class="words-box">
+                  <div class="words-lbl">Amount in Words:</div>
+                  <div class="words-val">${numberToWords(inv.amount || 0)} Rupees Only</div>
+                </div>
+              </div>
+            </div>
+            <div class="card card-svc" style="margin-bottom:10px">
+              <div class="card-hdr hdr-svc">SERVICE SCHEDULE</div>
+              <div class="card-body">
+                <div class="svc-msg"><p class="greet">DEAR VALUED CUSTOMER,</p><p>To ensure optimal performance, please follow the service schedule below.</p></div>
+                <table class="svc">
+                  <thead><tr><th style="width:25%">SERVICE DATE</th><th style="width:35%">SERVICE TYPE</th><th>RECOMMENDED SCHEDULE</th></tr></thead>
+                  <tbody>
+                    <tr><td>____/____/____</td><td class="svc-type">FIRST SERVICE</td><td>500-700 kms or 15-30 days</td></tr>
+                    <tr><td>____/____/____</td><td class="svc-type">SECOND SERVICE</td><td>3000-3500 kms or 30-90 days</td></tr>
+                    <tr><td>____/____/____</td><td class="svc-type">THIRD SERVICE</td><td>6000-6500 kms or 90-180 days</td></tr>
+                    <tr><td>____/____/____</td><td class="svc-type">FOURTH SERVICE</td><td>9000-9500 kms or 180-270 days</td></tr>
+                  </tbody>
+                </table>
+                <div class="svc-note">&#9888;&#65039; IMPORTANT: Follow whichever milestone comes first</div>
+              </div>
+            </div>
+            <div class="footer">
+              <div class="badges"><span>&#127942; Authorized Dealer</span><span>&#128336; 24/7 Support</span><span>&#9989; Quality Guaranteed</span></div>
+              <div class="footer-title">Thank You for Choosing M M Motors!</div>
+              <div class="footer-sub">Your trust drives our excellence in two-wheeler sales and service.</div>
+              <div class="footer-legal">Computer-generated invoice. Queries: mmmotors3123@gmail.com | 7026263123</div>
+            </div>
+          </div>
+        </div>
+      </body></html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
   };
 
   const handleDownload = () => {
