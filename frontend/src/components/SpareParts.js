@@ -21,6 +21,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useDraft, useDraftArray } from '../hooks/useDraft';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -236,6 +237,9 @@ const AddSparePart = () => {
     low_stock_threshold: '5',
     supplier: ''
   });
+  const [spDraftRestored, setSpDraftRestored] = useState(false);
+  const spEmpty = {name:'',part_number:'',brand:'',quantity:'',unit:'Nos',unit_price:'',hsn_sac:'',gst_percentage:'18',compatible_models:'',low_stock_threshold:'5',supplier:''};
+  const { clearDraft: clearSpDraft } = useDraft('draft_add_part', partData, setPartData, spEmpty, () => setSpDraftRestored(true));
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -251,6 +255,8 @@ const AddSparePart = () => {
         low_stock_threshold: parseInt(partData.low_stock_threshold)
       });
       toast.success('Spare part added successfully!');
+      clearSpDraft();
+      setSpDraftRestored(false);
       setPartData({
         name: '',
         part_number: '',
@@ -278,6 +284,12 @@ const AddSparePart = () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {spDraftRestored && (
+            <div className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 text-sm">
+              <span className="text-amber-800 font-medium">&#128196; Draft restored.</span>
+              <button type="button" onClick={() => { clearSpDraft(); setPartData(spEmpty); setSpDraftRestored(false); }} className="text-amber-700 underline ml-4">Clear draft</button>
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="name">Part Name</Label>
@@ -795,7 +807,11 @@ const CreateBill = () => {
     vehicle_name: '',
     vehicle_number: ''
   });
+  const [billDraftRestored, setBillDraftRestored] = useState(false);
+  const billCustEmpty = {name:'',mobile:'',vehicle_name:'',vehicle_number:''};
+  const { clearDraft: clearBillCustDraft } = useDraft('draft_bill_customer', customerData, setCustomerData, billCustEmpty, () => setBillDraftRestored(true));
   const [billItems, setBillItems] = useState([]);
+  const { clearDraft: clearBillItemsDraft } = useDraftArray('draft_bill_items', billItems, setBillItems);
   const [loading, setLoading] = useState(false);
   const [itemForm, setItemForm] = useState({
     part_id: '',
@@ -940,6 +956,9 @@ const CreateBill = () => {
       const response = await axios.post(`${API}/spare-parts/bills`, billPayload);
       console.log('Bill response:', response.data);
       toast.success('GST Bill generated successfully!');
+      clearBillCustDraft();
+      clearBillItemsDraft();
+      setBillDraftRestored(false);
       setCustomerData({ name: '', mobile: '', vehicle_name: '', vehicle_number: '' });
       setBillItems([]);
     } catch (error) {
@@ -971,6 +990,12 @@ const CreateBill = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
+            {billDraftRestored && (
+              <div className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 text-sm">
+                <span className="text-amber-800 font-medium">&#128196; Draft restored — customer and items loaded.</span>
+                <button type="button" onClick={() => { clearBillCustDraft(); clearBillItemsDraft(); setCustomerData(billCustEmpty); setBillItems([]); setBillDraftRestored(false); }} className="text-amber-700 underline ml-4">Clear draft</button>
+              </div>
+            )}
             {/* Customer & Vehicle Information */}
             <Card>
               <CardHeader>
