@@ -584,85 +584,82 @@ const CreateInvoice = () => {
     const printWindow = window.open('', '_blank', 'width=900,height=700');
     printWindow.document.write(`
       <!DOCTYPE html><html><head>
-        <title>Invoice Preview - ${inv.invoice_number}</title>
-        <style>
-          * { margin:0; padding:0; box-sizing:border-box; }
-          body { font-family:Arial,sans-serif; background:#f1f5f9; font-size:11px; color:#1e293b; }
-          .toolbar { background:#2563eb; color:white; padding:10px 18px; display:flex; justify-content:space-between; align-items:center; }
-          .toolbar h2 { font-size:15px; }
-          .toolbar-btns { display:flex; gap:8px; }
-          .btn { padding:7px 16px; border:none; border-radius:5px; cursor:pointer; font-weight:600; font-size:12px; }
-          .btn-print { background:#10b981; color:white; }
-          .btn-close { background:white; color:#2563eb; }
-          .page { max-width:210mm; margin:16px auto; background:white; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
-          .header { background:linear-gradient(to right,#1e3a8a,#2563eb); color:white; padding:12px 16px; display:flex; justify-content:space-between; align-items:flex-start; }
-          .co-name { font-size:20px; font-weight:bold; letter-spacing:1px; margin-bottom:2px; }
-          .co-tag { font-size:11px; color:#bfdbfe; margin-bottom:6px; }
-          .co-addr p { font-size:10px; color:#bfdbfe; display:flex; align-items:center; margin:1px 0; }
-          .dot { width:5px; height:5px; background:#93c5fd; border-radius:50%; margin-right:6px; flex-shrink:0; display:inline-block; }
-          .inv-box { background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.3); border-radius:8px; padding:10px 14px; text-align:right; min-width:170px; }
-          .inv-title { font-size:13px; font-weight:bold; margin-bottom:6px; }
-          .inv-row { display:flex; justify-content:space-between; gap:12px; font-size:10px; margin-bottom:3px; }
-          .inv-row span:last-child { font-weight:bold; }
-          .body { padding:12px 16px; }
-          .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
-          .card { border-radius:8px; overflow:hidden; border:1px solid; }
-          .card-blue { border-color:#bfdbfe; background:linear-gradient(135deg,#f8faff,#eff6ff); }
-          .card-green { border-color:#a7f3d0; background:linear-gradient(135deg,#f0fdf4,#ecfdf5); }
-          .card-purple { border-color:#ddd6fe; background:linear-gradient(135deg,#faf5ff,#f3e8ff); }
-          .card-pay { border-color:#bbf7d0; background:linear-gradient(135deg,#f0fdf4,#dcfce7); }
-          .card-svc { border-color:#bfdbfe; background:linear-gradient(135deg,#f8faff,#eff6ff); }
-          .card-hdr { padding:5px 10px; color:white; font-size:10px; font-weight:bold; }
-          .hdr-blue { background:linear-gradient(to right,#1d4ed8,#2563eb); }
-          .hdr-green { background:linear-gradient(to right,#047857,#059669); }
-          .hdr-purple { background:linear-gradient(to right,#6d28d9,#7c3aed); }
-          .hdr-pay { background:linear-gradient(to right,#047857,#059669); }
-          .hdr-svc { background:linear-gradient(to right,#1d4ed8,#2563eb); }
-          .card-body { padding:8px 10px; }
-          .row { display:flex; align-items:flex-start; border-bottom:1px solid #e2e8f0; padding:3px 0; font-size:10px; }
-          .row:last-child { border-bottom:none; }
-          .lbl { color:#475569; font-weight:600; width:52px; flex-shrink:0; }
-          .val { color:#0f172a; font-weight:500; }
-          .vgrid { display:grid; grid-template-columns:1fr 1fr; gap:4px 8px; }
-          .vitem { border-bottom:1px solid #d1fae5; padding:3px 0; }
-          .vitem:nth-last-child(-n+2) { border-bottom:none; }
-          .vlbl { font-size:9px; color:#065f46; font-weight:600; }
-          .vval { font-size:10px; color:#0f172a; font-weight:700; }
-          .vfull { display:flex; justify-content:space-between; font-size:10px; padding:2px 0; border-bottom:1px solid #d1fae5; }
-          .vfull:last-child { border-bottom:none; }
-          .vlbl2 { color:#065f46; font-weight:600; }
-          .ins-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; text-align:center; padding:4px 0; }
-          .ins-lbl { font-size:9px; color:#6d28d9; font-weight:600; margin-bottom:2px; }
-          .ins-val { font-size:10px; font-weight:700; color:#1e293b; }
-          .pay-grid { display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center; margin-bottom:8px; }
-          .pay-row { display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid #bbf7d0; font-size:10px; }
-          .pay-row:last-child { border-bottom:none; }
-          .pay-badge { background:#bbf7d0; color:#065f46; font-weight:bold; padding:2px 8px; border-radius:20px; font-size:10px; }
-          .amt-box { background:white; border:1px solid #86efac; border-radius:8px; padding:8px 14px; text-align:center; }
-          .amt-lbl { font-size:9px; color:#047857; font-weight:600; margin-bottom:2px; }
-          .amt-val { font-size:18px; font-weight:bold; color:#15803d; }
-          .words-box { background:linear-gradient(to right,#fefce8,#fef9c3); border:1px solid #fde047; border-radius:6px; padding:6px 10px; font-size:10px; }
-          .words-lbl { color:#92400e; font-weight:600; margin-bottom:1px; }
-          .words-val { color:#1e293b; font-style:italic; font-weight:500; }
-          .svc-msg { background:linear-gradient(to right,#dbeafe,#bfdbfe); border:1px solid #60a5fa; border-radius:6px; padding:8px; margin-bottom:8px; }
-          .svc-msg p { font-size:9px; color:#1e40af; }
-          .greet { font-weight:bold; margin-bottom:2px; font-size:10px; }
-          table.svc { width:100%; border-collapse:collapse; font-size:9px; border-radius:6px; overflow:hidden; }
-          table.svc th { background:linear-gradient(to right,#1d4ed8,#2563eb); color:white; padding:5px 8px; text-align:left; font-weight:bold; }
-          table.svc td { padding:4px 8px; border-bottom:1px solid #e2e8f0; background:#f8fafc; }
-          table.svc tr:last-child td { border-bottom:none; }
-          .svc-type { font-weight:bold; color:#1d4ed8; }
-          .svc-note { background:linear-gradient(to right,#fef3c7,#fde68a); text-align:center; font-weight:bold; color:#92400e; font-size:9px; padding:5px; border:1px solid #f59e0b; border-radius:0 0 6px 6px; }
-          .footer { background:linear-gradient(135deg,#f1f5f9,#e2e8f0); border:1px solid #cbd5e1; border-radius:8px; padding:10px; text-align:center; margin-top:10px; }
-          .badges { display:flex; justify-content:center; gap:20px; margin-bottom:6px; font-size:9px; color:#475569; }
-          .footer-title { font-weight:bold; font-size:13px; color:#1e293b; margin-bottom:2px; }
-          .footer-sub { font-size:9px; color:#64748b; margin-bottom:4px; }
-          .footer-legal { font-size:8px; color:#94a3b8; border-top:1px solid #cbd5e1; padding-top:5px; margin-top:4px; }
-          @media print { .toolbar{display:none!important;} body{background:white;} .page{margin:0;box-shadow:none;border-radius:0;} @page{size:A4;margin:8mm;} }
-        </style>
+        <title>Invoice - ${inv.invoice_number}</title>
+        <style>* { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: Arial, sans-serif; background: #f1f5f9; font-size: 11px; color: #1e293b; }
+          .toolbar { background: #2563eb; color: white; padding: 10px 18px; display: flex; justify-content: space-between; align-items: center; }
+          .toolbar h2 { font-size: 15px; }
+          .toolbar-btns { display: flex; gap: 8px; }
+          .btn { padding: 7px 16px; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 12px; }
+          .btn-print { background: #10b981; color: white; }
+          .btn-close { background: white; color: #2563eb; }
+          .page { max-width: 210mm; margin: 16px auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+          .header { background: linear-gradient(to right,#1e3a8a,#2563eb); color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: flex-start; }
+          .co-name { font-size: 20px; font-weight: bold; letter-spacing: 1px; margin-bottom: 2px; }
+          .co-tag { font-size: 11px; color: #bfdbfe; margin-bottom: 6px; }
+          .co-addr p { font-size: 10px; color: #bfdbfe; display: flex; align-items: center; margin: 1px 0; }
+          .dot { width: 5px; height: 5px; background: #93c5fd; border-radius: 50%; margin-right: 6px; flex-shrink: 0; display: inline-block; }
+          .inv-box { background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.3); border-radius: 8px; padding: 10px 14px; text-align: right; min-width: 170px; }
+          .inv-title { font-size: 13px; font-weight: bold; margin-bottom: 6px; }
+          .inv-row { display: flex; justify-content: space-between; gap: 12px; font-size: 10px; margin-bottom: 3px; }
+          .inv-row span:last-child { font-weight: bold; }
+          .body { padding: 12px 16px; }
+          .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+          .card { border-radius: 8px; overflow: hidden; border: 1px solid; }
+          .card-blue { border-color: #bfdbfe; background: linear-gradient(135deg,#f8faff,#eff6ff); }
+          .card-green { border-color: #a7f3d0; background: linear-gradient(135deg,#f0fdf4,#ecfdf5); }
+          .card-purple { border-color: #ddd6fe; background: linear-gradient(135deg,#faf5ff,#f3e8ff); }
+          .card-pay { border-color: #bbf7d0; background: linear-gradient(135deg,#f0fdf4,#dcfce7); }
+          .card-svc { border-color: #bfdbfe; background: linear-gradient(135deg,#f8faff,#eff6ff); }
+          .card-hdr { padding: 5px 10px; color: white; font-size: 10px; font-weight: bold; }
+          .hdr-blue { background: linear-gradient(to right,#1d4ed8,#2563eb); }
+          .hdr-green { background: linear-gradient(to right,#047857,#059669); }
+          .hdr-purple { background: linear-gradient(to right,#6d28d9,#7c3aed); }
+          .hdr-pay { background: linear-gradient(to right,#047857,#059669); }
+          .hdr-svc { background: linear-gradient(to right,#1d4ed8,#2563eb); }
+          .card-body { padding: 8px 10px; }
+          .row { display: flex; align-items: flex-start; border-bottom: 1px solid #e2e8f0; padding: 3px 0; font-size: 10px; }
+          .row:last-child { border-bottom: none; }
+          .lbl { color: #475569; font-weight: 600; width: 52px; flex-shrink: 0; }
+          .val { color: #0f172a; font-weight: 500; }
+          .vgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; }
+          .vitem { border-bottom: 1px solid #d1fae5; padding: 3px 0; }
+          .vlbl { font-size: 9px; color: #065f46; font-weight: 600; }
+          .vval { font-size: 10px; color: #0f172a; font-weight: 700; }
+          .vfull { display: flex; justify-content: space-between; font-size: 10px; padding: 2px 0; border-bottom: 1px solid #d1fae5; }
+          .vfull:last-child { border-bottom: none; }
+          .vlbl2 { color: #065f46; font-weight: 600; }
+          .ins-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; text-align: center; padding: 4px 0; }
+          .ins-lbl { font-size: 9px; color: #6d28d9; font-weight: 600; margin-bottom: 2px; }
+          .ins-val { font-size: 10px; font-weight: 700; color: #1e293b; }
+          .pay-grid { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; margin-bottom: 8px; }
+          .pay-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid #bbf7d0; font-size: 10px; }
+          .pay-row:last-child { border-bottom: none; }
+          .pay-badge { background: #bbf7d0; color: #065f46; font-weight: bold; padding: 2px 8px; border-radius: 20px; font-size: 10px; }
+          .amt-box { background: white; border: 1px solid #86efac; border-radius: 8px; padding: 8px 14px; text-align: center; }
+          .amt-lbl { font-size: 9px; color: #047857; font-weight: 600; margin-bottom: 2px; }
+          .amt-val { font-size: 18px; font-weight: bold; color: #15803d; }
+          .words-box { background: linear-gradient(to right,#fefce8,#fef9c3); border: 1px solid #fde047; border-radius: 6px; padding: 6px 10px; font-size: 10px; }
+          .words-lbl { color: #92400e; font-weight: 600; margin-bottom: 1px; }
+          .words-val { color: #1e293b; font-style: italic; font-weight: 500; }
+          .svc-msg { background: linear-gradient(to right,#dbeafe,#bfdbfe); border: 1px solid #60a5fa; border-radius: 6px; padding: 8px; margin-bottom: 8px; }
+          .svc-msg p { font-size: 9px; color: #1e40af; }
+          .greet { font-weight: bold; margin-bottom: 2px; font-size: 10px; }
+          table.svc { width: 100%; border-collapse: collapse; font-size: 9px; border-radius: 6px; overflow: hidden; }
+          table.svc th { background: linear-gradient(to right,#1d4ed8,#2563eb); color: white; padding: 5px 8px; text-align: left; font-weight: bold; }
+          table.svc td { padding: 4px 8px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }
+          table.svc tr:last-child td { border-bottom: none; }
+          .svc-type { font-weight: bold; color: #1d4ed8; }
+          .svc-note { background: linear-gradient(to right,#fef3c7,#fde68a); text-align: center; font-weight: bold; color: #92400e; font-size: 9px; padding: 5px; border: 1px solid #f59e0b; border-radius: 0 0 6px 6px; }
+          .footer { background: linear-gradient(135deg,#f1f5f9,#e2e8f0); border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; text-align: center; margin-top: 10px; }
+          .badges { display: flex; justify-content: center; gap: 20px; margin-bottom: 6px; font-size: 9px; color: #475569; }
+          .footer-title { font-weight: bold; font-size: 13px; color: #1e293b; margin-bottom: 2px; }
+          .footer-sub { font-size: 9px; color: #64748b; margin-bottom: 4px; }
+          .footer-legal { font-size: 8px; color: #94a3b8; border-top: 1px solid #cbd5e1; padding-top: 5px; margin-top: 4px; }
+          @media print { .toolbar { display: none !important; } body { background: white; } .page { margin: 0; box-shadow: none; border-radius: 0; } @page { size: A4; margin: 8mm; } }</style>
       </head><body>
-        <div class="toolbar">
-          <h2>&#128196; Invoice Preview - ${inv.invoice_number}</h2>
+                <div class="toolbar">
+          <h2>&#128196; Invoice - ${inv.invoice_number}</h2>
           <div class="toolbar-btns">
             <button class="btn btn-print" onclick="window.print()">&#128424; Print Invoice</button>
             <button class="btn btn-close" onclick="window.close()">&#10006; Close</button>
@@ -692,7 +689,7 @@ const CreateInvoice = () => {
                 <div class="card-body">
                   <div class="row"><span class="lbl">Name:</span><span class="val">${inv.customer?.name || 'N/A'}</span></div>
                   <div class="row"><span class="lbl">C/O:</span><span class="val">${inv.customer?.care_of || 'N/A'}</span></div>
-                  <div class="row"><span class="lbl">Mobile:</span><span class="val">${inv.customer?.mobile || 'N/A'}</span></div>
+                  <div class="row"><span class="lbl">Mobile:</span><span class="val">${inv.customer?.mobile || inv.customer?.phone || 'N/A'}</span></div>
                   <div class="row"><span class="lbl">Address:</span><span class="val">${inv.customer?.address || 'N/A'}</span></div>
                 </div>
               </div>
@@ -700,13 +697,13 @@ const CreateInvoice = () => {
                 <div class="card-hdr hdr-green">VEHICLE DETAILS</div>
                 <div class="card-body">
                   <div class="vgrid">
-                    <div class="vitem"><div class="vlbl">Brand</div><div class="vval">${inv.vehicle?.brand || 'N/A'}</div></div>
-                    <div class="vitem"><div class="vlbl">Model</div><div class="vval">${inv.vehicle?.model || 'N/A'}</div></div>
-                    <div class="vitem"><div class="vlbl">Color</div><div class="vval">${inv.vehicle?.color || 'N/A'}</div></div>
-                    <div class="vitem"><div class="vlbl">Vehicle No</div><div class="vval">${inv.vehicle?.vehicle_no || 'N/A'}</div></div>
+                    <div class="vitem"><div class="vlbl">Brand</div><div class="vval">${inv.customer?.vehicle_info?.brand || inv.vehicle?.brand || 'N/A'}</div></div>
+                    <div class="vitem"><div class="vlbl">Model</div><div class="vval">${inv.customer?.vehicle_info?.model || inv.vehicle?.model || 'N/A'}</div></div>
+                    <div class="vitem"><div class="vlbl">Color</div><div class="vval">${inv.customer?.vehicle_info?.color || inv.vehicle?.color || 'N/A'}</div></div>
+                    <div class="vitem"><div class="vlbl">Vehicle No</div><div class="vval">${inv.customer?.vehicle_info?.vehicle_number || inv.vehicle?.vehicle_no || 'N/A'}</div></div>
                   </div>
-                  <div class="vfull"><span class="vlbl2">Chassis No:</span><span>${inv.vehicle?.chassis_number || 'N/A'}</span></div>
-                  <div class="vfull"><span class="vlbl2">Engine No:</span><span>${inv.vehicle?.engine_number || 'N/A'}</span></div>
+                  <div class="vfull"><span class="vlbl2">Chassis No:</span><span>${inv.customer?.vehicle_info?.chassis_number || inv.vehicle?.chassis_number || 'N/A'}</span></div>
+                  <div class="vfull"><span class="vlbl2">Engine No:</span><span>${inv.customer?.vehicle_info?.engine_number || inv.vehicle?.engine_number || 'N/A'}</span></div>
                 </div>
               </div>
             </div>
@@ -714,9 +711,9 @@ const CreateInvoice = () => {
               <div class="card-hdr hdr-purple">INSURANCE NOMINEE DETAILS</div>
               <div class="card-body">
                 <div class="ins-grid">
-                  <div><div class="ins-lbl">Nominee Name</div><div class="ins-val">${inv.insurance?.nominee || 'N/A'}</div></div>
-                  <div><div class="ins-lbl">Relation</div><div class="ins-val" style="text-transform:capitalize">${inv.insurance?.relation || 'N/A'}</div></div>
-                  <div><div class="ins-lbl">Age</div><div class="ins-val">${inv.insurance?.age || 'N/A'} years</div></div>
+                  <div><div class="ins-lbl">Nominee Name</div><div class="ins-val">${inv.customer?.insurance_info?.nominee_name || inv.insurance?.nominee || inv.insurance_details?.nominee || 'N/A'}</div></div>
+                  <div><div class="ins-lbl">Relation</div><div class="ins-val" style="text-transform:capitalize">${inv.customer?.insurance_info?.relation || inv.insurance?.relation || 'N/A'}</div></div>
+                  <div><div class="ins-lbl">Age</div><div class="ins-val">${inv.customer?.insurance_info?.age || inv.insurance?.age || 'N/A'} years</div></div>
                 </div>
               </div>
             </div>
@@ -758,7 +755,7 @@ const CreateInvoice = () => {
             <div class="footer">
               <div class="badges"><span>&#127942; Authorized Dealer</span><span>&#128336; 24/7 Support</span><span>&#9989; Quality Guaranteed</span></div>
               <div class="footer-title">Thank You for Choosing M M Motors!</div>
-              <div class="footer-sub">Your trust drives our excellence in two-wheeler sales and service.</div>
+              <div class="footer-sub">Your trust drives our excellence.</div>
               <div class="footer-legal">Computer-generated invoice. Queries: mmmotors3123@gmail.com | 7026263123</div>
             </div>
           </div>
@@ -767,8 +764,7 @@ const CreateInvoice = () => {
     `);
     printWindow.document.close();
     printWindow.focus();
-  };
-
+  }
   const handleDownload = () => {
     const element = document.getElementById('invoice-preview');
     const printWindow = window.open('', '_blank');
@@ -1964,718 +1960,83 @@ const ViewInvoices = () => {
     if (!invoice) return;
     const printWindow = window.open('', '_blank', 'width=900,height=700');
     printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Invoice ${invoice.invoice_number}</title>
-          <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: Arial, sans-serif; background: #f1f5f9; font-size: 11px; color: #1e293b; }
-            .page { max-width: 210mm; margin: 0 auto; background: white; }
-
-            /* HEADER */
-            .header { background: linear-gradient(to right, #1e3a8a, #2563eb); color: white; padding: 12px 16px; border-radius: 8px 8px 0 0; display: flex; justify-content: space-between; align-items: flex-start; }
-            .co-name { font-size: 20px; font-weight: bold; letter-spacing: 1px; margin-bottom: 2px; }
-            .co-tag { font-size: 11px; color: #bfdbfe; margin-bottom: 6px; }
-            .co-addr p { font-size: 10px; color: #bfdbfe; display: flex; align-items: center; margin: 1px 0; }
-            .dot { width: 5px; height: 5px; background: #93c5fd; border-radius: 50%; margin-right: 6px; flex-shrink: 0; }
-            .inv-box { background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 10px 14px; text-align: right; min-width: 170px; }
-            .inv-title { font-size: 13px; font-weight: bold; margin-bottom: 6px; }
-            .inv-row { display: flex; justify-content: space-between; gap: 12px; font-size: 10px; margin-bottom: 3px; }
-            .inv-row span:last-child { font-weight: bold; }
-
-            /* BODY */
-            .body { padding: 12px 16px; }
-            .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-
-            /* SECTION CARDS */
-            .card { border-radius: 8px; overflow: hidden; border: 1px solid; }
-            .card-blue { border-color: #bfdbfe; background: linear-gradient(135deg, #f8faff, #eff6ff); }
-            .card-green { border-color: #a7f3d0; background: linear-gradient(135deg, #f0fdf4, #ecfdf5); }
-            .card-purple { border-color: #ddd6fe; background: linear-gradient(135deg, #faf5ff, #f3e8ff); }
-            .card-pay { border-color: #bbf7d0; background: linear-gradient(135deg, #f0fdf4, #dcfce7); }
-            .card-svc { border-color: #bfdbfe; background: linear-gradient(135deg, #f8faff, #eff6ff); }
-
-            .card-hdr { padding: 5px 10px; color: white; font-size: 10px; font-weight: bold; display: flex; align-items: center; gap: 5px; }
-            .hdr-blue   { background: linear-gradient(to right, #1d4ed8, #2563eb); }
-            .hdr-green  { background: linear-gradient(to right, #047857, #059669); }
-            .hdr-purple { background: linear-gradient(to right, #6d28d9, #7c3aed); }
-            .hdr-pay    { background: linear-gradient(to right, #047857, #059669); }
-            .hdr-svc    { background: linear-gradient(to right, #1d4ed8, #2563eb); }
-
-            .card-body { padding: 8px 10px; }
-
-            /* CUSTOMER ROWS */
-            .row { display: flex; align-items: flex-start; border-bottom: 1px solid #e2e8f0; padding: 3px 0; font-size: 10px; }
-            .row:last-child { border-bottom: none; }
-            .lbl { color: #475569; font-weight: 600; width: 52px; flex-shrink: 0; }
-            .val { color: #0f172a; font-weight: 500; }
-
-            /* VEHICLE GRID */
-            .vgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; }
-            .vitem { border-bottom: 1px solid #d1fae5; padding: 3px 0; }
-            .vitem:last-child, .vitem:nth-last-child(2) { border-bottom: none; }
-            .vlbl { font-size: 9px; color: #065f46; font-weight: 600; }
-            .vval { font-size: 10px; color: #0f172a; font-weight: 700; }
-            .vfull { grid-column: 1 / -1; display: flex; justify-content: space-between; font-size: 10px; padding: 2px 0; border-bottom: 1px solid #d1fae5; }
-            .vfull .vlbl2 { color: #065f46; font-weight: 600; }
-
-            /* INSURANCE */
-            .ins-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; text-align: center; padding: 4px 0; }
-            .ins-lbl { font-size: 9px; color: #6d28d9; font-weight: 600; margin-bottom: 2px; }
-            .ins-val { font-size: 10px; font-weight: 700; color: #1e293b; }
-
-            /* PAYMENT */
-            .pay-grid { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; margin-bottom: 8px; }
-            .pay-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid #bbf7d0; font-size: 10px; }
-            .pay-row:last-child { border-bottom: none; }
-            .pay-badge { background: #bbf7d0; color: #065f46; font-weight: bold; padding: 2px 8px; border-radius: 20px; font-size: 10px; }
-            .amt-box { background: white; border: 1px solid #86efac; border-radius: 8px; padding: 8px 14px; text-align: center; }
-            .amt-lbl { font-size: 9px; color: #047857; font-weight: 600; margin-bottom: 2px; }
-            .amt-val { font-size: 18px; font-weight: bold; color: #15803d; }
-            .words-box { background: linear-gradient(to right, #fefce8, #fef9c3); border: 1px solid #fde047; border-radius: 6px; padding: 6px 10px; font-size: 10px; }
-            .words-lbl { color: #92400e; font-weight: 600; margin-bottom: 1px; }
-            .words-val { color: #1e293b; font-style: italic; font-weight: 500; }
-
-            /* SERVICE TABLE */
-            .svc-msg { background: linear-gradient(to right, #dbeafe, #bfdbfe); border: 1px solid #60a5fa; border-radius: 6px; padding: 8px; margin-bottom: 8px; }
-            .svc-msg p { font-size: 9px; color: #1e40af; }
-            .svc-msg .greet { font-weight: bold; margin-bottom: 2px; font-size: 10px; }
-            table.svc { width: 100%; border-collapse: collapse; font-size: 9px; border-radius: 6px; overflow: hidden; }
-            table.svc th { background: linear-gradient(to right, #1d4ed8, #2563eb); color: white; padding: 5px 8px; text-align: left; font-weight: bold; }
-            table.svc td { padding: 4px 8px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }
-            table.svc tr:last-child td { border-bottom: none; }
-            .svc-type { font-weight: bold; color: #1d4ed8; }
-            .svc-note { background: linear-gradient(to right, #fef3c7, #fde68a); text-align: center; font-weight: bold; color: #92400e; font-size: 9px; padding: 5px; border: 1px solid #f59e0b; border-radius: 0 0 6px 6px; margin-top: -1px; }
-
-            /* FOOTER */
-            .footer { background: linear-gradient(135deg, #f1f5f9, #e2e8f0); border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; text-align: center; margin-top: 10px; }
-            .badges { display: flex; justify-content: center; gap: 20px; margin-bottom: 6px; font-size: 9px; color: #475569; }
-            .footer-title { font-weight: bold; font-size: 13px; color: #1e293b; margin-bottom: 2px; }
-            .footer-sub { font-size: 9px; color: #64748b; margin-bottom: 4px; }
-            .footer-feats { font-size: 9px; color: #64748b; margin-bottom: 4px; }
-            .footer-legal { font-size: 8px; color: #94a3b8; border-top: 1px solid #cbd5e1; padding-top: 5px; }
-
-            @media print {
-              body { background: white; }
-              .page { max-width: 100%; }
-              @page { size: A4; margin: 8mm; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="page">
-            <!-- HEADER -->
-            <div class="header">
-              <div>
-                <div class="co-name">M M MOTORS</div>
-                <div class="co-tag">Premium Two Wheeler Sales &amp; Service</div>
-                <div class="co-addr">
-                  <p><span class="dot"></span>Bengaluru main road, behind Ruchi Bakery</p>
-                  <p><span class="dot"></span>Malur, Karnataka 563130</p>
-                  <p><span class="dot"></span>Phone: 7026263123 | Email: mmmotors3123@gmail.com</p>
-                </div>
-              </div>
-              <div class="inv-box">
-                <div class="inv-title">SALES INVOICE</div>
-                <div class="inv-row"><span>Invoice No:</span><span>${invoice.invoice_number}</span></div>
-                <div class="inv-row"><span>Date:</span><span>${new Date(invoice.sale_date).toLocaleDateString('en-IN')}</span></div>
-              </div>
-            </div>
-
-            <div class="body">
-              <!-- Customer + Vehicle -->
-              <div class="grid2">
-                <!-- Customer -->
-                <div class="card card-blue">
-                  <div class="card-hdr hdr-blue">&#128100; CUSTOMER DETAILS</div>
-                  <div class="card-body">
-                    <div class="row"><span class="lbl">Name:</span><span class="val">${invoice.customer?.name || 'N/A'}</span></div>
-                    <div class="row"><span class="lbl">C/O:</span><span class="val">${invoice.customer?.care_of || 'N/A'}</span></div>
-                    <div class="row"><span class="lbl">Mobile:</span><span class="val">${invoice.customer?.mobile || invoice.customer?.phone || 'N/A'}</span></div>
-                    <div class="row"><span class="lbl">Address:</span><span class="val">${invoice.customer?.address || 'N/A'}</span></div>
-                  </div>
-                </div>
-                <!-- Vehicle -->
-                <div class="card card-green">
-                  <div class="card-hdr hdr-green">&#127949; VEHICLE DETAILS</div>
-                  <div class="card-body">
-                    <div class="vgrid">
-                      <div class="vitem"><div class="vlbl">Brand</div><div class="vval">${invoice.customer?.vehicle_info?.brand || invoice.vehicle?.brand || 'N/A'}</div></div>
-                      <div class="vitem"><div class="vlbl">Model</div><div class="vval">${invoice.customer?.vehicle_info?.model || invoice.vehicle?.model || 'N/A'}</div></div>
-                      <div class="vitem"><div class="vlbl">Color</div><div class="vval">${invoice.customer?.vehicle_info?.color || invoice.vehicle?.color || 'N/A'}</div></div>
-                      <div class="vitem"><div class="vlbl">Vehicle No</div><div class="vval">${invoice.customer?.vehicle_info?.vehicle_number || invoice.vehicle?.vehicle_no || 'N/A'}</div></div>
-                    </div>
-                    <div class="vfull"><span class="vlbl2">Chassis No:</span><span>${invoice.customer?.vehicle_info?.chassis_number || invoice.vehicle?.chassis_number || 'N/A'}</span></div>
-                    <div class="vfull" style="border-bottom:none"><span class="vlbl2">Engine No:</span><span>${invoice.customer?.vehicle_info?.engine_number || invoice.vehicle?.engine_number || 'N/A'}</span></div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Insurance -->
-              <div class="card card-purple" style="margin-bottom:10px">
-                <div class="card-hdr hdr-purple">&#128737; INSURANCE NOMINEE DETAILS</div>
-                <div class="card-body">
-                  <div class="ins-grid">
-                    <div><div class="ins-lbl">Nominee Name</div><div class="ins-val">${invoice.customer?.insurance_info?.nominee_name || invoice.insurance_details?.nominee || 'N/A'}</div></div>
-                    <div><div class="ins-lbl">Relation</div><div class="ins-val" style="text-transform:capitalize">${invoice.customer?.insurance_info?.relation || invoice.insurance_details?.relation || 'N/A'}</div></div>
-                    <div><div class="ins-lbl">Age</div><div class="ins-val">${invoice.customer?.insurance_info?.age || invoice.insurance_details?.age || 'N/A'} years</div></div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Payment -->
-              <div class="card card-pay" style="margin-bottom:10px">
-                <div class="card-hdr hdr-pay">&#128179; PAYMENT SUMMARY</div>
-                <div class="card-body">
-                  <div class="pay-grid">
-                    <div>
-                      <div class="pay-row"><span style="color:#047857;font-weight:600">Payment Method:</span><span class="pay-badge">${invoice.payment_method || 'CASH'}</span></div>
-                      <div class="pay-row"><span style="color:#047857;font-weight:600">Hypothecation:</span><span style="font-weight:bold">${invoice.hypothecation || 'Cash'}</span></div>
-                    </div>
-                    <div class="amt-box">
-                      <div class="amt-lbl">TOTAL AMOUNT</div>
-                      <div class="amt-val">&#8377;${invoice.amount?.toLocaleString() || '0'}</div>
-                    </div>
-                  </div>
-                  <div class="words-box">
-                    <div class="words-lbl">Amount in Words:</div>
-                    <div class="words-val">${numberToWords(invoice.amount || 0)} Rupees Only</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Service Schedule -->
-              <div class="card card-svc" style="margin-bottom:10px">
-                <div class="card-hdr hdr-svc">&#128295; SERVICE SCHEDULE</div>
-                <div class="card-body">
-                  <div class="svc-msg">
-                    <p class="greet">DEAR VALUED CUSTOMER,</p>
-                    <p>We thank you for choosing our world-class vehicle. To ensure optimal performance and longevity, please follow the service schedule below.</p>
-                  </div>
-                  <table class="svc">
-                    <thead><tr><th style="width:25%">SERVICE DATE</th><th style="width:35%">SERVICE TYPE</th><th>RECOMMENDED SCHEDULE</th></tr></thead>
-                    <tbody>
-                      <tr><td>____/____/____</td><td class="svc-type">FIRST SERVICE</td><td>500–700 kms or 15–30 days</td></tr>
-                      <tr><td>____/____/____</td><td class="svc-type">SECOND SERVICE</td><td>3000–3500 kms or 30–90 days</td></tr>
-                      <tr><td>____/____/____</td><td class="svc-type">THIRD SERVICE</td><td>6000–6500 kms or 90–180 days</td></tr>
-                      <tr><td>____/____/____</td><td class="svc-type">FOURTH SERVICE</td><td>9000–9500 kms or 180–270 days</td></tr>
-                    </tbody>
-                  </table>
-                  <div class="svc-note">&#9888;&#65039; IMPORTANT: Follow whichever milestone comes first (kilometers or days)</div>
-                </div>
-              </div>
-
-              <!-- Footer -->
-              <div class="footer">
-                <div class="badges">
-                  <span>&#127942; Authorized Dealer</span>
-                  <span>&#128336; 24/7 Service Support</span>
-                  <span>&#9989; Quality Guaranteed</span>
-                </div>
-                <div class="footer-title">Thank You for Choosing M M Motors!</div>
-                <div class="footer-sub">Your trust drives our excellence in two-wheeler sales and service.</div>
-                <div class="footer-feats">&#127775; Premium Quality &nbsp;•&nbsp; &#9889; Expert Service &nbsp;•&nbsp; &#129309; Customer First</div>
-                <div class="footer-legal">This is a computer-generated invoice and does not require a signature.<br>For queries, contact us at mmmotors3123@gmail.com or 7026263123</div>
-              </div>
-            </div>
-          </div>
-          <script>window.onload = function(){ window.print(); }</script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-  };
-
-const Sales = () => {
-  const location = useLocation();
-  
-  const navigationItems = [
-    { name: 'Overview', path: '/sales', icon: TrendingUp },
-    { name: 'Create Invoice', path: '/sales/create-invoice', icon: Plus },
-    { name: 'View Invoices', path: '/sales/invoices', icon: FileText },
-    { name: 'Add Customer', path: '/sales/customers', icon: Users },
-    { name: 'View Customer Details', path: '/sales/customer-details', icon: Eye },
-    { name: 'Sales Report', path: '/sales/reports', icon: TrendingUp },
-    { name: 'Insurance', path: '/sales/insurance', icon: Shield }
-  ];
-
-  return (
-    <div className="space-y-6">
-      {/* Sub Navigation */}
-      <div className="bg-white rounded-lg border border-gray-200 p-1">
-        <div className="flex flex-wrap gap-1">
-          {navigationItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            return (
-              <Link key={item.path} to={item.path}>
-                <Button
-                  variant={isActive ? "default" : "ghost"}
-                  size="sm"
-                  className="flex items-center space-x-2"
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.name}</span>
-                </Button>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Routes */}
-      <Routes>
-        <Route path="/" element={<SalesOverview />} />
-        <Route path="/create-invoice" element={<CreateInvoice />} />
-        <Route path="/invoices" element={<ViewInvoices />} />
-        <Route path="/customers" element={<CustomersManagement />} />
-        <Route path="/customer-details" element={<ViewCustomerDetailsPage />} />
-        <Route path="/reports" element={<SalesReports />} />
-        <Route path="/insurance" element={<InsuranceManagement />} />
-      </Routes>
-    </div>
-  );
-};
-
-const SalesOverview = () => {
-  const [stats, setStats] = useState({
-    totalSales: 0,
-    monthlyRevenue: 0,
-    pendingInvoices: 0,
-    topCustomers: []
-  });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
-  const fetchStats = async () => {
-    try {
-      setLoading(true);
-      const [salesRes, customersRes] = await Promise.all([
-        axios.get(`${API}/sales`),
-        axios.get(`${API}/customers`, {
-          params: {
-            page: 1,
-            limit: 10000,
-            sort: 'created_at',
-            order: 'desc'
-          }
-        })
-      ]);
-
-      const sales = salesRes.data;
-      const customers = customersRes.data.data || customersRes.data;
-
-      // Calculate current month revenue
-      const currentMonth = new Date().getMonth();
-      const currentYear = new Date().getFullYear();
-      const monthlyRevenue = sales
-        .filter(sale => {
-          const saleDate = new Date(sale.sale_date);
-          return saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear;
-        })
-        .reduce((sum, sale) => sum + (sale.amount || 0), 0);
-
-      setStats({
-        totalSales: sales.length,
-        monthlyRevenue: monthlyRevenue,
-        pendingInvoices: 0, // This would need a separate status field in sales
-        topCustomers: customers.slice(0, 5) // Top 5 customers by recent creation
-      });
-    } catch (error) {
-      console.error('Failed to fetch sales overview stats:', error);
-      toast.error('Failed to fetch sales data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <Card className="lg:col-span-2">
-        <CardHeader>
-          <CardTitle>Sales Overview</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <p className="text-2xl font-bold text-blue-600">{stats.totalSales}</p>
-              <p className="text-sm text-gray-600">Total Sales</p>
-            </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <p className="text-2xl font-bold text-green-600">₹{stats.monthlyRevenue}</p>
-              <p className="text-sm text-gray-600">Monthly Revenue</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Link to="/sales/create-invoice">
-            <Button className="w-full justify-start">
-              <Plus className="w-4 h-4 mr-2" />
-              Create Invoice
-            </Button>
-          </Link>
-          <Link to="/sales/customers">
-            <Button variant="outline" className="w-full justify-start">
-              <Users className="w-4 h-4 mr-2" />
-              Add Customer
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
-
-const CreateInvoice = () => {
-  const [invoiceData, setInvoiceData] = useState({
-    date: new Date().toISOString().split('T')[0],
-    name: '',
-    care_of: '',
-    mobile: '',
-    address: '',
-    brand: '',
-    model: '',
-    color: '',
-    chassis_number: '',
-    engine_number: '',
-    vehicle_no: '',
-    insurance_nominee: '',
-    relation: '',
-    age: '',
-    amount: '',
-    payment_method: '',
-    hypothecation: ''
-  });
-  const [loading, setLoading] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
-  const [generatedInvoice, setGeneratedInvoice] = useState(null);
-  const [vehicleSuggestions, setVehicleSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [selectedVehicle, setSelectedVehicle] = useState(null);
-
-  const brands = ['TVS', 'BAJAJ', 'HERO', 'HONDA', 'TRIUMPH', 'KTM', 'SUZUKI', 'APRILIA', 'YAMAHA', 'PIAGGIO', 'ROYAL ENFIELD'];
-
-  // Vehicle search functionality
-  const searchVehiclesByChassisNo = async (chassisQuery) => {
-    if (chassisQuery.length < 3) {
-      setVehicleSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-
-    try {
-      const response = await axios.get(`${API}/vehicles`);
-      const availableVehicles = response.data.filter(vehicle => 
-        vehicle.status === 'in_stock' && 
-        vehicle.chassis_number?.toLowerCase().includes(chassisQuery.toLowerCase())
-      );
-      
-      setVehicleSuggestions(availableVehicles.slice(0, 10)); // Limit to 10 suggestions
-      setShowSuggestions(availableVehicles.length > 0);
-    } catch (error) {
-      console.error('Error searching vehicles:', error);
-      toast.error('Failed to search vehicles');
-    }
-  };
-
-  // Debounced search to avoid excessive API calls
-  const debounce = (func, delay) => {
-    let timeoutId;
-    return (...args) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => func.apply(null, args), delay);
-    };
-  };
-
-  const debouncedVehicleSearch = debounce(searchVehiclesByChassisNo, 300);
-
-  const handleInputChange = (field, value) => {
-    setInvoiceData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-
-    // Trigger vehicle search when chassis number changes
-    if (field === 'chassis_number') {
-      debouncedVehicleSearch(value);
-    }
-  };
-
-  // Select vehicle from suggestions
-  const selectVehicle = (vehicle) => {
-    setSelectedVehicle(vehicle);
-    setInvoiceData(prev => ({
-      ...prev,
-      brand: vehicle.brand,
-      model: vehicle.model,
-      color: vehicle.color,
-      chassis_number: vehicle.chassis_number,
-      engine_number: vehicle.engine_number,
-      vehicle_no: vehicle.vehicle_number || vehicle.vehicle_no || ''
-    }));
-    
-    setShowSuggestions(false);
-    setVehicleSuggestions([]);
-    
-    toast.success(`Vehicle details loaded: ${vehicle.brand} ${vehicle.model}`);
-  };
-
-  const generateInvoiceNumber = () => {
-    const timestamp = Date.now();
-    return `INV-${timestamp.toString().slice(-8)}`;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Comprehensive validation
-    const errors = [];
-    
-    // Required field validations
-    if (!invoiceData.name.trim()) errors.push('Customer name is required');
-    if (!invoiceData.mobile.trim()) errors.push('Mobile number is required');
-    if (!invoiceData.brand.trim()) errors.push('Vehicle brand is required');
-    if (!invoiceData.model.trim()) errors.push('Vehicle model is required');
-    if (!invoiceData.chassis_number.trim()) errors.push('Chassis number is required');
-    if (!invoiceData.engine_number.trim()) errors.push('Engine number is required');
-    if (!invoiceData.amount) errors.push('Amount is required');
-    if (!invoiceData.payment_method) errors.push('Payment method is required');
-    
-    // Format validations
-    if (invoiceData.mobile && !/^\d{10}$/.test(invoiceData.mobile)) {
-      errors.push('Mobile number must be 10 digits');
-    }
-    
-    // Amount validation
-    if (invoiceData.amount && parseFloat(invoiceData.amount) <= 0) {
-      errors.push('Amount must be greater than zero');
-    }
-    
-    // Chassis/Engine number length validation
-    if (invoiceData.chassis_number && invoiceData.chassis_number.length < 5) {
-      errors.push('Chassis number must be at least 5 characters');
-    }
-    
-    if (invoiceData.engine_number && invoiceData.engine_number.length < 5) {
-      errors.push('Engine number must be at least 5 characters');
-    }
-    
-    // Insurance nominee validation (if any one field is filled, all should be filled)
-    const hasInsuranceInfo = invoiceData.insurance_nominee || invoiceData.relation || invoiceData.age;
-    if (hasInsuranceInfo) {
-      if (!invoiceData.insurance_nominee) errors.push('Insurance nominee name is required');
-      if (!invoiceData.relation) errors.push('Insurance nominee relation is required');
-      if (!invoiceData.age) errors.push('Insurance nominee age is required');
-    }
-    
-    // Show all validation errors
-    if (errors.length > 0) {
-      errors.forEach(error => toast.error(error));
-      return;
-    }
-    
-    setLoading(true);
-
-    try {
-      // Create customer first with insurance nominee details
-      const customerData = {
-        name: invoiceData.name,
-        mobile: invoiceData.mobile,
-        care_of: invoiceData.care_of,
-        email: null,
-        address: invoiceData.address
-      };
-
-      // Add insurance nominee details if provided
-      if (invoiceData.insurance_nominee || invoiceData.relation || invoiceData.age) {
-        customerData.insurance_info = {
-          nominee_name: invoiceData.insurance_nominee || '',
-          relation: invoiceData.relation || '',
-          age: invoiceData.age || ''
-        };
-      }
-
-      const customerResponse = await axios.post(`${API}/customers`, customerData);
-
-      let vehicleResponse;
-      
-      if (selectedVehicle) {
-        // Use selected vehicle from inventory
-        vehicleResponse = { data: selectedVehicle };
-        
-        // Update the vehicle to associate it with this customer
-        await axios.put(`${API}/vehicles/${selectedVehicle.id}`, {
-          ...selectedVehicle,
-          customer_id: customerResponse.data.id,
-          status: 'sold',
-          date_sold: new Date().toISOString()
-        });
-      } else {
-        // Create new vehicle entry
-        vehicleResponse = await axios.post(`${API}/vehicles`, {
-          brand: invoiceData.brand,
-          model: invoiceData.model,
-          chassis_number: invoiceData.chassis_number,
-          engine_number: invoiceData.engine_number,
-          color: invoiceData.color,
-          vehicle_no: invoiceData.vehicle_no,
-          key_number: 'N/A',
-          inbound_location: 'Showroom',
-          customer_id: customerResponse.data.id,
-          status: 'sold',
-          date_sold: new Date().toISOString()
-        });
-      }
-
-      // Create sale
-      const saleResponse = await axios.post(`${API}/sales`, {
-        customer_id: customerResponse.data.id,
-        vehicle_id: vehicleResponse.data.id,
-        amount: parseFloat(invoiceData.amount),
-        payment_method: invoiceData.payment_method
-      });
-
-      const invoice = {
-        ...saleResponse.data,
-        invoice_number: generateInvoiceNumber(),
-        customer: {
-          name: invoiceData.name,
-          care_of: invoiceData.care_of,
-          mobile: invoiceData.mobile,
-          address: invoiceData.address
-        },
-        vehicle: {
-          brand: invoiceData.brand,
-          model: invoiceData.model,
-          color: invoiceData.color,
-          chassis_number: invoiceData.chassis_number,
-          engine_number: invoiceData.engine_number,
-          vehicle_no: invoiceData.vehicle_no
-        },
-        insurance: {
-          nominee: invoiceData.insurance_nominee,
-          relation: invoiceData.relation,
-          age: invoiceData.age
-        },
-        date: invoiceData.date,
-        amount: parseFloat(invoiceData.amount),
-        payment_method: invoiceData.payment_method,
-        hypothecation: invoiceData.hypothecation
-      };
-
-      setGeneratedInvoice(invoice);
-      setShowPreview(true);
-      toast.success('Invoice generated successfully!');
-    } catch (error) {
-      toast.error(getErrorMessage(error) || 'Failed to generate invoice');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePrint = () => {
-    if (!generatedInvoice) return;
-    const inv = generatedInvoice;
-    const printWindow = window.open('', '_blank', 'width=900,height=700');
-    printWindow.document.write(`
       <!DOCTYPE html><html><head>
-        <title>Invoice Preview - ${inv.invoice_number}</title>
-        <style>
-          * { margin:0; padding:0; box-sizing:border-box; }
-          body { font-family:Arial,sans-serif; background:#f1f5f9; font-size:11px; color:#1e293b; }
-          .toolbar { background:#2563eb; color:white; padding:10px 18px; display:flex; justify-content:space-between; align-items:center; }
-          .toolbar h2 { font-size:15px; }
-          .toolbar-btns { display:flex; gap:8px; }
-          .btn { padding:7px 16px; border:none; border-radius:5px; cursor:pointer; font-weight:600; font-size:12px; }
-          .btn-print { background:#10b981; color:white; }
-          .btn-close { background:white; color:#2563eb; }
-          .page { max-width:210mm; margin:16px auto; background:white; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
-          .header { background:linear-gradient(to right,#1e3a8a,#2563eb); color:white; padding:12px 16px; display:flex; justify-content:space-between; align-items:flex-start; }
-          .co-name { font-size:20px; font-weight:bold; letter-spacing:1px; margin-bottom:2px; }
-          .co-tag { font-size:11px; color:#bfdbfe; margin-bottom:6px; }
-          .co-addr p { font-size:10px; color:#bfdbfe; display:flex; align-items:center; margin:1px 0; }
-          .dot { width:5px; height:5px; background:#93c5fd; border-radius:50%; margin-right:6px; flex-shrink:0; display:inline-block; }
-          .inv-box { background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.3); border-radius:8px; padding:10px 14px; text-align:right; min-width:170px; }
-          .inv-title { font-size:13px; font-weight:bold; margin-bottom:6px; }
-          .inv-row { display:flex; justify-content:space-between; gap:12px; font-size:10px; margin-bottom:3px; }
-          .inv-row span:last-child { font-weight:bold; }
-          .body { padding:12px 16px; }
-          .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
-          .card { border-radius:8px; overflow:hidden; border:1px solid; }
-          .card-blue { border-color:#bfdbfe; background:linear-gradient(135deg,#f8faff,#eff6ff); }
-          .card-green { border-color:#a7f3d0; background:linear-gradient(135deg,#f0fdf4,#ecfdf5); }
-          .card-purple { border-color:#ddd6fe; background:linear-gradient(135deg,#faf5ff,#f3e8ff); }
-          .card-pay { border-color:#bbf7d0; background:linear-gradient(135deg,#f0fdf4,#dcfce7); }
-          .card-svc { border-color:#bfdbfe; background:linear-gradient(135deg,#f8faff,#eff6ff); }
-          .card-hdr { padding:5px 10px; color:white; font-size:10px; font-weight:bold; }
-          .hdr-blue { background:linear-gradient(to right,#1d4ed8,#2563eb); }
-          .hdr-green { background:linear-gradient(to right,#047857,#059669); }
-          .hdr-purple { background:linear-gradient(to right,#6d28d9,#7c3aed); }
-          .hdr-pay { background:linear-gradient(to right,#047857,#059669); }
-          .hdr-svc { background:linear-gradient(to right,#1d4ed8,#2563eb); }
-          .card-body { padding:8px 10px; }
-          .row { display:flex; align-items:flex-start; border-bottom:1px solid #e2e8f0; padding:3px 0; font-size:10px; }
-          .row:last-child { border-bottom:none; }
-          .lbl { color:#475569; font-weight:600; width:52px; flex-shrink:0; }
-          .val { color:#0f172a; font-weight:500; }
-          .vgrid { display:grid; grid-template-columns:1fr 1fr; gap:4px 8px; }
-          .vitem { border-bottom:1px solid #d1fae5; padding:3px 0; }
-          .vitem:nth-last-child(-n+2) { border-bottom:none; }
-          .vlbl { font-size:9px; color:#065f46; font-weight:600; }
-          .vval { font-size:10px; color:#0f172a; font-weight:700; }
-          .vfull { display:flex; justify-content:space-between; font-size:10px; padding:2px 0; border-bottom:1px solid #d1fae5; }
-          .vfull:last-child { border-bottom:none; }
-          .vlbl2 { color:#065f46; font-weight:600; }
-          .ins-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; text-align:center; padding:4px 0; }
-          .ins-lbl { font-size:9px; color:#6d28d9; font-weight:600; margin-bottom:2px; }
-          .ins-val { font-size:10px; font-weight:700; color:#1e293b; }
-          .pay-grid { display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center; margin-bottom:8px; }
-          .pay-row { display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid #bbf7d0; font-size:10px; }
-          .pay-row:last-child { border-bottom:none; }
-          .pay-badge { background:#bbf7d0; color:#065f46; font-weight:bold; padding:2px 8px; border-radius:20px; font-size:10px; }
-          .amt-box { background:white; border:1px solid #86efac; border-radius:8px; padding:8px 14px; text-align:center; }
-          .amt-lbl { font-size:9px; color:#047857; font-weight:600; margin-bottom:2px; }
-          .amt-val { font-size:18px; font-weight:bold; color:#15803d; }
-          .words-box { background:linear-gradient(to right,#fefce8,#fef9c3); border:1px solid #fde047; border-radius:6px; padding:6px 10px; font-size:10px; }
-          .words-lbl { color:#92400e; font-weight:600; margin-bottom:1px; }
-          .words-val { color:#1e293b; font-style:italic; font-weight:500; }
-          .svc-msg { background:linear-gradient(to right,#dbeafe,#bfdbfe); border:1px solid #60a5fa; border-radius:6px; padding:8px; margin-bottom:8px; }
-          .svc-msg p { font-size:9px; color:#1e40af; }
-          .greet { font-weight:bold; margin-bottom:2px; font-size:10px; }
-          table.svc { width:100%; border-collapse:collapse; font-size:9px; border-radius:6px; overflow:hidden; }
-          table.svc th { background:linear-gradient(to right,#1d4ed8,#2563eb); color:white; padding:5px 8px; text-align:left; font-weight:bold; }
-          table.svc td { padding:4px 8px; border-bottom:1px solid #e2e8f0; background:#f8fafc; }
-          table.svc tr:last-child td { border-bottom:none; }
-          .svc-type { font-weight:bold; color:#1d4ed8; }
-          .svc-note { background:linear-gradient(to right,#fef3c7,#fde68a); text-align:center; font-weight:bold; color:#92400e; font-size:9px; padding:5px; border:1px solid #f59e0b; border-radius:0 0 6px 6px; }
-          .footer { background:linear-gradient(135deg,#f1f5f9,#e2e8f0); border:1px solid #cbd5e1; border-radius:8px; padding:10px; text-align:center; margin-top:10px; }
-          .badges { display:flex; justify-content:center; gap:20px; margin-bottom:6px; font-size:9px; color:#475569; }
-          .footer-title { font-weight:bold; font-size:13px; color:#1e293b; margin-bottom:2px; }
-          .footer-sub { font-size:9px; color:#64748b; margin-bottom:4px; }
-          .footer-legal { font-size:8px; color:#94a3b8; border-top:1px solid #cbd5e1; padding-top:5px; margin-top:4px; }
-          @media print { .toolbar{display:none!important;} body{background:white;} .page{margin:0;box-shadow:none;border-radius:0;} @page{size:A4;margin:8mm;} }
-        </style>
+        <title>Invoice - ${invoice.invoice_number}</title>
+        <style>* { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: Arial, sans-serif; background: #f1f5f9; font-size: 11px; color: #1e293b; }
+          .toolbar { background: #2563eb; color: white; padding: 10px 18px; display: flex; justify-content: space-between; align-items: center; }
+          .toolbar h2 { font-size: 15px; }
+          .toolbar-btns { display: flex; gap: 8px; }
+          .btn { padding: 7px 16px; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 12px; }
+          .btn-print { background: #10b981; color: white; }
+          .btn-close { background: white; color: #2563eb; }
+          .page { max-width: 210mm; margin: 16px auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+          .header { background: linear-gradient(to right,#1e3a8a,#2563eb); color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: flex-start; }
+          .co-name { font-size: 20px; font-weight: bold; letter-spacing: 1px; margin-bottom: 2px; }
+          .co-tag { font-size: 11px; color: #bfdbfe; margin-bottom: 6px; }
+          .co-addr p { font-size: 10px; color: #bfdbfe; display: flex; align-items: center; margin: 1px 0; }
+          .dot { width: 5px; height: 5px; background: #93c5fd; border-radius: 50%; margin-right: 6px; flex-shrink: 0; display: inline-block; }
+          .inv-box { background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.3); border-radius: 8px; padding: 10px 14px; text-align: right; min-width: 170px; }
+          .inv-title { font-size: 13px; font-weight: bold; margin-bottom: 6px; }
+          .inv-row { display: flex; justify-content: space-between; gap: 12px; font-size: 10px; margin-bottom: 3px; }
+          .inv-row span:last-child { font-weight: bold; }
+          .body { padding: 12px 16px; }
+          .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+          .card { border-radius: 8px; overflow: hidden; border: 1px solid; }
+          .card-blue { border-color: #bfdbfe; background: linear-gradient(135deg,#f8faff,#eff6ff); }
+          .card-green { border-color: #a7f3d0; background: linear-gradient(135deg,#f0fdf4,#ecfdf5); }
+          .card-purple { border-color: #ddd6fe; background: linear-gradient(135deg,#faf5ff,#f3e8ff); }
+          .card-pay { border-color: #bbf7d0; background: linear-gradient(135deg,#f0fdf4,#dcfce7); }
+          .card-svc { border-color: #bfdbfe; background: linear-gradient(135deg,#f8faff,#eff6ff); }
+          .card-hdr { padding: 5px 10px; color: white; font-size: 10px; font-weight: bold; }
+          .hdr-blue { background: linear-gradient(to right,#1d4ed8,#2563eb); }
+          .hdr-green { background: linear-gradient(to right,#047857,#059669); }
+          .hdr-purple { background: linear-gradient(to right,#6d28d9,#7c3aed); }
+          .hdr-pay { background: linear-gradient(to right,#047857,#059669); }
+          .hdr-svc { background: linear-gradient(to right,#1d4ed8,#2563eb); }
+          .card-body { padding: 8px 10px; }
+          .row { display: flex; align-items: flex-start; border-bottom: 1px solid #e2e8f0; padding: 3px 0; font-size: 10px; }
+          .row:last-child { border-bottom: none; }
+          .lbl { color: #475569; font-weight: 600; width: 52px; flex-shrink: 0; }
+          .val { color: #0f172a; font-weight: 500; }
+          .vgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; }
+          .vitem { border-bottom: 1px solid #d1fae5; padding: 3px 0; }
+          .vlbl { font-size: 9px; color: #065f46; font-weight: 600; }
+          .vval { font-size: 10px; color: #0f172a; font-weight: 700; }
+          .vfull { display: flex; justify-content: space-between; font-size: 10px; padding: 2px 0; border-bottom: 1px solid #d1fae5; }
+          .vfull:last-child { border-bottom: none; }
+          .vlbl2 { color: #065f46; font-weight: 600; }
+          .ins-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; text-align: center; padding: 4px 0; }
+          .ins-lbl { font-size: 9px; color: #6d28d9; font-weight: 600; margin-bottom: 2px; }
+          .ins-val { font-size: 10px; font-weight: 700; color: #1e293b; }
+          .pay-grid { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; margin-bottom: 8px; }
+          .pay-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid #bbf7d0; font-size: 10px; }
+          .pay-row:last-child { border-bottom: none; }
+          .pay-badge { background: #bbf7d0; color: #065f46; font-weight: bold; padding: 2px 8px; border-radius: 20px; font-size: 10px; }
+          .amt-box { background: white; border: 1px solid #86efac; border-radius: 8px; padding: 8px 14px; text-align: center; }
+          .amt-lbl { font-size: 9px; color: #047857; font-weight: 600; margin-bottom: 2px; }
+          .amt-val { font-size: 18px; font-weight: bold; color: #15803d; }
+          .words-box { background: linear-gradient(to right,#fefce8,#fef9c3); border: 1px solid #fde047; border-radius: 6px; padding: 6px 10px; font-size: 10px; }
+          .words-lbl { color: #92400e; font-weight: 600; margin-bottom: 1px; }
+          .words-val { color: #1e293b; font-style: italic; font-weight: 500; }
+          .svc-msg { background: linear-gradient(to right,#dbeafe,#bfdbfe); border: 1px solid #60a5fa; border-radius: 6px; padding: 8px; margin-bottom: 8px; }
+          .svc-msg p { font-size: 9px; color: #1e40af; }
+          .greet { font-weight: bold; margin-bottom: 2px; font-size: 10px; }
+          table.svc { width: 100%; border-collapse: collapse; font-size: 9px; border-radius: 6px; overflow: hidden; }
+          table.svc th { background: linear-gradient(to right,#1d4ed8,#2563eb); color: white; padding: 5px 8px; text-align: left; font-weight: bold; }
+          table.svc td { padding: 4px 8px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }
+          table.svc tr:last-child td { border-bottom: none; }
+          .svc-type { font-weight: bold; color: #1d4ed8; }
+          .svc-note { background: linear-gradient(to right,#fef3c7,#fde68a); text-align: center; font-weight: bold; color: #92400e; font-size: 9px; padding: 5px; border: 1px solid #f59e0b; border-radius: 0 0 6px 6px; }
+          .footer { background: linear-gradient(135deg,#f1f5f9,#e2e8f0); border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; text-align: center; margin-top: 10px; }
+          .badges { display: flex; justify-content: center; gap: 20px; margin-bottom: 6px; font-size: 9px; color: #475569; }
+          .footer-title { font-weight: bold; font-size: 13px; color: #1e293b; margin-bottom: 2px; }
+          .footer-sub { font-size: 9px; color: #64748b; margin-bottom: 4px; }
+          .footer-legal { font-size: 8px; color: #94a3b8; border-top: 1px solid #cbd5e1; padding-top: 5px; margin-top: 4px; }
+          @media print { .toolbar { display: none !important; } body { background: white; } .page { margin: 0; box-shadow: none; border-radius: 0; } @page { size: A4; margin: 8mm; } }</style>
       </head><body>
-        <div class="toolbar">
-          <h2>&#128196; Invoice Preview - ${inv.invoice_number}</h2>
+                <div class="toolbar">
+          <h2>&#128196; Invoice - ${invoice.invoice_number}</h2>
           <div class="toolbar-btns">
             <button class="btn btn-print" onclick="window.print()">&#128424; Print Invoice</button>
             <button class="btn btn-close" onclick="window.close()">&#10006; Close</button>
@@ -2694,8 +2055,8 @@ const CreateInvoice = () => {
             </div>
             <div class="inv-box">
               <div class="inv-title">SALES INVOICE</div>
-              <div class="inv-row"><span>Invoice No:</span><span>${inv.invoice_number}</span></div>
-              <div class="inv-row"><span>Date:</span><span>${inv.date || new Date().toLocaleDateString('en-IN')}</span></div>
+              <div class="inv-row"><span>Invoice No:</span><span>${invoice.invoice_number}</span></div>
+              <div class="inv-row"><span>Date:</span><span>${new Date(invoice.sale_date).toLocaleDateString('en-IN')}</span></div>
             </div>
           </div>
           <div class="body">
@@ -2703,23 +2064,23 @@ const CreateInvoice = () => {
               <div class="card card-blue">
                 <div class="card-hdr hdr-blue">CUSTOMER DETAILS</div>
                 <div class="card-body">
-                  <div class="row"><span class="lbl">Name:</span><span class="val">${inv.customer?.name || 'N/A'}</span></div>
-                  <div class="row"><span class="lbl">C/O:</span><span class="val">${inv.customer?.care_of || 'N/A'}</span></div>
-                  <div class="row"><span class="lbl">Mobile:</span><span class="val">${inv.customer?.mobile || 'N/A'}</span></div>
-                  <div class="row"><span class="lbl">Address:</span><span class="val">${inv.customer?.address || 'N/A'}</span></div>
+                  <div class="row"><span class="lbl">Name:</span><span class="val">${invoice.customer?.name || 'N/A'}</span></div>
+                  <div class="row"><span class="lbl">C/O:</span><span class="val">${invoice.customer?.care_of || 'N/A'}</span></div>
+                  <div class="row"><span class="lbl">Mobile:</span><span class="val">${invoice.customer?.mobile || invoice.customer?.phone || 'N/A'}</span></div>
+                  <div class="row"><span class="lbl">Address:</span><span class="val">${invoice.customer?.address || 'N/A'}</span></div>
                 </div>
               </div>
               <div class="card card-green">
                 <div class="card-hdr hdr-green">VEHICLE DETAILS</div>
                 <div class="card-body">
                   <div class="vgrid">
-                    <div class="vitem"><div class="vlbl">Brand</div><div class="vval">${inv.vehicle?.brand || 'N/A'}</div></div>
-                    <div class="vitem"><div class="vlbl">Model</div><div class="vval">${inv.vehicle?.model || 'N/A'}</div></div>
-                    <div class="vitem"><div class="vlbl">Color</div><div class="vval">${inv.vehicle?.color || 'N/A'}</div></div>
-                    <div class="vitem"><div class="vlbl">Vehicle No</div><div class="vval">${inv.vehicle?.vehicle_no || 'N/A'}</div></div>
+                    <div class="vitem"><div class="vlbl">Brand</div><div class="vval">${invoice.customer?.vehicle_info?.brand || invoice.vehicle?.brand || 'N/A'}</div></div>
+                    <div class="vitem"><div class="vlbl">Model</div><div class="vval">${invoice.customer?.vehicle_info?.model || invoice.vehicle?.model || 'N/A'}</div></div>
+                    <div class="vitem"><div class="vlbl">Color</div><div class="vval">${invoice.customer?.vehicle_info?.color || invoice.vehicle?.color || 'N/A'}</div></div>
+                    <div class="vitem"><div class="vlbl">Vehicle No</div><div class="vval">${invoice.customer?.vehicle_info?.vehicle_number || invoice.vehicle?.vehicle_no || 'N/A'}</div></div>
                   </div>
-                  <div class="vfull"><span class="vlbl2">Chassis No:</span><span>${inv.vehicle?.chassis_number || 'N/A'}</span></div>
-                  <div class="vfull"><span class="vlbl2">Engine No:</span><span>${inv.vehicle?.engine_number || 'N/A'}</span></div>
+                  <div class="vfull"><span class="vlbl2">Chassis No:</span><span>${invoice.customer?.vehicle_info?.chassis_number || invoice.vehicle?.chassis_number || 'N/A'}</span></div>
+                  <div class="vfull"><span class="vlbl2">Engine No:</span><span>${invoice.customer?.vehicle_info?.engine_number || invoice.vehicle?.engine_number || 'N/A'}</span></div>
                 </div>
               </div>
             </div>
@@ -2727,9 +2088,9 @@ const CreateInvoice = () => {
               <div class="card-hdr hdr-purple">INSURANCE NOMINEE DETAILS</div>
               <div class="card-body">
                 <div class="ins-grid">
-                  <div><div class="ins-lbl">Nominee Name</div><div class="ins-val">${inv.insurance?.nominee || 'N/A'}</div></div>
-                  <div><div class="ins-lbl">Relation</div><div class="ins-val" style="text-transform:capitalize">${inv.insurance?.relation || 'N/A'}</div></div>
-                  <div><div class="ins-lbl">Age</div><div class="ins-val">${inv.insurance?.age || 'N/A'} years</div></div>
+                  <div><div class="ins-lbl">Nominee Name</div><div class="ins-val">${invoice.customer?.insurance_info?.nominee_name || invoice.insurance?.nominee || invoice.insurance_details?.nominee || 'N/A'}</div></div>
+                  <div><div class="ins-lbl">Relation</div><div class="ins-val" style="text-transform:capitalize">${invoice.customer?.insurance_info?.relation || invoice.insurance?.relation || 'N/A'}</div></div>
+                  <div><div class="ins-lbl">Age</div><div class="ins-val">${invoice.customer?.insurance_info?.age || invoice.insurance?.age || 'N/A'} years</div></div>
                 </div>
               </div>
             </div>
@@ -2738,17 +2099,17 @@ const CreateInvoice = () => {
               <div class="card-body">
                 <div class="pay-grid">
                   <div>
-                    <div class="pay-row"><span style="color:#047857;font-weight:600">Payment Method:</span><span class="pay-badge">${inv.payment_method || 'CASH'}</span></div>
-                    <div class="pay-row"><span style="color:#047857;font-weight:600">Hypothecation:</span><span style="font-weight:bold">${inv.hypothecation || 'Cash'}</span></div>
+                    <div class="pay-row"><span style="color:#047857;font-weight:600">Payment Method:</span><span class="pay-badge">${invoice.payment_method || 'CASH'}</span></div>
+                    <div class="pay-row"><span style="color:#047857;font-weight:600">Hypothecation:</span><span style="font-weight:bold">${invoice.hypothecation || 'Cash'}</span></div>
                   </div>
                   <div class="amt-box">
                     <div class="amt-lbl">TOTAL AMOUNT</div>
-                    <div class="amt-val">&#8377;${inv.amount?.toLocaleString() || '0'}</div>
+                    <div class="amt-val">&#8377;${invoice.amount?.toLocaleString() || '0'}</div>
                   </div>
                 </div>
                 <div class="words-box">
                   <div class="words-lbl">Amount in Words:</div>
-                  <div class="words-val">${numberToWords(inv.amount || 0)} Rupees Only</div>
+                  <div class="words-val">${numberToWords(invoice.amount || 0)} Rupees Only</div>
                 </div>
               </div>
             </div>
@@ -2771,7 +2132,7 @@ const CreateInvoice = () => {
             <div class="footer">
               <div class="badges"><span>&#127942; Authorized Dealer</span><span>&#128336; 24/7 Support</span><span>&#9989; Quality Guaranteed</span></div>
               <div class="footer-title">Thank You for Choosing M M Motors!</div>
-              <div class="footer-sub">Your trust drives our excellence in two-wheeler sales and service.</div>
+              <div class="footer-sub">Your trust drives our excellence.</div>
               <div class="footer-legal">Computer-generated invoice. Queries: mmmotors3123@gmail.com | 7026263123</div>
             </div>
           </div>
@@ -2780,1675 +2141,193 @@ const CreateInvoice = () => {
     `);
     printWindow.document.close();
     printWindow.focus();
-  };
-
-  const handleDownload = () => {
-    const element = document.getElementById('invoice-preview');
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Invoice ${generatedInvoice?.invoice_number}</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            .invoice-container { max-width: 800px; margin: 0 auto; }
-            .header { text-align: center; margin-bottom: 20px; }
-            .section { margin: 15px 0; }
-            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-            .field { margin-bottom: 8px; }
-            .label { font-weight: bold; }
-            .total { font-size: 18px; font-weight: bold; text-align: right; }
-            @media print { body { margin: 0; } }
-          </style>
-        </head>
-        <body>${element.innerHTML}</body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.print();
-  };
-
-  // Function to download invoice as PDF
-  const handleDownloadPDF = async (invoice = null) => {
-    const invoiceData = invoice || generatedInvoice;
-    if (!invoiceData) return;
-
-    try {
-      // Get the invoice preview element
-      const invoiceElement = document.getElementById('invoice-preview');
-      if (!invoiceElement) return;
-
-      // Import html2pdf dynamically
-      const { default: html2pdf } = await import('html2pdf.js');
-
-      // Generate filename with customer name and mobile number
-      const customerName = invoiceData.customer?.name || 'Name';
-      const customerMobile = invoiceData.customer?.mobile || 'Mobile';
-      const sanitizedName = customerName.replace(/[^a-zA-Z0-9]/g, '_');
-      const sanitizedMobile = customerMobile.replace(/[^0-9]/g, '');
-      const filename = `Invoice_${sanitizedName}_${sanitizedMobile}_${invoiceData.invoice_number}.pdf`;
-
-      // Configure options for PDF generation
-      const opt = {
-        margin: [0.3, 0.3, 0.3, 0.3],
-        filename: filename,
-        image: { type: 'jpeg', quality: 0.95 },
-        html2canvas: { 
-          scale: 1.5,
-          useCORS: true,
-          letterRendering: true,
-          width: 794,  // A4 width in pixels at 96 DPI
-          height: 1123 // A4 height in pixels at 96 DPI
-        },
-        jsPDF: { 
-          unit: 'mm', 
-          format: 'a4', 
-          orientation: 'portrait',
-          compress: false
-        }
-      };
-
-      // Generate and download PDF
-      html2pdf().set(opt).from(invoiceElement).save();
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Error generating PDF. Please try again.');
-    }
-  };
-
-  const resetForm = () => {
-    setInvoiceData({
-      date: new Date().toISOString().split('T')[0],
-      name: '',
-      care_of: '',
-      mobile: '',
-      address: '',
-      brand: '',
-      model: '',
-      color: '',
-      chassis_number: '',
-      engine_number: '',
-      vehicle_no: '',
-      insurance_nominee: '',
-      relation: '',
-      age: '',
-      amount: '',
-      payment_method: 'Cash',
-      hypothecation: ''
-    });
-    setShowPreview(false);
-    setGeneratedInvoice(null);
-  };
-
-  if (showPreview && generatedInvoice) {
-    return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center no-print">
-          <h2 className="text-2xl font-bold">Invoice Preview</h2>
-          <div className="flex gap-2">
-            <Button onClick={() => setShowPreview(false)} variant="outline">
-              Back to Form
-            </Button>
-            <Button onClick={handlePrint} variant="outline">
-              Print
-            </Button>
-            <Button onClick={handleDownloadPDF}>
-              Download PDF
-            </Button>
-            <Button onClick={resetForm}>
-              New Invoice
-            </Button>
-          </div>
-        </div>
-
-        <Card id="invoice-preview" className="print-full-width shadow-2xl max-w-[21cm] mx-auto">
-          <CardContent className="p-0">
-            <div className="invoice-container bg-white text-xs">
-              {/* Professional Header - Compact */}
-              <div className="header bg-gradient-to-r from-blue-800 to-blue-600 text-white p-3 rounded-t-lg">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h1 className="text-xl font-bold tracking-wide">M M MOTORS</h1>
-                    <p className="text-blue-100 text-xs mt-1 font-medium">Premium Two Wheeler Sales & Service</p>
-                    <div className="mt-1 text-blue-100 text-xs space-y-0.5">
-                      <p className="flex items-center">
-                        <span className="w-1.5 h-1.5 bg-blue-300 rounded-full mr-1.5"></span>
-                        Bengaluru main road, behind Ruchi Bakery
-                      </p>
-                      <p className="flex items-center">
-                        <span className="w-1.5 h-1.5 bg-blue-300 rounded-full mr-1.5"></span>
-                        Malur, Karnataka 563130
-                      </p>
-                      <p className="flex items-center">
-                        <span className="w-1.5 h-1.5 bg-blue-300 rounded-full mr-1.5"></span>
-                        Phone: 7026263123 | Email: mmmotors3123@gmail.com
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-2 border border-white border-opacity-30">
-                      <h2 className="text-sm font-bold text-white mb-1">SALES INVOICE</h2>
-                      <div className="space-y-0.5 text-xs">
-                        <div className="flex justify-between">
-                          <span className="text-blue-100 text-xs">Invoice No:</span>
-                          <span className="font-bold text-white text-xs">{generatedInvoice.invoice_number}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-blue-100 text-xs">Date:</span>
-                          <span className="font-bold text-white text-xs">{new Date(generatedInvoice.date).toLocaleDateString('en-IN')}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-3 space-y-3">
-
-              {/* Customer & Vehicle Details Grid - Compact */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-                {/* Customer Details */}
-                <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg border border-slate-200 overflow-hidden">
-                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-2 py-1">
-                    <h3 className="text-white font-bold flex items-center text-xs">
-                      <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                      </svg>
-                      CUSTOMER DETAILS
-                    </h3>
-                  </div>
-                  <div className="p-2 space-y-1">
-                    <div className="flex items-center border-b border-slate-200 pb-0.5">
-                      <span className="text-slate-600 font-medium w-12 text-xs">Name:</span>
-                      <span className="text-slate-900 font-semibold text-xs">{generatedInvoice.customer.name}</span>
-                    </div>
-                    <div className="flex items-center border-b border-slate-200 pb-0.5">
-                      <span className="text-slate-600 font-medium w-12 text-xs">C/O:</span>
-                      <span className="text-slate-900 text-xs">{generatedInvoice.customer.care_of}</span>
-                    </div>
-                    <div className="flex items-center border-b border-slate-200 pb-0.5">
-                      <span className="text-slate-600 font-medium w-12 text-xs">Mobile:</span>
-                      <span className="text-slate-900 font-mono font-semibold text-xs">{generatedInvoice.customer.mobile}</span>
-                    </div>
-                    <div className="flex items-start">
-                      <span className="text-slate-600 font-medium w-12 text-xs">Address:</span>
-                      <span className="text-slate-900 leading-tight text-xs">{generatedInvoice.customer.address}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Vehicle Details */}
-                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg border border-emerald-200 overflow-hidden">
-                  <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 px-2 py-1">
-                    <h3 className="text-white font-bold flex items-center text-xs">
-                      <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12,2L14,6H18L14,8L15,12L12,10L9,12L10,8L6,6H10L12,2Z"/>
-                      </svg>
-                      VEHICLE DETAILS
-                    </h3>
-                  </div>
-                  <div className="p-2 space-y-1">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="border-b border-emerald-200 pb-0.5">
-                        <span className="text-emerald-700 font-medium text-xs">Brand</span>
-                        <div className="text-slate-900 font-bold text-xs">{generatedInvoice.vehicle.brand}</div>
-                      </div>
-                      <div className="border-b border-emerald-200 pb-0.5">
-                        <span className="text-emerald-700 font-medium text-xs">Model</span>
-                        <div className="text-slate-900 font-semibold text-xs">{generatedInvoice.vehicle.model}</div>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="border-b border-emerald-200 pb-0.5">
-                        <span className="text-emerald-700 font-medium text-xs">Color</span>
-                        <div className="text-slate-900 text-xs">{generatedInvoice.vehicle.color}</div>
-                      </div>
-                      <div className="border-b border-emerald-200 pb-0.5">
-                        <span className="text-emerald-700 font-medium text-xs">Vehicle No</span>
-                        <div className="text-slate-900 font-mono font-bold text-xs">{generatedInvoice.vehicle.vehicle_no}</div>
-                      </div>
-                    </div>
-                    <div className="space-y-0.5">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-emerald-700 font-medium">Chassis No:</span>
-                        <span className="text-slate-900 font-mono text-xs">{generatedInvoice.vehicle.chassis_number}</span>
-                      </div>
-                      <div className="flex justify-between text-xs">
-                        <span className="text-emerald-700 font-medium">Engine No:</span>
-                        <span className="text-slate-900 font-mono text-xs">{generatedInvoice.vehicle.engine_number}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Insurance Details - Compact */}
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200 overflow-hidden">
-                <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-2 py-1">
-                  <h3 className="text-white font-bold flex items-center text-xs">
-                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10V11.5H16.2V16H7.8V11.5H9.2V10C9.2,8.6 10.6,7 12,7M12,8.2C11.2,8.2 10.5,8.9 10.5,9.7V11.5H13.5V9.7C13.5,8.9 12.8,8.2 12,8.2Z"/>
-                    </svg>
-                    INSURANCE NOMINEE DETAILS
-                  </h3>
-                </div>
-                <div className="p-2">
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-center">
-                      <span className="text-purple-700 font-medium text-xs block">Nominee Name</span>
-                      <div className="text-slate-900 font-semibold mt-0.5 text-xs">{generatedInvoice.insurance.nominee}</div>
-                    </div>
-                    <div className="text-center">
-                      <span className="text-purple-700 font-medium text-xs block">Relation</span>
-                      <div className="text-slate-900 font-semibold mt-0.5 capitalize text-xs">{generatedInvoice.insurance.relation}</div>
-                    </div>
-                    <div className="text-center">
-                      <span className="text-purple-700 font-medium text-xs block">Age</span>
-                      <div className="text-slate-900 font-semibold mt-0.5 text-xs">{generatedInvoice.insurance.age} years</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Payment Summary - Compact */}
-              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200 overflow-hidden">
-                <div className="bg-gradient-to-r from-green-600 to-green-700 px-2 py-1">
-                  <h3 className="text-white font-bold flex items-center text-xs">
-                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M7,15H9C9,16.08 10.37,17 12,17C13.63,17 15,16.08 15,15C15,13.9 13.96,13.5 11.76,12.97C9.64,12.44 7,11.78 7,9C7,7.21 8.47,5.69 10.5,5.18V3H13.5V5.18C15.53,5.69 17,7.21 17,9H15C15,7.92 13.63,7 12,7C10.37,7 9,7.92 9,9C9,10.1 10.04,10.5 12.24,11.03C14.36,11.56 17,12.22 17,15C17,16.79 15.53,18.31 13.5,18.82V21H10.5V18.82C8.47,18.31 7,16.79 7,15Z"/>
-                    </svg>
-                    PAYMENT SUMMARY
-                  </h3>
-                </div>
-                <div className="p-2">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
-                    <div className="space-y-1">
-                      <div className="flex justify-between items-center py-1 border-b border-green-200">
-                        <span className="text-green-700 font-medium text-xs">Payment Method:</span>
-                        <span className="text-slate-900 font-bold uppercase bg-green-200 px-2 py-0.5 rounded-full text-xs">
-                          {generatedInvoice.payment_method}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center py-1">
-                        <span className="text-green-700 font-medium text-xs">Hypothecation:</span>
-                        <span className="text-slate-900 font-semibold text-xs">{generatedInvoice.hypothecation || 'CASH'}</span>
-                      </div>
-                    </div>
-                    <div className="bg-white rounded-lg p-2 border border-green-300 shadow-sm">
-                      <div className="text-center">
-                        <span className="text-green-700 font-medium text-xs block mb-1">TOTAL AMOUNT</span>
-                        <div className="text-lg font-bold text-green-600">
-                          ₹{generatedInvoice.amount.toLocaleString()}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-2 border border-yellow-200">
-                    <span className="text-orange-800 font-semibold text-xs">Amount in Words:</span>
-                    <div className="text-slate-900 font-medium mt-0.5 italic text-xs">
-                      {numberToWords(generatedInvoice.amount)} Rupees Only
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Service Schedule - Compact */}
-              <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg border border-indigo-200 overflow-hidden">
-                <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-2 py-1">
-                  <h3 className="text-white font-bold text-center flex items-center justify-center text-xs">
-                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22C6.47,22 2,17.5 2,12A10,10 0 0,1 12,2M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z"/>
-                    </svg>
-                    SERVICE SCHEDULE
-                  </h3>
-                </div>
-                <div className="p-2">
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-2 mb-2 border border-indigo-200">
-                    <p className="font-bold text-indigo-800 text-xs mb-1">DEAR VALUED CUSTOMER,</p>
-                    <p className="text-indigo-700 text-xs leading-tight">
-                      We thank you for choosing our world-class vehicle. To ensure optimal performance and longevity, 
-                      please follow the service schedule below for a pleasant riding experience at all times.
-                    </p>
-                  </div>
-
-                  <div className="overflow-hidden rounded-lg border border-indigo-300 shadow-sm">
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr className="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white">
-                          <th className="p-1.5 text-left font-bold border-r border-indigo-500">SERVICE DATE</th>
-                          <th className="p-1.5 text-left font-bold border-r border-indigo-500">SERVICE TYPE</th>
-                          <th className="p-1.5 text-left font-bold">RECOMMENDED SCHEDULE</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white">
-                        <tr className="border-b border-indigo-200 hover:bg-indigo-50">
-                          <td className="p-1.5 border-r border-indigo-200 text-slate-600">____/____/____</td>
-                          <td className="p-1.5 border-r border-indigo-200 font-bold text-indigo-700">FIRST SERVICE</td>
-                          <td className="p-1.5 text-slate-800">500-700 kms or 15-30 days</td>
-                        </tr>
-                        <tr className="border-b border-indigo-200 hover:bg-indigo-50">
-                          <td className="p-1.5 border-r border-indigo-200 text-slate-600">____/____/____</td>
-                          <td className="p-1.5 border-r border-indigo-200 font-bold text-indigo-700">SECOND SERVICE</td>
-                          <td className="p-1.5 text-slate-800">3000-3500 kms or 30-90 days</td>
-                        </tr>
-                        <tr className="border-b border-indigo-200 hover:bg-indigo-50">
-                          <td className="p-1.5 border-r border-indigo-200 text-slate-600">____/____/____</td>
-                          <td className="p-1.5 border-r border-indigo-200 font-bold text-indigo-700">THIRD SERVICE</td>
-                          <td className="p-1.5 text-slate-800">6000-6500 kms or 90-180 days</td>
-                        </tr>
-                        <tr className="hover:bg-indigo-50">
-                          <td className="p-1.5 border-r border-indigo-200 text-slate-600">____/____/____</td>
-                          <td className="p-1.5 border-r border-indigo-200 font-bold text-indigo-700">FOURTH SERVICE</td>
-                          <td className="p-1.5 text-slate-800">9000-9500 kms or 180-270 days</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    
-                    <div className="bg-gradient-to-r from-amber-100 to-yellow-100 border-t border-indigo-300 p-1.5 text-center">
-                      <p className="font-bold text-amber-800 text-xs">
-                        ⚠️ IMPORTANT: Follow whichever milestone comes first (kilometers or days)
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Professional Footer - Compact */}
-              <div className="mt-3 bg-gradient-to-r from-slate-100 to-slate-200 rounded-lg p-3 border border-slate-300">
-                <div className="text-center space-y-2">
-                  <div className="flex items-center justify-center space-x-6 text-slate-700">
-                    <div className="flex items-center">
-                      <svg className="w-3 h-3 mr-1 text-green-600" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M9,11H15L13,9H11V7H13V9H15V7A2,2 0 0,0 13,5H11A2,2 0 0,0 9,7V9H7L9,11M20,6H16V4A2,2 0 0,0 14,2H10A2,2 0 0,0 8,4V6H4A2,2 0 0,0 2,8V19A2,2 0 0,0 4,21H20A2,2 0 0,0 22,19V8A2,2 0 0,0 20,6Z"/>
-                      </svg>
-                      <span className="text-xs font-medium">Authorized Dealer</span>
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="w-3 h-3 mr-1 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,7V13H12.5L16.2,16.7L17.3,15.6L14.2,12.5H13V7H11Z"/>
-                      </svg>
-                      <span className="text-xs font-medium">24/7 Service Support</span>
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="w-3 h-3 mr-1 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
-                      </svg>
-                      <span className="text-xs font-medium">Quality Guaranteed</span>
-                    </div>
-                  </div>
-                  
-                  <div className="border-t border-slate-300 pt-2">
-                    <h4 className="text-sm font-bold text-slate-800 mb-1">Thank You for Choosing M M Motors!</h4>
-                    <p className="text-slate-600 text-xs mb-1">Your trust drives our excellence in two-wheeler sales and service.</p>
-                    <div className="flex justify-center items-center space-x-3 text-xs text-slate-500">
-                      <span>🌟 Premium Quality</span>
-                      <span>•</span>
-                      <span>⚡ Expert Service</span>
-                      <span>•</span>
-                      <span>🤝 Customer First</span>
-                    </div>
-                  </div>
-                  
-                  <div className="text-xs text-slate-500 border-t border-slate-300 pt-1">
-                    This is a computer-generated invoice and does not require a signature. 
-                    For queries, contact us at mmmotors3123@gmail.com or 7026263123
-                  </div>
-                </div>
-              </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
   }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Create New Invoice</CardTitle>
-        <CardDescription>Fill in all details to generate a comprehensive invoice</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Date */}
-          <div>
-            <Label htmlFor="date">Date</Label>
-            <Input
-              id="date"
-              type="date"
-              value={invoiceData.date}
-              onChange={(e) => handleInputChange('date', e.target.value)}
-            />
-          </div>
-
-          {/* Customer Details */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-blue-600">Customer Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  placeholder="Enter customer name"
-                  value={invoiceData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="care_of">C/O (Care Of)</Label>
-                <Input
-                  id="care_of"
-                  placeholder="S/O, D/O, W/O"
-                  value={invoiceData.care_of}
-                  onChange={(e) => handleInputChange('care_of', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="mobile">Mobile Number *</Label>
-                <Input
-                  id="mobile"
-                  placeholder="Enter mobile number"
-                  value={invoiceData.mobile}
-                  onChange={(e) => handleInputChange('mobile', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="address">Address</Label>
-                <Textarea
-                  id="address"
-                  placeholder="Enter complete address"
-                  value={invoiceData.address}
-                  onChange={(e) => handleInputChange('address', e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Vehicle Details */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-blue-600">Vehicle Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="brand">Brand</Label>
-                <Select value={invoiceData.brand} onValueChange={(value) => handleInputChange('brand', value)} disabled={selectedVehicle}>
-                  <SelectTrigger className={selectedVehicle ? 'bg-green-50 border-green-200' : ''}>
-                    <SelectValue placeholder={selectedVehicle ? "Selected from inventory" : "Select brand"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {brands.map((brand) => (
-                      <SelectItem key={brand} value={brand}>
-                        {brand}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="model">Model</Label>
-                <Input
-                  id="model"
-                  placeholder="Enter model name"
-                  value={invoiceData.model}
-                  onChange={(e) => handleInputChange('model', e.target.value)}
-                  disabled={selectedVehicle}
-                  className={selectedVehicle ? 'bg-green-50 border-green-200' : ''}
-                />
-              </div>
-              <div>
-                <Label htmlFor="color">Color</Label>
-                <Input
-                  id="color"
-                  placeholder="Enter color"
-                  value={invoiceData.color}
-                  onChange={(e) => handleInputChange('color', e.target.value)}
-                  disabled={selectedVehicle}
-                  className={selectedVehicle ? 'bg-green-50 border-green-200' : ''}
-                />
-              </div>
-              <div className="relative">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="chassis_number">Chassis No</Label>
-                  {selectedVehicle && (
-                    <div className="flex items-center gap-1">
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        ✓ From Inventory
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedVehicle(null);
-                          setInvoiceData(prev => ({
-                            ...prev,
-                            brand: '',
-                            model: '',
-                            color: '',
-                            chassis_number: '',
-                            engine_number: '',
-                            vehicle_no: ''
-                          }));
-                        }}
-                        className="text-red-500 hover:text-red-700 text-xs"
-                        title="Clear selection and enter manually"
-                      >
-                        ✗
-                      </button>
-                    </div>
-                  )}
-                </div>
-                <Input
-                  id="chassis_number"
-                  placeholder={selectedVehicle ? "Selected from inventory" : "Enter chassis number (min 3 chars for suggestions)"}
-                  value={invoiceData.chassis_number}
-                  onChange={(e) => handleInputChange('chassis_number', e.target.value)}
-                  onFocus={() => {
-                    if (invoiceData.chassis_number.length >= 3 && !selectedVehicle) {
-                      setShowSuggestions(true);
-                    }
-                  }}
-                  onBlur={() => {
-                    // Delay hiding suggestions to allow clicking on them
-                    setTimeout(() => setShowSuggestions(false), 150);
-                  }}
-                  disabled={selectedVehicle}
-                  className={selectedVehicle ? 'bg-green-50 border-green-200' : ''}
-                />
-                
-                {/* Vehicle Suggestions Dropdown */}
-                {showSuggestions && vehicleSuggestions.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 z-50 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                    <div className="p-2 bg-blue-50 border-b">
-                      <span className="text-sm font-medium text-blue-700">
-                        {vehicleSuggestions.length} vehicle(s) found - Click to select
-                      </span>
-                    </div>
-                    {vehicleSuggestions.map((vehicle) => (
-                      <div
-                        key={vehicle.id}
-                        className="p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 transition-colors"
-                        onClick={() => selectVehicle(vehicle)}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="font-medium text-gray-900">
-                              {vehicle.brand} {vehicle.model}
-                            </div>
-                            <div className="text-sm text-gray-600">
-                              <span className="font-mono">{vehicle.chassis_number}</span>
-                              <span className="mx-2">•</span>
-                              <span>{vehicle.color}</span>
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              Engine: {vehicle.engine_number}
-                              {vehicle.vehicle_no && (
-                                <span> • Vehicle No: {vehicle.vehicle_no}</span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="ml-2">
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              Available
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="engine_number">Engine No</Label>
-                <Input
-                  id="engine_number"
-                  placeholder="Enter engine number"
-                  value={invoiceData.engine_number}
-                  onChange={(e) => handleInputChange('engine_number', e.target.value)}
-                  disabled={selectedVehicle}
-                  className={selectedVehicle ? 'bg-green-50 border-green-200' : ''}
-                />
-              </div>
-              <div>
-                <Label htmlFor="vehicle_no">Vehicle No</Label>
-                <Input
-                  id="vehicle_no"
-                  placeholder="Enter vehicle registration number"
-                  value={invoiceData.vehicle_no}
-                  onChange={(e) => handleInputChange('vehicle_no', e.target.value)}
-                  disabled={selectedVehicle}
-                  className={selectedVehicle ? 'bg-green-50 border-green-200' : ''}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Insurance Nominee Details */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-blue-600">Insurance Nominee Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="insurance_nominee">Nominee Name</Label>
-                <Input
-                  id="insurance_nominee"
-                  placeholder="Enter nominee name"
-                  value={invoiceData.insurance_nominee}
-                  onChange={(e) => handleInputChange('insurance_nominee', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="relation">Relation</Label>
-                <Select value={invoiceData.relation} onValueChange={(value) => handleInputChange('relation', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select relation" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="father">Father</SelectItem>
-                    <SelectItem value="mother">Mother</SelectItem>
-                    <SelectItem value="spouse">Spouse</SelectItem>
-                    <SelectItem value="son">Son</SelectItem>
-                    <SelectItem value="daughter">Daughter</SelectItem>
-                    <SelectItem value="brother">Brother</SelectItem>
-                    <SelectItem value="sister">Sister</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="age">Age</Label>
-                <Input
-                  id="age"
-                  type="number"
-                  placeholder="Enter age"
-                  value={invoiceData.age}
-                  onChange={(e) => handleInputChange('age', e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Payment Details */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-blue-600">Payment Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="amount">Amount (₹)</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  placeholder="Enter amount"
-                  value={invoiceData.amount}
-                  onChange={(e) => handleInputChange('amount', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="payment_method">Payment Method</Label>
-                <Select value={invoiceData.payment_method} onValueChange={(value) => handleInputChange('payment_method', value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Cash">Cash</SelectItem>
-                    <SelectItem value="Card">Card</SelectItem>
-                    <SelectItem value="UPI">UPI</SelectItem>
-                    <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                    <SelectItem value="Cheque">Cheque</SelectItem>
-                    <SelectItem value="Finance">Finance</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="hypothecation">Hypothecation</Label>
-                <Input
-                  id="hypothecation"
-                  placeholder="Enter hypothecation details"
-                  value={invoiceData.hypothecation}
-                  onChange={(e) => handleInputChange('hypothecation', e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex gap-4">
-            <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? (
-                <>
-                  <LoadingSpinner size="sm" className="mr-2" />
-                  Generating Invoice...
-                </>
-              ) : 'Generate Invoice'}
-            </Button>
-            <Button type="button" variant="outline" onClick={resetForm}>
-              Reset Form
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
-  );
-};
-
-const ViewInvoices = () => {
-  const [invoices, setInvoices] = useState([]);
-  const [filteredInvoices, setFilteredInvoices] = useState([]);
-  const [customers, setCustomers] = useState([]);
-  const [vehicles, setVehicles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingInvoice, setEditingInvoice] = useState(null);
-  const [editFormData, setEditFormData] = useState({});
-  const [selectedInvoices, setSelectedInvoices] = useState([]);
-  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
-  
-  // Pagination & Sorting
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(25);
-  const [sortBy, setSortBy] = useState('sale_date');
-  const [sortOrder, setSortOrder] = useState('desc');
-
-  useEffect(() => {
-    fetchInvoices();
-    fetchCustomers();
-    fetchVehicles();
-  }, []);
-
-  useEffect(() => {
-    filterInvoices();
-  }, [invoices, searchTerm, customers, vehicles, sortBy, sortOrder]);
-
-  const fetchInvoices = async () => {
-    try {
-      const response = await axios.get(`${API}/sales`);
-      setInvoices(response.data);
-    } catch (error) {
-      toast.error('Failed to fetch invoices');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchCustomers = async () => {
-    try {
-      const response = await axios.get(`${API}/customers`, {
-        params: {
-          page: 1,
-          limit: 10000, // Fetch all customers for lookups
-          sort: 'created_at',
-          order: 'desc'
-        }
-      });
-      // Extract the data array from paginated response
-      setCustomers(response.data.data || response.data);
-    } catch (error) {
-      console.error('Failed to fetch customers');
-    }
-  };
-
-  const fetchVehicles = async () => {
-    try {
-      const response = await axios.get(`${API}/vehicles`);
-      setVehicles(response.data);
-    } catch (error) {
-      console.error('Failed to fetch vehicles');
-    }
-  };
-
-  const filterInvoices = () => {
-    // Create a copy to avoid mutating original array (important for React state updates)
-    let filtered = [...invoices];
-
-    if (searchTerm) {
-      filtered = filtered.filter(invoice => {
-        const customer = customers.find(c => c.id === invoice.customer_id);
-        const vehicle = vehicles.find(v => v.id === invoice.vehicle_id);
-        
-        return (
-          invoice.invoice_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          customer?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          vehicle?.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          invoice.amount?.toString().includes(searchTerm) ||
-          invoice.payment_method?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      });
-    }
-
-    // Apply sorting (on the copy, not original)
-    filtered.sort((a, b) => {
-      let aVal, bVal;
-      
-      switch (sortBy) {
-        case 'sale_date':
-          aVal = new Date(a.sale_date || 0);
-          bVal = new Date(b.sale_date || 0);
-          break;
-        case 'invoice_number':
-          aVal = a.invoice_number || '';
-          bVal = b.invoice_number || '';
-          break;
-        case 'customer_name':
-          const customerA = customers.find(c => c.id === a.customer_id);
-          const customerB = customers.find(c => c.id === b.customer_id);
-          aVal = customerA?.name || '';
-          bVal = customerB?.name || '';
-          break;
-        case 'amount':
-          aVal = a.amount || 0;
-          bVal = b.amount || 0;
-          break;
-        default:
-          return 0;
-      }
-
-      if (sortOrder === 'asc') {
-        return aVal > bVal ? 1 : -1;
-      } else {
-        return aVal < bVal ? 1 : -1;
-      }
-    });
-
-    setFilteredInvoices(filtered);
-    setCurrentPage(1); // Reset to first page when filters change
-  };
-
-  const getCustomerName = (customerId) => {
-    const customer = customers.find(c => c.id === customerId);
-    return customer ? customer.name : 'Unknown Customer';
-  };
-
-  const getVehicleModel = (invoice) => {
-    // First try to get from invoice/sale record directly (for imported or manually entered data)
-    if (invoice.vehicle_brand || invoice.vehicle_model) {
-      return `${invoice.vehicle_brand || ''} ${invoice.vehicle_model || ''}`.trim() || 'Unknown Vehicle';
-    }
-    
-    // Fall back to looking up by vehicle_id
-    if (invoice.vehicle_id) {
-      const vehicle = vehicles.find(v => v.id === invoice.vehicle_id);
-      if (vehicle) {
-        return `${vehicle.brand || ''} ${vehicle.model || ''}`.trim() || 'Unknown Vehicle';
-      }
-    }
-    
-    return 'Unknown Vehicle';
-  };
-
-  const getStatusBadge = (status) => {
-    const statusColors = {
-      'paid': 'bg-green-100 text-green-800',
-      'pending': 'bg-yellow-100 text-yellow-800',
-      'overdue': 'bg-red-100 text-red-800',
-      'cancelled': 'bg-gray-100 text-gray-800'
-    };
-
-    return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[status] || statusColors.paid}`}>
-        {status || 'Paid'}
-      </span>
-    );
-  };
-
-  const handleViewInvoice = (invoice) => {
-    const customer = customers.find(c => c.id === invoice.customer_id);
-    const vehicle = vehicles.find(v => v.id === invoice.vehicle_id);
-    
-    setSelectedInvoice({
-      ...invoice,
-      customer,
-      vehicle
-    });
-    setShowInvoiceModal(true);
-  };
-
-  const handleEditInvoice = (invoice) => {
-    const customer = customers.find(c => c.id === invoice.customer_id);
-    const vehicle = vehicles.find(v => v.id === invoice.vehicle_id);
-    
-    setEditingInvoice(invoice);
-    setEditFormData({
-      // Basic Invoice Details
-      invoice_number: invoice.invoice_number,
-      sale_date: invoice.sale_date,
-      amount: invoice.amount,
-      payment_method: invoice.payment_method,
-      hypothecation: invoice.hypothecation || 'Cash',
-      
-      // Customer Details
-      customer_id: invoice.customer_id,
-      customer_name: customer?.name || '',
-      customer_care_of: customer?.care_of || '',
-      customer_mobile: customer?.mobile || customer?.phone || '',
-      customer_address: customer?.address || '',
-      
-      // Vehicle Details - prioritize invoice data over vehicle lookup
-      vehicle_id: invoice.vehicle_id,
-      vehicle_brand: invoice.vehicle_brand || vehicle?.brand || '',
-      vehicle_model: invoice.vehicle_model || vehicle?.model || '',
-      vehicle_color: invoice.vehicle_color || vehicle?.color || '',
-      vehicle_no: invoice.vehicle_registration || vehicle?.vehicle_no || '',
-      chassis_number: invoice.vehicle_chassis || vehicle?.chassis_number || '',
-      engine_number: invoice.vehicle_engine || vehicle?.engine_number || '',
-      
-      // Insurance Details - check multiple sources
-      insurance_details: {
-        nominee: invoice.insurance_nominee || invoice.insurance_details?.nominee || customer?.insurance_info?.nominee_name || '',
-        relation: invoice.insurance_relation || invoice.insurance_details?.relation || customer?.insurance_info?.relation || '',
-        age: invoice.insurance_age || invoice.insurance_details?.age || customer?.insurance_info?.age || ''
-      }
-    });
-    setShowEditModal(true);
-  };
-
-  const handleDeleteInvoice = async (invoice) => {
-    if (!window.confirm(`Are you sure you want to delete invoice "${invoice.invoice_number}"? This action cannot be undone and will reset the associated vehicle status to available.`)) {
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${API}/sales/${invoice.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      // Remove from local state
-      const updatedInvoices = invoices.filter(inv => inv.id !== invoice.id);
-      setInvoices(updatedInvoices);
-      
-      toast.success('Invoice deleted successfully!');
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to delete invoice');
-    }
-  };
-
-  const handleSaveEdit = async () => {
-    if (!editingInvoice) return;
-    
-    try {
-      setLoading(true);
-      
-      // Prepare the update payload with all fields
-      const updatePayload = {
-        customer_id: editFormData.customer_id,
-        vehicle_id: editFormData.vehicle_id,
-        sale_date: editFormData.sale_date,
-        amount: parseFloat(editFormData.amount),
-        payment_method: editFormData.payment_method,
-        hypothecation: editFormData.hypothecation,
-        
-        // Vehicle details (for imported sales or direct entry)
-        vehicle_brand: editFormData.vehicle_brand,
-        vehicle_model: editFormData.vehicle_model,
-        vehicle_color: editFormData.vehicle_color,
-        vehicle_registration: editFormData.vehicle_no,
-        vehicle_chassis: editFormData.chassis_number,
-        vehicle_engine: editFormData.engine_number,
-        
-        // Insurance details - send both nested and flat structure
-        insurance_details: editFormData.insurance_details,
-        insurance_nominee: editFormData.insurance_details?.nominee,
-        insurance_relation: editFormData.insurance_details?.relation,
-        insurance_age: editFormData.insurance_details?.age,
-        
-        source: editingInvoice.source || 'direct'
-      };
-      
-      await axios.put(`${API}/sales/${editingInvoice.id}`, updatePayload);
-      
-      // Update local state immediately for instant UI feedback
-      setInvoices(prevInvoices => 
-        prevInvoices.map(inv => 
-          inv.id === editingInvoice.id 
-            ? {
-                ...inv,
-                customer_id: updatePayload.customer_id,
-                vehicle_id: updatePayload.vehicle_id,
-                sale_date: updatePayload.sale_date,
-                amount: updatePayload.amount,
-                payment_method: updatePayload.payment_method,
-                hypothecation: updatePayload.hypothecation,
-                vehicle_brand: updatePayload.vehicle_brand,
-                vehicle_model: updatePayload.vehicle_model,
-                vehicle_color: updatePayload.vehicle_color,
-                vehicle_registration: updatePayload.vehicle_registration,
-                vehicle_chassis: updatePayload.vehicle_chassis,
-                vehicle_engine: updatePayload.vehicle_engine,
-                insurance_details: updatePayload.insurance_details,
-                source: updatePayload.source
-              }
-            : inv
-        )
-      );
-      
-      toast.success('Invoice updated successfully!');
-      setShowEditModal(false);
-      setEditingInvoice(null);
-      setEditFormData({});
-    } catch (error) {
-      toast.error(getErrorMessage(error) || 'Failed to update invoice');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setShowEditModal(false);
-    setEditingInvoice(null);
-    setEditFormData({});
-  };
-
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
-      setSelectedInvoices(filteredInvoices.map(inv => inv.id));
-    } else {
-      setSelectedInvoices([]);
-    }
-  };
-
-  const handleSelectInvoice = (invoiceId) => {
-    setSelectedInvoices(prev =>
-      prev.includes(invoiceId)
-        ? prev.filter(id => id !== invoiceId)
-        : [...prev, invoiceId]
-    );
-  };
-
-  const handleBulkDelete = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.delete(`${API}/sales`, {
-        data: { ids: selectedInvoices },
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (response.data.deleted > 0) {
-        toast.success(`Successfully deleted ${response.data.deleted} invoice(s)`);
-      }
-
-      if (response.data.failed && response.data.failed.length > 0) {
-        toast.error(`Failed to delete ${response.data.failed.length} invoice(s)`);
-      }
-
-      setSelectedInvoices([]);
-      setShowBulkDeleteModal(false);
-      fetchInvoices(); // Refresh the list
-    } catch (error) {
-      toast.error('Failed to delete invoices');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDownloadInvoicePDF = async (invoice) => {
-    if (!invoice) return;
-
-    try {
-      // Import html2pdf dynamically
-      const { default: html2pdf } = await import('html2pdf.js');
-
-      // Generate filename with customer name and mobile number
-      const customerName = invoice.customer?.name || 'name';
-      const customerMobile = invoice.customer?.mobile || invoice.customer?.phone || 'mobile';
-      const sanitizedName = customerName.replace(/[^a-zA-Z0-9]/g, '_');
-      const sanitizedMobile = customerMobile.replace(/[^0-9]/g, '');
-      const filename = `Invoice_${sanitizedName}_${sanitizedMobile}_${invoice.invoice_number}.pdf`;
-
-      // Create a temporary div with invoice content for PDF generation
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = `
-        <div style="max-width: 21cm; margin: 0 auto; font-family: Arial, sans-serif; line-height: 1.3;">
-          <div style="text-align: center; margin-bottom: 12px; border-bottom: 2px solid #333; padding-bottom: 10px;">
-            <h1 style="margin: 0; font-size: 18px; color: #2563eb; font-weight: bold;">M M MOTORS</h1>
-            <p style="margin: 3px 0; font-size: 11px;">Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130</p>
-            <p style="margin: 3px 0; font-size: 11px;">Two Wheeler Sales Invoice</p>
-            <div style="display: flex; justify-content: space-between; margin-top: 8px;">
-              <div><strong>Invoice No:</strong> ${invoice.invoice_number}</div>
-              <div><strong>Date:</strong> ${new Date(invoice.sale_date).toLocaleDateString('en-IN')}</div>
-            </div>
-          </div>
-          
-          <div style="margin-bottom: 12px; border: 2px solid #ccc; padding: 10px; border-radius: 6px;">
-            <h3 style="margin: 0 0 8px 0; font-size: 12px; color: #2563eb; border-bottom: 1px solid #ccc; padding-bottom: 3px;">Customer Details</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Name:</strong> ${invoice.customer?.name || 'N/A'}</div>
-              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Mobile:</strong> ${invoice.customer?.mobile || invoice.customer?.phone || 'N/A'}</div>
-              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Address:</strong> ${invoice.customer?.address || 'N/A'}</div>
-            </div>
-          </div>
-          
-          <div style="margin-bottom: 12px; border: 2px solid #ccc; padding: 10px; border-radius: 6px;">
-            <h3 style="margin: 0 0 8px 0; font-size: 12px; color: #2563eb; border-bottom: 1px solid #ccc; padding-bottom: 3px;">Vehicle Details</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Brand:</strong> ${invoice.customer?.vehicle_info?.brand || invoice.vehicle?.brand || 'N/A'}</div>
-              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Model:</strong> ${invoice.customer?.vehicle_info?.model || invoice.vehicle?.model || 'N/A'}</div>
-              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Color:</strong> ${invoice.customer?.vehicle_info?.color || invoice.vehicle?.color || 'N/A'}</div>
-              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Chassis No:</strong> ${invoice.customer?.vehicle_info?.chassis_number || invoice.vehicle?.chassis_number || 'N/A'}</div>
-              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Engine No:</strong> ${invoice.customer?.vehicle_info?.engine_number || invoice.vehicle?.engine_number || 'N/A'}</div>
-              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Vehicle No:</strong> ${invoice.customer?.vehicle_info?.vehicle_number || invoice.vehicle?.vehicle_no || 'N/A'}</div>
-            </div>
-          </div>
-          
-          <div style="margin-bottom: 12px; border: 2px solid #ccc; padding: 10px; border-radius: 6px;">
-            <h3 style="margin: 0 0 8px 0; font-size: 12px; color: #2563eb; border-bottom: 1px solid #ccc; padding-bottom: 3px;">Payment Details</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 8px;">
-              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Payment Method:</strong> ${invoice.payment_method?.toUpperCase() || 'CASH'}</div>
-              <div style="font-size: 10px; margin-bottom: 4px;"><strong>Hypothecation:</strong> ${invoice.hypothecation || 'CASH'}</div>
-              <div style="font-size: 14px; font-weight: bold; text-align: right;"><strong>Amount:</strong> ₹${invoice.amount?.toLocaleString() || '0'}</div>
-            </div>
-            <div style="margin-top: 6px; font-style: italic; padding: 6px; background-color: #f8f8f8; border-radius: 3px; border-top: 1px solid #ccc; font-size: 10px;">
-              <strong>Amount in Words:</strong> ${numberToWords(invoice.amount || 0)} Rupees Only
-            </div>
-          </div>
-        </div>
-      `;
-
-      // Configure options for PDF generation
-      const opt = {
-        margin: [0.3, 0.3, 0.3, 0.3],
-        filename: filename,
-        image: { type: 'jpeg', quality: 0.95 },
-        html2canvas: { 
-          scale: 1.5,
-          useCORS: true,
-          letterRendering: true,
-          width: 794,  // A4 width in pixels at 96 DPI
-          height: 1123 // A4 height in pixels at 96 DPI
-        },
-        jsPDF: { 
-          unit: 'mm', 
-          format: 'a4', 
-          orientation: 'portrait',
-          compress: true
-        }
-      };
-
-      // Generate and download PDF
-      html2pdf().set(opt).from(tempDiv).save();
-      
-      // Clean up
-      tempDiv.remove();
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Error generating PDF. Please try again.');
-    }
-  };
-
   const handlePrintInvoiceModal = (invoice) => {
     if (!invoice) return;
-    
-    // Create a new window with the optimized invoice layout matching sales invoice format
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
-    
+    const printWindow = window.open('', '_blank', 'width=900,height=700');
     printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Invoice ${invoice.invoice_number}</title>
-          <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { 
-              font-family: 'Arial', sans-serif; 
-              line-height: 1.3; 
-              color: #333;
-              background: white;
-              font-size: 12px;
-            }
-            .invoice-container { 
-              max-width: 210mm; 
-              margin: 0 auto; 
-              padding: 8mm;
-              background: white;
-              transform: scale(0.9);
-              transform-origin: top center;
-            }
-            
-            /* Professional Header - Matching Sales Invoice */
-            .header { 
-              background: linear-gradient(135deg, #2563eb, #1d4ed8);
-              color: white;
-              padding: 15px;
-              margin-bottom: 15px;
-              border-radius: 8px;
-              display: flex;
-              justify-content: space-between;
-              align-items: start;
-            }
-            .header-left {
-              flex: 1;
-            }
-            .company-name { 
-              font-size: 24px; 
-              font-weight: bold; 
-              margin-bottom: 4px;
-            }
-            .company-tagline { 
-              font-size: 12px; 
-              opacity: 0.9;
-              margin-bottom: 8px;
-            }
-            .company-address { 
-              font-size: 11px; 
-              line-height: 1.4;
-            }
-            .company-address p {
-              margin: 2px 0;
-              display: flex;
-              align-items: center;
-            }
-            .bullet {
-              width: 4px;
-              height: 4px;
-              background: rgba(255,255,255,0.7);
-              border-radius: 50%;
-              margin-right: 8px;
-            }
-            .header-right {
-              background: rgba(255,255,255,0.2);
-              padding: 12px;
-              border-radius: 8px;
-              border: 1px solid rgba(255,255,255,0.3);
-            }
-            .invoice-title {
-              font-size: 14px;
-              font-weight: bold;
-              margin-bottom: 8px;
-            }
-            .invoice-info {
-              font-size: 11px;
-            }
-            .invoice-info div {
-              display: flex;
-              justify-content: space-between;
-              margin-bottom: 4px;
-            }
-            
-            /* Content Sections - Matching Sales Invoice */
-            .content-section {
-              margin-bottom: 12px;
-            }
-            .section-grid {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 12px;
-              margin-bottom: 12px;
-            }
-            .detail-card {
-              border-radius: 8px;
-              border: 1px solid #e2e8f0;
-              overflow: hidden;
-            }
-            .detail-header {
-              padding: 8px 12px;
-              font-weight: bold;
-              font-size: 11px;
-              color: white;
-              display: flex;
-              align-items: center;
-            }
-            .detail-content {
-              padding: 10px 12px;
-              background: #f8fafc;
-              font-size: 11px;
-            }
-            .detail-row {
-              display: flex;
-              justify-content: space-between;
-              margin-bottom: 6px;
-              padding-bottom: 3px;
-              border-bottom: 1px solid #e2e8f0;
-            }
-            .detail-row:last-child {
-              border-bottom: none;
-              margin-bottom: 0;
-            }
-            .detail-label {
-              font-weight: 600;
-              color: #374151;
-              min-width: 60px;
-            }
-            .detail-value {
-              color: #111827;
-              text-align: right;
-            }
-            
-            /* Color themes for different sections */
-            .customer-card .detail-header { background: linear-gradient(135deg, #2563eb, #3b82f6); }
-            .vehicle-card .detail-header { background: linear-gradient(135deg, #059669, #10b981); }
-            .insurance-card .detail-header { background: linear-gradient(135deg, #7c3aed, #8b5cf6); }
-            
-            /* Payment Summary - Matching Sales Invoice */
-            .payment-summary {
-              background: linear-gradient(135deg, #059669, #10b981);
-              color: white;
-              padding: 15px;
-              border-radius: 8px;
-              margin: 15px 0;
-              text-align: center;
-            }
-            .payment-header {
-              font-size: 12px;
-              font-weight: bold;
-              margin-bottom: 4px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            }
-            .payment-method {
-              font-size: 10px;
-              background: rgba(255,255,255,0.2);
-              padding: 4px 8px;
-              border-radius: 12px;
-              margin-bottom: 8px;
-              display: inline-block;
-            }
-            .amount-large {
-              font-size: 28px;
-              font-weight: bold;
-              margin: 8px 0;
-            }
-            .amount-words {
-              font-size: 11px;
-              font-style: italic;
-              opacity: 0.9;
-              background: rgba(255,255,255,0.1);
-              padding: 8px;
-              border-radius: 4px;
-              margin-top: 8px;
-            }
-            
-            /* Service Schedule - Matching Sales Invoice */
-            .service-schedule {
-              border: 1px solid #e2e8f0;
-              border-radius: 8px;
-              overflow: hidden;
-              margin: 15px 0;
-            }
-            .service-header {
-              background: linear-gradient(135deg, #4f46e5, #6366f1);
-              color: white;
-              padding: 10px 12px;
-              font-weight: bold;
-              font-size: 12px;
-              text-align: center;
-            }
-            .service-message {
-              background: #f0f9ff;
-              padding: 12px;
-              border-bottom: 1px solid #bfdbfe;
-            }
-            .service-message p {
-              margin: 0;
-              font-size: 10px;
-              color: #1e40af;
-            }
-            .service-message .customer-greeting {
-              font-weight: bold;
-              margin-bottom: 4px;
-            }
-            .service-table {
-              width: 100%;
-              border-collapse: collapse;
-              font-size: 10px;
-            }
-            .service-table th {
-              background: linear-gradient(135deg, #4f46e5, #6366f1);
-              color: white;
-              padding: 8px;
-              text-align: left;
-              font-weight: bold;
-              border-right: 1px solid rgba(255,255,255,0.3);
-            }
-            .service-table td {
-              padding: 8px;
-              border-bottom: 1px solid #e2e8f0;
-              border-right: 1px solid #e2e8f0;
-            }
-            .service-table tr:nth-child(even) {
-              background: #f8fafc;
-            }
-            .service-type {
-              font-weight: bold;
-              color: #4f46e5;
-            }
-            .service-note {
-              background: linear-gradient(90deg, #fef3c7, #fde68a);
-              padding: 8px;
-              text-align: center;
-              font-weight: bold;
-              color: #92400e;
-              font-size: 10px;
-              border-top: 1px solid #f59e0b;
-            }
-            
-            /* Footer - Matching Sales Invoice */
-            .footer {
-              background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
-              border-radius: 8px;
-              padding: 15px;
-              text-align: center;
-              margin-top: 20px;
-              border: 1px solid #cbd5e1;
-            }
-            .footer-badges {
-              display: flex;
-              justify-content: center;
-              gap: 20px;
-              margin-bottom: 12px;
-              font-size: 10px;
-              color: #475569;
-            }
-            .footer-title {
-              font-weight: bold;
-              font-size: 14px;
-              color: #1e293b;
-              margin-bottom: 6px;
-            }
-            .footer-subtitle {
-              font-size: 11px;
-              color: #64748b;
-              margin-bottom: 8px;
-            }
-            .footer-features {
-              font-size: 10px;
-              color: #64748b;
-              margin-bottom: 10px;
-            }
-            .footer-contact {
-              font-size: 10px;
-              color: #64748b;
-              border-top: 1px solid #cbd5e1;
-              padding-top: 10px;
-            }
-            
-            @media print {
-              body { -webkit-print-color-adjust: exact; }
-              .invoice-container { padding: 6mm; }
-              @page { size: A4; margin: 0.5cm; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="invoice-container">
-            <!-- Professional Header -->
-            <div class="header">
-              <div class="header-left">
-                <div class="company-name">M M MOTORS</div>
-                <div class="company-tagline">Premium Two Wheeler Sales & Service</div>
-                <div class="company-address">
-                  <p><span class="bullet"></span>Bengaluru main road, behind Ruchi Bakery</p>
-                  <p><span class="bullet"></span>Malur, Karnataka 563130</p>
-                  <p><span class="bullet"></span>Phone: 7026263123 | Email: mmmotors3123@gmail.com</p>
-                </div>
-              </div>
-              <div class="header-right">
-                <div class="invoice-title">SALES INVOICE</div>
-                <div class="invoice-info">
-                  <div><span>Invoice No:</span><span>${invoice.invoice_number}</span></div>
-                  <div><span>Date:</span><span>${new Date(invoice.sale_date).toLocaleDateString('en-IN')}</span></div>
-                </div>
+      <!DOCTYPE html><html><head>
+        <title>Invoice - ${invoice.invoice_number}</title>
+        <style>* { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: Arial, sans-serif; background: #f1f5f9; font-size: 11px; color: #1e293b; }
+          .toolbar { background: #2563eb; color: white; padding: 10px 18px; display: flex; justify-content: space-between; align-items: center; }
+          .toolbar h2 { font-size: 15px; }
+          .toolbar-btns { display: flex; gap: 8px; }
+          .btn { padding: 7px 16px; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 12px; }
+          .btn-print { background: #10b981; color: white; }
+          .btn-close { background: white; color: #2563eb; }
+          .page { max-width: 210mm; margin: 16px auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+          .header { background: linear-gradient(to right,#1e3a8a,#2563eb); color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: flex-start; }
+          .co-name { font-size: 20px; font-weight: bold; letter-spacing: 1px; margin-bottom: 2px; }
+          .co-tag { font-size: 11px; color: #bfdbfe; margin-bottom: 6px; }
+          .co-addr p { font-size: 10px; color: #bfdbfe; display: flex; align-items: center; margin: 1px 0; }
+          .dot { width: 5px; height: 5px; background: #93c5fd; border-radius: 50%; margin-right: 6px; flex-shrink: 0; display: inline-block; }
+          .inv-box { background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.3); border-radius: 8px; padding: 10px 14px; text-align: right; min-width: 170px; }
+          .inv-title { font-size: 13px; font-weight: bold; margin-bottom: 6px; }
+          .inv-row { display: flex; justify-content: space-between; gap: 12px; font-size: 10px; margin-bottom: 3px; }
+          .inv-row span:last-child { font-weight: bold; }
+          .body { padding: 12px 16px; }
+          .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+          .card { border-radius: 8px; overflow: hidden; border: 1px solid; }
+          .card-blue { border-color: #bfdbfe; background: linear-gradient(135deg,#f8faff,#eff6ff); }
+          .card-green { border-color: #a7f3d0; background: linear-gradient(135deg,#f0fdf4,#ecfdf5); }
+          .card-purple { border-color: #ddd6fe; background: linear-gradient(135deg,#faf5ff,#f3e8ff); }
+          .card-pay { border-color: #bbf7d0; background: linear-gradient(135deg,#f0fdf4,#dcfce7); }
+          .card-svc { border-color: #bfdbfe; background: linear-gradient(135deg,#f8faff,#eff6ff); }
+          .card-hdr { padding: 5px 10px; color: white; font-size: 10px; font-weight: bold; }
+          .hdr-blue { background: linear-gradient(to right,#1d4ed8,#2563eb); }
+          .hdr-green { background: linear-gradient(to right,#047857,#059669); }
+          .hdr-purple { background: linear-gradient(to right,#6d28d9,#7c3aed); }
+          .hdr-pay { background: linear-gradient(to right,#047857,#059669); }
+          .hdr-svc { background: linear-gradient(to right,#1d4ed8,#2563eb); }
+          .card-body { padding: 8px 10px; }
+          .row { display: flex; align-items: flex-start; border-bottom: 1px solid #e2e8f0; padding: 3px 0; font-size: 10px; }
+          .row:last-child { border-bottom: none; }
+          .lbl { color: #475569; font-weight: 600; width: 52px; flex-shrink: 0; }
+          .val { color: #0f172a; font-weight: 500; }
+          .vgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; }
+          .vitem { border-bottom: 1px solid #d1fae5; padding: 3px 0; }
+          .vlbl { font-size: 9px; color: #065f46; font-weight: 600; }
+          .vval { font-size: 10px; color: #0f172a; font-weight: 700; }
+          .vfull { display: flex; justify-content: space-between; font-size: 10px; padding: 2px 0; border-bottom: 1px solid #d1fae5; }
+          .vfull:last-child { border-bottom: none; }
+          .vlbl2 { color: #065f46; font-weight: 600; }
+          .ins-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; text-align: center; padding: 4px 0; }
+          .ins-lbl { font-size: 9px; color: #6d28d9; font-weight: 600; margin-bottom: 2px; }
+          .ins-val { font-size: 10px; font-weight: 700; color: #1e293b; }
+          .pay-grid { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; margin-bottom: 8px; }
+          .pay-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid #bbf7d0; font-size: 10px; }
+          .pay-row:last-child { border-bottom: none; }
+          .pay-badge { background: #bbf7d0; color: #065f46; font-weight: bold; padding: 2px 8px; border-radius: 20px; font-size: 10px; }
+          .amt-box { background: white; border: 1px solid #86efac; border-radius: 8px; padding: 8px 14px; text-align: center; }
+          .amt-lbl { font-size: 9px; color: #047857; font-weight: 600; margin-bottom: 2px; }
+          .amt-val { font-size: 18px; font-weight: bold; color: #15803d; }
+          .words-box { background: linear-gradient(to right,#fefce8,#fef9c3); border: 1px solid #fde047; border-radius: 6px; padding: 6px 10px; font-size: 10px; }
+          .words-lbl { color: #92400e; font-weight: 600; margin-bottom: 1px; }
+          .words-val { color: #1e293b; font-style: italic; font-weight: 500; }
+          .svc-msg { background: linear-gradient(to right,#dbeafe,#bfdbfe); border: 1px solid #60a5fa; border-radius: 6px; padding: 8px; margin-bottom: 8px; }
+          .svc-msg p { font-size: 9px; color: #1e40af; }
+          .greet { font-weight: bold; margin-bottom: 2px; font-size: 10px; }
+          table.svc { width: 100%; border-collapse: collapse; font-size: 9px; border-radius: 6px; overflow: hidden; }
+          table.svc th { background: linear-gradient(to right,#1d4ed8,#2563eb); color: white; padding: 5px 8px; text-align: left; font-weight: bold; }
+          table.svc td { padding: 4px 8px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }
+          table.svc tr:last-child td { border-bottom: none; }
+          .svc-type { font-weight: bold; color: #1d4ed8; }
+          .svc-note { background: linear-gradient(to right,#fef3c7,#fde68a); text-align: center; font-weight: bold; color: #92400e; font-size: 9px; padding: 5px; border: 1px solid #f59e0b; border-radius: 0 0 6px 6px; }
+          .footer { background: linear-gradient(135deg,#f1f5f9,#e2e8f0); border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; text-align: center; margin-top: 10px; }
+          .badges { display: flex; justify-content: center; gap: 20px; margin-bottom: 6px; font-size: 9px; color: #475569; }
+          .footer-title { font-weight: bold; font-size: 13px; color: #1e293b; margin-bottom: 2px; }
+          .footer-sub { font-size: 9px; color: #64748b; margin-bottom: 4px; }
+          .footer-legal { font-size: 8px; color: #94a3b8; border-top: 1px solid #cbd5e1; padding-top: 5px; margin-top: 4px; }
+          @media print { .toolbar { display: none !important; } body { background: white; } .page { margin: 0; box-shadow: none; border-radius: 0; } @page { size: A4; margin: 8mm; } }</style>
+      </head><body>
+                <div class="toolbar">
+          <h2>&#128196; Invoice - ${invoice.invoice_number}</h2>
+          <div class="toolbar-btns">
+            <button class="btn btn-print" onclick="window.print()">&#128424; Print Invoice</button>
+            <button class="btn btn-close" onclick="window.close()">&#10006; Close</button>
+          </div>
+        </div>
+        <div class="page">
+          <div class="header">
+            <div>
+              <div class="co-name">M M MOTORS</div>
+              <div class="co-tag">Premium Two Wheeler Sales &amp; Service</div>
+              <div class="co-addr">
+                <p><span class="dot"></span>Bengaluru main road, behind Ruchi Bakery</p>
+                <p><span class="dot"></span>Malur, Karnataka 563130</p>
+                <p><span class="dot"></span>Phone: 7026263123 | Email: mmmotors3123@gmail.com</p>
               </div>
             </div>
-            
-            <!-- Customer & Vehicle Details Grid -->
-            <div class="section-grid">
-              <!-- Customer Details -->
-              <div class="detail-card customer-card">
-                <div class="detail-header">
-                  👤 CUSTOMER DETAILS
-                </div>
-                <div class="detail-content">
-                  <div class="detail-row">
-                    <span class="detail-label">Name:</span>
-                    <span class="detail-value">${invoice.customer?.name || 'N/A'}</span>
-                  </div>
-                  <div class="detail-row">
-                    <span class="detail-label">Mobile:</span>
-                    <span class="detail-value">${invoice.customer?.mobile || invoice.customer?.phone || 'N/A'}</span>
-                  </div>
-                  <div class="detail-row">
-                    <span class="detail-label">Address:</span>
-                    <span class="detail-value">${invoice.customer?.address || 'N/A'}</span>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Vehicle Details -->
-              <div class="detail-card vehicle-card">
-                <div class="detail-header">
-                  🏍️ VEHICLE DETAILS
-                </div>
-                <div class="detail-content">
-                  <div class="detail-row">
-                    <span class="detail-label">Brand:</span>
-                    <span class="detail-value">${invoice.customer?.vehicle_info?.brand || invoice.vehicle?.brand || 'N/A'}</span>
-                  </div>
-                  <div class="detail-row">
-                    <span class="detail-label">Model:</span>
-                    <span class="detail-value">${invoice.customer?.vehicle_info?.model || invoice.vehicle?.model || 'N/A'}</span>
-                  </div>
-                  <div class="detail-row">
-                    <span class="detail-label">Color:</span>
-                    <span class="detail-value">${invoice.customer?.vehicle_info?.color || invoice.vehicle?.color || 'N/A'}</span>
-                  </div>
-                  <div class="detail-row">
-                    <span class="detail-label">Vehicle No:</span>
-                    <span class="detail-value">${invoice.customer?.vehicle_info?.vehicle_number || invoice.vehicle?.vehicle_no || 'N/A'}</span>
-                  </div>
-                  <div class="detail-row">
-                    <span class="detail-label">Chassis No:</span>
-                    <span class="detail-value">${invoice.customer?.vehicle_info?.chassis_number || invoice.vehicle?.chassis_number || 'N/A'}</span>
-                  </div>
-                  <div class="detail-row">
-                    <span class="detail-label">Engine No:</span>
-                    <span class="detail-value">${invoice.customer?.vehicle_info?.engine_number || invoice.vehicle?.engine_number || 'N/A'}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Insurance Nominee Details -->
-            <div class="detail-card insurance-card">
-              <div class="detail-header">
-                🛡️ INSURANCE NOMINEE DETAILS
-              </div>
-              <div class="detail-content">
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
-                  <div style="text-align: center;">
-                    <div style="font-size: 10px; color: #7c3aed; font-weight: 600; margin-bottom: 4px;">Nominee Name</div>
-                    <div style="font-weight: bold;">${invoice.customer?.insurance_info?.nominee_name || invoice.insurance_details?.nominee || invoice.insurance?.nominee || 'N/A'}</div>
-                  </div>
-                  <div style="text-align: center;">
-                    <div style="font-size: 10px; color: #7c3aed; font-weight: 600; margin-bottom: 4px;">Relation</div>
-                    <div style="font-weight: bold; text-transform: capitalize;">${invoice.customer?.insurance_info?.relation || invoice.insurance_details?.relation || invoice.insurance?.relation || 'N/A'}</div>
-                  </div>
-                  <div style="text-align: center;">
-                    <div style="font-size: 10px; color: #7c3aed; font-weight: 600; margin-bottom: 4px;">Age</div>
-                    <div style="font-weight: bold;">${invoice.customer?.insurance_info?.age || invoice.insurance_details?.age || invoice.insurance?.age || 'N/A'} years</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Payment Summary -->
-            <div class="payment-summary">
-              <div class="payment-header">💳 PAYMENT SUMMARY</div>
-              <div class="payment-method">Payment Method: ${invoice.payment_method || 'CASH'}</div>
-              <div style="font-size: 14px; margin-bottom: 4px;">TOTAL AMOUNT</div>
-              <div class="amount-large">₹${invoice.amount?.toLocaleString() || '0'}</div>
-              <div class="amount-words">
-                ${numberToWords(invoice.amount || 0)} Rupees Only
-              </div>
-            </div>
-            
-            <!-- Service Schedule -->
-            <div class="service-schedule">
-              <div class="service-header">
-                🔧 SERVICE SCHEDULE
-              </div>
-              <div class="service-message">
-                <p class="customer-greeting">DEAR VALUED CUSTOMER,</p>
-                <p>We thank you for choosing our world-class vehicle. To ensure optimal performance and longevity, please follow the service schedule below for a pleasant riding experience at all times.</p>
-              </div>
-              <table class="service-table">
-                <thead>
-                  <tr>
-                    <th style="width: 25%;">SERVICE DATE</th>
-                    <th style="width: 35%;">SERVICE TYPE</th>
-                    <th style="width: 40%;">RECOMMENDED SCHEDULE</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>____/____/____</td>
-                    <td class="service-type">FIRST SERVICE</td>
-                    <td>500-700 kms or 15-30 days</td>
-                  </tr>
-                  <tr>
-                    <td>____/____/____</td>
-                    <td class="service-type">SECOND SERVICE</td>
-                    <td>3000-3500 kms or 30-90 days</td>
-                  </tr>
-                  <tr>
-                    <td>____/____/____</td>
-                    <td class="service-type">THIRD SERVICE</td>
-                    <td>6000-6500 kms or 90-180 days</td>
-                  </tr>
-                  <tr>
-                    <td>____/____/____</td>
-                    <td class="service-type">FOURTH SERVICE</td>
-                    <td>9000-9500 kms or 180-270 days</td>
-                  </tr>
-                </tbody>
-              </table>
-              <div class="service-note">
-                ⚠️ IMPORTANT: Follow whichever milestone comes first (kilometers or days)
-              </div>
-            </div>
-            
-            <!-- Footer -->
-            <div class="footer">
-              <div class="footer-badges">
-                <span>🏆 Authorized Dealer</span>
-                <span>🕒 24/7 Service Support</span>
-                <span>✅ Quality Guaranteed</span>
-              </div>
-              <div class="footer-title">Thank You for Choosing M M Motors!</div>
-              <div class="footer-subtitle">Your trust drives our excellence in two-wheeler sales and service.</div>
-              <div class="footer-features">🌟 Premium Quality • ⚡ Expert Service • 🤝 Customer First</div>
-              <div class="footer-contact">
-                This is a computer-generated invoice and does not require a signature.<br>
-                For queries, contact us at mmmotors3123@gmail.com or 7026263123
-              </div>
+            <div class="inv-box">
+              <div class="inv-title">SALES INVOICE</div>
+              <div class="inv-row"><span>Invoice No:</span><span>${invoice.invoice_number}</span></div>
+              <div class="inv-row"><span>Date:</span><span>${new Date(invoice.sale_date).toLocaleDateString('en-IN')}</span></div>
             </div>
           </div>
-        </body>
-      </html>
+          <div class="body">
+            <div class="grid2">
+              <div class="card card-blue">
+                <div class="card-hdr hdr-blue">CUSTOMER DETAILS</div>
+                <div class="card-body">
+                  <div class="row"><span class="lbl">Name:</span><span class="val">${invoice.customer?.name || 'N/A'}</span></div>
+                  <div class="row"><span class="lbl">C/O:</span><span class="val">${invoice.customer?.care_of || 'N/A'}</span></div>
+                  <div class="row"><span class="lbl">Mobile:</span><span class="val">${invoice.customer?.mobile || invoice.customer?.phone || 'N/A'}</span></div>
+                  <div class="row"><span class="lbl">Address:</span><span class="val">${invoice.customer?.address || 'N/A'}</span></div>
+                </div>
+              </div>
+              <div class="card card-green">
+                <div class="card-hdr hdr-green">VEHICLE DETAILS</div>
+                <div class="card-body">
+                  <div class="vgrid">
+                    <div class="vitem"><div class="vlbl">Brand</div><div class="vval">${invoice.customer?.vehicle_info?.brand || invoice.vehicle?.brand || 'N/A'}</div></div>
+                    <div class="vitem"><div class="vlbl">Model</div><div class="vval">${invoice.customer?.vehicle_info?.model || invoice.vehicle?.model || 'N/A'}</div></div>
+                    <div class="vitem"><div class="vlbl">Color</div><div class="vval">${invoice.customer?.vehicle_info?.color || invoice.vehicle?.color || 'N/A'}</div></div>
+                    <div class="vitem"><div class="vlbl">Vehicle No</div><div class="vval">${invoice.customer?.vehicle_info?.vehicle_number || invoice.vehicle?.vehicle_no || 'N/A'}</div></div>
+                  </div>
+                  <div class="vfull"><span class="vlbl2">Chassis No:</span><span>${invoice.customer?.vehicle_info?.chassis_number || invoice.vehicle?.chassis_number || 'N/A'}</span></div>
+                  <div class="vfull"><span class="vlbl2">Engine No:</span><span>${invoice.customer?.vehicle_info?.engine_number || invoice.vehicle?.engine_number || 'N/A'}</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="card card-purple" style="margin-bottom:10px">
+              <div class="card-hdr hdr-purple">INSURANCE NOMINEE DETAILS</div>
+              <div class="card-body">
+                <div class="ins-grid">
+                  <div><div class="ins-lbl">Nominee Name</div><div class="ins-val">${invoice.customer?.insurance_info?.nominee_name || invoice.insurance?.nominee || invoice.insurance_details?.nominee || 'N/A'}</div></div>
+                  <div><div class="ins-lbl">Relation</div><div class="ins-val" style="text-transform:capitalize">${invoice.customer?.insurance_info?.relation || invoice.insurance?.relation || 'N/A'}</div></div>
+                  <div><div class="ins-lbl">Age</div><div class="ins-val">${invoice.customer?.insurance_info?.age || invoice.insurance?.age || 'N/A'} years</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="card card-pay" style="margin-bottom:10px">
+              <div class="card-hdr hdr-pay">PAYMENT SUMMARY</div>
+              <div class="card-body">
+                <div class="pay-grid">
+                  <div>
+                    <div class="pay-row"><span style="color:#047857;font-weight:600">Payment Method:</span><span class="pay-badge">${invoice.payment_method || 'CASH'}</span></div>
+                    <div class="pay-row"><span style="color:#047857;font-weight:600">Hypothecation:</span><span style="font-weight:bold">${invoice.hypothecation || 'Cash'}</span></div>
+                  </div>
+                  <div class="amt-box">
+                    <div class="amt-lbl">TOTAL AMOUNT</div>
+                    <div class="amt-val">&#8377;${invoice.amount?.toLocaleString() || '0'}</div>
+                  </div>
+                </div>
+                <div class="words-box">
+                  <div class="words-lbl">Amount in Words:</div>
+                  <div class="words-val">${numberToWords(invoice.amount || 0)} Rupees Only</div>
+                </div>
+              </div>
+            </div>
+            <div class="card card-svc" style="margin-bottom:10px">
+              <div class="card-hdr hdr-svc">SERVICE SCHEDULE</div>
+              <div class="card-body">
+                <div class="svc-msg"><p class="greet">DEAR VALUED CUSTOMER,</p><p>To ensure optimal performance, please follow the service schedule below.</p></div>
+                <table class="svc">
+                  <thead><tr><th style="width:25%">SERVICE DATE</th><th style="width:35%">SERVICE TYPE</th><th>RECOMMENDED SCHEDULE</th></tr></thead>
+                  <tbody>
+                    <tr><td>____/____/____</td><td class="svc-type">FIRST SERVICE</td><td>500-700 kms or 15-30 days</td></tr>
+                    <tr><td>____/____/____</td><td class="svc-type">SECOND SERVICE</td><td>3000-3500 kms or 30-90 days</td></tr>
+                    <tr><td>____/____/____</td><td class="svc-type">THIRD SERVICE</td><td>6000-6500 kms or 90-180 days</td></tr>
+                    <tr><td>____/____/____</td><td class="svc-type">FOURTH SERVICE</td><td>9000-9500 kms or 180-270 days</td></tr>
+                  </tbody>
+                </table>
+                <div class="svc-note">&#9888;&#65039; IMPORTANT: Follow whichever milestone comes first</div>
+              </div>
+            </div>
+            <div class="footer">
+              <div class="badges"><span>&#127942; Authorized Dealer</span><span>&#128336; 24/7 Support</span><span>&#9989; Quality Guaranteed</span></div>
+              <div class="footer-title">Thank You for Choosing M M Motors!</div>
+              <div class="footer-sub">Your trust drives our excellence.</div>
+              <div class="footer-legal">Computer-generated invoice. Queries: mmmotors3123@gmail.com | 7026263123</div>
+            </div>
+          </div>
+        </div>
+      </body></html>
     `);
-    
     printWindow.document.close();
-    printWindow.print();
-  };
-
+    printWindow.focus();
+  }
   if (loading) {
     return <div className="flex justify-center p-8"><div className="spinner"></div></div>;
   }
@@ -4527,9 +2406,11 @@ const ViewInvoices = () => {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">This Month</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {invoices.filter(inv => 
-                    new Date(inv.sale_date).getMonth() === new Date().getMonth()
-                  ).length}
+                  {invoices.filter(inv => {
+                    const d = new Date(inv.sale_date);
+                    const now = new Date();
+                    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                  }).length}
                 </p>
               </div>
             </div>
