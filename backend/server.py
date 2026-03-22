@@ -2530,7 +2530,7 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
     return ImportResult(
         job_id=import_job.id,
         status="completed",
-        message=f"Import completed: {successful} successful, {failed} failed, {skipped} skipped (duplicates). Cross-referenced: {import_stats['vehicles_linked']} vehicles linked, {import_stats['sales_created']} sales created.",nked, {import_stats['sales_created']} sales created.",
+        message=f"Import completed: {successful} successful, {failed} failed, {skipped} skipped (duplicates). Cross-referenced: {import_stats['vehicles_linked']} vehicles linked, {import_stats['sales_created']} sales created.",
         total_records=len(data),
         successful_records=successful,
         failed_records=failed,
