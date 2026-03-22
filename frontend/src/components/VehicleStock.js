@@ -1022,7 +1022,7 @@ const StockView = () => {
   
   // Pagination & Sorting
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(25);
+  const [itemsPerPage] = useState(200);
   const [sortBy, setSortBy] = useState('date_received');
   const [sortOrder, setSortOrder] = useState('desc');
 
