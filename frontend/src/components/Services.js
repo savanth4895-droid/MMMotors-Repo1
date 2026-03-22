@@ -42,6 +42,7 @@ import {
   Save
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useDraft, useDraftArray } from '../hooks/useDraft';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -227,6 +228,9 @@ const NewService = () => {
     chassis_number: '',
     engine_number: ''
   });
+  const [draftRestored, setDraftRestored] = useState(false);
+  const regEmpty = {customer_name:'',phone_number:'',customer_address:'',vehicle_brand:'',vehicle_model:'',vehicle_year:'',vehicle_reg_no:'',chassis_number:'',engine_number:''};
+  const { clearDraft: clearRegDraft } = useDraft('draft_registration', registrationData, setRegistrationData, regEmpty, () => setDraftRestored(true));
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
@@ -452,17 +456,17 @@ const NewService = () => {
 
   // Debounced search functions
   const debouncedSearchByPhone = useCallback(
-    debounce((phoneNumber) => searchByPhone(phoneNumber), 10000),
+    debounce((phoneNumber) => searchByPhone(phoneNumber), 500),
     []
   );
 
   const debouncedSearchByChassisNumber = useCallback(
-    debounce((chassisNumber) => searchByChassisNumber(chassisNumber), 10000),
+    debounce((chassisNumber) => searchByChassisNumber(chassisNumber), 500),
     []
   );
 
   const debouncedSearchChassisNumbers = useCallback(
-    debounce((partialChassisNumber) => searchChassisNumbers(partialChassisNumber), 10000),
+    debounce((partialChassisNumber) => searchChassisNumbers(partialChassisNumber), 300),
     []
   );
 
@@ -537,6 +541,12 @@ const NewService = () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSave} className="space-y-6">
+          {draftRestored && (
+            <div className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 text-sm">
+              <span className="text-amber-800 font-medium">&#128196; Draft restored — your previous entries have been loaded.</span>
+              <button type="button" onClick={() => { clearRegDraft(); setRegistrationData(regEmpty); setDraftRestored(false); }} className="text-amber-700 underline ml-4">Clear draft</button>
+            </div>
+          )}
           {/* Auto-fill Information */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-center gap-2">
@@ -1527,6 +1537,9 @@ const JobCards = () => {
     kms_driven: '',
     service_date: new Date().toISOString().split('T')[0] // Default to today
   });
+  const [jcDraftRestored, setJcDraftRestored] = useState(false);
+  const jcEmpty = {customer_id:'',customer_name:'',customer_mobile:'',vehicle_number:'',vehicle_brand:'',vehicle_model:'',vehicle_year:'',service_type:'',complaint:'',estimated_amount:'',service_number:'',kms_driven:'',service_date:new Date().toISOString().split('T')[0]};
+  const { clearDraft: clearJcDraft } = useDraft('draft_job_card', newJobCardData, setNewJobCardData, jcEmpty, () => setJcDraftRestored(true));
   const [savingJobCard, setSavingJobCard] = useState(false);
   
   // Bulk selection state
