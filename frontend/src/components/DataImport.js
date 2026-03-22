@@ -99,7 +99,8 @@ const DataImport = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/import/jobs`, {
-        headers: { Authorization: `Bearer ${token}` }
+        timeout: 300000,
+          headers: { Authorization: `Bearer ${token}` }
       });
       setImportJobs(response.data);
     } catch (error) {
@@ -158,6 +159,7 @@ const DataImport = () => {
         `${API}/import/upload?data_type=${selectedDataType}`,
         formData,
         {
+          timeout: 300000,
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'multipart/form-data',
@@ -188,7 +190,8 @@ const DataImport = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/import/template/${dataType}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        timeout: 300000,
+          headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob'
       });
 
