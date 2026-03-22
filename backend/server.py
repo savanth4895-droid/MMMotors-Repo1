@@ -2324,83 +2324,80 @@ async def parse_excel_file(file_content: bytes) -> List[Dict]:
     return df.to_dict('records')
 
 async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id: str) -> ImportResult:
-    """Import customers data with vehicle and insurance information and cross-referencing"""
+    """Import customers data — uses bulk pre-fetch + batch insert for speed"""
     successful = 0
     failed = 0
     skipped = 0
     errors = []
     incomplete_records = []
-    import_stats = {
-        'vehicles_linked': 0,
-        'sales_created': 0
-    }
-    
+    import_stats = {'vehicles_linked': 0, 'sales_created': 0}
+
+    # ── PRE-FETCH: load all existing mobiles, vehicle numbers, chassis numbers in one query ──
+    existing_mobiles = set()
+    async for c in db.customers.find({}, {"mobile": 1}):
+        if c.get("mobile"):
+            existing_mobiles.add(str(c["mobile"]))
+
+    existing_vehicles = {}  # chassis_number -> vehicle doc
+    existing_vehicles_by_reg = {}  # vehicle_number -> vehicle doc
+    async for v in db.vehicles.find({}, {"id": 1, "chassis_number": 1, "vehicle_number": 1}):
+        if v.get("chassis_number"):
+            existing_vehicles[v["chassis_number"]] = v
+        if v.get("vehicle_number"):
+            existing_vehicles_by_reg[v["vehicle_number"]] = v
+
+    # ── PROCESS ROWS into batches ──
+    customers_to_insert = []
+    sales_to_insert = []
+    vehicle_updates = []   # list of (filter, update) tuples
+
     for idx, row in enumerate(data):
         try:
-            # Get phone number from either 'mobile' or 'phone' field - use safe_str
             phone_number = safe_str(row.get('mobile', '')) or safe_str(row.get('phone', ''))
-            
-            # Get name and phone with fallbacks (no longer required)
-            name = safe_str(row.get('name', ''))
-            if not name:
-                name = "Customer"
+            name = safe_str(row.get('name', '')) or "Customer"
             if not phone_number:
-                phone_number = "0000000000"  # Default phone number
-            
-            # Get address with fallback to empty string if not provided
-            address = safe_str(row.get('address', ''))
-            if not address:
-                address = "Address not provided"
-            
-            # Check for duplicate customer before processing
+                phone_number = "0000000000"
+            address = safe_str(row.get('address', '')) or "Address not provided"
+
+            # Duplicate check against in-memory set — no DB query needed
             if phone_number and phone_number != "0000000000":
-                existing_customer = await db.customers.find_one({"mobile": phone_number})
-                if existing_customer:
-                    # Skip duplicate customer (don't count as error)
+                if phone_number in existing_mobiles:
                     skipped += 1
                     continue
-            
-            # Create basic customer record
+                existing_mobiles.add(phone_number)  # prevent duplicates within the file itself
+
             customer_data = CustomerCreate(
-                name=name,
-                mobile=phone_number,
+                name=name, mobile=phone_number,
                 email=safe_str(row.get('email', '')) or None,
                 address=address,
                 care_of=safe_str(row.get('care_of', '')) or None
             )
-            
             customer = Customer(**customer_data.dict())
-            
-            # Add vehicle and insurance information as extended data
+            customer_dict = customer.dict()
+
             vehicle_info = {}
             insurance_info = {}
             sales_info = {}
-            
-            # Map vehicle fields from CSV template (support both old and new field names)
-            if (row.get('brand') or row.get('model') or 
-                row.get('vehicle_no') or row.get('vehicle_number') or 
+
+            if (row.get('brand') or row.get('model') or
+                row.get('vehicle_no') or row.get('vehicle_number') or
                 row.get('chassis_no') or row.get('chassis_number')):
                 vehicle_info = {
                     'brand': safe_str(row.get('brand', '')),
-                    'model': safe_str(row.get('model', '')), 
+                    'model': safe_str(row.get('model', '')),
                     'color': safe_str(row.get('color', '')),
-                    'vehicle_number': (safe_str(row.get('vehicle_number', '')) or 
-                                     safe_str(row.get('vehicle_no', ''))),
-                    'chassis_number': (safe_str(row.get('chassis_number', '')) or 
-                                     safe_str(row.get('chassis_no', ''))),
-                    'engine_number': (safe_str(row.get('engine_number', '')) or 
-                                    safe_str(row.get('engine_no', '')))
+                    'vehicle_number': (safe_str(row.get('vehicle_number', '')) or safe_str(row.get('vehicle_no', ''))),
+                    'chassis_number': (safe_str(row.get('chassis_number', '')) or safe_str(row.get('chassis_no', ''))),
+                    'engine_number': (safe_str(row.get('engine_number', '')) or safe_str(row.get('engine_no', '')))
                 }
-            
-            # Map insurance nominee fields (using actual CSV column names)
+
             if row.get('nominee_name') or row.get('relation') or row.get('age'):
                 insurance_info = {
                     'nominee_name': safe_str(row.get('nominee_name', '')),
                     'relation': safe_str(row.get('relation', '')),
                     'age': safe_str(row.get('age', ''))
                 }
-            
-            # Map sales information if available
+
             if row.get('sale_amount') or row.get('payment_method'):
                 sales_info = {
                     'amount': safe_str(row.get('sale_amount', '')),
@@ -2409,113 +2406,74 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                     'sale_date': safe_str(row.get('sale_date', '')),
                     'invoice_number': safe_str(row.get('invoice_number', ''))
                 }
-            
-            # Create basic customer record
-            customer_data = CustomerCreate(
-                name=name,
-                mobile=phone_number,
-                email=safe_str(row.get('email', '')) or None,
-                address=address,
-                care_of=safe_str(row.get('care_of', '')) or None
-            )
-            
-            customer = Customer(**customer_data.dict())
-            
-            # Add extended information to customer record
-            customer_dict = customer.dict()
+
             if vehicle_info and any(vehicle_info.values()):
                 customer_dict['vehicle_info'] = vehicle_info
             if insurance_info and any(insurance_info.values()):
                 customer_dict['insurance_info'] = insurance_info
             if sales_info and any(sales_info.values()):
                 customer_dict['sales_info'] = sales_info
-            
-            await db.customers.insert_one(customer_dict)
-            
-            # CROSS-REFERENCE: Try to link to existing vehicle
-            if vehicle_info.get('chassis_number') or vehicle_info.get('vehicle_number'):
-                existing_vehicle = await find_vehicle_by_identifiers(
-                    vehicle_info.get('vehicle_number'),
-                    vehicle_info.get('chassis_number')
-                )
-                if existing_vehicle:
-                    # Link vehicle to customer
-                    await db.vehicles.update_one(
-                        {"id": existing_vehicle['id']},
-                        {"$set": {"customer_id": customer.id}}
-                    )
-                    import_stats['vehicles_linked'] += 1
-            
-            # Create a sales record if sales information is provided
-            if sales_info and any(sales_info.values()) and sales_info.get('amount'):
+
+            customers_to_insert.append(customer_dict)
+
+            # Queue vehicle link update using in-memory lookup — no DB query
+            chassis = vehicle_info.get('chassis_number')
+            reg = vehicle_info.get('vehicle_number')
+            matched_vehicle = None
+            if chassis and chassis in existing_vehicles:
+                matched_vehicle = existing_vehicles[chassis]
+            elif reg and reg in existing_vehicles_by_reg:
+                matched_vehicle = existing_vehicles_by_reg[reg]
+
+            if matched_vehicle:
+                vehicle_updates.append((
+                    {"id": matched_vehicle['id']},
+                    {"$set": {"customer_id": customer.id}}
+                ))
+                import_stats['vehicles_linked'] += 1
+
+            # Build sale record if sales info present
+            if sales_info and sales_info.get('amount'):
                 try:
-                    # Parse sale date
                     sale_date = None
-                    if sales_info.get('sale_date'):
+                    date_str = str(sales_info.get('sale_date', '')).strip()
+                    if date_str:
                         try:
-                            # Try to parse various date formats
-                            date_str = str(sales_info['sale_date']).strip()
-                            from datetime import datetime
-                            import re
-                            
-                            # Handle Excel numeric date format (days since 1900-01-01)
+                            from datetime import datetime as _dt
+                            import re as _re
                             if date_str.replace('.', '').isdigit():
-                                try:
-                                    # Excel date: number of days since 1900-01-01
-                                    excel_date = float(date_str)
-                                    # Excel incorrectly treats 1900 as a leap year, adjust for dates after Feb 28, 1900
-                                    if excel_date > 60:
-                                        excel_date -= 1
-                                    sale_date = datetime(1900, 1, 1) + timedelta(days=excel_date - 2)
-                                except (ValueError, TypeError, OverflowError):
-                                    pass
-                            
-                            # Try various string date formats
-                            if not sale_date:
-                                # Format: DD-MMM (03-Mar) - add current year
-                                if re.match(r'\d{1,2}-[A-Za-z]{3}', date_str):
-                                    date_str = f"{date_str}-{datetime.now().year}"
-                                    sale_date = datetime.strptime(date_str, "%d-%b-%Y")
-                                # Format: DD/MM/YYYY (15/01/2024)
-                                elif re.match(r'\d{1,2}/\d{1,2}/\d{4}', date_str):
-                                    sale_date = datetime.strptime(date_str, "%d/%m/%Y")
-                                # Format: DD-MM-YYYY (15-01-2024)
-                                elif re.match(r'\d{1,2}-\d{1,2}-\d{4}', date_str):
-                                    sale_date = datetime.strptime(date_str, "%d-%m-%Y")
-                                # Format: YYYY-MM-DD (2024-01-15)
-                                elif re.match(r'\d{4}-\d{1,2}-\d{1,2}', date_str):
-                                    sale_date = datetime.strptime(date_str, "%Y-%m-%d")
-                                # Format: YYYY/MM/DD (2024/01/15)
-                                elif re.match(r'\d{4}/\d{1,2}/\d{1,2}', date_str):
-                                    sale_date = datetime.strptime(date_str, "%Y/%m/%d")
-                                # Format: DD MMM YYYY (15 Jan 2024)
-                                elif re.match(r'\d{1,2}\s+[A-Za-z]{3}\s+\d{4}', date_str):
-                                    sale_date = datetime.strptime(date_str, "%d %b %Y")
-                                # Format: MMM DD, YYYY (Jan 15, 2024)
-                                elif re.match(r'[A-Za-z]{3}\s+\d{1,2},?\s+\d{4}', date_str):
-                                    sale_date = datetime.strptime(date_str.replace(',', ''), "%b %d %Y")
-                                else:
-                                    # Try generic parser as last resort
-                                    from dateutil import parser
-                                    sale_date = parser.parse(date_str)
-                            
-                            if not sale_date:
-                                sale_date = datetime.now()  # Default to current date
-                        except Exception as date_error:
-                            print(f"Date parsing error for '{sales_info.get('sale_date')}': {date_error}")
-                            sale_date = datetime.now()  # Default if parsing fails
-                    else:
+                                excel_date = float(date_str)
+                                if excel_date > 60:
+                                    excel_date -= 1
+                                sale_date = _dt(1900, 1, 1) + timedelta(days=excel_date - 2)
+                            elif _re.match(r'\d{1,2}-[A-Za-z]{3}', date_str):
+                                sale_date = _dt.strptime(f"{date_str}-{_dt.now().year}", "%d-%b-%Y")
+                            elif _re.match(r'\d{1,2}/\d{1,2}/\d{4}', date_str):
+                                sale_date = _dt.strptime(date_str, "%d/%m/%Y")
+                            elif _re.match(r'\d{1,2}-\d{1,2}-\d{4}', date_str):
+                                sale_date = _dt.strptime(date_str, "%d-%m-%Y")
+                            elif _re.match(r'\d{4}-\d{1,2}-\d{1,2}', date_str):
+                                sale_date = _dt.strptime(date_str, "%Y-%m-%d")
+                            else:
+                                from dateutil import parser as _dp
+                                sale_date = _dp.parse(date_str)
+                        except Exception:
+                            sale_date = datetime.now()
+                    if not sale_date:
                         sale_date = datetime.now()
-                    
-                    # Create sales record from imported data
+
+                    vehicle_id = None
+                    if chassis and chassis in existing_vehicles:
+                        vehicle_id = existing_vehicles[chassis]['id']
+
                     sale_record = Sale(
                         customer_id=customer.id,
-                        vehicle_id=None,  # Will be set if vehicle exists
-                        amount=float(sales_info['amount']) if sales_info.get('amount') else 0.0,
-                        payment_method=sales_info.get('payment_method', 'CASH').upper(),
+                        vehicle_id=vehicle_id,
+                        amount=float(sales_info['amount']),
+                        payment_method=(sales_info.get('payment_method') or 'CASH').upper(),
                         hypothecation=sales_info.get('hypothecation', ''),
                         sale_date=sale_date,
-                        invoice_number=sales_info.get('invoice_number', f"IMP-{customer.id[:8]}"),
+                        invoice_number=sales_info.get('invoice_number') or f"IMP-{customer.id[:8]}",
                         vehicle_brand=vehicle_info.get('brand', ''),
                         vehicle_model=vehicle_info.get('model', ''),
                         vehicle_color=vehicle_info.get('color', ''),
@@ -2525,31 +2483,14 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                         insurance_nominee=insurance_info.get('nominee_name', ''),
                         insurance_relation=insurance_info.get('relation', ''),
                         insurance_age=insurance_info.get('age', ''),
-                        source="import",  # Mark as imported data
-                        created_by="import_system"  # Add required created_by field
+                        source="import",
+                        created_by="import_system"
                     )
-                    
-                    # Try to find matching vehicle in inventory
-                    if vehicle_info.get('chassis_number'):
-                        existing_vehicle = await db.vehicles.find_one({
-                            "chassis_number": vehicle_info['chassis_number']
-                        })
-                        if existing_vehicle:
-                            sale_record.vehicle_id = existing_vehicle['id']
-                            # Update vehicle status to sold
-                            await db.vehicles.update_one(
-                                {"id": existing_vehicle['id']},
-                                {"$set": {"status": "sold", "customer_id": customer.id}}
-                            )
-                    
-                    await db.sales.insert_one(sale_record.dict())
+                    sales_to_insert.append(sale_record.dict())
                     import_stats['sales_created'] += 1
-                    
                 except Exception as sale_error:
-                    # Log the error but don't fail the customer import
-                    print(f"Warning: Could not create sale record for customer {customer.id}: {sale_error}")
-            
-            # Track incomplete records
+                    print(f"Warning: Could not build sale for row {idx+2}: {sale_error}")
+
             missing_fields = []
             if not vehicle_info or not any(vehicle_info.values()):
                 missing_fields.append('vehicle_info')
@@ -2557,25 +2498,27 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                 missing_fields.append('insurance_info')
             if not sales_info or not any(sales_info.values()):
                 missing_fields.append('sales_info')
-            
             if missing_fields:
-                incomplete_records.append({
-                    "record_id": customer.id,
-                    "row": idx + 2,
-                    "missing_fields": missing_fields,
-                    "data": row
-                })
-            
+                incomplete_records.append({"record_id": customer.id, "row": idx + 2, "missing_fields": missing_fields, "data": row})
+
             successful += 1
-            
+
         except Exception as e:
             failed += 1
-            errors.append({
-                "row": idx + 2,  # +2 because CSV has header and is 1-indexed
-                "data": row,
-                "error": str(e)
-            })
-    
+            errors.append({"row": idx + 2, "data": row, "error": str(e)})
+
+    # ── BULK WRITE: single round-trip per collection ──
+    if customers_to_insert:
+        await db.customers.insert_many(customers_to_insert, ordered=False)
+    if sales_to_insert:
+        await db.sales.insert_many(sales_to_insert, ordered=False)
+    # Vehicle updates — run concurrently
+    if vehicle_updates:
+        import asyncio as _asyncio
+        await _asyncio.gather(*[
+            db.vehicles.update_one(f, u) for f, u in vehicle_updates
+        ])
+
     import_job.successful_records = successful
     import_job.failed_records = failed
     import_job.skipped_records = skipped
@@ -2583,11 +2526,11 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
     import_job.errors = errors
     import_job.cross_reference_stats = import_stats
     import_job.incomplete_records = incomplete_records
-    
+
     return ImportResult(
         job_id=import_job.id,
         status="completed",
-        message=f"Import completed: {successful} successful, {failed} failed, {skipped} skipped (duplicates). Cross-referenced: {import_stats['vehicles_linked']} vehicles linked, {import_stats['sales_created']} sales created.",
+        message=f"Import completed: {successful} successful, {failed} failed, {skipped} skipped (duplicates). Cross-referenced: {import_stats['vehicles_linked']} vehicles linked, {import_stats['sales_created']} sales created.",nked, {import_stats['sales_created']} sales created.",
         total_records=len(data),
         successful_records=successful,
         failed_records=failed,
