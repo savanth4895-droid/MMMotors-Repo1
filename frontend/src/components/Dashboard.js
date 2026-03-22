@@ -28,7 +28,9 @@ const Dashboard = () => {
     vehicles_in_stock: 0,
     vehicles_sold: 0,
     pending_services: 0,
+    active_jobs: 0,
     low_stock_parts: 0,
+    total_parts: 0,
     completed_today: 0,
     sales_stats: {
       total_sales: 0,
@@ -53,7 +55,7 @@ const Dashboard = () => {
     const refreshInterval = setInterval(() => {
       fetchStats();
       fetchRecentActivities();
-    }, 30000); // 30 seconds
+    }, 10000); // 10 seconds — real-time dashboard
     
     // Cleanup interval on component unmount
     return () => clearInterval(refreshInterval);
@@ -153,7 +155,7 @@ const Dashboard = () => {
       link: '/services',
       stats: [
         { label: 'Pending Services', value: stats.pending_services },
-        { label: 'Active Jobs', value: stats.pending_services }
+        { label: 'Active Jobs', value: stats.active_jobs }
       ]
     },
     {
@@ -175,7 +177,7 @@ const Dashboard = () => {
       link: '/spare-parts',
       stats: [
         { label: 'Low Stock Items', value: stats.low_stock_parts },
-        { label: 'Active Parts', value: '250+' }
+        { label: 'Total Parts', value: stats.total_parts }
       ]
     }
   ];
@@ -244,7 +246,7 @@ const Dashboard = () => {
               Last updated: {lastUpdate.toLocaleTimeString()}
             </p>
             <p className="text-xs text-blue-200">
-              Auto-refresh every 30s
+              Auto-refresh every 10s
             </p>
           </div>
         </div>
