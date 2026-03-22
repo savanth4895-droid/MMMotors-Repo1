@@ -452,17 +452,17 @@ const NewService = () => {
 
   // Debounced search functions
   const debouncedSearchByPhone = useCallback(
-    debounce((phoneNumber) => searchByPhone(phoneNumber), 500),
+    debounce((phoneNumber) => searchByPhone(phoneNumber), 10000),
     []
   );
 
   const debouncedSearchByChassisNumber = useCallback(
-    debounce((chassisNumber) => searchByChassisNumber(chassisNumber), 500),
+    debounce((chassisNumber) => searchByChassisNumber(chassisNumber), 10000),
     []
   );
 
   const debouncedSearchChassisNumbers = useCallback(
-    debounce((partialChassisNumber) => searchChassisNumbers(partialChassisNumber), 300),
+    debounce((partialChassisNumber) => searchChassisNumbers(partialChassisNumber), 10000),
     []
   );
 
