@@ -59,7 +59,31 @@ client = AsyncIOMotorClient(mongo_url, **client_options)
 db = client[os.environ['DB_NAME']]
 
 async def next_sequence(name: str) -> int:
-    """Atomically increment a named counter — prevents duplicate invoice/job numbers."""
+    """Atomically increment a named counter — prevents duplicate invoice/job numbers.
+    If counter doesn't exist yet, seeds it from actual collection count so numbers
+    stay sensible (e.g. INV-000448 after 447 existing sales).
+    """
+    # Collection name map: counter name -> db collection
+    collection_map = {
+        "sales": db.sales,
+        "services": db.services,
+        "registrations": db.registrations,
+        "spare_part_bills": db.spare_part_bills,
+        "service_bills": db.service_bills,
+    }
+
+    # Check if counter already exists
+    existing = await db.counters.find_one({"_id": name})
+    if not existing:
+        # Seed from actual count so we don't start from 0 or a crazy number
+        coll = collection_map.get(name)
+        seed = await coll.count_documents({}) if coll is not None else 0
+        await db.counters.update_one(
+            {"_id": name},
+            {"$setOnInsert": {"seq": seed}},
+            upsert=True
+        )
+
     result = await db.counters.find_one_and_update(
         {"_id": name},
         {"$inc": {"seq": 1}},
@@ -106,6 +130,31 @@ async def startup_db_client():
         print("✅ MongoDB indexes created")
     except Exception as e:
         print(f"⚠️ Index creation warning: {e}")
+
+    # Fix corrupted sequence counters — reset to actual collection counts
+    # This runs every startup but is a no-op if counters are already correct
+    try:
+        counter_sources = [
+            ("sales",            db.sales),
+            ("services",         db.services),
+            ("registrations",    db.registrations),
+            ("spare_part_bills", db.spare_part_bills),
+            ("service_bills",    db.service_bills),
+        ]
+        for counter_name, coll in counter_sources:
+            existing = await db.counters.find_one({"_id": counter_name})
+            real_count = await coll.count_documents({})
+            if existing is None or existing.get("seq", 0) > real_count + 10000:
+                # Counter is missing or wildly wrong — reset it to real count
+                await db.counters.update_one(
+                    {"_id": counter_name},
+                    {"$set": {"seq": real_count}},
+                    upsert=True
+                )
+                print(f"✅ Reset {counter_name} counter to {real_count}")
+        print("✅ Sequence counters verified")
+    except Exception as e:
+        print(f"⚠️ Counter reset warning: {e}")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
@@ -833,6 +882,16 @@ async def create_customer(customer_data: CustomerCreate, current_user: User = De
     
     customer = Customer(**customer_data.dict())
     await db.customers.insert_one(customer.dict())
+    return customer
+
+
+@api_router.get("/customers/by-mobile/{mobile}")
+async def get_customer_by_mobile(mobile: str, current_user: User = Depends(get_current_user)):
+    """Look up a customer by exact mobile number — used by invoice creation to avoid duplicates"""
+    customer = await db.customers.find_one({"mobile": mobile})
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    customer.pop("_id", None)
     return customer
 
 @api_router.get("/customers")
@@ -2458,9 +2517,9 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                                 from dateutil import parser as _dp
                                 sale_date = _dp.parse(date_str)
                         except Exception:
-                            sale_date = datetime.now()
+                            sale_date = datetime(datetime.now().year, 1, 1)  # Unknown date — use year start
                     if not sale_date:
-                        sale_date = datetime.now()
+                        sale_date = datetime(datetime.now().year, 1, 1)  # Unknown date — use year start
 
                     vehicle_id = None
                     if chassis and chassis in existing_vehicles:
@@ -2609,7 +2668,7 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
                     date_received = parse_date_flexible(date_received_str)
                     vehicle_dict['date_received'] = date_received
                 except Exception as e:
-                    # If date parsing fails, use current date
+                    # If date parsing fails, use start of year (avoids inflating this-month stats)
                     vehicle_dict['date_received'] = datetime.now(timezone.utc)
             else:
                 vehicle_dict['date_received'] = datetime.now(timezone.utc)
