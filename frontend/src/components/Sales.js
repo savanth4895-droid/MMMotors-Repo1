@@ -227,107 +227,367 @@ const Sales = () => {
 };
 
 const SalesOverview = () => {
-  const [stats, setStats] = useState({
-    totalSales: 0,
-    monthlyRevenue: 0,
-    pendingInvoices: 0,
-    topCustomers: []
-  });
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  useEffect(() => { fetchStats(); }, []);
 
   const fetchStats = async () => {
     try {
       setLoading(true);
+      const token = localStorage.getItem('token');
       const [salesRes, customersRes] = await Promise.all([
-        axios.get(`${API}/sales`),
+        axios.get(`${API}/sales`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/customers`, {
-          params: {
-            page: 1,
-            limit: 10000,
-            sort: 'created_at',
-            order: 'desc'
-          }
+          params: { page: 1, limit: 10000, sort: 'created_at', order: 'desc' },
+          headers: { Authorization: `Bearer ${token}` }
         })
       ]);
 
       const sales = salesRes.data;
       const customers = customersRes.data.data || customersRes.data;
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
 
-      // Calculate current month revenue
-      const currentMonth = new Date().getMonth();
-      const currentYear = new Date().getFullYear();
-      const monthlyRevenue = sales
-        .filter(sale => {
-          const saleDate = new Date(sale.sale_date);
-          return saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear;
-        })
-        .reduce((sum, sale) => sum + (sale.amount || 0), 0);
+      // Previous month
+      const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+      const prevYear  = currentMonth === 0 ? currentYear - 1 : currentYear;
+
+      const isCurrent = s => {
+        const d = new Date(s.sale_date);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      };
+      const isPrev = s => {
+        const d = new Date(s.sale_date);
+        return d.getMonth() === prevMonth && d.getFullYear() === prevYear;
+      };
+      const isToday = s => new Date(s.sale_date).toDateString() === now.toDateString();
+      const isThisYear = s => new Date(s.sale_date).getFullYear() === currentYear;
+
+      const currentMonthSales = sales.filter(isCurrent);
+      const prevMonthSales    = sales.filter(isPrev);
+      const todaySales        = sales.filter(isToday);
+      const yearSales         = sales.filter(isThisYear);
+
+      const revenue   = arr => arr.reduce((s, x) => s + (x.amount || x.sale_amount || 0), 0);
+      const curRev    = revenue(currentMonthSales);
+      const prevRev   = revenue(prevMonthSales);
+      const revChange = prevRev > 0 ? (((curRev - prevRev) / prevRev) * 100).toFixed(1) : null;
+
+      // Brand breakdown this month
+      const brandMap = {};
+      currentMonthSales.forEach(s => {
+        const b = s.vehicle_brand || s.brand || 'Unknown';
+        brandMap[b] = (brandMap[b] || 0) + 1;
+      });
+      const brandBreakdown = Object.entries(brandMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+
+      // Payment method breakdown this month
+      const payMap = {};
+      currentMonthSales.forEach(s => {
+        const p = s.payment_method || 'cash';
+        payMap[p] = (payMap[p] || 0) + 1;
+      });
+
+      // Recent 5 sales
+      const recent = [...sales]
+        .sort((a, b) => new Date(b.sale_date) - new Date(a.sale_date))
+        .slice(0, 5);
+
+      // Monthly trend — last 6 months
+      const trend = [];
+      for (let i = 5; i >= 0; i--) {
+        const m = (currentMonth - i + 12) % 12;
+        const y = currentMonth - i < 0 ? currentYear - 1 : currentYear;
+        const label = new Date(y, m, 1).toLocaleString('en-IN', { month: 'short' });
+        const total = revenue(sales.filter(s => {
+          const d = new Date(s.sale_date);
+          return d.getMonth() === m && d.getFullYear() === y;
+        }));
+        trend.push({ label, total });
+      }
+      const maxTrend = Math.max(...trend.map(t => t.total), 1);
 
       setStats({
         totalSales: sales.length,
-        monthlyRevenue: monthlyRevenue,
-        pendingInvoices: 0, // This would need a separate status field in sales
-        topCustomers: customers.slice(0, 5) // Top 5 customers by recent creation
+        currentMonthSales: currentMonthSales.length,
+        prevMonthSales: prevMonthSales.length,
+        curRev, prevRev, revChange,
+        todaySales: todaySales.length,
+        todayRev: revenue(todaySales),
+        yearSales: yearSales.length,
+        yearRev: revenue(yearSales),
+        totalCustomers: customers.length,
+        brandBreakdown,
+        payMap,
+        recent,
+        trend,
+        maxTrend
       });
-    } catch (error) {
-      console.error('Failed to fetch sales overview stats:', error);
+    } catch (err) {
       toast.error('Failed to fetch sales data');
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+  const fmt = n => `₹${Number(n || 0).toLocaleString('en-IN')}`;
+
+  if (loading) return (
+    <div className="flex justify-center items-center h-64">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    </div>
+  );
+  if (!stats) return null;
+
+  const { revChange } = stats;
+  const revUp = revChange !== null && parseFloat(revChange) >= 0;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <Card className="lg:col-span-2">
-        <CardHeader>
-          <CardTitle>Sales Overview</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <p className="text-2xl font-bold text-blue-600">{stats.totalSales}</p>
-              <p className="text-sm text-gray-600">Total Sales</p>
-            </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <p className="text-2xl font-bold text-green-600">₹{stats.monthlyRevenue}</p>
-              <p className="text-sm text-gray-600">Monthly Revenue</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="space-y-6">
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Link to="/sales/create-invoice">
-            <Button className="w-full justify-start">
-              <Plus className="w-4 h-4 mr-2" />
-              Create Invoice
-            </Button>
-          </Link>
-          <Link to="/sales/customers">
-            <Button variant="outline" className="w-full justify-start">
-              <Users className="w-4 h-4 mr-2" />
-              Add Customer
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
+      {/* ── Row 1: 4 KPI cards ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Today */}
+        <Card>
+          <CardContent className="p-5">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Today's Sales</p>
+            <p className="text-3xl font-bold text-blue-600">{stats.todaySales}</p>
+            <p className="text-sm text-green-600 font-medium mt-1">{fmt(stats.todayRev)}</p>
+          </CardContent>
+        </Card>
+
+        {/* This Month */}
+        <Card className="border-blue-200">
+          <CardContent className="p-5">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">This Month</p>
+            <p className="text-3xl font-bold text-blue-700">{stats.currentMonthSales}</p>
+            <p className="text-sm text-green-600 font-medium mt-1">{fmt(stats.curRev)}</p>
+            {revChange !== null && (
+              <p className={`text-xs mt-1 font-medium ${revUp ? 'text-green-600' : 'text-red-500'}`}>
+                {revUp ? '▲' : '▼'} {Math.abs(revChange)}% vs last month
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* This Year */}
+        <Card>
+          <CardContent className="p-5">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">This Year</p>
+            <p className="text-3xl font-bold text-purple-600">{stats.yearSales}</p>
+            <p className="text-sm text-green-600 font-medium mt-1">{fmt(stats.yearRev)}</p>
+          </CardContent>
+        </Card>
+
+        {/* All Time */}
+        <Card>
+          <CardContent className="p-5">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">All Time</p>
+            <p className="text-3xl font-bold text-gray-800">{stats.totalSales}</p>
+            <p className="text-xs text-gray-500 mt-1">{stats.totalCustomers} customers</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── Row 2: Monthly trend bar chart + Brand breakdown + Quick Actions ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+        {/* Monthly revenue trend */}
+        <Card className="lg:col-span-2">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-blue-500" />
+              Monthly Revenue Trend
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-end gap-2 h-36">
+              {stats.trend.map((t, i) => {
+                const pct = stats.maxTrend > 0 ? (t.total / stats.maxTrend) * 100 : 0;
+                const isCurrentM = i === stats.trend.length - 1;
+                return (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                    <span className="text-xs text-gray-500 hidden md:block">
+                      {t.total > 0 ? `₹${Math.round(t.total / 1000)}k` : ''}
+                    </span>
+                    <div className="w-full flex items-end" style={{ height: '90px' }}>
+                      <div
+                        className={`w-full rounded-t-sm transition-all ${isCurrentM ? 'bg-blue-500' : 'bg-blue-200'}`}
+                        style={{ height: `${Math.max(pct, t.total > 0 ? 4 : 0)}%` }}
+                        title={`${t.label}: ₹${t.total.toLocaleString('en-IN')}`}
+                      />
+                    </div>
+                    <span className="text-xs text-gray-500">{t.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
+              <span className="flex items-center gap-1"><span className="w-3 h-3 bg-blue-500 rounded-sm inline-block"></span> This month</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 bg-blue-200 rounded-sm inline-block"></span> Previous months</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Link to="/sales/create-invoice">
+              <Button className="w-full justify-start text-sm">
+                <Plus className="w-4 h-4 mr-2" /> Create Invoice
+              </Button>
+            </Link>
+            <Link to="/sales/invoices">
+              <Button variant="outline" className="w-full justify-start text-sm">
+                <FileText className="w-4 h-4 mr-2" /> View Invoices
+              </Button>
+            </Link>
+            <Link to="/sales/customers">
+              <Button variant="outline" className="w-full justify-start text-sm">
+                <Users className="w-4 h-4 mr-2" /> Add Customer
+              </Button>
+            </Link>
+            <Link to="/sales/report">
+              <Button variant="outline" className="w-full justify-start text-sm">
+                <TrendingUp className="w-4 h-4 mr-2" /> Sales Report
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── Row 3: Brand breakdown + Payment methods + Recent sales ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+        {/* Brand breakdown */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <PieChart className="w-4 h-4 text-purple-500" />
+              This Month by Brand
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {stats.brandBreakdown.length === 0 ? (
+              <p className="text-sm text-gray-400 py-4 text-center">No sales this month</p>
+            ) : (
+              <div className="space-y-2">
+                {stats.brandBreakdown.map(([brand, count], i) => {
+                  const pct = stats.currentMonthSales > 0
+                    ? Math.round((count / stats.currentMonthSales) * 100) : 0;
+                  const colors = ['bg-blue-500','bg-purple-500','bg-green-500','bg-orange-500','bg-pink-500'];
+                  return (
+                    <div key={brand}>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="font-medium text-gray-700">{brand}</span>
+                        <span className="text-gray-500">{count} ({pct}%)</span>
+                      </div>
+                      <div className="w-full bg-gray-100 rounded-full h-2">
+                        <div
+                          className={`${colors[i % colors.length]} h-2 rounded-full`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Payment method breakdown */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-green-500" />
+              Payment Methods
+            </CardTitle>
+            <CardDescription className="text-xs">This month</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {Object.keys(stats.payMap).length === 0 ? (
+              <p className="text-sm text-gray-400 py-4 text-center">No sales this month</p>
+            ) : (
+              <div className="space-y-3">
+                {Object.entries(stats.payMap)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([method, count]) => {
+                    const pct = stats.currentMonthSales > 0
+                      ? Math.round((count / stats.currentMonthSales) * 100) : 0;
+                    const labels = {
+                      cash: { label: 'Cash', color: 'text-green-600 bg-green-50' },
+                      finance: { label: 'Finance', color: 'text-blue-600 bg-blue-50' },
+                      upi: { label: 'UPI', color: 'text-purple-600 bg-purple-50' },
+                      cheque: { label: 'Cheque', color: 'text-orange-600 bg-orange-50' },
+                    };
+                    const cfg = labels[method] || { label: method, color: 'text-gray-600 bg-gray-50' };
+                    return (
+                      <div key={method} className="flex items-center justify-between">
+                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${cfg.color}`}>
+                          {cfg.label}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-24 bg-gray-100 rounded-full h-2">
+                            <div className="bg-blue-400 h-2 rounded-full" style={{ width: `${pct}%` }} />
+                          </div>
+                          <span className="text-xs text-gray-600 w-8 text-right">{count}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Recent sales */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-blue-500" />
+              Recent Sales
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            {stats.recent.length === 0 ? (
+              <p className="text-sm text-gray-400 py-4 text-center px-4">No sales yet</p>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {stats.recent.map((sale, i) => (
+                  <div key={i} className="px-4 py-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-800 truncate max-w-[130px]">
+                        {sale.customer_name || 'Customer'}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {sale.sale_date ? new Date(sale.sale_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '—'}
+                        {sale.vehicle_brand ? ` · ${sale.vehicle_brand}` : ''}
+                      </p>
+                    </div>
+                    <span className="text-sm font-semibold text-green-600">
+                      {fmt(sale.amount || sale.sale_amount)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="px-4 pb-3 pt-1">
+              <Link to="/sales/invoices">
+                <Button variant="outline" size="sm" className="w-full text-xs">View all invoices</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+      </div>
     </div>
   );
 };
