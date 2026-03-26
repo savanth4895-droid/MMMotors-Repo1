@@ -2542,7 +2542,7 @@ async def upload_import_file(
     """Upload and process import file"""
     
     # Validate data type
-    valid_types = ["customers", "vehicles", "spare_parts", "services"]
+    valid_types = ["customers", "vehicles", "spare_parts", "services", "service_bills", "registrations"]
     if data_type not in valid_types:
         raise HTTPException(status_code=400, detail=f"Invalid data type. Must be one of: {valid_types}")
     
@@ -2579,6 +2579,10 @@ async def upload_import_file(
             result = await import_spare_parts_data(data, import_job, current_user.id)
         elif data_type == "services":
             result = await import_services_data(data, import_job, current_user.id)
+        elif data_type == "service_bills":
+            result = await import_service_bills_data(data, import_job, current_user.id)
+        elif data_type == "registrations":
+            result = await import_registrations_data(data, import_job, current_user.id)
         
         import_job.status = "completed"
         import_job.end_time = datetime.now(timezone.utc)
@@ -2620,7 +2624,9 @@ async def download_import_template(
         "customers": "name,care_of,mobile,email,address,brand,model,color,vehicle_number,chassis_number,engine_number,nominee_name,relation,age,sale_amount,payment_method,hypothecation,sale_date,invoice_number\nJohn Doe,S/O Ramesh,9876543210,john@example.com,\"123 Main St, Bangalore\",TVS,Apache RTR 160,Red,KA01AB1234,ABC123456789012345,ENG987654321,Jane Doe,spouse,28,75000,cash,cash,2024-01-15,INV001\nJane Smith,D/O Kumar,9876543211,jane@example.com,\"456 Oak Ave, Mysore\",BAJAJ,Pulsar 150,Blue,KA02CD5678,DEF123456789012345,ENG987654322,John Smith,father,55,65000,finance,\"Bank Finance\",2024-01-16,INV002",
         "vehicles": "date_received,brand,model,chassis_number,engine_number,color,vehicle_number,key_number,inbound_location,page_number,status,customer_mobile,customer_name,sale_amount,payment_method\n2025-01-15,TVS,Apache RTR 160,ABC123456789,ENG987654321,Red,KA01AB1234,KEY001,Warehouse A,Page 1,in_stock,9876543210,John Doe,75000,cash\n2025-01-16,BAJAJ,Pulsar 150,DEF123456789,ENG987654322,Blue,KA02CD5678,KEY002,Warehouse B,Page 2,in_stock,9876543211,Jane Smith,65000,finance",
         "spare_parts": "name,part_number,brand,quantity,unit,unit_price,hsn_sac,gst_percentage,supplier,compatible_models\nBrake Pad,BP001,TVS,50,Nos,250.00,87084090,18.0,ABC Supplies,\"Apache RTR 160, Pulsar 150\"\nEngine Oil,EO001,CASTROL,25,Ltr,450.00,27101981,28.0,XYZ Motors,\"All Models\"",
-        "services": "registration_date,customer_name,customer_mobile,vehicle_number,chassis_number,vehicle_brand,vehicle_model,vehicle_year,service_type,description,amount\n2025-01-15,John Doe,9876543210,KA01AB1234,ABC123456789,TVS,Apache RTR 160,2024,periodic_service,General servicing,1500.00\n2025-01-16,Jane Smith,9876543211,KA02CD5678,DEF123456789,BAJAJ,Pulsar 150,2023,repair,Brake repair,800.00"
+        "services": "registration_date,customer_name,customer_mobile,vehicle_number,chassis_number,vehicle_brand,vehicle_model,vehicle_year,service_type,description,amount\n2025-01-15,John Doe,9876543210,KA01AB1234,ABC123456789,TVS,Apache RTR 160,2024,periodic_service,General servicing,1500.00\n2025-01-16,Jane Smith,9876543211,KA02CD5678,DEF123456789,BAJAJ,Pulsar 150,2023,repair,Brake repair,800.00",
+        "service_bills": "bill_date,customer_name,customer_mobile,vehicle_number,vehicle_brand,vehicle_model,job_card_number,item_description,item_hsn,item_qty,item_rate,item_gst_percent,total_amount,status\n2025-01-15,John Doe,9876543210,KA01AB1234,TVS,Apache RTR 160,JOB-000001,Engine Oil Change,27101,1,450,18,531,paid\n2025-01-16,Jane Smith,9876543211,KA02CD5678,BAJAJ,Pulsar 150,,Brake Pad Replacement,87084090,2,250,18,590,pending",
+        "registrations": "customer_name,customer_mobile,customer_address,vehicle_number,vehicle_brand,vehicle_model,vehicle_year,chassis_number,engine_number,registration_date\nJohn Doe,9876543210,\"123 Main St, Bangalore\",KA01AB1234,TVS,Apache RTR 160,2024,ABC123456789012345,ENG987654321,2025-01-15\nJane Smith,9876543211,\"456 Oak Ave, Mysore\",KA02CD5678,BAJAJ,Pulsar 150,2023,DEF123456789012345,ENG987654322,2025-01-16"
     }
     
     if data_type not in templates:
@@ -3346,6 +3352,318 @@ async def import_services_data(data: List[Dict], import_job: ImportJob, user_id:
         job_id=import_job.id,
         status="completed",
         message=f"Import completed: {successful} successful, {failed} failed, {skipped} skipped (duplicates). Cross-referenced: {import_stats['customers_linked']} customers linked, {import_stats['customers_created']} customers created, {import_stats['vehicles_linked']} vehicles linked.",
+        total_records=len(data),
+        successful_records=successful,
+        failed_records=failed,
+        skipped_records=skipped,
+        errors=errors,
+        cross_reference_stats=import_stats,
+        incomplete_records=incomplete_records
+    )
+
+    return ImportResult(
+        job_id=import_job.id,
+        status="completed",
+        message=f"Import completed: {successful} successful, {failed} failed, {skipped} skipped (duplicates). Cross-referenced: {import_stats['customers_linked']} customers linked, {import_stats['customers_created']} customers created, {import_stats['vehicles_linked']} vehicles linked.",
+        total_records=len(data),
+        successful_records=successful,
+        failed_records=failed,
+        skipped_records=skipped,
+        errors=errors,
+        cross_reference_stats=import_stats,
+        incomplete_records=incomplete_records
+    )
+
+async def import_service_bills_data(data: List[Dict], import_job: ImportJob, user_id: str) -> ImportResult:
+    """Import service bills from CSV/Excel.
+    Each row = one bill with a single line item. Multiple rows with the same
+    job_card_number (or customer+date combo) are grouped into one bill.
+    """
+    successful = 0
+    failed = 0
+    skipped = 0
+    errors = []
+    incomplete_records = []
+    import_stats = {'customers_linked': 0, 'customers_created': 0}
+
+    # Group rows by bill key so multiple items land on one bill
+    bill_groups: Dict[str, List[Dict]] = {}
+    for idx, row in enumerate(data):
+        jcn = (row.get('job_card_number') or '').strip()
+        mobile = (row.get('customer_mobile') or '').strip()
+        date = (row.get('bill_date') or '').strip()
+        # Key: prefer job card number, fall back to mobile+date
+        key = jcn if jcn else f"{mobile}__{date}__{idx}"
+        bill_groups.setdefault(key, []).append((idx, row))
+
+    for key, rows in bill_groups.items():
+        idx0, first = rows[0]
+        try:
+            customer_name = (first.get('customer_name') or '').strip()
+            customer_mobile = (first.get('customer_mobile') or '').strip()
+            vehicle_number = (first.get('vehicle_number') or '').strip()
+            vehicle_brand = (first.get('vehicle_brand') or '').strip() or None
+            vehicle_model = (first.get('vehicle_model') or '').strip() or None
+            job_card_number = (first.get('job_card_number') or '').strip() or None
+            status = (first.get('status') or 'pending').strip().lower()
+            if status not in ('paid', 'pending', 'cancelled'):
+                status = 'pending'
+
+            # Resolve customer
+            customer_id = None
+            if customer_mobile:
+                existing_cust = await db.customers.find_one({"mobile": customer_mobile})
+                if existing_cust:
+                    customer_id = existing_cust.get('id')
+                    import_stats['customers_linked'] += 1
+                else:
+                    # Create minimal customer
+                    from models import Customer  # noqa – already imported via *
+                    new_cust_id = str(uuid.uuid4())
+                    await db.customers.insert_one({
+                        "id": new_cust_id, "name": customer_name or "Unknown",
+                        "mobile": customer_mobile, "created_at": datetime.now(timezone.utc)
+                    })
+                    customer_id = new_cust_id
+                    import_stats['customers_created'] += 1
+
+            # Check duplicate bill by job card number
+            if job_card_number:
+                existing_bill = await db.service_bills.find_one({"job_card_number": job_card_number})
+                if existing_bill:
+                    skipped += 1
+                    continue
+
+            # Build bill items from all rows in this group
+            items = []
+            subtotal = 0.0
+            total_cgst = 0.0
+            total_sgst = 0.0
+
+            for _, row in rows:
+                desc = (row.get('item_description') or '').strip() or 'Service'
+                hsn = (row.get('item_hsn') or '').strip()
+                try:
+                    qty = float(row.get('item_qty') or 1)
+                    rate = float(row.get('item_rate') or 0)
+                    gst_pct = float(row.get('item_gst_percent') or 18)
+                except (ValueError, TypeError):
+                    qty, rate, gst_pct = 1, 0, 18
+
+                item_subtotal = qty * rate
+                cgst = round(item_subtotal * gst_pct / 200, 2)
+                sgst = round(item_subtotal * gst_pct / 200, 2)
+                item_total = round(item_subtotal + cgst + sgst, 2)
+
+                items.append({
+                    "description": desc, "hsn_sac": hsn,
+                    "quantity": qty, "rate": rate,
+                    "gst_percentage": gst_pct,
+                    "cgst": cgst, "sgst": sgst,
+                    "total": item_total
+                })
+                subtotal += item_subtotal
+                total_cgst += cgst
+                total_sgst += sgst
+
+            # Use total_amount from CSV if provided and items are empty/zero
+            csv_total = None
+            try:
+                csv_total = float(first.get('total_amount') or 0) or None
+            except (ValueError, TypeError):
+                pass
+
+            total_tax = round(total_cgst + total_sgst, 2)
+            total_amount = csv_total if (csv_total and not items) else round(subtotal + total_tax, 2)
+
+            # If no items built, create a single line from total_amount
+            if not items and total_amount:
+                items = [{"description": "Service (imported)", "hsn_sac": "", "quantity": 1,
+                          "rate": total_amount, "gst_percentage": 0, "cgst": 0, "sgst": 0, "total": total_amount}]
+                subtotal = total_amount
+                total_tax = 0
+
+            # Bill date
+            bill_date = datetime.now(timezone.utc)
+            raw_date = (first.get('bill_date') or '').strip()
+            if raw_date:
+                try:
+                    from dateutil import parser as date_parser
+                    bill_date = date_parser.parse(raw_date)
+                except Exception:
+                    pass
+
+            # Generate bill number
+            seq = await db.service_bills.count_documents({})
+            bill_number = f"SB-{seq + 1:06d}"
+
+            bill = ServiceBill(
+                bill_number=bill_number,
+                job_card_number=job_card_number,
+                customer_id=customer_id,
+                customer_name=customer_name or None,
+                customer_mobile=customer_mobile or None,
+                vehicle_number=vehicle_number or None,
+                vehicle_brand=vehicle_brand,
+                vehicle_model=vehicle_model,
+                items=items,
+                subtotal=round(subtotal, 2),
+                total_discount=0,
+                total_cgst=round(total_cgst, 2),
+                total_sgst=round(total_sgst, 2),
+                total_tax=total_tax,
+                total_amount=total_amount,
+                bill_date=bill_date,
+                status=status,
+                created_by=user_id
+            )
+            await db.service_bills.insert_one(bill.dict())
+            successful += 1
+
+        except Exception as e:
+            failed += 1
+            errors.append({"row": idx0 + 2, "error": str(e)})
+
+    import_job.successful_records = successful
+    import_job.failed_records = failed
+    import_job.skipped_records = skipped
+    import_job.processed_records = successful + failed + skipped
+    import_job.errors = errors
+    import_job.cross_reference_stats = import_stats
+    import_job.incomplete_records = incomplete_records
+
+    return ImportResult(
+        job_id=import_job.id,
+        status="completed",
+        message=f"Service bills import: {successful} bills created, {failed} failed, {skipped} skipped (duplicate job card). {import_stats['customers_linked']} customers linked, {import_stats['customers_created']} customers created.",
+        total_records=len(data),
+        successful_records=successful,
+        failed_records=failed,
+        skipped_records=skipped,
+        errors=errors,
+        cross_reference_stats=import_stats,
+        incomplete_records=incomplete_records
+    )
+
+    return ImportResult(
+        job_id=import_job.id,
+        status="completed",
+        message=f"Service bills import: {successful} bills created, {failed} failed, {skipped} skipped (duplicate job card). {import_stats['customers_linked']} customers linked, {import_stats['customers_created']} customers created.",
+        total_records=len(data),
+        successful_records=successful,
+        failed_records=failed,
+        skipped_records=skipped,
+        errors=errors,
+        cross_reference_stats=import_stats,
+        incomplete_records=incomplete_records
+    )
+
+async def import_registrations_data(data: List[Dict], import_job: ImportJob, user_id: str) -> ImportResult:
+    """Import service registrations (REG-XXXXXX). Auto-links or creates customers."""
+    successful = 0
+    failed = 0
+    skipped = 0
+    errors = []
+    incomplete_records = []
+    import_stats = {'customers_linked': 0, 'customers_created': 0}
+
+    for idx, row in enumerate(data):
+        try:
+            customer_name = (row.get('customer_name') or '').strip()
+            customer_mobile = (row.get('customer_mobile') or '').strip()
+            vehicle_number = (row.get('vehicle_number') or '').strip()
+
+            if not customer_mobile:
+                raise ValueError("customer_mobile is required")
+            if not vehicle_number:
+                raise ValueError("vehicle_number is required")
+
+            # Dedup: skip if same mobile + vehicle_number already registered
+            existing_reg = await db.registrations.find_one({
+                "customer_mobile": customer_mobile,
+                "vehicle_number": vehicle_number
+            })
+            if existing_reg:
+                skipped += 1
+                continue
+
+            # Find or create customer
+            existing_customer = await db.customers.find_one({"mobile": customer_mobile})
+            if existing_customer:
+                customer_id = existing_customer["id"]
+                updates = {}
+                if customer_name and existing_customer.get("name") != customer_name:
+                    updates["name"] = customer_name
+                existing_type = existing_customer.get("customer_type", "sales")
+                if existing_type == "sales":
+                    updates["customer_type"] = "both"
+                elif not existing_type:
+                    updates["customer_type"] = "service"
+                if updates:
+                    await db.customers.update_one({"id": customer_id}, {"$set": updates})
+                import_stats['customers_linked'] += 1
+            else:
+                customer_id = str(uuid.uuid4())
+                await db.customers.insert_one({
+                    "id": customer_id,
+                    "name": customer_name or "Unknown",
+                    "mobile": customer_mobile,
+                    "address": (row.get('customer_address') or '').strip(),
+                    "customer_type": "service",
+                    "created_at": datetime.now(timezone.utc)
+                })
+                import_stats['customers_created'] += 1
+
+            # Parse registration_date
+            reg_date = datetime.now(timezone.utc)
+            raw_date = (row.get('registration_date') or '').strip()
+            if raw_date:
+                try:
+                    from dateutil import parser as date_parser
+                    reg_date = date_parser.parse(raw_date)
+                except Exception:
+                    pass
+
+            seq = await next_sequence("registrations")
+            registration_number = f"REG-{seq:06d}"
+
+            registration = Registration(
+                registration_number=registration_number,
+                customer_id=customer_id,
+                customer_name=customer_name or "Unknown",
+                customer_mobile=customer_mobile,
+                customer_address=(row.get('customer_address') or '').strip() or None,
+                vehicle_number=vehicle_number,
+                vehicle_brand=(row.get('vehicle_brand') or '').strip() or None,
+                vehicle_model=(row.get('vehicle_model') or '').strip() or None,
+                vehicle_year=(row.get('vehicle_year') or '').strip() or None,
+                chassis_number=(row.get('chassis_number') or '').strip() or None,
+                engine_number=(row.get('engine_number') or '').strip() or None,
+                registration_date=reg_date,
+                created_by=user_id
+            )
+            await db.registrations.insert_one(registration.dict())
+            successful += 1
+
+            if not customer_name:
+                incomplete_records.append({"row": idx + 2, "missing_fields": ["customer_name"]})
+
+        except Exception as e:
+            failed += 1
+            errors.append({"row": idx + 2, "error": str(e)})
+
+    import_job.successful_records = successful
+    import_job.failed_records = failed
+    import_job.skipped_records = skipped
+    import_job.processed_records = successful + failed + skipped
+    import_job.errors = errors
+    import_job.cross_reference_stats = import_stats
+    import_job.incomplete_records = incomplete_records
+
+    return ImportResult(
+        job_id=import_job.id,
+        status="completed",
+        message=f"Registrations import: {successful} created, {failed} failed, {skipped} skipped (duplicates by mobile+vehicle). {import_stats['customers_linked']} customers linked, {import_stats['customers_created']} customers created.",
         total_records=len(data),
         successful_records=successful,
         failed_records=failed,
