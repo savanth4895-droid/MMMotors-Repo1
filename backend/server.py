@@ -2449,7 +2449,29 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
     total_revenue = revenue_stats[0]["total_revenue"] if revenue_stats else 0
     direct_revenue = revenue_stats[0]["direct_revenue"] if revenue_stats else 0
     imported_revenue = revenue_stats[0]["imported_revenue"] if revenue_stats else 0
-    
+
+    # Service bill statistics
+    total_service_bills = await db.service_bills.count_documents({})
+    paid_service_bills = await db.service_bills.count_documents({"status": "paid"})
+    pending_service_bills = await db.service_bills.count_documents({"status": "pending"})
+    service_bill_pipeline = [
+        {"$group": {
+            "_id": None,
+            "total_service_revenue": {"$sum": "$total_amount"},
+            "paid_revenue": {"$sum": {"$cond": [{"$eq": ["$status", "paid"]}, "$total_amount", 0]}},
+            "pending_revenue": {"$sum": {"$cond": [{"$eq": ["$status", "pending"]}, "$total_amount", 0]}}
+        }}
+    ]
+    service_bill_stats = await db.service_bills.aggregate(service_bill_pipeline).to_list(1)
+    total_service_revenue = service_bill_stats[0]["total_service_revenue"] if service_bill_stats else 0
+    paid_service_revenue = service_bill_stats[0]["paid_revenue"] if service_bill_stats else 0
+    pending_service_revenue = service_bill_stats[0]["pending_revenue"] if service_bill_stats else 0
+
+    # Total service jobs (job cards)
+    total_service_jobs = await db.services.count_documents({})
+    completed_services = await db.services.count_documents({"status": ServiceStatus.COMPLETED})
+    in_progress_services = await db.services.count_documents({"status": ServiceStatus.IN_PROGRESS})
+
     return {
         "total_customers": total_customers,
         "total_vehicles": total_vehicles,
@@ -2465,6 +2487,18 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
             "total_revenue": total_revenue,
             "direct_revenue": direct_revenue,
             "imported_revenue": imported_revenue
+        },
+        "service_stats": {
+            "total_service_bills": total_service_bills,
+            "paid_bills": paid_service_bills,
+            "pending_bills": pending_service_bills,
+            "total_service_revenue": total_service_revenue,
+            "paid_revenue": paid_service_revenue,
+            "pending_revenue": pending_service_revenue,
+            "total_service_jobs": total_service_jobs,
+            "completed_services": completed_services,
+            "in_progress_services": in_progress_services,
+            "pending_services": pending_services
         }
     }
 
