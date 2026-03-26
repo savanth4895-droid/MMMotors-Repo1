@@ -409,6 +409,82 @@ const Dashboard = () => {
         </CardContent>
       </Card>
 
+      {/* Service Overview */}
+      <Card className="border-l-4 border-l-blue-500">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Wrench className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Service Overview</CardTitle>
+                <CardDescription>Job cards and service billing revenue</CardDescription>
+              </div>
+            </div>
+            <Link to="/services">
+              <Button variant="outline" size="sm">
+                View Services
+              </Button>
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <p className="text-2xl font-bold text-blue-600">
+                ₹{stats.service_stats?.total_service_revenue?.toLocaleString('en-IN', { maximumFractionDigits: 0 }) || '0'}
+              </p>
+              <p className="text-xs text-gray-600">Total Revenue</p>
+            </div>
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <p className="text-2xl font-bold text-green-600">
+                ₹{stats.service_stats?.paid_revenue?.toLocaleString('en-IN', { maximumFractionDigits: 0 }) || '0'}
+              </p>
+              <p className="text-xs text-gray-600">Collected</p>
+            </div>
+            <div className="text-center p-4 bg-orange-50 rounded-lg">
+              <p className="text-2xl font-bold text-orange-600">
+                ₹{stats.service_stats?.pending_revenue?.toLocaleString('en-IN', { maximumFractionDigits: 0 }) || '0'}
+              </p>
+              <p className="text-xs text-gray-600">Outstanding</p>
+            </div>
+            <div className="text-center p-4 bg-purple-50 rounded-lg">
+              <p className="text-2xl font-bold text-purple-600">
+                {stats.service_stats?.total_service_bills || 0}
+              </p>
+              <p className="text-xs text-gray-600">Total Bills</p>
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-4 gap-4">
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <p className="text-lg font-semibold text-gray-900">
+                {stats.service_stats?.total_service_jobs || 0}
+              </p>
+              <p className="text-xs text-gray-600">Total Jobs</p>
+            </div>
+            <div className="text-center p-3 bg-green-50 rounded-lg">
+              <p className="text-lg font-semibold text-green-700">
+                {stats.service_stats?.completed_services || 0}
+              </p>
+              <p className="text-xs text-gray-600">Completed</p>
+            </div>
+            <div className="text-center p-3 bg-yellow-50 rounded-lg">
+              <p className="text-lg font-semibold text-yellow-700">
+                {stats.service_stats?.in_progress_services || 0}
+              </p>
+              <p className="text-xs text-gray-600">In Progress</p>
+            </div>
+            <div className="text-center p-3 bg-red-50 rounded-lg">
+              <p className="text-lg font-semibold text-red-700">
+                {stats.service_stats?.pending_services || 0}
+              </p>
+              <p className="text-xs text-gray-600">Pending</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Backup Status */}
       {backupStats && (
         <Card className="border-l-4 border-l-blue-500">
