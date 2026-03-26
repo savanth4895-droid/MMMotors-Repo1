@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
 import { 
   Users, 
   ShoppingCart, 
@@ -10,7 +11,18 @@ import {
   TrendingUp,
   AlertTriangle,
   CheckCircle,
-  Database
+  Database,
+  ChevronDown,
+  ChevronUp,
+  Upload,
+  X,
+  FileText,
+  Image,
+  Eye,
+  CheckSquare,
+  Square,
+  Search,
+  RotateCcw
 } from 'lucide-react';
 
 // Custom Motorcycle Icon Component
@@ -460,6 +472,9 @@ const Dashboard = () => {
         </Card>
       )}
 
+      {/* Sales Process Milestone Tracker */}
+      <SalesMilestoneTracker />
+
       {/* Recent Activity */}
       <Card>
         <CardHeader>
@@ -500,5 +515,423 @@ const Dashboard = () => {
     </div>
   );
 };
+
+
+// ─── Sales Process Milestone Tracker ─────────────────────────────────────────
+
+const MILESTONES = [
+  { key: 'customer_docs',      label: 'Customer Docs',      sub: 'Aadhaar, PAN, RTO', icon: '🪪', color: '#3b82f6' },
+  { key: 'invoice_insurance',  label: 'Invoice & Insurance',sub: 'Invoice, policy',    icon: '📄', color: '#8b5cf6' },
+  { key: 'road_tax',           label: 'Road Tax',           sub: 'Tax receipt',        icon: '🛣️', color: '#f97316' },
+  { key: 'number_plates',      label: 'Number Plates',      sub: 'Front & back',       icon: '🔢', color: '#10b981' },
+  { key: 'plates_attached',    label: 'Plates on Bike',     sub: 'Final attachment',   icon: '🏍️', color: '#06b6d4' },
+];
+
+const compressImage = (file) => new Promise((resolve) => {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = document.createElement('img');
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX = 800;
+      let { width, height } = img;
+      if (width > MAX || height > MAX) {
+        if (width > height) { height = Math.round(height * MAX / width); width = MAX; }
+        else { width = Math.round(width * MAX / height); height = MAX; }
+      }
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      let data = canvas.toDataURL('image/jpeg', 0.5);
+      if (data.length > 270000) data = canvas.toDataURL('image/jpeg', 0.3);
+      resolve({ data, mime_type: 'image/jpeg', size_kb: parseFloat((data.length * 0.75 / 1024).toFixed(1)) });
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+const SalesMilestoneTracker = () => {
+  const [sales, setSales] = useState([]);
+  const [milestoneData, setMilestoneData] = useState({});
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedSale, setSelectedSale] = useState(null);
+  const [activeMilestone, setActiveMilestone] = useState(null); // key of expanded panel
+  const [uploading, setUploading] = useState({});
+  const [viewDoc, setViewDoc] = useState(null);
+  const [notes, setNotes] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [savingNote, setSavingNote] = useState({});
+
+  useEffect(() => { fetchRecentSales(); }, []);
+  useEffect(() => { if (selectedSale) fetchMilestones(selectedSale.id); }, [selectedSale]);
+
+  const fetchRecentSales = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API}/sales`, { headers: { Authorization: `Bearer ${token}` } });
+      const sorted = (res.data || []).sort((a, b) => new Date(b.sale_date || b.created_at) - new Date(a.sale_date || a.created_at));
+      setSales(sorted.slice(0, 100));
+    } catch { /* silent */ }
+  };
+
+  const fetchMilestones = async (saleId) => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API}/sale-milestones/${saleId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      }).catch(() => ({ data: null }));
+      const data = res.data || { milestones: {} };
+      setMilestoneData(data);
+      const n = {};
+      MILESTONES.forEach(m => { n[m.key] = data.milestones?.[m.key]?.notes || ''; });
+      setNotes(n);
+    } finally { setLoading(false); }
+  };
+
+  const ms = (key) => milestoneData?.milestones?.[key] || {};
+  const completedCount = MILESTONES.filter(m => ms(m.key).completed).length;
+  const pct = Math.round((completedCount / MILESTONES.length) * 100);
+
+  const handleToggle = async (key) => {
+    if (!selectedSale) return;
+    const token = localStorage.getItem('token');
+    const isCompleted = ms(key).completed;
+    const url = isCompleted
+      ? `${API}/sale-milestones/${selectedSale.id}/milestone/${key}/uncomplete`
+      : `${API}/sale-milestones/${selectedSale.id}/milestone/${key}/complete`;
+    await axios.post(url, { notes: notes[key] || '' }, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
+    await fetchMilestones(selectedSale.id);
+  };
+
+  const handleUpload = async (key, files) => {
+    if (!selectedSale || !files.length) return;
+    setUploading(p => ({ ...p, [key]: true }));
+    try {
+      const token = localStorage.getItem('token');
+      const newDocs = [];
+      for (const file of Array.from(files)) {
+        let doc;
+        if (file.type.startsWith('image/')) {
+          const c = await compressImage(file);
+          doc = { name: file.name, ...c };
+        } else {
+          const data = await new Promise(r => { const fr = new FileReader(); fr.onload = e => r(e.target.result); fr.readAsDataURL(file); });
+          doc = { name: file.name, data, mime_type: file.type, size_kb: parseFloat((file.size / 1024).toFixed(1)) };
+        }
+        newDocs.push(doc);
+      }
+      const existing = ms(key).docs || [];
+      await axios.post(
+        `${API}/sale-milestones/${selectedSale.id}/milestone/${key}/complete`,
+        { docs: [...existing, ...newDocs], notes: notes[key] || '' },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      await fetchMilestones(selectedSale.id);
+    } catch { alert('Upload failed'); }
+    finally { setUploading(p => ({ ...p, [key]: false })); }
+  };
+
+  const handleDeleteDoc = async (key, idx) => {
+    if (!selectedSale || !window.confirm('Delete this document?')) return;
+    const token = localStorage.getItem('token');
+    await axios.delete(`${API}/sale-milestones/${selectedSale.id}/milestone/${key}/doc/${idx}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    await fetchMilestones(selectedSale.id);
+  };
+
+  const handleSaveNote = async (key) => {
+    if (!selectedSale) return;
+    setSavingNote(p => ({ ...p, [key]: true }));
+    const token = localStorage.getItem('token');
+    const state = ms(key);
+    await axios.post(
+      `${API}/sale-milestones/${selectedSale.id}/milestone/${key}/complete`,
+      { docs: state.docs || [], notes: notes[key] || '' },
+      { headers: { Authorization: `Bearer ${token}` } }
+    ).catch(() => {});
+    await fetchMilestones(selectedSale.id);
+    setSavingNote(p => ({ ...p, [key]: false }));
+  };
+
+  const filteredSales = sales.filter(s =>
+    !searchTerm ||
+    s.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.invoice_number?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100 bg-gray-50">
+        <div className="flex items-center gap-2">
+          <span className="text-base">📋</span>
+          <div>
+            <h3 className="text-xs font-semibold text-gray-800">Sales Process Tracker</h3>
+            <p className="text-xs text-gray-400 hidden">Document milestone checklist per sale</p>
+          </div>
+        </div>
+        {selectedSale && (
+          <button
+            onClick={() => { setSelectedSale(null); setMilestoneData({}); setActiveMilestone(null); }}
+            className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1 border border-gray-200 rounded-lg px-2 py-1"
+          >
+            <RotateCcw className="w-3 h-3" /> Change
+          </button>
+        )}
+      </div>
+
+      <div className="p-3">
+        {!selectedSale ? (
+          /* ── Sale Picker ── */
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Search customer or invoice..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="pl-9 text-xs h-8"
+              />
+            </div>
+            <div className="rounded-lg border border-gray-100 divide-y divide-gray-50 max-h-72 overflow-y-auto">
+              {filteredSales.length === 0 ? (
+                <p className="text-center text-gray-400 text-sm py-6">No sales found</p>
+              ) : filteredSales.map(sale => (
+                <button key={sale.id} onClick={() => setSelectedSale(sale)}
+                  className="w-full text-left px-3 py-1.5 hover:bg-blue-50 flex items-center justify-between group transition-colors">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-xs font-medium text-gray-800 truncate">{sale.customer_name || 'Unknown'}</span>
+                    <span className="text-xs text-gray-400 font-mono flex-shrink-0">{sale.invoice_number}</span>
+                  </div>
+                  <span className="text-xs text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-2">→</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {/* ── Sale summary bar ── */}
+            <div className="flex items-center gap-3 bg-gray-50 rounded-lg px-3 py-2">
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-gray-800 text-xs truncate">{selectedSale.customer_name}</p>
+                <p className="text-xs text-gray-400 font-mono">{selectedSale.invoice_number}</p>
+              </div>
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <div className="text-right">
+                  <span className={`text-lg font-bold ${completedCount === MILESTONES.length ? 'text-green-600' : 'text-blue-600'}`}>
+                    {completedCount}<span className="text-gray-400 font-normal text-sm">/{MILESTONES.length}</span>
+                  </span>
+                </div>
+                <div className="w-24">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full transition-all duration-500 ${completedCount === MILESTONES.length ? 'bg-green-500' : 'bg-blue-500'}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 text-right mt-0.5">{pct}%</p>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Horizontal Timeline ── */}
+            <div className="relative">
+              {/* Connector line */}
+              <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-200 z-0" />
+              {/* Completed fill line */}
+              <div
+                className="absolute top-5 left-0 h-0.5 bg-green-400 z-0 transition-all duration-700"
+                style={{ width: completedCount === 0 ? '0%' : `${((completedCount - 0.5) / MILESTONES.length) * 100}%` }}
+              />
+
+              {/* Steps row */}
+              <div className="relative z-10 grid grid-cols-5 gap-1">
+                {MILESTONES.map((m, idx) => {
+                  const state = ms(m.key);
+                  const done = state.completed;
+                  const active = activeMilestone === m.key;
+                  const docCount = (state.docs || []).length;
+
+                  return (
+                    <div key={m.key} className="flex flex-col items-center gap-1">
+                      {/* Circle */}
+                      <button
+                        onClick={() => { handleToggle(m.key); }}
+                        title={done ? 'Click to unmark' : 'Click to mark complete'}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-all duration-200 border-2 shadow-sm
+                          ${done
+                            ? 'bg-green-500 border-green-500 scale-105'
+                            : 'bg-white border-gray-300 hover:border-blue-400 hover:scale-105'
+                          }`}
+                      >
+                        {done ? '✓' : m.icon}
+                      </button>
+
+                      {/* Label */}
+                      <div className="text-center w-full">
+                        <p className={`text-xs font-semibold leading-tight ${done ? 'text-green-700' : 'text-gray-700'}`} style={{fontSize:'9px'}}>
+                          {m.label}
+                        </p>
+                        <p className="text-gray-400 leading-tight" style={{fontSize:'8px'}}>{m.sub}</p>
+                        {done && state.completed_at && (
+                          <p className="text-xs text-green-500 mt-0.5">
+                            {new Date(state.completed_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                          </p>
+                        )}
+                        {docCount > 0 && (
+                          <span className="inline-block mt-0.5 text-xs px-1.5 py-0 rounded-full bg-blue-100 text-blue-700 font-medium">
+                            {docCount} doc{docCount > 1 ? 's' : ''}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Expand button */}
+                      <button
+                        onClick={() => setActiveMilestone(active ? null : m.key)}
+                        className={`px-1.5 py-0 rounded-full border transition-colors
+                          ${active
+                            ? 'bg-blue-500 text-white border-blue-500'
+                            : 'bg-white text-gray-400 border-gray-200 hover:border-blue-300 hover:text-blue-500'
+                          }`}
+                      >
+                        <span style={{fontSize:'8px'}}>{active ? '▲' : '▼'}</span>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* ── Expanded detail panel ── */}
+            {activeMilestone && (() => {
+              const m = MILESTONES.find(x => x.key === activeMilestone);
+              const state = ms(activeMilestone);
+              const docs = state.docs || [];
+              return (
+                <div className="border border-gray-200 rounded-xl overflow-hidden" style={{ borderTopColor: m.color, borderTopWidth: 3 }}>
+                  <div className="bg-gray-50 px-4 py-2.5 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">{m.icon}</span>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800">{m.label}</p>
+                        <p className="text-xs text-gray-400">{m.sub}</p>
+                      </div>
+                    </div>
+                    <button onClick={() => setActiveMilestone(null)} className="text-gray-400 hover:text-gray-600">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="p-4 space-y-4">
+                    {/* Docs grid */}
+                    {docs.length > 0 && (
+                      <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                        {docs.map((doc, i) => (
+                          <div key={i} className="relative group border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
+                            {doc.mime_type?.startsWith('image/') ? (
+                              <img src={doc.data} alt={doc.name} className="w-full h-14 object-cover" />
+                            ) : (
+                              <div className="w-full h-14 flex flex-col items-center justify-center">
+                                <FileText className="w-5 h-5 text-gray-400" />
+                                <span className="text-xs text-gray-400">{doc.mime_type?.split('/')[1]?.toUpperCase()}</span>
+                              </div>
+                            )}
+                            <div className="px-1 pb-1">
+                              <p className="text-xs text-gray-600 truncate">{doc.name}</p>
+                              <p className="text-xs text-gray-400">{doc.size_kb}KB</p>
+                            </div>
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 transition-opacity rounded-lg">
+                              <button onClick={() => setViewDoc(doc)} className="text-white hover:text-blue-300"><Eye className="w-4 h-4" /></button>
+                              <button onClick={() => handleDeleteDoc(activeMilestone, i)} className="text-white hover:text-red-300"><X className="w-4 h-4" /></button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Upload + notes row */}
+                    <div className="flex gap-3 items-start flex-wrap sm:flex-nowrap">
+                      {/* Upload */}
+                      <label className="flex items-center gap-2 border-2 border-dashed border-gray-200 rounded-lg px-4 py-2.5 cursor-pointer hover:border-blue-300 transition-colors bg-white flex-shrink-0">
+                        <input type="file" multiple accept="image/*,application/pdf" className="hidden"
+                          onChange={e => handleUpload(activeMilestone, e.target.files)} />
+                        {uploading[activeMilestone] ? (
+                          <span className="text-sm text-gray-400">Compressing...</span>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4 text-gray-400" />
+                            <span className="text-sm text-gray-500 whitespace-nowrap">Upload docs</span>
+                          </>
+                        )}
+                      </label>
+
+                      {/* Notes */}
+                      <div className="flex gap-2 flex-1 min-w-0">
+                        <input
+                          type="text"
+                          placeholder="Add a note for this milestone..."
+                          value={notes[activeMilestone] || ''}
+                          onChange={e => setNotes(p => ({ ...p, [activeMilestone]: e.target.value }))}
+                          className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200 bg-white"
+                        />
+                        <button
+                          onClick={() => handleSaveNote(activeMilestone)}
+                          className="text-sm bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors flex-shrink-0"
+                        >
+                          {savingNote[activeMilestone] ? '...' : 'Save'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Saved note display */}
+                    {state.notes && (
+                      <p className="text-xs text-gray-500 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                        📝 {state.notes}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* All done */}
+            {completedCount === MILESTONES.length && (
+              <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-center">
+                <p className="text-green-700 font-semibold text-sm">🎉 All milestones complete!</p>
+                <p className="text-green-500 text-xs mt-0.5">{selectedSale.customer_name} — fully documented</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Doc preview modal */}
+      {viewDoc && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setViewDoc(null)}>
+          <div className="bg-white rounded-xl max-w-lg w-full max-h-[85vh] overflow-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <p className="font-medium text-sm truncate">{viewDoc.name}</p>
+              <button onClick={() => setViewDoc(null)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="p-4">
+              {viewDoc.mime_type?.startsWith('image/') ? (
+                <img src={viewDoc.data} alt={viewDoc.name} className="w-full rounded-lg" />
+              ) : (
+                <div className="text-center py-8">
+                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-600">{viewDoc.name}</p>
+                  <a href={viewDoc.data} download={viewDoc.name} className="mt-3 inline-block text-sm text-blue-600 underline">Download</a>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 
 export default Dashboard;
