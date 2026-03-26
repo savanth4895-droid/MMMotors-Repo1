@@ -312,8 +312,7 @@ class Sale(BaseModel):
     insurance_relation: Optional[str] = None
     insurance_age: Optional[str] = None
     hypothecation: Optional[str] = None
-
-class SaleCreate(BaseModel):
+    pending_amount: Optional[float] = None  # None = fully paid, >0 = balance due
     customer_id: str
     vehicle_id: Optional[str] = None  # Made optional for imported sales
     sale_date: Optional[datetime] = None  # Allow updating sale date
@@ -333,6 +332,7 @@ class SaleCreate(BaseModel):
     insurance_relation: Optional[str] = None
     insurance_age: Optional[str] = None
     hypothecation: Optional[str] = None
+    pending_amount: Optional[float] = None  # Balance due after partial payment
 
 class Service(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -1529,6 +1529,34 @@ async def update_sale(sale_id: str, sale_data: SaleCreate, current_user: User = 
     updated_sale = Sale(**merged_data)
     await db.sales.replace_one({"id": sale_id}, updated_sale.dict())
     return updated_sale
+
+@api_router.patch("/sales/{sale_id}/payment")
+async def record_sale_payment(sale_id: str, payment: dict, current_user: User = Depends(get_current_user)):
+    """Record a partial or full payment against a sale. Body: { amount_paid: float, note: str? }"""
+    existing_sale = await db.sales.find_one({"id": sale_id})
+    if not existing_sale:
+        raise HTTPException(status_code=404, detail="Sale not found")
+    
+    amount_paid = float(payment.get("amount_paid", 0))
+    if amount_paid <= 0:
+        raise HTTPException(status_code=400, detail="amount_paid must be greater than 0")
+    
+    current_pending = existing_sale.get("pending_amount")
+    total_amount = existing_sale.get("amount", 0)
+    
+    # If pending_amount was never set, treat full amount as pending
+    if current_pending is None:
+        current_pending = total_amount
+    
+    new_pending = max(0, current_pending - amount_paid)
+    
+    await db.sales.update_one(
+        {"id": sale_id},
+        {"$set": {"pending_amount": new_pending if new_pending > 0 else 0}}
+    )
+    
+    updated = await db.sales.find_one({"id": sale_id}, {"_id": 0})
+    return {"message": "Payment recorded", "pending_amount": new_pending, "sale": updated}
 
 @api_router.delete("/sales/{sale_id}")
 async def delete_sale(sale_id: str, current_user: User = Depends(get_current_user)):
