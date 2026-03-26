@@ -1842,6 +1842,10 @@ const JobCards = () => {
   const [customerSuggestions, setCustomerSuggestions] = useState([]);
   const [searchingCustomers, setSearchingCustomers] = useState(false);
   const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
+
+  // Vehicle picker state (when customer has multiple vehicles)
+  const [showVehiclePicker, setShowVehiclePicker] = useState(false);
+  const [vehiclePickerOptions, setVehiclePickerOptions] = useState([]);
   
   // Pagination & Sorting
   const [currentPage, setCurrentPage] = useState(1);
@@ -2350,58 +2354,86 @@ const JobCards = () => {
     }
   };
 
-  // Fetch vehicle info from sales records for a customer
+  // Fetch ALL vehicles for a customer from sales + registrations, show picker if multiple
   const fetchVehicleFromSales = async (customerId) => {
     try {
       const token = localStorage.getItem('token');
-      const salesResponse = await axios.get(`${API}/sales`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
+      const [salesResponse, regsResponse] = await Promise.all([
+        axios.get(`${API}/sales`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/registrations`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
+      ]);
+
       const sales = salesResponse.data;
-      // Find sales for this customer
-      const customerSales = sales.filter(sale => sale.customer_id === customerId);
-      
-      if (customerSales.length > 0) {
-        // Get the most recent sale
-        const latestSale = customerSales.sort((a, b) => 
-          new Date(b.created_at) - new Date(a.created_at)
-        )[0];
-        
-        // If we have vehicle info in the sale, populate the form
-        if (latestSale.vehicle_id) {
-          // Fetch vehicle details
-          const vehicleResponse = await axios.get(`${API}/vehicles/${latestSale.vehicle_id}`, {
+      const regs  = regsResponse.data || [];
+      const customerSales = sales.filter(s => s.customer_id === customerId);
+      const customerRegs  = regs.filter(r => r.customer_id === customerId);
+
+      // Build a list of vehicles from all sources
+      const vehicleList = [];
+
+      for (const sale of customerSales) {
+        if (sale.vehicle_id) {
+          const vRes = await axios.get(`${API}/vehicles/${sale.vehicle_id}`, {
             headers: { Authorization: `Bearer ${token}` }
           }).catch(() => null);
-          
-          if (vehicleResponse && vehicleResponse.data) {
-            const vehicle = vehicleResponse.data;
-            setNewJobCardData(prev => ({
-              ...prev,
-              vehicle_number: vehicle.vehicle_number || vehicle.registration_number || '',
-              vehicle_brand: vehicle.brand || '',
-              vehicle_model: vehicle.model || '',
-              vehicle_year: vehicle.year?.toString() || ''
-            }));
-            toast.success('Vehicle info loaded from sales record');
-            return;
+          if (vRes?.data) {
+            const v = vRes.data;
+            vehicleList.push({
+              vehicle_number: v.vehicle_number || '',
+              vehicle_brand:  v.brand || '',
+              vehicle_model:  v.model || '',
+              vehicle_year:   v.year?.toString() || '',
+              source: 'Sales Invoice'
+            });
           }
-        }
-        
-        // Try to get vehicle info from sale record itself
-        if (latestSale.vehicle_brand || latestSale.vehicle_model || latestSale.chassis_number) {
-          setNewJobCardData(prev => ({
-            ...prev,
-            vehicle_brand: latestSale.vehicle_brand || prev.vehicle_brand,
-            vehicle_model: latestSale.vehicle_model || prev.vehicle_model,
-            vehicle_number: latestSale.vehicle_number || latestSale.chassis_number || prev.vehicle_number
-          }));
-          toast.success('Vehicle info loaded from sales record');
+        } else if (sale.vehicle_brand || sale.vehicle_model || sale.vehicle_number) {
+          vehicleList.push({
+            vehicle_number: sale.vehicle_number || '',
+            vehicle_brand:  sale.vehicle_brand || '',
+            vehicle_model:  sale.vehicle_model || '',
+            vehicle_year:   '',
+            source: 'Sales Invoice'
+          });
         }
       }
+
+      for (const reg of customerRegs) {
+        vehicleList.push({
+          vehicle_number: reg.vehicle_number || '',
+          vehicle_brand:  reg.vehicle_brand || '',
+          vehicle_model:  reg.vehicle_model || '',
+          vehicle_year:   reg.vehicle_year || '',
+          source: 'Registration'
+        });
+      }
+
+      // Deduplicate by vehicle_number
+      const seen = new Set();
+      const unique = vehicleList.filter(v => {
+        if (!v.vehicle_number || seen.has(v.vehicle_number)) return false;
+        seen.add(v.vehicle_number);
+        return true;
+      });
+
+      if (unique.length === 0) return;
+
+      if (unique.length === 1) {
+        // Only one vehicle — auto-fill directly
+        setNewJobCardData(prev => ({
+          ...prev,
+          vehicle_number: unique[0].vehicle_number,
+          vehicle_brand:  unique[0].vehicle_brand,
+          vehicle_model:  unique[0].vehicle_model,
+          vehicle_year:   unique[0].vehicle_year,
+        }));
+        toast.success('Vehicle info loaded');
+      } else {
+        // Multiple vehicles — show picker
+        setVehiclePickerOptions(unique);
+        setShowVehiclePicker(true);
+      }
     } catch (error) {
-      console.error('Error fetching vehicle from sales:', error);
+      console.error('Error fetching vehicles:', error);
     }
   };
 
@@ -3269,6 +3301,49 @@ const JobCards = () => {
         </div>
       )}
 
+      {/* Vehicle Picker Modal — shown when customer has multiple vehicles */}
+      {showVehiclePicker && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h2 className="text-lg font-bold">Select Vehicle</h2>
+                  <p className="text-sm text-gray-500">Multiple vehicles found for this customer</p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setShowVehiclePicker(false)}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {vehiclePickerOptions.map((v, i) => (
+                  <button
+                    key={i}
+                    className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                    onClick={() => {
+                      setNewJobCardData(prev => ({
+                        ...prev,
+                        vehicle_number: v.vehicle_number,
+                        vehicle_brand:  v.vehicle_brand,
+                        vehicle_model:  v.vehicle_model,
+                        vehicle_year:   v.vehicle_year,
+                      }));
+                      setShowVehiclePicker(false);
+                      toast.success(`Vehicle ${v.vehicle_number} selected`);
+                    }}
+                  >
+                    <div className="font-medium text-gray-900">{v.vehicle_brand} {v.vehicle_model}</div>
+                    <div className="text-sm text-gray-500 font-mono">{v.vehicle_number}</div>
+                    {v.vehicle_year && <div className="text-xs text-gray-400">{v.vehicle_year}</div>}
+                    <div className="text-xs text-blue-500 mt-1">Source: {v.source}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Edit Job Card Modal */}
       {showEditModal && editingJobCard && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -3552,21 +3627,7 @@ const ServicesBilling = () => {
   const [spareParts, setSpareParts] = useState([]);
   const [sparePartSuggestions, setSparePartSuggestions] = useState([]);
   const [activeDescriptionIndex, setActiveDescriptionIndex] = useState(null);
-  const [billItems, setBillItems] = useState([{
-    sl_no: 1,
-    description: '',
-    hsn_sac: '',
-    qty: 1,
-    unit: 'Nos',
-    rate: 0,
-    labor: 0,
-    disc_percent: 0,
-    gst_percent: 18,
-    cgst_amount: 0,
-    sgst_amount: 0,
-    total_tax: 0,
-    amount: 0
-  }]);
+  const [billItems, setBillItems] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState('');
   const [billNumber, setBillNumber] = useState(`SB-${Date.now().toString().slice(-6)}`);
   const [billDate, setBillDate] = useState(new Date().toISOString().split('T')[0]);
@@ -3896,21 +3957,7 @@ const ServicesBilling = () => {
     setJobCardNumber('');
     setServiceDetails(null);
     setSelectedCustomer('');
-    setBillItems([{
-      sl_no: 1,
-      description: '',
-      hsn_sac: '',
-      qty: 1,
-      unit: 'Nos',
-      rate: 0,
-      labor: 0,
-      disc_percent: 0,
-      gst_percent: 18,
-      cgst_amount: 0,
-      sgst_amount: 0,
-      total_tax: 0,
-      amount: 0
-    }]);
+    setBillItems([]);
   };
 
   const handleDeleteServiceBill = async (bill) => {
@@ -3998,7 +4045,7 @@ const ServicesBilling = () => {
     const baseAmount = (item.qty * item.rate) + item.labor;
     const discountAmount = (baseAmount * item.disc_percent) / 100;
     const taxableAmount = baseAmount - discountAmount;
-    
+
     const gstAmount = (taxableAmount * item.gst_percent) / 100;
     const cgstAmount = gstAmount / 2;
     const sgstAmount = gstAmount / 2;
@@ -4013,23 +4060,42 @@ const ServicesBilling = () => {
     };
   };
 
+  // For GST-inclusive prices (spare parts inventory):
+  // back-calculate the exclusive rate so that rate + GST = original inclusive price
+  // Formula: exclusive_rate = inclusive_price / (1 + gst_percent/100)
+  const exclusiveRateFromInclusive = (inclusivePrice, gstPercent) => {
+    const divisor = 1 + (gstPercent / 100);
+    return divisor > 0 ? parseFloat((inclusivePrice / divisor).toFixed(2)) : parseFloat(inclusivePrice.toFixed(2));
+  };
+
   const handleSelectSparePart = (index, part) => {
     const updatedItems = [...billItems];
+    const gstPercent = part.gst_percent || 0;
+
+    // Spare parts from inventory have GST-inclusive unit_price.
+    // Back-calculate the exclusive rate so GST is correctly shown and total = original price.
+    // Predefined service items are already GST-exclusive — use their rate as-is.
+    const rate = part.source === 'spare_parts'
+      ? exclusiveRateFromInclusive(part.rate, gstPercent)
+      : (part.rate || 0);
+
     updatedItems[index] = {
       ...updatedItems[index],
       description: part.name,
       hsn_sac: part.hsn_sac,
       unit: part.unit,
-      rate: part.rate,
-      gst_percent: part.gst_percent,
-      spare_part_id: part.id || null,  // Track spare part ID for inventory deduction
+      rate,
+      gst_percent: gstPercent,
+      // Store the original inclusive price so we can re-derive rate if GST% is changed
+      inclusive_price: part.source === 'spare_parts' ? part.rate : null,
+      spare_part_id: part.id || null,
       source: part.source || 'manual'
     };
-    
+
     // Recalculate amounts
     const calculatedAmounts = calculateItemAmounts(updatedItems[index]);
     updatedItems[index] = { ...updatedItems[index], ...calculatedAmounts };
-    
+
     setBillItems(updatedItems);
     setSparePartSuggestions([]);
     setActiveDescriptionIndex(null);
@@ -4038,11 +4104,21 @@ const ServicesBilling = () => {
   const updateBillItem = (index, field, value) => {
     const updatedItems = [...billItems];
     updatedItems[index] = { ...updatedItems[index], [field]: value };
-    
+
+    // If the user changes gst_percent on an inventory spare part,
+    // re-derive the exclusive rate from the stored inclusive_price
+    // so the grand total stays equal to the original shelf price.
+    if (field === 'gst_percent' && updatedItems[index].inclusive_price != null) {
+      updatedItems[index].rate = exclusiveRateFromInclusive(
+        updatedItems[index].inclusive_price,
+        parseFloat(value) || 0
+      );
+    }
+
     // Recalculate amounts for this item
     const calculatedAmounts = calculateItemAmounts(updatedItems[index]);
     updatedItems[index] = { ...updatedItems[index], ...calculatedAmounts };
-    
+
     setBillItems(updatedItems);
   };
 
@@ -4115,15 +4191,9 @@ const ServicesBilling = () => {
   };
 
   const removeBillItem = (index) => {
-    if (billItems.length > 1) {
-      const updatedItems = billItems.filter((_, i) => i !== index);
-      // Update serial numbers
-      const reNumberedItems = updatedItems.map((item, i) => ({
-        ...item,
-        sl_no: i + 1
-      }));
-      setBillItems(reNumberedItems);
-    }
+    const updatedItems = billItems.filter((_, i) => i !== index);
+    const reNumberedItems = updatedItems.map((item, i) => ({ ...item, sl_no: i + 1 }));
+    setBillItems(reNumberedItems);
   };
 
   // Duplicate function removed - using the first declaration above
@@ -4206,21 +4276,7 @@ const ServicesBilling = () => {
       toast.success('Service bill saved successfully!');
       
       // Reset form
-      setBillItems([{
-        sl_no: 1,
-        description: '',
-        hsn_sac: '',
-        qty: 1,
-        unit: 'Nos',
-        rate: 0,
-        labor: 0,
-        disc_percent: 0,
-        gst_percent: 18,
-        cgst_amount: 0,
-        sgst_amount: 0,
-        total_tax: 0,
-        amount: 0
-      }]);
+      setBillItems([]);
       setSelectedCustomer('');
       setBillNumber(`SB-${Date.now().toString().slice(-6)}`);
       setBillDate(new Date().toISOString().split('T')[0]);
@@ -4235,351 +4291,144 @@ const ServicesBilling = () => {
     }
   };
 
-  const handlePrintBill = () => {
-    // Create professional itemized bill for printing
+  const handlePrintBill = (pageSize = 'A5') => {
     const selectedCustomerData = customers.find(c => c.id === selectedCustomer);
     const totals = calculateTotals();
-    
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Service Bill - ${billNumber}</title>
-          <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { 
-              font-family: 'Arial', sans-serif; 
-              line-height: 1.4; 
-              color: #333;
-              background: white;
-            }
-            .bill-container { 
-              max-width: 210mm; 
-              margin: 0 auto; 
-              padding: 15mm;
-              background: white;
-            }
-            
-            /* Header Styles */
-            .bill-header { 
-              text-align: center; 
-              border-bottom: 3px solid #2563eb;
-              padding-bottom: 15px;
-              margin-bottom: 20px;
-            }
-            .company-name { 
-              font-size: 28px; 
-              font-weight: bold; 
-              color: #1e40af;
-              margin-bottom: 4px;
-            }
-            .company-tagline { 
-              font-size: 14px; 
-              color: #6b7280;
-              margin-bottom: 8px;
-            }
-            .company-address { 
-              font-size: 12px; 
-              color: #4b5563;
-              line-height: 1.4;
-            }
-            
-            /* Bill Title */
-            .bill-title { 
-              text-align: center;
-              background: linear-gradient(135deg, #2563eb, #1d4ed8);
-              color: white;
-              padding: 12px;
-              font-size: 20px;
-              font-weight: bold;
-              margin: 20px 0;
-              border-radius: 8px;
-            }
-            
-            /* Bill Info */
-            .bill-info { 
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 20px;
-              margin-bottom: 20px;
-              padding: 15px;
-              background: #f8fafc;
-              border-radius: 8px;
-              border: 1px solid #e2e8f0;
-            }
-            .info-section h4 { 
-              color: #1e40af;
-              font-size: 14px;
-              font-weight: bold;
-              margin-bottom: 8px;
-              border-bottom: 2px solid #3b82f6;
-              padding-bottom: 4px;
-            }
-            .info-row { 
-              display: flex;
-              justify-content: space-between;
-              margin-bottom: 6px;
-              padding: 3px 0;
-            }
-            .info-label { 
-              font-weight: 600;
-              color: #374151;
-              font-size: 12px;
-            }
-            .info-value { 
-              color: #111827;
-              font-size: 12px;
-            }
-            
-            /* Items Table */
-            .items-table { 
-              width: 100%; 
-              border-collapse: collapse; 
-              margin: 20px 0;
-              font-size: 12px;
-              box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            }
-            .items-table th { 
-              background: linear-gradient(135deg, #1e40af, #3b82f6);
-              color: white;
-              font-weight: bold;
-              padding: 15px 8px;
-              text-align: center;
-              font-size: 12px;
-              border: 1px solid #1e40af;
-            }
-            .items-table td { 
-              padding: 12px 8px;
-              border: 1px solid #d1d5db;
-              text-align: center;
-            }
-            .items-table tbody tr:nth-child(even) { 
-              background: #f8fafc;
-            }
-            .items-table tbody tr:hover { 
-              background: #e0f2fe;
-            }
-            .description-cell { 
-              text-align: left !important;
-              font-weight: 500;
-            }
-            .amount-cell { 
-              font-weight: bold;
-              color: #059669;
-            }
-            
-            /* Totals Section */
-            .totals-section { 
-              margin-top: 30px;
-              display: grid;
-              grid-template-columns: 1fr 400px;
-              gap: 30px;
-            }
-            .totals-table { 
-              width: 100%;
-              border-collapse: collapse;
-            }
-            .totals-table tr { 
-              border-bottom: 1px solid #e5e7eb;
-            }
-            .totals-table td { 
-              padding: 12px 15px;
-              font-size: 16px;
-            }
-            .totals-table .label { 
-              font-weight: 600;
-              color: #374151;
-            }
-            .totals-table .value { 
-              text-align: right;
-              font-weight: bold;
-              color: #111827;
-            }
-            .grand-total { 
-              background: linear-gradient(135deg, #059669, #10b981) !important;
-              color: white !important;
-              font-size: 20px !important;
-              font-weight: bold !important;
-            }
-            
-            /* Terms Section */
-            .terms-section { 
-              margin-top: 30px;
-              padding: 20px;
-              background: #fef3c7;
-              border: 1px solid #f59e0b;
-              border-radius: 8px;
-            }
-            .terms-section h4 { 
-              color: #92400e;
-              margin-bottom: 10px;
-              font-size: 16px;
-            }
-            .terms-section p { 
-              color: #78350f;
-              font-size: 14px;
-              margin-bottom: 5px;
-            }
-            
-            /* Footer */
-            .bill-footer { 
-              margin-top: 40px;
-              text-align: center;
-              color: #6b7280;
-              font-size: 14px;
-              border-top: 2px solid #e5e7eb;
-              padding-top: 20px;
-            }
-            
-            @media print {
-              body { -webkit-print-color-adjust: exact; }
-              .bill-container { padding: 8mm; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="bill-container">
-            <!-- Header -->
-            <div class="bill-header">
-              <div class="company-name">M M MOTORS</div>
-              <div class="company-tagline">Two Wheeler Service Excellence</div>
-              <div class="company-address">
-                Bengaluru main road, behind Ruchi Bakery<br>
-                Malur, Karnataka 563130<br>
-                Phone: 7026263123 | Email: mmmotors3123@gmail.com
-              </div>
-            </div>
-            
-            <!-- Bill Title -->
-            <div class="bill-title">
-              GST SERVICE BILL
-            </div>
-            
-            <!-- Bill Information -->
-            <div class="bill-info">
-              <div class="info-section">
-                <h4>Bill Details</h4>
-                <div class="info-row">
-                  <span class="info-label">Bill Number:</span>
-                  <span class="info-value">${billNumber}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Bill Date:</span>
-                  <span class="info-value">${new Date(billDate).toLocaleDateString('en-IN')}</span>
-                </div>
-                ${serviceDetails ? `
-                <div class="info-row">
-                  <span class="info-label">Job Card:</span>
-                  <span class="info-value">${serviceDetails.job_card_number}</span>
-                </div>
-                ` : ''}
-              </div>
-              
-              <div class="info-section">
-                <h4>Customer Details</h4>
-                <div class="info-row">
-                  <span class="info-label">Name:</span>
-                  <span class="info-value">${selectedCustomerData?.name || serviceDetails?.customer_name || 'N/A'}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Phone:</span>
-                  <span class="info-value">${selectedCustomerData?.phone || serviceDetails?.customer_phone || 'N/A'}</span>
-                </div>
-                ${serviceDetails?.vehicle_number ? `
-                <div class="info-row">
-                  <span class="info-label">Vehicle:</span>
-                  <span class="info-value">${serviceDetails.vehicle_number}</span>
-                </div>
-                ` : ''}
-              </div>
-            </div>
-            
-            <!-- Items Table -->
-            <table class="items-table">
-              <thead>
-                <tr>
-                  <th style="width: 5%;">S.No</th>
-                  <th style="width: 25%;">Description of Services</th>
-                  <th style="width: 10%;">HSN/SAC</th>
-                  <th style="width: 8%;">Qty</th>
-                  <th style="width: 8%;">Unit</th>
-                  <th style="width: 10%;">Rate</th>
-                  <th style="width: 10%;">Labor</th>
-                  <th style="width: 8%;">Disc%</th>
-                  <th style="width: 8%;">GST%</th>
-                  <th style="width: 10%;">CGST</th>
-                  <th style="width: 10%;">SGST</th>
-                  <th style="width: 12%;">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${billItems.map((item, index) => `
-                  <tr>
-                    <td>${index + 1}</td>
-                    <td class="description-cell">${item.description || 'Service Item'}</td>
-                    <td>${item.hsn_sac || '998'}</td>
-                    <td>${item.qty}</td>
-                    <td>${item.unit}</td>
-                    <td>₹${item.rate.toFixed(2)}</td>
-                    <td>₹${item.labor.toFixed(2)}</td>
-                    <td>${item.disc_percent}%</td>
-                    <td>${item.gst_percent}%</td>
-                    <td>₹${item.cgst_amount.toFixed(2)}</td>
-                    <td>₹${item.sgst_amount.toFixed(2)}</td>
-                    <td class="amount-cell">₹${item.amount.toFixed(2)}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-            
-            <!-- Totals Section -->
-            <div class="totals-section">
-              <div class="terms-section">
-                <h4>Terms & Conditions:</h4>
-                <p>• Service warranty: 30 days or 1000 km whichever is earlier</p>
-                <p>• Parts warranty as per manufacturer terms</p>
-                <p>• Bill must be presented for warranty claims</p>
-                <p>• Payment due immediately upon service completion</p>
-              </div>
-              
-              <table class="totals-table">
-                <tr>
-                  <td class="label">Subtotal:</td>
-                  <td class="value">₹${totals.subtotal.toFixed(2)}</td>
-                </tr>
-                <tr>
-                  <td class="label">Total Discount:</td>
-                  <td class="value">₹${totals.totalDiscount.toFixed(2)}</td>
-                </tr>
-                <tr>
-                  <td class="label">Total CGST:</td>
-                  <td class="value">₹${totals.totalCGST.toFixed(2)}</td>
-                </tr>
-                <tr>
-                  <td class="label">Total SGST:</td>
-                  <td class="value">₹${totals.totalSGST.toFixed(2)}</td>
-                </tr>
-                <tr>
-                  <td class="label">Total Tax:</td>
-                  <td class="value">₹${totals.totalTax.toFixed(2)}</td>
-                </tr>
-                <tr class="grand-total">
-                  <td class="label">GRAND TOTAL:</td>
-                  <td class="value">₹${totals.grandTotal.toFixed(2)}</td>
-                </tr>
-              </table>
-            </div>
-            
-            <!-- Footer -->
-            <div class="bill-footer">
-              <p><strong>Thank you for choosing M M Motors!</strong></p>
-              <p>For any queries, please contact us at mmmotors3123@gmail.com or 7026263123</p>
-            </div>
+    const w = pageSize === 'A4' ? '210mm' : '148mm';
+    const padding = pageSize === 'A4' ? '10mm' : '6mm';
+    const fontSize = pageSize === 'A4' ? '11px' : '9px';
+
+    const numberToWordsLocal = (num) => {
+      const ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten',
+        'Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+      const tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+      if (num === 0) return 'Zero';
+      const cvt = (n) => {
+        if (n === 0) return '';
+        if (n < 20) return ones[n];
+        if (n < 100) return tens[Math.floor(n/10)] + (n%10 ? ' '+ones[n%10] : '');
+        return ones[Math.floor(n/100)]+' Hundred'+(n%100 ? ' '+cvt(n%100) : '');
+      };
+      let r='', n=Math.floor(num);
+      if(n>=10000000){r+=cvt(Math.floor(n/10000000))+' Crore ';n%=10000000;}
+      if(n>=100000){r+=cvt(Math.floor(n/100000))+' Lakh ';n%=100000;}
+      if(n>=1000){r+=cvt(Math.floor(n/1000))+' Thousand ';n%=1000;}
+      if(n>0)r+=cvt(n);
+      return r.trim()||'Zero';
+    };
+
+    const itemsHtml = billItems.filter(i=>i.description).map((item,idx)=>`
+      <tr>
+        <td style="text-align:center;">${idx+1}</td>
+        <td>${item.description}</td>
+        <td style="text-align:center;">${item.hsn_sac||'-'}</td>
+        <td style="text-align:center;">${item.qty} ${item.unit}</td>
+        <td style="text-align:right;">\u20B9${(item.rate||0).toFixed(2)}</td>
+        <td style="text-align:right;">\u20B9${(item.cgst_amount||0).toFixed(2)}</td>
+        <td style="text-align:right;">\u20B9${(item.sgst_amount||0).toFixed(2)}</td>
+        <td style="text-align:right;font-weight:bold;">\u20B9${(item.amount||0).toFixed(2)}</td>
+      </tr>`).join('');
+
+    const printWindow = window.open('', '_blank', 'width=800,height=700');
+    printWindow.document.write(`<!DOCTYPE html><html><head>
+      <title>Service Bill - ${billNumber}</title>
+      <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:Arial,sans-serif;font-size:${fontSize};color:#333;background:white;}
+        .bill-container{max-width:${w};margin:0 auto;padding:${padding};background:white;}
+        .bill-header{text-align:center;border-bottom:2px solid #1e40af;padding-bottom:8px;margin-bottom:12px;}
+        .company-name{font-size:${pageSize==='A4'?'20px':'16px'};font-weight:bold;color:#1e40af;margin-bottom:2px;}
+        .company-tagline{font-size:${pageSize==='A4'?'11px':'9px'};color:#6b7280;margin-bottom:4px;}
+        .company-address{font-size:${pageSize==='A4'?'10px':'8px'};color:#4b5563;}
+        .gstin{font-size:${pageSize==='A4'?'10px':'8px'};color:#1e40af;font-weight:bold;margin-top:3px;}
+        .bill-title{text-align:center;background:#1e40af;color:white;padding:6px;font-size:${pageSize==='A4'?'14px':'11px'};font-weight:bold;margin:8px 0;}
+        .bill-info{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;padding:8px;background:#f8fafc;border:1px solid #e2e8f0;}
+        .info-section h4{color:#1e40af;font-size:${pageSize==='A4'?'11px':'9px'};font-weight:bold;margin-bottom:4px;border-bottom:1px solid #3b82f6;padding-bottom:2px;}
+        .info-row{display:flex;justify-content:space-between;margin-bottom:2px;font-size:${pageSize==='A4'?'10px':'8px'};}
+        .info-label{font-weight:600;color:#374151;}
+        .info-value{color:#111827;}
+        .items-table{width:100%;border-collapse:collapse;margin:8px 0;font-size:${pageSize==='A4'?'10px':'8px'};}
+        .items-table th{background:#1e40af;color:white;font-weight:bold;padding:5px 4px;text-align:left;border:1px solid #1e40af;}
+        .items-table td{padding:4px;border:1px solid #d1d5db;}
+        .items-table tr:nth-child(even){background:#f8fafc;}
+        .summary-section{display:flex;justify-content:flex-end;margin-top:10px;}
+        .summary-table{width:${pageSize==='A4'?'260px':'200px'};border-collapse:collapse;}
+        .summary-table td{padding:4px 8px;border:1px solid #d1d5db;font-size:${pageSize==='A4'?'10px':'8px'};}
+        .summary-table .label{background:#f8fafc;font-weight:600;}
+        .summary-table .total-row{background:#1e40af;color:white;font-weight:bold;font-size:${pageSize==='A4'?'12px':'10px'};}
+        .amount-words{background:#dbeafe;padding:6px 10px;margin:10px 0;border-left:3px solid #1e40af;font-size:${pageSize==='A4'?'10px':'8px'};}
+        .terms{margin-top:12px;padding-top:8px;border-top:1px solid #e5e7eb;font-size:${pageSize==='A4'?'9px':'7.5px'};color:#6b7280;}
+        .terms h4{font-size:${pageSize==='A4'?'10px':'8px'};color:#374151;margin-bottom:4px;}
+        .terms ol{margin-left:12px;}
+        .signatures{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:25px;padding-top:15px;}
+        .signature-box{text-align:center;padding-top:20px;border-top:1px solid #374151;font-size:${pageSize==='A4'?'10px':'8px'};}
+        .bill-footer{margin-top:12px;text-align:center;color:#6b7280;font-size:${pageSize==='A4'?'10px':'8px'};border-top:1px solid #e5e7eb;padding-top:8px;}
+        @media print{
+          body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+          @page{size:${pageSize};margin:${padding};}
+          .bill-container{padding:0;}
+        }
+      </style>
+    </head><body>
+      <div class="bill-container">
+        <div class="bill-header">
+          <div class="company-name">M M MOTORS</div>
+          <div class="company-tagline">Two Wheeler Service Excellence</div>
+          <div class="company-address">Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130<br>Phone: 7026263123 | Email: mmmotors3123@gmail.com</div>
+          <div class="gstin">GSTIN: 29CUJPM6814P1ZQ</div>
+        </div>
+        <div class="bill-title">TAX INVOICE / SERVICE BILL</div>
+        <div class="bill-info">
+          <div class="info-section">
+            <h4>Bill Information</h4>
+            <div class="info-row"><span class="info-label">Bill No:</span><span class="info-value">${billNumber}</span></div>
+            <div class="info-row"><span class="info-label">Date:</span><span class="info-value">${new Date(billDate).toLocaleDateString('en-IN')}</span></div>
+            ${serviceDetails ? `<div class="info-row"><span class="info-label">Job Card:</span><span class="info-value">${serviceDetails.job_card_number}</span></div>` : ''}
           </div>
-        </body>
-      </html>
-    `);
+          <div class="info-section">
+            <h4>Customer Details</h4>
+            <div class="info-row"><span class="info-label">Name:</span><span class="info-value">${selectedCustomerData?.name || serviceDetails?.customer_name || 'N/A'}</span></div>
+            <div class="info-row"><span class="info-label">Phone:</span><span class="info-value">${selectedCustomerData?.mobile || serviceDetails?.customer_phone || 'N/A'}</span></div>
+            ${serviceDetails?.vehicle_number ? `<div class="info-row"><span class="info-label">Vehicle:</span><span class="info-value">${serviceDetails.vehicle_number}</span></div>` : ''}
+          </div>
+        </div>
+        <table class="items-table">
+          <thead><tr>
+            <th style="width:5%;text-align:center;">Sl</th>
+            <th style="width:35%;">Description</th>
+            <th style="width:10%;text-align:center;">HSN/SAC</th>
+            <th style="width:10%;text-align:center;">Qty</th>
+            <th style="width:10%;text-align:right;">Rate</th>
+            <th style="width:10%;text-align:right;">CGST</th>
+            <th style="width:10%;text-align:right;">SGST</th>
+            <th style="width:10%;text-align:right;">Amount</th>
+          </tr></thead>
+          <tbody>${itemsHtml}</tbody>
+        </table>
+        <div class="summary-section">
+          <table class="summary-table">
+            <tr><td class="label">Subtotal:</td><td style="text-align:right;">\u20B9${totals.subtotal.toFixed(2)}</td></tr>
+            <tr><td class="label">CGST:</td><td style="text-align:right;">\u20B9${totals.totalCGST.toFixed(2)}</td></tr>
+            <tr><td class="label">SGST:</td><td style="text-align:right;">\u20B9${totals.totalSGST.toFixed(2)}</td></tr>
+            <tr class="total-row"><td>Grand Total:</td><td style="text-align:right;">\u20B9${totals.grandTotal.toFixed(2)}</td></tr>
+          </table>
+        </div>
+        <div class="amount-words"><strong>Amount in Words:</strong> ${numberToWordsLocal(totals.grandTotal)} Rupees Only</div>
+        <div class="terms">
+          <h4>Terms & Conditions:</h4>
+          <ol>
+            <li>Warranty as per manufacturer terms only</li>
+            <li>Payment due on delivery</li>
+            <li>Goods once sold will not be taken back</li>
+          </ol>
+        </div>
+        <div class="signatures">
+          <div class="signature-box">Customer Signature</div>
+          <div class="signature-box">For M M MOTORS<br>Authorized Signatory</div>
+        </div>
+        <div class="bill-footer"><p><strong>Thank you for your business!</strong></p><p>This is a computer generated invoice.</p></div>
+      </div>
+    </body></html>`);
     printWindow.document.close();
     printWindow.print();
   };
@@ -4814,9 +4663,13 @@ const CreateBillContent = ({
           <p className="text-gray-600">Create GST-compliant service bills</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={handlePrintBill} variant="outline" className="flex items-center gap-2">
+          <Button onClick={() => handlePrintBill('A5')} variant="outline" className="flex items-center gap-2">
             <Printer className="w-4 h-4" />
-            Print Bill
+            Print A5
+          </Button>
+          <Button onClick={() => handlePrintBill('A4')} variant="outline" className="flex items-center gap-2">
+            <Printer className="w-4 h-4" />
+            Print A4
           </Button>
           <Button onClick={handleSaveBill} disabled={loading} className="flex items-center gap-2">
             {loading ? (
@@ -5037,11 +4890,18 @@ const CreateBillContent = ({
                   <SelectValue placeholder="Select customer" />
                 </SelectTrigger>
                 <SelectContent>
-                  {customers.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {customer.name} - {customer.phone}
-                    </SelectItem>
-                  ))}
+                  {customers.map((customer) => {
+                    const vehicleModel = customer.vehicle_info?.model || '';
+                    const vehicleBrand = customer.vehicle_info?.brand || '';
+                    const vehicleLabel = vehicleBrand && vehicleModel
+                      ? ` — ${vehicleBrand} ${vehicleModel}`
+                      : vehicleModel ? ` — ${vehicleModel}` : '';
+                    return (
+                      <SelectItem key={customer.id} value={customer.id}>
+                        {customer.name}{vehicleLabel}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
@@ -5507,387 +5367,167 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
     }
   };
 
-  const handlePrintBill = (bill) => {
-    // Check if bill has itemized data
+  const handlePrintBill = (bill, pageSize = 'A5') => {
     const hasItems = bill.items && bill.items.length > 0;
-    
-    // Generate items rows for the table
-    const itemsRows = hasItems ? bill.items.map((item, index) => `
-      <tr>
-        <td style="text-align: center;">${index + 1}</td>
-        <td>${item.description || item.name || 'Service Item'}</td>
-        <td style="text-align: center;">${item.hsn_sac || '-'}</td>
-        <td style="text-align: center;">${item.qty || 1} ${item.unit || 'Nos'}</td>
-        <td style="text-align: right;">₹${(item.rate || 0).toFixed(2)}</td>
-        <td style="text-align: right;">₹${(item.cgst_amount || 0).toFixed(2)}</td>
-        <td style="text-align: right;">₹${(item.sgst_amount || 0).toFixed(2)}</td>
-        <td style="text-align: right; font-weight: bold;">₹${(item.amount || 0).toFixed(2)}</td>
-      </tr>
-    `).join('') : `
-      <tr>
-        <td style="text-align: center;">1</td>
-        <td>${bill.description || 'Service Charge'}</td>
-        <td style="text-align: center;">9987</td>
-        <td style="text-align: center;">1 Nos</td>
-        <td style="text-align: right;">₹${((bill.amount || 0) / 1.18).toFixed(2)}</td>
-        <td style="text-align: right;">₹${((bill.amount || 0) * 0.09 / 1.18).toFixed(2)}</td>
-        <td style="text-align: right;">₹${((bill.amount || 0) * 0.09 / 1.18).toFixed(2)}</td>
-        <td style="text-align: right; font-weight: bold;">₹${(bill.amount || 0).toFixed(2)}</td>
-      </tr>
-    `;
-    
-    // Calculate totals
-    const subtotal = hasItems 
-      ? bill.items.reduce((sum, item) => sum + ((item.rate || 0) * (item.qty || 1)), 0)
-      : (bill.amount || 0) / 1.18;
-    const totalCgst = hasItems 
-      ? bill.items.reduce((sum, item) => sum + (item.cgst_amount || 0), 0)
-      : (bill.amount || 0) * 0.09 / 1.18;
-    const totalSgst = hasItems 
-      ? bill.items.reduce((sum, item) => sum + (item.sgst_amount || 0), 0)
-      : (bill.amount || 0) * 0.09 / 1.18;
+    const w = pageSize === 'A4' ? '210mm' : '148mm';
+    const padding = pageSize === 'A4' ? '10mm' : '6mm';
+    const fs = pageSize === 'A4' ? '11px' : '9px';
+    const fsSmall = pageSize === 'A4' ? '10px' : '8px';
+    const fsXSmall = pageSize === 'A4' ? '9px' : '7.5px';
+
+    const subtotal = hasItems
+      ? bill.items.reduce((s,i)=>s+((i.rate||0)*(i.qty||1)),0)
+      : (bill.amount||0)/1.18;
+    const totalCgst = hasItems
+      ? bill.items.reduce((s,i)=>s+(i.cgst_amount||0),0)
+      : (bill.amount||0)*0.09/1.18;
+    const totalSgst = hasItems
+      ? bill.items.reduce((s,i)=>s+(i.sgst_amount||0),0)
+      : (bill.amount||0)*0.09/1.18;
     const grandTotal = bill.total_amount || bill.amount || 0;
-    
-    // Number to words function
+
     const numberToWordsLocal = (num) => {
-      const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
-        'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
-      const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-      
-      if (num === 0) return 'Zero';
-      
-      const convertLessThanThousand = (n) => {
-        if (n === 0) return '';
-        if (n < 20) return ones[n];
-        if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + ones[n % 10] : '');
-        return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 !== 0 ? ' ' + convertLessThanThousand(n % 100) : '');
+      const ones=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten',
+        'Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+      const tens=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+      if(num===0)return 'Zero';
+      const cvt=(n)=>{
+        if(n===0)return '';
+        if(n<20)return ones[n];
+        if(n<100)return tens[Math.floor(n/10)]+(n%10?' '+ones[n%10]:'');
+        return ones[Math.floor(n/100)]+' Hundred'+(n%100?' '+cvt(n%100):'');
       };
-      
-      const rupees = Math.floor(num);
-      let result = '';
-      let n = rupees;
-      
-      if (n >= 10000000) {
-        result += convertLessThanThousand(Math.floor(n / 10000000)) + ' Crore ';
-        n %= 10000000;
-      }
-      if (n >= 100000) {
-        result += convertLessThanThousand(Math.floor(n / 100000)) + ' Lakh ';
-        n %= 100000;
-      }
-      if (n >= 1000) {
-        result += convertLessThanThousand(Math.floor(n / 1000)) + ' Thousand ';
-        n %= 1000;
-      }
-      if (n > 0) {
-        result += convertLessThanThousand(n);
-      }
-      
-      return result.trim() || 'Zero';
+      let r='',n=Math.floor(num);
+      if(n>=10000000){r+=cvt(Math.floor(n/10000000))+' Crore ';n%=10000000;}
+      if(n>=100000){r+=cvt(Math.floor(n/100000))+' Lakh ';n%=100000;}
+      if(n>=1000){r+=cvt(Math.floor(n/1000))+' Thousand ';n%=1000;}
+      if(n>0)r+=cvt(n);
+      return r.trim()||'Zero';
     };
-    
-    // Create professional itemized service bill for printing
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Service Bill - ${bill.bill_number || bill.job_card_number || 'N/A'}</title>
-          <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { 
-              font-family: 'Arial', sans-serif; 
-              line-height: 1.4; 
-              color: #333;
-              background: white;
-              font-size: 12px;
-            }
-            .bill-container { 
-              max-width: 210mm; 
-              margin: 0 auto; 
-              padding: 10mm;
-              background: white;
-            }
-            
-            /* Header Styles */
-            .bill-header { 
-              text-align: center; 
-              border-bottom: 2px solid #1e40af;
-              padding-bottom: 10px;
-              margin-bottom: 15px;
-            }
-            .company-name { 
-              font-size: 24px; 
-              font-weight: bold; 
-              color: #1e40af;
-              margin-bottom: 2px;
-            }
-            .company-tagline { 
-              font-size: 12px; 
-              color: #6b7280;
-              margin-bottom: 5px;
-            }
-            .company-address { 
-              font-size: 11px; 
-              color: #4b5563;
-            }
-            .gstin { 
-              font-size: 11px; 
-              color: #1e40af;
-              font-weight: bold;
-              margin-top: 5px;
-            }
-            
-            /* Bill Title */
-            .bill-title { 
-              text-align: center;
-              background: #1e40af;
-              color: white;
-              padding: 8px;
-              font-size: 16px;
-              font-weight: bold;
-              margin: 10px 0;
-            }
-            
-            /* Bill Info Grid */
-            .bill-info { 
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 15px;
-              margin-bottom: 15px;
-              padding: 10px;
-              background: #f8fafc;
-              border: 1px solid #e2e8f0;
-            }
-            .info-section h4 { 
-              color: #1e40af;
-              font-size: 12px;
-              font-weight: bold;
-              margin-bottom: 5px;
-              border-bottom: 1px solid #3b82f6;
-              padding-bottom: 3px;
-            }
-            .info-row { 
-              display: flex;
-              justify-content: space-between;
-              margin-bottom: 3px;
-              font-size: 11px;
-            }
-            .info-label { font-weight: 600; color: #374151; }
-            .info-value { color: #111827; }
-            
-            /* Items Table */
-            .items-table { 
-              width: 100%; 
-              border-collapse: collapse; 
-              margin: 10px 0;
-              font-size: 11px;
-            }
-            .items-table th { 
-              background: #1e40af;
-              color: white;
-              font-weight: bold;
-              padding: 8px 5px;
-              text-align: left;
-              border: 1px solid #1e40af;
-            }
-            .items-table td { 
-              padding: 6px 5px;
-              border: 1px solid #d1d5db;
-            }
-            .items-table tr:nth-child(even) { background: #f8fafc; }
-            
-            /* Summary Section */
-            .summary-section {
-              display: flex;
-              justify-content: flex-end;
-              margin-top: 15px;
-            }
-            .summary-table {
-              width: 300px;
-              border-collapse: collapse;
-            }
-            .summary-table td {
-              padding: 6px 10px;
-              border: 1px solid #d1d5db;
-              font-size: 11px;
-            }
-            .summary-table .label { background: #f8fafc; font-weight: 600; }
-            .summary-table .total-row { background: #1e40af; color: white; font-weight: bold; font-size: 14px; }
-            
-            /* Amount in Words */
-            .amount-words {
-              background: #dbeafe;
-              padding: 8px 12px;
-              margin: 15px 0;
-              border-left: 4px solid #1e40af;
-              font-size: 11px;
-            }
-            
-            /* Terms */
-            .terms {
-              margin-top: 20px;
-              padding-top: 10px;
-              border-top: 1px solid #e5e7eb;
-              font-size: 10px;
-              color: #6b7280;
-            }
-            .terms h4 { font-size: 11px; color: #374151; margin-bottom: 5px; }
-            .terms ol { margin-left: 15px; }
-            
-            /* Signatures */
-            .signatures {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 50px;
-              margin-top: 40px;
-              padding-top: 20px;
-            }
-            .signature-box {
-              text-align: center;
-              padding-top: 30px;
-              border-top: 1px solid #374151;
-              font-size: 11px;
-            }
-            
-            /* Footer */
-            .bill-footer { 
-              margin-top: 20px;
-              text-align: center;
-              color: #6b7280;
-              font-size: 11px;
-              border-top: 1px solid #e5e7eb;
-              padding-top: 10px;
-            }
-            
-            @media print {
-              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-              .bill-container { padding: 5mm; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="bill-container">
-            <!-- Header -->
-            <div class="bill-header">
-              <div class="company-name">M M MOTORS</div>
-              <div class="company-tagline">Two Wheeler Service Excellence</div>
-              <div class="company-address">
-                Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130<br>
-                Phone: 7026263123 | Email: mmmotors3123@gmail.com
-              </div>
-              <div class="gstin">GSTIN: 29CUJPM6814P1ZQ</div>
-            </div>
-            
-            <!-- Bill Title -->
-            <div class="bill-title">TAX INVOICE / SERVICE BILL</div>
-            
-            <!-- Bill Information -->
-            <div class="bill-info">
-              <div class="info-section">
-                <h4>Bill Information</h4>
-                <div class="info-row">
-                  <span class="info-label">Bill Number:</span>
-                  <span class="info-value">${bill.bill_number || bill.job_card_number || 'N/A'}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Bill Date:</span>
-                  <span class="info-value">${bill.created_at || bill.bill_date ? new Date(bill.created_at || bill.bill_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Payment Status:</span>
-                  <span class="info-value">${bill.status === 'paid' || bill.status === 'completed' ? 'PAID' : 'UNPAID'}</span>
-                </div>
-              </div>
-              
-              <div class="info-section">
-                <h4>Customer Details</h4>
-                <div class="info-row">
-                  <span class="info-label">Name:</span>
-                  <span class="info-value">${bill.customer_name || 'N/A'}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Mobile:</span>
-                  <span class="info-value">${bill.customer_mobile || bill.customer_phone || 'N/A'}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Vehicle:</span>
-                  <span class="info-value">${bill.vehicle_reg_no || bill.vehicle_number || 'N/A'}</span>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Items Table -->
-            <table class="items-table">
-              <thead>
-                <tr>
-                  <th style="width: 5%; text-align: center;">Sl</th>
-                  <th style="width: 35%;">Description of Goods/Services</th>
-                  <th style="width: 10%; text-align: center;">HSN/SAC</th>
-                  <th style="width: 10%; text-align: center;">Qty</th>
-                  <th style="width: 10%; text-align: right;">Rate</th>
-                  <th style="width: 10%; text-align: right;">CGST</th>
-                  <th style="width: 10%; text-align: right;">SGST</th>
-                  <th style="width: 10%; text-align: right;">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${itemsRows}
-              </tbody>
-            </table>
-            
-            <!-- Summary -->
-            <div class="summary-section">
-              <table class="summary-table">
-                <tr>
-                  <td class="label">Subtotal:</td>
-                  <td style="text-align: right;">₹${subtotal.toFixed(2)}</td>
-                </tr>
-                <tr>
-                  <td class="label">CGST:</td>
-                  <td style="text-align: right;">₹${totalCgst.toFixed(2)}</td>
-                </tr>
-                <tr>
-                  <td class="label">SGST:</td>
-                  <td style="text-align: right;">₹${totalSgst.toFixed(2)}</td>
-                </tr>
-                <tr class="total-row">
-                  <td>Grand Total:</td>
-                  <td style="text-align: right;">₹${grandTotal.toFixed(2)}</td>
-                </tr>
-              </table>
-            </div>
-            
-            <!-- Amount in Words -->
-            <div class="amount-words">
-              <strong>Amount in Words:</strong> ${numberToWordsLocal(grandTotal)} Rupees Only
-            </div>
-            
-            <!-- Terms -->
-            <div class="terms">
-              <h4>Terms & Conditions:</h4>
-              <ol>
-                <li>Warranty as per manufacturer terms only</li>
-                <li>Payment due on delivery</li>
-                <li>Goods once sold will not be taken back</li>
-              </ol>
-            </div>
-            
-            <!-- Signatures -->
-            <div class="signatures">
-              <div class="signature-box">Customer Signature</div>
-              <div class="signature-box">For M M MOTORS<br>Authorized Signatory</div>
-            </div>
-            
-            <!-- Footer -->
-            <div class="bill-footer">
-              <p><strong>Thank you for your business!</strong></p>
-              <p>This is a computer generated invoice.</p>
-            </div>
+
+    const itemsHtml = hasItems
+      ? bill.items.map((item,idx)=>`
+        <tr>
+          <td style="text-align:center;">${idx+1}</td>
+          <td>${item.description||'Service Item'}</td>
+          <td style="text-align:center;">${item.hsn_sac||'-'}</td>
+          <td style="text-align:center;">${item.qty||1} ${item.unit||'Nos'}</td>
+          <td style="text-align:right;">\u20B9${(item.rate||0).toFixed(2)}</td>
+          <td style="text-align:right;">\u20B9${(item.cgst_amount||0).toFixed(2)}</td>
+          <td style="text-align:right;">\u20B9${(item.sgst_amount||0).toFixed(2)}</td>
+          <td style="text-align:right;font-weight:bold;">\u20B9${(item.amount||0).toFixed(2)}</td>
+        </tr>`).join('')
+      : `<tr>
+          <td style="text-align:center;">1</td>
+          <td>${bill.description||'Service Charge'}</td>
+          <td style="text-align:center;">9987</td>
+          <td style="text-align:center;">1 Nos</td>
+          <td style="text-align:right;">\u20B9${((bill.amount||0)/1.18).toFixed(2)}</td>
+          <td style="text-align:right;">\u20B9${((bill.amount||0)*0.09/1.18).toFixed(2)}</td>
+          <td style="text-align:right;">\u20B9${((bill.amount||0)*0.09/1.18).toFixed(2)}</td>
+          <td style="text-align:right;font-weight:bold;">\u20B9${(bill.amount||0).toFixed(2)}</td>
+        </tr>`;
+
+    const printWindow = window.open('','_blank','width=800,height=700');
+    printWindow.document.write(`<!DOCTYPE html><html><head>
+      <title>Service Bill - ${bill.bill_number||bill.job_card_number||'N/A'}</title>
+      <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:Arial,sans-serif;font-size:${fs};color:#333;background:white;}
+        .bill-container{max-width:${w};margin:0 auto;padding:${padding};background:white;}
+        .bill-header{text-align:center;border-bottom:2px solid #1e40af;padding-bottom:8px;margin-bottom:10px;}
+        .company-name{font-size:${pageSize==='A4'?'20px':'15px'};font-weight:bold;color:#1e40af;margin-bottom:2px;}
+        .company-tagline{font-size:${fsSmall};color:#6b7280;margin-bottom:3px;}
+        .company-address{font-size:${fsXSmall};color:#4b5563;}
+        .gstin{font-size:${fsXSmall};color:#1e40af;font-weight:bold;margin-top:3px;}
+        .bill-title{text-align:center;background:#1e40af;color:white;padding:5px;font-size:${pageSize==='A4'?'13px':'11px'};font-weight:bold;margin:7px 0;}
+        .bill-info{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;padding:7px;background:#f8fafc;border:1px solid #e2e8f0;}
+        .info-section h4{color:#1e40af;font-size:${fsSmall};font-weight:bold;margin-bottom:3px;border-bottom:1px solid #3b82f6;padding-bottom:2px;}
+        .info-row{display:flex;justify-content:space-between;margin-bottom:2px;font-size:${fsXSmall};}
+        .info-label{font-weight:600;color:#374151;}
+        .info-value{color:#111827;}
+        .items-table{width:100%;border-collapse:collapse;margin:7px 0;font-size:${fsXSmall};}
+        .items-table th{background:#1e40af;color:white;font-weight:bold;padding:4px 3px;text-align:left;border:1px solid #1e40af;}
+        .items-table td{padding:3px 4px;border:1px solid #d1d5db;}
+        .items-table tr:nth-child(even){background:#f8fafc;}
+        .summary-section{display:flex;justify-content:flex-end;margin-top:8px;}
+        .summary-table{width:${pageSize==='A4'?'240px':'190px'};border-collapse:collapse;}
+        .summary-table td{padding:3px 7px;border:1px solid #d1d5db;font-size:${fsXSmall};}
+        .summary-table .label{background:#f8fafc;font-weight:600;}
+        .summary-table .total-row{background:#1e40af;color:white;font-weight:bold;font-size:${fsSmall};}
+        .amount-words{background:#dbeafe;padding:5px 8px;margin:8px 0;border-left:3px solid #1e40af;font-size:${fsXSmall};}
+        .terms{margin-top:10px;padding-top:7px;border-top:1px solid #e5e7eb;font-size:${fsXSmall};color:#6b7280;}
+        .terms h4{font-size:${fsXSmall};color:#374151;margin-bottom:3px;}
+        .terms ol{margin-left:10px;}
+        .signatures{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px;padding-top:12px;}
+        .signature-box{text-align:center;padding-top:18px;border-top:1px solid #374151;font-size:${fsXSmall};}
+        .bill-footer{margin-top:10px;text-align:center;color:#6b7280;font-size:${fsXSmall};border-top:1px solid #e5e7eb;padding-top:7px;}
+        @media print{
+          body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+          @page{size:${pageSize};margin:${padding};}
+          .bill-container{padding:0;}
+        }
+      </style>
+    </head><body>
+      <div class="bill-container">
+        <div class="bill-header">
+          <div class="company-name">M M MOTORS</div>
+          <div class="company-tagline">Two Wheeler Service Excellence</div>
+          <div class="company-address">Bengaluru main road, behind Ruchi Bakery, Malur, Karnataka 563130<br>Phone: 7026263123 | Email: mmmotors3123@gmail.com</div>
+          <div class="gstin">GSTIN: 29CUJPM6814P1ZQ</div>
+        </div>
+        <div class="bill-title">TAX INVOICE / SERVICE BILL</div>
+        <div class="bill-info">
+          <div class="info-section">
+            <h4>Bill Information</h4>
+            <div class="info-row"><span class="info-label">Bill No:</span><span class="info-value">${bill.bill_number||bill.job_card_number||'N/A'}</span></div>
+            <div class="info-row"><span class="info-label">Date:</span><span class="info-value">${bill.created_at||bill.bill_date?new Date(bill.created_at||bill.bill_date).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'N/A'}</span></div>
+            <div class="info-row"><span class="info-label">Status:</span><span class="info-value">${bill.status==='paid'||bill.status==='completed'?'PAID':'UNPAID'}</span></div>
           </div>
-        </body>
-      </html>
-    `);
+          <div class="info-section">
+            <h4>Customer Details</h4>
+            <div class="info-row"><span class="info-label">Name:</span><span class="info-value">${bill.customer_name||'N/A'}</span></div>
+            <div class="info-row"><span class="info-label">Mobile:</span><span class="info-value">${bill.customer_mobile||bill.customer_phone||'N/A'}</span></div>
+            <div class="info-row"><span class="info-label">Vehicle:</span><span class="info-value">${bill.vehicle_reg_no||bill.vehicle_number||'N/A'}</span></div>
+          </div>
+        </div>
+        <table class="items-table">
+          <thead><tr>
+            <th style="width:5%;text-align:center;">Sl</th>
+            <th style="width:35%;">Description</th>
+            <th style="width:10%;text-align:center;">HSN/SAC</th>
+            <th style="width:10%;text-align:center;">Qty</th>
+            <th style="width:10%;text-align:right;">Rate</th>
+            <th style="width:10%;text-align:right;">CGST</th>
+            <th style="width:10%;text-align:right;">SGST</th>
+            <th style="width:10%;text-align:right;">Amount</th>
+          </tr></thead>
+          <tbody>${itemsHtml}</tbody>
+        </table>
+        <div class="summary-section">
+          <table class="summary-table">
+            <tr><td class="label">Subtotal:</td><td style="text-align:right;">\u20B9${subtotal.toFixed(2)}</td></tr>
+            <tr><td class="label">CGST:</td><td style="text-align:right;">\u20B9${totalCgst.toFixed(2)}</td></tr>
+            <tr><td class="label">SGST:</td><td style="text-align:right;">\u20B9${totalSgst.toFixed(2)}</td></tr>
+            <tr class="total-row"><td>Grand Total:</td><td style="text-align:right;">\u20B9${grandTotal.toFixed(2)}</td></tr>
+          </table>
+        </div>
+        <div class="amount-words"><strong>Amount in Words:</strong> ${numberToWordsLocal(grandTotal)} Rupees Only</div>
+        <div class="terms">
+          <h4>Terms & Conditions:</h4>
+          <ol>
+            <li>Warranty as per manufacturer terms only</li>
+            <li>Payment due on delivery</li>
+            <li>Goods once sold will not be taken back</li>
+          </ol>
+        </div>
+        <div class="signatures">
+          <div class="signature-box">Customer Signature</div>
+          <div class="signature-box">For M M MOTORS<br>Authorized Signatory</div>
+        </div>
+        <div class="bill-footer"><p><strong>Thank you for your business!</strong></p><p>This is a computer generated invoice.</p></div>
+      </div>
+    </body></html>`);
     printWindow.document.close();
     printWindow.print();
   };
@@ -6396,9 +6036,19 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
                           <Button 
                             size="sm" 
                             variant="outline"
-                            onClick={() => handlePrintBill(bill)}
+                            onClick={() => handlePrintBill(bill, 'A5')}
+                            title="Print A5"
                           >
                             <Printer className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handlePrintBill(bill, 'A4')}
+                            title="Print A4"
+                            className="text-xs"
+                          >
+                            A4
                           </Button>
                           <Button 
                             size="sm" 
@@ -6583,10 +6233,17 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
               <div className="mt-6 flex justify-end gap-2">
                 <Button 
                   variant="outline" 
-                  onClick={() => handlePrintBill(selectedBill)}
+                  onClick={() => handlePrintBill(selectedBill, 'A5')}
                 >
                   <Printer className="w-4 h-4 mr-2" />
-                  Print
+                  Print A5
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => handlePrintBill(selectedBill, 'A4')}
+                >
+                  <Printer className="w-4 h-4 mr-2" />
+                  Print A4
                 </Button>
                 <Button 
                   variant="outline" 
