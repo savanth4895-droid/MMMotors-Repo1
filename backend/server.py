@@ -313,6 +313,8 @@ class Sale(BaseModel):
     insurance_age: Optional[str] = None
     hypothecation: Optional[str] = None
     pending_amount: Optional[float] = None  # None = fully paid, >0 = balance due
+
+class SaleCreate(BaseModel):
     customer_id: str
     vehicle_id: Optional[str] = None  # Made optional for imported sales
     sale_date: Optional[datetime] = None  # Allow updating sale date
