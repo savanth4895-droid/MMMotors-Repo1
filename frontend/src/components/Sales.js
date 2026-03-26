@@ -25,7 +25,12 @@ import {
   BarChart3,
   PieChart,
   Download,
-  Trash2
+  Trash2,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  IndianRupee,
+  CreditCard
 } from 'lucide-react';
 // Utility function to convert number to words
 const numberToWords = (num) => {
@@ -182,6 +187,7 @@ const Sales = () => {
     { name: 'Overview', path: '/sales', icon: TrendingUp },
     { name: 'Create Invoice', path: '/sales/create-invoice', icon: Plus },
     { name: 'View Invoices', path: '/sales/invoices', icon: FileText },
+    { name: 'Pending Payments', path: '/sales/pending-payments', icon: AlertTriangle },
     { name: 'Add Customer', path: '/sales/customers', icon: Users },
     { name: 'View Customer Details', path: '/sales/customer-details', icon: Eye },
     { name: 'Sales Report', path: '/sales/reports', icon: TrendingUp },
@@ -217,6 +223,7 @@ const Sales = () => {
         <Route path="/" element={<SalesOverview />} />
         <Route path="/create-invoice" element={<CreateInvoice />} />
         <Route path="/invoices" element={<ViewInvoices />} />
+        <Route path="/pending-payments" element={<PendingPayments />} />
         <Route path="/customers" element={<CustomersManagement />} />
         <Route path="/customer-details" element={<ViewCustomerDetailsPage />} />
         <Route path="/reports" element={<SalesReports />} />
@@ -2070,6 +2077,7 @@ const ViewInvoices = () => {
       amount: invoice.amount,
       payment_method: invoice.payment_method,
       hypothecation: invoice.hypothecation || 'Cash',
+      pending_amount: invoice.pending_amount ?? '',
       
       // Customer Details
       customer_id: invoice.customer_id,
@@ -2132,8 +2140,7 @@ const ViewInvoices = () => {
         amount: parseFloat(editFormData.amount),
         payment_method: editFormData.payment_method,
         hypothecation: editFormData.hypothecation,
-        
-        // Vehicle details (for imported sales or direct entry)
+        pending_amount: editFormData.pending_amount !== '' ? parseFloat(editFormData.pending_amount) : null,
         vehicle_brand: editFormData.vehicle_brand,
         vehicle_model: editFormData.vehicle_model,
         vehicle_color: editFormData.vehicle_color,
@@ -2843,6 +2850,7 @@ const ViewInvoices = () => {
                   <th className="text-left p-3 font-semibold">Customer Name</th>
                   <th className="text-left p-3 font-semibold">Vehicle Model</th>
                   <th className="text-left p-3 font-semibold">Amount</th>
+                  <th className="text-left p-3 font-semibold">Pending</th>
                   <th className="text-left p-3 font-semibold">Status</th>
                   <th className="text-left p-3 font-semibold">Actions</th>
                 </tr>
@@ -2850,13 +2858,13 @@ const ViewInvoices = () => {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan="8" className="p-0">
+                    <td colSpan="9" className="p-0">
                       <TableSkeleton rows={5} columns={8} />
                     </td>
                   </tr>
                 ) : filteredInvoices.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="p-8 text-center text-gray-500">
+                    <td colSpan="9" className="p-8 text-center text-gray-500">
                       <EmptyState 
                         title={searchTerm ? 'No invoices found' : 'No invoices yet'}
                         description={searchTerm ? 'Try adjusting your search terms' : 'Create a new invoice to get started'}
@@ -2899,6 +2907,17 @@ const ViewInvoices = () => {
                           <span className="font-semibold text-gray-900">
                             ₹{invoice.amount?.toLocaleString() || '0'}
                           </span>
+                        </td>
+                        <td className="p-3">
+                          {invoice.pending_amount > 0 ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+                              ₹{invoice.pending_amount.toLocaleString()}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                              Cleared
+                            </span>
+                          )}
                         </td>
                         <td className="p-3">
                           {getStatusBadge(invoice.status || 'paid')}
@@ -3537,6 +3556,17 @@ const ViewInvoices = () => {
                         value={editFormData.amount || ''}
                         onChange={(e) => setEditFormData({...editFormData, amount: parseFloat(e.target.value)})}
                         placeholder="Enter amount"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="pending_amount">Pending Amount (₹)</Label>
+                      <Input
+                        id="pending_amount"
+                        type="number"
+                        step="0.01"
+                        value={editFormData.pending_amount ?? ''}
+                        onChange={(e) => setEditFormData({...editFormData, pending_amount: e.target.value})}
+                        placeholder="0 = fully paid, leave blank if N/A"
                       />
                     </div>
                     <div>
@@ -6803,6 +6833,333 @@ const InsuranceManagement = () => {
                 </div>
                 <Button onClick={() => setShowEditModal(false)}>
                   Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Pending Payments Page ─────────────────────────────────────────────────────
+
+const PendingPayments = () => {
+  const [invoices, setInvoices] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [collectingId, setCollectingId] = useState(null);
+  const [collectAmount, setCollectAmount] = useState('');
+  const [collectNote, setCollectNote] = useState('');
+  const [showCollectModal, setShowCollectModal] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const [salesRes, custRes] = await Promise.all([
+        axios.get(`${API}/sales`),
+        axios.get(`${API}/customers`, { params: { page: 1, limit: 10000 } })
+      ]);
+      setInvoices(salesRes.data);
+      setCustomers(custRes.data.data || custRes.data);
+    } catch {
+      toast.error('Failed to load data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getCustomerName = (customerId) => {
+    const c = customers.find(c => c.id === customerId);
+    return c?.name || '—';
+  };
+
+  const getCustomerMobile = (customerId) => {
+    const c = customers.find(c => c.id === customerId);
+    return c?.mobile || c?.phone || '—';
+  };
+
+  // Invoices that have a pending_amount > 0
+  const pendingInvoices = invoices.filter(inv => inv.pending_amount > 0);
+
+  const filtered = pendingInvoices.filter(inv => {
+    if (!searchTerm) return true;
+    const q = searchTerm.toLowerCase();
+    return (
+      inv.invoice_number?.toLowerCase().includes(q) ||
+      getCustomerName(inv.customer_id).toLowerCase().includes(q) ||
+      getCustomerMobile(inv.customer_id).includes(q) ||
+      inv.vehicle_model?.toLowerCase().includes(q) ||
+      inv.vehicle_brand?.toLowerCase().includes(q)
+    );
+  });
+
+  const totalPending = pendingInvoices.reduce((s, inv) => s + (inv.pending_amount || 0), 0);
+  const totalAmount = pendingInvoices.reduce((s, inv) => s + (inv.amount || 0), 0);
+
+  const openCollect = (invoice) => {
+    setSelectedInvoice(invoice);
+    setCollectAmount(invoice.pending_amount?.toString() || '');
+    setCollectNote('');
+    setShowCollectModal(true);
+  };
+
+  const handleCollect = async () => {
+    if (!selectedInvoice || !collectAmount) return;
+    const amt = parseFloat(collectAmount);
+    if (isNaN(amt) || amt <= 0) { toast.error('Enter a valid amount'); return; }
+    if (amt > selectedInvoice.pending_amount) { toast.error(`Cannot collect more than ₹${selectedInvoice.pending_amount.toLocaleString()} pending`); return; }
+
+    setSaving(true);
+    try {
+      await axios.patch(`${API}/sales/${selectedInvoice.id}/payment`, {
+        amount_paid: amt,
+        note: collectNote
+      });
+      toast.success(`₹${amt.toLocaleString()} collected successfully`);
+      setShowCollectModal(false);
+      fetchData();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Failed to record payment');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <div className="flex justify-center p-8"><div className="spinner" /></div>;
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">Pending Payments</h2>
+        <p className="text-gray-500 text-sm mt-0.5">Track and collect outstanding balances from sales invoices</p>
+      </div>
+
+      {/* Summary cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="border-l-4 border-l-orange-400">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+              <AlertTriangle className="w-5 h-5 text-orange-500" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Invoices with Pending</p>
+              <p className="text-2xl font-bold text-gray-900">{pendingInvoices.length}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-red-400">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+              <IndianRupee className="w-5 h-5 text-red-500" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Total Outstanding</p>
+              <p className="text-2xl font-bold text-red-600">₹{totalPending.toLocaleString()}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-blue-400">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              <CreditCard className="w-5 h-5 text-blue-500" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Total Invoice Value</p>
+              <p className="text-2xl font-bold text-gray-900">₹{totalAmount.toLocaleString()}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+        <Input
+          placeholder="Search by invoice no, customer, mobile, or vehicle..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
+      {/* Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-orange-500" />
+            Outstanding Invoices ({filtered.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {filtered.length === 0 ? (
+            <div className="text-center py-12">
+              <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
+              <p className="font-semibold text-gray-700">
+                {pendingInvoices.length === 0 ? 'No pending payments!' : 'No results found'}
+              </p>
+              <p className="text-sm text-gray-400 mt-1">
+                {pendingInvoices.length === 0
+                  ? 'All invoices are fully paid.'
+                  : 'Try a different search term.'}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b bg-gray-50">
+                    <th className="text-left p-3 font-semibold text-sm">Invoice No.</th>
+                    <th className="text-left p-3 font-semibold text-sm">Date</th>
+                    <th className="text-left p-3 font-semibold text-sm">Customer</th>
+                    <th className="text-left p-3 font-semibold text-sm">Mobile</th>
+                    <th className="text-left p-3 font-semibold text-sm">Vehicle</th>
+                    <th className="text-left p-3 font-semibold text-sm">Invoice Amt</th>
+                    <th className="text-left p-3 font-semibold text-sm">Pending</th>
+                    <th className="text-left p-3 font-semibold text-sm">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map(inv => {
+                    const pct = inv.amount > 0 ? ((inv.pending_amount / inv.amount) * 100).toFixed(0) : 0;
+                    return (
+                      <tr key={inv.id} className="border-b hover:bg-orange-50/40 transition-colors">
+                        <td className="p-3">
+                          <span className="font-medium text-blue-600 text-sm">{inv.invoice_number}</span>
+                        </td>
+                        <td className="p-3 text-gray-500 text-sm">
+                          {new Date(inv.sale_date).toLocaleDateString('en-IN')}
+                        </td>
+                        <td className="p-3">
+                          <p className="font-medium text-gray-900 text-sm">{getCustomerName(inv.customer_id)}</p>
+                        </td>
+                        <td className="p-3 text-gray-500 text-sm">
+                          {getCustomerMobile(inv.customer_id)}
+                        </td>
+                        <td className="p-3 text-gray-600 text-sm">
+                          {[inv.vehicle_brand, inv.vehicle_model].filter(Boolean).join(' ') || '—'}
+                        </td>
+                        <td className="p-3 font-semibold text-gray-900 text-sm">
+                          ₹{inv.amount?.toLocaleString()}
+                        </td>
+                        <td className="p-3">
+                          <div>
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700">
+                              ₹{inv.pending_amount?.toLocaleString()}
+                            </span>
+                            <div className="w-24 bg-gray-200 rounded-full h-1.5 mt-1.5">
+                              <div
+                                className="bg-orange-400 h-1.5 rounded-full"
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                            <p className="text-xs text-gray-400 mt-0.5">{pct}% unpaid</p>
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <Button
+                            size="sm"
+                            onClick={() => openCollect(inv)}
+                            className="bg-green-600 hover:bg-green-700 text-white text-xs"
+                          >
+                            <CheckCircle className="w-3.5 h-3.5 mr-1" />
+                            Collect
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Collect Payment Modal */}
+      {showCollectModal && selectedInvoice && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-lg font-bold text-gray-900">Collect Payment</h3>
+                <button onClick={() => setShowCollectModal(false)} className="p-1.5 hover:bg-gray-100 rounded-lg">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+
+              {/* Invoice summary */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-5 space-y-1.5 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Invoice</span>
+                  <span className="font-medium">{selectedInvoice.invoice_number}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Customer</span>
+                  <span className="font-medium">{getCustomerName(selectedInvoice.customer_id)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Invoice Amount</span>
+                  <span className="font-medium">₹{selectedInvoice.amount?.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between border-t pt-1.5 mt-1.5">
+                  <span className="text-orange-600 font-semibold">Outstanding</span>
+                  <span className="font-bold text-orange-600">₹{selectedInvoice.pending_amount?.toLocaleString()}</span>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="collect_amount">Amount Collecting (₹) *</Label>
+                  <Input
+                    id="collect_amount"
+                    type="number"
+                    step="0.01"
+                    value={collectAmount}
+                    onChange={(e) => setCollectAmount(e.target.value)}
+                    placeholder="Enter amount"
+                    className="mt-1"
+                  />
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      type="button"
+                      onClick={() => setCollectAmount(selectedInvoice.pending_amount?.toString())}
+                      className="text-xs text-blue-600 hover:underline"
+                    >
+                      Full amount (₹{selectedInvoice.pending_amount?.toLocaleString()})
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="collect_note">Note (optional)</Label>
+                  <Input
+                    id="collect_note"
+                    value={collectNote}
+                    onChange={(e) => setCollectNote(e.target.value)}
+                    placeholder="e.g. Cash received, UPI ref #..."
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <Button
+                  onClick={handleCollect}
+                  disabled={saving}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                >
+                  {saving ? 'Saving...' : `Collect ₹${parseFloat(collectAmount || 0).toLocaleString()}`}
+                </Button>
+                <Button variant="outline" onClick={() => setShowCollectModal(false)} className="flex-1">
+                  Cancel
                 </Button>
               </div>
             </div>
