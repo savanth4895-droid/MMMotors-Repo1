@@ -56,7 +56,8 @@ const Services = () => {
     { name: 'View Registrations', path: '/services/registrations', icon: Eye },
     { name: 'Job Cards', path: '/services/job-cards', icon: ClipboardList },
     { name: 'Service Bills', path: '/services/billing', icon: FileText },
-    { name: 'Service Due', path: '/services/due', icon: Calendar }
+    { name: 'Service Due', path: '/services/due', icon: Calendar },
+    { name: 'Service Report', path: '/services/report', icon: IndianRupee },
   ];
 
   return (
@@ -91,127 +92,413 @@ const Services = () => {
         <Route path="/job-cards" element={<JobCards />} />
         <Route path="/billing" element={<ServicesBilling />} />
         <Route path="/due" element={<ServiceDue />} />
+        <Route path="/report" element={<ServiceReport />} />
       </Routes>
     </div>
   );
 };
 
 const ServicesOverview = () => {
-  const [stats, setStats] = useState({
-    pendingServices: 0,
-    completedToday: 0,
-    inProgress: 0
-  });
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => { fetchStats(); }, []);
 
   const fetchStats = async () => {
     try {
-      const [pending, inProgress, completed] = await Promise.all([
-        axios.get(`${API}/services?status=pending`),
-        axios.get(`${API}/services?status=in_progress`),
-        axios.get(`${API}/services?status=completed`)
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const [allServicesRes, billsRes, reportRes] = await Promise.all([
+        axios.get(`${API}/services`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/service-bills`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
+        axios.get(`${API}/service-report`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: { summary: {} } })),
       ]);
-      
-      setStats({
-        pendingServices: pending.data.length,
-        inProgress: inProgress.data.length,
-        completedToday: completed.data.filter(s => 
-          new Date(s.completion_date).toDateString() === new Date().toDateString()
-        ).length
+
+      const services = allServicesRes.data;
+      const bills = billsRes.data || [];
+      const reportSummary = reportRes.data?.summary || {};
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+      const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+      const prevYear  = currentMonth === 0 ? currentYear - 1 : currentYear;
+
+      const isToday     = d => new Date(d).toDateString() === now.toDateString();
+      const isCurMonth  = d => { const x = new Date(d); return x.getMonth() === currentMonth && x.getFullYear() === currentYear; };
+      const isPrevMonth = d => { const x = new Date(d); return x.getMonth() === prevMonth && x.getFullYear() === prevYear; };
+
+      // Status counts
+      const pending    = services.filter(s => s.status === 'pending');
+      const inProgress = services.filter(s => s.status === 'in_progress');
+      const completed  = services.filter(s => s.status === 'completed');
+      const cancelled  = services.filter(s => s.status === 'cancelled');
+
+      // Today
+      const todayJobs = services.filter(s => isToday(s.service_date || s.created_at));
+      const completedToday = completed.filter(s => isToday(s.completion_date || s.created_at));
+
+      // This month vs prev month
+      const curMonthJobs  = services.filter(s => isCurMonth(s.service_date || s.created_at));
+      const prevMonthJobs = services.filter(s => isPrevMonth(s.service_date || s.created_at));
+      const jobChange = prevMonthJobs.length > 0
+        ? (((curMonthJobs.length - prevMonthJobs.length) / prevMonthJobs.length) * 100).toFixed(1)
+        : null;
+
+      // Revenue from bills
+      const curMonthRev  = bills.filter(b => isCurMonth(b.created_at)).reduce((s, b) => s + (b.total_amount || b.amount || 0), 0);
+      const prevMonthRev = bills.filter(b => isPrevMonth(b.created_at)).reduce((s, b) => s + (b.total_amount || b.amount || 0), 0);
+      const revChange = prevMonthRev > 0
+        ? (((curMonthRev - prevMonthRev) / prevMonthRev) * 100).toFixed(1)
+        : null;
+      const totalRev = bills.reduce((s, b) => s + (b.total_amount || b.amount || 0), 0);
+
+      // Service type breakdown (all time)
+      const typeMap = {};
+      services.forEach(s => {
+        const t = s.service_type || 'other';
+        typeMap[t] = (typeMap[t] || 0) + 1;
       });
-    } catch (error) {
+      const typeBreakdown = Object.entries(typeMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6)
+        .map(([t, c]) => ({ label: t.replace(/_/g, ' '), count: c, pct: services.length > 0 ? Math.round((c / services.length) * 100) : 0 }));
+
+      // Monthly trend — last 6 months (job count)
+      const trend = [];
+      for (let i = 5; i >= 0; i--) {
+        const m = (currentMonth - i + 12) % 12;
+        const y = currentMonth - i < 0 ? currentYear - 1 : currentYear;
+        const label = new Date(y, m, 1).toLocaleString('en-IN', { month: 'short' });
+        const count = services.filter(s => {
+          const d = new Date(s.service_date || s.created_at);
+          return d.getMonth() === m && d.getFullYear() === y;
+        }).length;
+        const rev = bills.filter(b => {
+          const d = new Date(b.created_at);
+          return d.getMonth() === m && d.getFullYear() === y;
+        }).reduce((s, b) => s + (b.total_amount || b.amount || 0), 0);
+        trend.push({ label, count, rev });
+      }
+      const maxCount = Math.max(...trend.map(t => t.count), 1);
+
+      // Recent 5 job cards
+      const recent = [...services]
+        .sort((a, b) => new Date(b.service_date || b.created_at) - new Date(a.service_date || a.created_at))
+        .slice(0, 5);
+
+      // Avg turnaround (days between service_date and completion_date for completed jobs)
+      const withTurnaround = completed.filter(s => s.service_date && s.completion_date);
+      const avgTurnaround = withTurnaround.length > 0
+        ? (withTurnaround.reduce((s, x) => s + (new Date(x.completion_date) - new Date(x.service_date)) / 86400000, 0) / withTurnaround.length).toFixed(1)
+        : null;
+
+      setStats({
+        total: services.length,
+        pending: pending.length,
+        inProgress: inProgress.length,
+        completed: completed.length,
+        cancelled: cancelled.length,
+        todayJobs: todayJobs.length,
+        completedToday: completedToday.length,
+        curMonthJobs: curMonthJobs.length,
+        prevMonthJobs: prevMonthJobs.length,
+        jobChange,
+        curMonthRev,
+        prevMonthRev,
+        revChange,
+        totalRev,
+        typeBreakdown,
+        trend,
+        maxCount,
+        recent,
+        avgTurnaround,
+        paidBills: bills.filter(b => b.status === 'paid' || b.status === 'completed').length,
+        unpaidBills: bills.filter(b => b.status !== 'paid' && b.status !== 'completed').length,
+        partsRevenue: reportSummary.total_parts_revenue || 0,
+        labourRevenue: reportSummary.total_labour_revenue || 0,
+      });
+    } catch (err) {
       toast.error('Failed to fetch service statistics');
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  const fmt = n => `₹${Number(n || 0).toLocaleString('en-IN')}`;
+
+  if (loading) return (
+    <div className="flex justify-center items-center h-64">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    </div>
+  );
+  if (!stats) return null;
+
+  const jobUp  = stats.jobChange !== null && parseFloat(stats.jobChange) >= 0;
+  const revUp  = stats.revChange !== null && parseFloat(stats.revChange) >= 0;
+
+  const typeColors = ['bg-blue-500','bg-purple-500','bg-green-500','bg-orange-400','bg-pink-500','bg-teal-500'];
 
   return (
-    <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="space-y-4">
+
+      {/* ── Row 1: 5 live status KPIs ── */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Pending Services</p>
-                <p className="text-2xl font-bold text-orange-600">{stats.pendingServices}</p>
-              </div>
-              <Clock className="w-8 h-8 text-orange-600" />
-            </div>
+          <CardContent className="p-4">
+            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">Pending</p>
+            <p className="text-3xl font-bold text-orange-500">{stats.pending}</p>
+            <p className="text-xs text-gray-400 mt-1">awaiting start</p>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">In Progress</p>
-                <p className="text-2xl font-bold text-blue-600">{stats.inProgress}</p>
-              </div>
-              <AlertCircle className="w-8 h-8 text-blue-600" />
-            </div>
+        <Card className="border-blue-200">
+          <CardContent className="p-4">
+            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">In Progress</p>
+            <p className="text-3xl font-bold text-blue-600">{stats.inProgress}</p>
+            <p className="text-xs text-gray-400 mt-1">being worked on</p>
           </CardContent>
         </Card>
-
+        <Card className="border-green-200">
+          <CardContent className="p-4">
+            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">Completed Today</p>
+            <p className="text-3xl font-bold text-green-600">{stats.completedToday}</p>
+            <p className="text-xs text-gray-400 mt-1">{stats.todayJobs} opened today</p>
+          </CardContent>
+        </Card>
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Completed Today</p>
-                <p className="text-2xl font-bold text-green-600">{stats.completedToday}</p>
-              </div>
-              <CheckCircle className="w-8 h-8 text-green-600" />
-            </div>
+          <CardContent className="p-4">
+            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">This Month</p>
+            <p className="text-3xl font-bold text-purple-600">{stats.curMonthJobs}</p>
+            {stats.jobChange !== null && (
+              <p className={`text-xs mt-1 font-medium ${jobUp ? 'text-green-600' : 'text-red-500'}`}>
+                {jobUp ? '▲' : '▼'} {Math.abs(stats.jobChange)}% vs last month
+              </p>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">All Time</p>
+            <p className="text-3xl font-bold text-gray-700">{stats.total}</p>
+            <p className="text-xs text-gray-400 mt-1">{stats.completed} completed</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* ── Row 2: Revenue cards ── */}
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
         <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+          <CardContent className="p-4">
+            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">This Month Revenue</p>
+            <p className="text-2xl font-bold text-green-600">{fmt(stats.curMonthRev)}</p>
+            {stats.revChange !== null && (
+              <p className={`text-xs mt-1 font-medium ${revUp ? 'text-green-600' : 'text-red-500'}`}>
+                {revUp ? '▲' : '▼'} {Math.abs(stats.revChange)}% vs last month
+              </p>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">Total Revenue</p>
+            <p className="text-2xl font-bold text-blue-700">{fmt(stats.totalRev)}</p>
+            <p className="text-xs text-gray-400 mt-1">from all bills</p>
+          </CardContent>
+        </Card>
+        <Card className="border-green-200">
+          <CardContent className="p-4">
+            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">Parts Revenue</p>
+            <p className="text-2xl font-bold text-green-700">{fmt(stats.partsRevenue)}</p>
+            <p className="text-xs text-gray-400 mt-1">
+              {stats.totalRev > 0 ? ((stats.partsRevenue / stats.totalRev) * 100).toFixed(1) : 0}% of total
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="border-purple-200">
+          <CardContent className="p-4">
+            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">Labour Revenue</p>
+            <p className="text-2xl font-bold text-purple-600">{fmt(stats.labourRevenue)}</p>
+            <p className="text-xs text-gray-400 mt-1">
+              {stats.totalRev > 0 ? ((stats.labourRevenue / stats.totalRev) * 100).toFixed(1) : 0}% of total
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">Paid Bills</p>
+            <p className="text-2xl font-bold text-green-600">{stats.paidBills}</p>
+            <p className="text-xs text-red-400 mt-1">{stats.unpaidBills} unpaid</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">Avg Turnaround</p>
+            <p className="text-2xl font-bold text-purple-600">
+              {stats.avgTurnaround !== null ? `${stats.avgTurnaround}d` : '—'}
+            </p>
+            <p className="text-xs text-gray-400 mt-1">pending → complete</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── Row 3: Monthly trend + Service type breakdown + Quick Actions ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+        {/* Monthly job trend */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <FileText className="w-4 h-4 text-blue-500" />
+              Monthly Job Volume
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent>
+            <div className="flex items-end gap-2 h-28">
+              {stats.trend.map((t, i) => {
+                const pct = stats.maxCount > 0 ? (t.count / stats.maxCount) * 100 : 0;
+                const isCur = i === stats.trend.length - 1;
+                return (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                    <span className="text-xs text-gray-400">{t.count > 0 ? t.count : ''}</span>
+                    <div className="w-full flex items-end" style={{ height: '80px' }}>
+                      <div
+                        className={`w-full rounded-t-sm ${isCur ? 'bg-blue-500' : 'bg-blue-200'}`}
+                        style={{ height: `${Math.max(pct, t.count > 0 ? 5 : 0)}%` }}
+                        title={`${t.label}: ${t.count} jobs, ${fmt(t.rev)}`}
+                      />
+                    </div>
+                    <span className="text-xs text-gray-400">{t.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Service type breakdown */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Wrench className="w-4 h-4 text-purple-500" />
+              Service Type Breakdown
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {stats.typeBreakdown.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-4">No services yet</p>
+            ) : (
+              <div className="space-y-2">
+                {stats.typeBreakdown.map((t, i) => (
+                  <div key={t.label}>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="font-medium text-gray-700 capitalize">{t.label}</span>
+                      <span className="text-gray-400">{t.count} ({t.pct}%)</span>
+                    </div>
+                    <div className="w-full bg-gray-100 rounded-full h-2">
+                      <div className={`${typeColors[i % typeColors.length]} h-2 rounded-full`} style={{ width: `${t.pct}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
             <Link to="/services/new">
-              <Button className="w-full justify-start">
-                <Plus className="w-4 h-4 mr-2" />
-                New Service Registration
+              <Button className="w-full justify-start text-sm">
+                <Plus className="w-4 h-4 mr-2" /> New Registration
               </Button>
             </Link>
             <Link to="/services/job-cards">
-              <Button variant="outline" className="w-full justify-start">
-                <ClipboardList className="w-4 h-4 mr-2" />
-                View Job Cards
+              <Button variant="outline" className="w-full justify-start text-sm">
+                <ClipboardList className="w-4 h-4 mr-2" /> View Job Cards
+              </Button>
+            </Link>
+            <Link to="/services/billing">
+              <Button variant="outline" className="w-full justify-start text-sm">
+                <FileText className="w-4 h-4 mr-2" /> Create Service Bill
+              </Button>
+            </Link>
+            <Link to="/services/report">
+              <Button variant="outline" className="w-full justify-start text-sm">
+                <IndianRupee className="w-4 h-4 mr-2" /> Service Report
+              </Button>
+            </Link>
+            <Link to="/services/due">
+              <Button variant="outline" className="w-full justify-start text-sm">
+                <Calendar className="w-4 h-4 mr-2" /> Service Due
               </Button>
             </Link>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Service Types</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span>Regular Service</span>
-                <Badge variant="outline">45%</Badge>
-              </div>
-              <div className="flex justify-between">
-                <span>Repair Work</span>
-                <Badge variant="outline">30%</Badge>
-              </div>
-              <div className="flex justify-between">
-                <span>Parts Replacement</span>
-                <Badge variant="outline">25%</Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
+
+      {/* ── Row 4: Recent job cards ── */}
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <ClipboardList className="w-4 h-4 text-blue-500" />
+              Recent Job Cards
+            </CardTitle>
+            <Link to="/services/job-cards">
+              <Button variant="outline" size="sm" className="text-xs">View all</Button>
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          {stats.recent.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-6">No job cards yet</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-gray-50">
+                    <th className="text-left p-3 font-medium text-gray-500 text-xs">Job Card</th>
+                    <th className="text-left p-3 font-medium text-gray-500 text-xs">Vehicle</th>
+                    <th className="text-left p-3 font-medium text-gray-500 text-xs">Service Type</th>
+                    <th className="text-left p-3 font-medium text-gray-500 text-xs">Date</th>
+                    <th className="text-left p-3 font-medium text-gray-500 text-xs">Amount</th>
+                    <th className="text-left p-3 font-medium text-gray-500 text-xs">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.recent.map((s, i) => {
+                    const statusCfg = {
+                      pending:     'bg-yellow-100 text-yellow-800',
+                      in_progress: 'bg-blue-100 text-blue-800',
+                      completed:   'bg-green-100 text-green-800',
+                      cancelled:   'bg-red-100 text-red-800',
+                    };
+                    return (
+                      <tr key={i} className="border-b hover:bg-gray-50">
+                        <td className="p-3 font-mono text-blue-600 text-xs">{s.job_card_number || '—'}</td>
+                        <td className="p-3 text-gray-700">{s.vehicle_number || '—'}</td>
+                        <td className="p-3 text-gray-600 capitalize text-xs">{(s.service_type || '—').replace(/_/g, ' ')}</td>
+                        <td className="p-3 text-gray-500 text-xs">
+                          {s.service_date ? new Date(s.service_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '—'}
+                        </td>
+                        <td className="p-3 font-medium text-green-600 text-xs">{s.amount ? fmt(s.amount) : '—'}</td>
+                        <td className="p-3">
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusCfg[s.status] || 'bg-gray-100 text-gray-600'}`}>
+                            {(s.status || 'pending').replace('_', ' ')}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
     </div>
   );
 };
@@ -7334,4 +7621,341 @@ const ServiceDue = () => {
   );
 };
 
+const ServiceReport = () => {
+  const [report, setReport] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 25;
+
+  useEffect(() => {
+    fetchReport();
+  }, []);
+
+  const fetchReport = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const params = {};
+      if (startDate) params.start_date = new Date(startDate).toISOString();
+      if (endDate) {
+        const ed = new Date(endDate);
+        ed.setHours(23, 59, 59, 999);
+        params.end_date = ed.toISOString();
+      }
+      const res = await axios.get(`${API}/service-report`, {
+        params,
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setReport(res.data);
+      setCurrentPage(1);
+    } catch {
+      toast.error('Failed to fetch service report');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filtered = report?.rows?.filter(r =>
+    !searchTerm ||
+    r.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    r.bill_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    r.vehicle_number?.toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
+
+  const paged = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const handlePrint = () => {
+    const s = report?.summary;
+    const printWin = window.open('', '_blank', 'width=900,height=700');
+    printWin.document.write(`<!DOCTYPE html><html><head><title>Service Revenue Report</title>
+    <style>
+      *{margin:0;padding:0;box-sizing:border-box}
+      body{font-family:Arial,sans-serif;font-size:12px;color:#333;padding:20px}
+      h1{font-size:22px;color:#1e40af;text-align:center;margin-bottom:4px}
+      .sub{text-align:center;color:#6b7280;margin-bottom:20px;font-size:12px}
+      .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+      .card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:12px;text-align:center}
+      .card .val{font-size:18px;font-weight:bold;color:#1e40af}
+      .card .lbl{font-size:10px;color:#6b7280;margin-top:2px}
+      table{width:100%;border-collapse:collapse;font-size:11px}
+      th{background:#1e40af;color:#fff;padding:8px 6px;text-align:left}
+      td{padding:6px;border-bottom:1px solid #e5e7eb}
+      tr:nth-child(even){background:#f8fafc}
+      .parts{color:#059669;font-weight:600}
+      .labour{color:#7c3aed;font-weight:600}
+      .total{color:#1e40af;font-weight:bold}
+      @media print{body{padding:8px}}
+    </style></head><body>
+    <h1>M M MOTORS — Service Revenue Report</h1>
+    <p class="sub">Generated: ${new Date().toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'})}</p>
+    <div class="summary">
+      <div class="card"><div class="val">${s?.total_bills || 0}</div><div class="lbl">Total Bills</div></div>
+      <div class="card"><div class="val" style="color:#059669">₹${(s?.total_parts_revenue || 0).toLocaleString()}</div><div class="lbl">Parts Revenue</div></div>
+      <div class="card"><div class="val" style="color:#7c3aed">₹${(s?.total_labour_revenue || 0).toLocaleString()}</div><div class="lbl">Labour Revenue</div></div>
+      <div class="card"><div class="val">₹${(s?.grand_total || 0).toLocaleString()}</div><div class="lbl">Grand Total</div></div>
+    </div>
+    <table><thead><tr>
+      <th>Bill #</th><th>Job Card</th><th>Customer</th><th>Vehicle</th><th>Date</th>
+      <th>Parts (₹)</th><th>Labour (₹)</th><th>Tax (₹)</th><th>Total (₹)</th><th>Status</th>
+    </tr></thead><tbody>
+    ${filtered.map(r => `<tr>
+      <td>${r.bill_number || '—'}</td>
+      <td>${r.job_card_number || '—'}</td>
+      <td>${r.customer_name || '—'}</td>
+      <td>${r.vehicle_number || '—'}</td>
+      <td>${r.bill_date ? new Date(r.bill_date).toLocaleDateString('en-IN') : '—'}</td>
+      <td class="parts">${r.parts_revenue.toFixed(2)}</td>
+      <td class="labour">${r.labour_revenue.toFixed(2)}</td>
+      <td>${r.total_tax.toFixed(2)}</td>
+      <td class="total">${r.grand_total.toFixed(2)}</td>
+      <td>${r.status || '—'}</td>
+    </tr>`).join('')}
+    </tbody></table>
+    </body></html>`);
+    printWin.document.close();
+    printWin.print();
+  };
+
+  const exportCSV = () => {
+    const rows = [
+      ['Bill #','Job Card','Customer','Mobile','Vehicle','Date','Parts Revenue','Labour Revenue','Tax','Grand Total','Status'].join(','),
+      ...filtered.map(r => [
+        r.bill_number||'',r.job_card_number||'',r.customer_name||'',r.customer_mobile||'',
+        r.vehicle_number||'',r.bill_date?new Date(r.bill_date).toLocaleDateString('en-IN'):'',
+        r.parts_revenue,r.labour_revenue,r.total_tax,r.grand_total,r.status||''
+      ].map(v=>`"${v}"`).join(','))
+    ].join('\n');
+    const blob = new Blob([rows],{type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href=url; a.download=`service_report_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+    toast.success('Report exported!');
+  };
+
+  const s = report?.summary;
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Service Revenue Report</h2>
+          <p className="text-gray-600">Parts revenue vs Labour revenue breakdown per bill</p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={handlePrint} variant="outline" className="flex items-center gap-2">
+            <Printer className="w-4 h-4" /> Print Report
+          </Button>
+          <Button onClick={exportCSV} variant="outline" className="flex items-center gap-2">
+            <Download className="w-4 h-4" /> Export CSV
+          </Button>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-wrap gap-4 items-end">
+            <div>
+              <Label htmlFor="start_date">From Date</Label>
+              <Input id="start_date" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-40" />
+            </div>
+            <div>
+              <Label htmlFor="end_date">To Date</Label>
+              <Input id="end_date" type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-40" />
+            </div>
+            <Button onClick={fetchReport} disabled={loading} className="flex items-center gap-2">
+              {loading ? <><LoadingSpinner size="sm" /> Loading...</> : <><Search className="w-4 h-4" /> Apply Filter</>}
+            </Button>
+            {(startDate || endDate) && (
+              <Button variant="outline" onClick={() => { setStartDate(''); setEndDate(''); setTimeout(fetchReport, 0); }}>
+                Clear
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Summary Cards */}
+      {s && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-5">
+              <p className="text-sm text-gray-600 mb-1">Total Bills</p>
+              <p className="text-3xl font-bold text-blue-600">{s.total_bills}</p>
+            </CardContent>
+          </Card>
+          <Card className="border-green-200">
+            <CardContent className="p-5">
+              <p className="text-sm text-gray-600 mb-1">Parts Revenue</p>
+              <p className="text-3xl font-bold text-green-600">₹{s.total_parts_revenue.toLocaleString()}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {s.grand_total > 0 ? ((s.total_parts_revenue / s.grand_total) * 100).toFixed(1) : 0}% of total
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="border-purple-200">
+            <CardContent className="p-5">
+              <p className="text-sm text-gray-600 mb-1">Labour Revenue</p>
+              <p className="text-3xl font-bold text-purple-600">₹{s.total_labour_revenue.toLocaleString()}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {s.grand_total > 0 ? ((s.total_labour_revenue / s.grand_total) * 100).toFixed(1) : 0}% of total
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="border-blue-200 bg-blue-50">
+            <CardContent className="p-5">
+              <p className="text-sm text-gray-600 mb-1">Grand Total</p>
+              <p className="text-3xl font-bold text-blue-800">₹{s.grand_total.toLocaleString()}</p>
+              <p className="text-xs text-gray-500 mt-1">Tax: ₹{s.total_tax.toLocaleString()}</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Revenue Split Bar */}
+      {s && s.grand_total > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-sm font-medium text-gray-700 mb-2">Revenue Split</p>
+            <div className="flex rounded-full overflow-hidden h-6">
+              <div
+                className="bg-green-500 flex items-center justify-center text-white text-xs font-bold transition-all"
+                style={{ width: `${(s.total_parts_revenue / s.grand_total) * 100}%` }}
+              >
+                {s.grand_total > 0 && ((s.total_parts_revenue / s.grand_total) * 100).toFixed(0) > 10
+                  ? `Parts ${((s.total_parts_revenue / s.grand_total) * 100).toFixed(0)}%` : ''}
+              </div>
+              <div
+                className="bg-purple-500 flex items-center justify-center text-white text-xs font-bold transition-all"
+                style={{ width: `${(s.total_labour_revenue / s.grand_total) * 100}%` }}
+              >
+                {s.grand_total > 0 && ((s.total_labour_revenue / s.grand_total) * 100).toFixed(0) > 10
+                  ? `Labour ${((s.total_labour_revenue / s.grand_total) * 100).toFixed(0)}%` : ''}
+              </div>
+            </div>
+            <div className="flex gap-4 mt-2 text-xs text-gray-600">
+              <span className="flex items-center gap-1"><span className="w-3 h-3 bg-green-500 rounded-full inline-block"></span> Parts</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 bg-purple-500 rounded-full inline-block"></span> Labour</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+        <Input
+          placeholder="Search by customer, bill number, vehicle..."
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
+      {/* Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Bill-wise Revenue Breakdown ({filtered.length} bills)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="border-b bg-gray-50">
+                  <th className="text-left p-3 font-semibold">Bill #</th>
+                  <th className="text-left p-3 font-semibold">Job Card</th>
+                  <th className="text-left p-3 font-semibold">Customer</th>
+                  <th className="text-left p-3 font-semibold">Vehicle</th>
+                  <th className="text-left p-3 font-semibold">Date</th>
+                  <th className="text-right p-3 font-semibold text-green-700">Parts (₹)</th>
+                  <th className="text-right p-3 font-semibold text-purple-700">Labour (₹)</th>
+                  <th className="text-right p-3 font-semibold text-gray-600">Tax (₹)</th>
+                  <th className="text-right p-3 font-semibold text-blue-700">Total (₹)</th>
+                  <th className="text-left p-3 font-semibold">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan="10" className="p-0"><TableSkeleton rows={5} columns={10} /></td></tr>
+                ) : paged.length === 0 ? (
+                  <tr>
+                    <td colSpan="10" className="p-8 text-center text-gray-500">
+                      <EmptyState title="No bills found" description="No service bills match the current filter" />
+                    </td>
+                  </tr>
+                ) : (
+                  paged.map((row, i) => (
+                    <tr key={i} className="border-b hover:bg-gray-50 transition-colors">
+                      <td className="p-3 font-mono text-blue-600">{row.bill_number || '—'}</td>
+                      <td className="p-3 text-gray-600 font-mono text-xs">{row.job_card_number || '—'}</td>
+                      <td className="p-3 font-medium text-gray-900">{row.customer_name || '—'}</td>
+                      <td className="p-3 text-gray-600">{row.vehicle_number || '—'}</td>
+                      <td className="p-3 text-gray-500">
+                        {row.bill_date ? new Date(row.bill_date).toLocaleDateString('en-IN') : '—'}
+                      </td>
+                      <td className="p-3 text-right font-semibold text-green-600">
+                        {row.parts_revenue > 0 ? `₹${row.parts_revenue.toLocaleString()}` : <span className="text-gray-400">₹0</span>}
+                      </td>
+                      <td className="p-3 text-right font-semibold text-purple-600">
+                        {row.labour_revenue > 0 ? `₹${row.labour_revenue.toLocaleString()}` : <span className="text-gray-400">₹0</span>}
+                      </td>
+                      <td className="p-3 text-right text-gray-600">₹{row.total_tax.toFixed(2)}</td>
+                      <td className="p-3 text-right font-bold text-blue-700">₹{row.grand_total.toLocaleString()}</td>
+                      <td className="p-3">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                          row.status === 'paid' || row.status === 'completed'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {row.status === 'paid' || row.status === 'completed' ? 'PAID' : 'UNPAID'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+              {/* Totals footer */}
+              {filtered.length > 0 && s && (
+                <tfoot>
+                  <tr className="bg-blue-50 border-t-2 border-blue-200 font-bold">
+                    <td colSpan="5" className="p-3 text-right text-gray-700">Totals ({filtered.length} bills):</td>
+                    <td className="p-3 text-right text-green-700">
+                      ₹{filtered.reduce((a, r) => a + r.parts_revenue, 0).toLocaleString(undefined, {maximumFractionDigits: 2})}
+                    </td>
+                    <td className="p-3 text-right text-purple-700">
+                      ₹{filtered.reduce((a, r) => a + r.labour_revenue, 0).toLocaleString(undefined, {maximumFractionDigits: 2})}
+                    </td>
+                    <td className="p-3 text-right text-gray-600">
+                      ₹{filtered.reduce((a, r) => a + r.total_tax, 0).toFixed(2)}
+                    </td>
+                    <td className="p-3 text-right text-blue-800">
+                      ₹{filtered.reduce((a, r) => a + r.grand_total, 0).toLocaleString(undefined, {maximumFractionDigits: 2})}
+                    </td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          </div>
+        </CardContent>
+        {filtered.length > itemsPerPage && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(filtered.length / itemsPerPage)}
+            total={filtered.length}
+            limit={itemsPerPage}
+            onPageChange={setCurrentPage}
+          />
+        )}
+      </Card>
+    </div>
+  );
+};
+
 export default Services;
+
