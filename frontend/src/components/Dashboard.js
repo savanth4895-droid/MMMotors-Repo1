@@ -57,6 +57,7 @@ const Dashboard = () => {
   const [recentActivities, setRecentActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [showTracker, setShowTracker] = useState(true);
 
   useEffect(() => {
     // Initial fetch
@@ -245,15 +246,27 @@ const Dashboard = () => {
             </p>
           </div>
           <div className="flex flex-col items-end gap-2">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={fetchStats}
-              className="bg-white/20 border-white/30 text-white hover:bg-white/30"
-            >
-              <Database className="w-4 h-4 mr-2" />
-              Refresh Stats
-            </Button>
+            <div className="flex gap-2">
+              {!showTracker && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowTracker(true)}
+                  className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+                >
+                  📋 Process Tracker
+                </Button>
+              )}
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={fetchStats}
+                className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+              >
+                <Database className="w-4 h-4 mr-2" />
+                Refresh Stats
+              </Button>
+            </div>
             <p className="text-xs text-blue-100">
               Last updated: {lastUpdate.toLocaleTimeString()}
             </p>
@@ -263,6 +276,9 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Sales Process Tracker — top of dashboard, closeable */}
+      {showTracker && <SalesMilestoneTracker onClose={() => setShowTracker(false)} />}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -472,9 +488,6 @@ const Dashboard = () => {
         </Card>
       )}
 
-      {/* Sales Process Milestone Tracker */}
-      <SalesMilestoneTracker />
-
       {/* Recent Activity */}
       <Card>
         <CardHeader>
@@ -550,7 +563,7 @@ const compressImage = (file) => new Promise((resolve) => {
   reader.readAsDataURL(file);
 });
 
-const SalesMilestoneTracker = () => {
+const SalesMilestoneTracker = ({ onClose }) => {
   const [sales, setSales] = useState([]);
   const [milestoneData, setMilestoneData] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
@@ -568,8 +581,22 @@ const SalesMilestoneTracker = () => {
   const fetchRecentSales = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`${API}/sales`, { headers: { Authorization: `Bearer ${token}` } });
-      const sorted = (res.data || []).sort((a, b) => new Date(b.sale_date || b.created_at) - new Date(a.sale_date || a.created_at));
+      const [salesRes, custRes] = await Promise.all([
+        axios.get(`${API}/sales`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/customers`, {
+          params: { page: 1, limit: 10000 },
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+      const customers = custRes.data.data || custRes.data || [];
+      const custMap = {};
+      customers.forEach(c => { if (c.id) custMap[c.id] = c.name; });
+
+      const sales = (salesRes.data || []).map(s => ({
+        ...s,
+        customer_name: s.customer_name || custMap[s.customer_id] || ''
+      }));
+      const sorted = sales.sort((a, b) => new Date(b.sale_date || b.created_at) - new Date(a.sale_date || a.created_at));
       setSales(sorted.slice(0, 100));
     } catch { /* silent */ }
   };
@@ -672,14 +699,25 @@ const SalesMilestoneTracker = () => {
             <p className="text-xs text-gray-400 hidden">Document milestone checklist per sale</p>
           </div>
         </div>
-        {selectedSale && (
-          <button
-            onClick={() => { setSelectedSale(null); setMilestoneData({}); setActiveMilestone(null); }}
-            className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1 border border-gray-200 rounded-lg px-2 py-1"
-          >
-            <RotateCcw className="w-3 h-3" /> Change
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {selectedSale && (
+            <button
+              onClick={() => { setSelectedSale(null); setMilestoneData({}); setActiveMilestone(null); }}
+              className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1 border border-gray-200 rounded-lg px-2 py-1"
+            >
+              <RotateCcw className="w-3 h-3" /> Change
+            </button>
+          )}
+          {onClose && (
+            <button
+              onClick={onClose}
+              title="Close tracker"
+              className="text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md p-1 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="p-3">
