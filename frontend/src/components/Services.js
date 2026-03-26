@@ -6926,123 +6926,190 @@ const ServiceDue = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      
+
       // Fetch all necessary data
-      const [servicesResponse, salesResponse, customersResponse] = await Promise.all([
-        axios.get(`${API}/services`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API}/sales`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
+      const [servicesResponse, salesResponse, vehiclesResponse, customersResponse] = await Promise.all([
+        axios.get(`${API}/services`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/sales`,    { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/vehicles`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/customers`, {
-          params: {
-            page: 1,
-            limit: 10000,
-            sort: 'created_at',
-            order: 'desc'
-          },
+          params: { page: 1, limit: 10000, sort: 'created_at', order: 'desc' },
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
-      
-      const services = servicesResponse.data;
-      const sales = salesResponse.data;
+
+      const services  = servicesResponse.data;
+      const sales     = salesResponse.data;
+      const vehicles  = vehiclesResponse.data;
       const customers = customersResponse.data.data || customersResponse.data;
-      const today = new Date();
-      
-      // Create a map of vehicles with their purchase dates and latest service dates
-      const vehicleServiceMap = {};
-      
-      // First, populate with purchase dates from sales
+      const today     = new Date();
+
+      // ── Build a lookup: vehicle_id → vehicle_number ──────────────────────
+      const vehicleIdToRegNo = {};
+      vehicles.forEach(v => { if (v.id && v.vehicle_number) vehicleIdToRegNo[v.id] = v.vehicle_number; });
+
+      // ── Build a lookup: vehicle_reg_no → invoice (sale_date) ────────────
+      // Key = vehicle_reg_no (lower-cased for consistency)
+      // Value = { invoice_date, customer_id, customer_name }
+      const invoiceByRegNo = {};
       sales.forEach(sale => {
-        if (sale && sale.vehicle_id && sale.created_at) {
-          vehicleServiceMap[sale.vehicle_id] = {
-            purchase_date: new Date(sale.created_at),
-            latest_service_date: null,
-            customer_name: customers.find(c => c && c.id === sale.customer_id)?.name || 'Unknown',
-            vehicle_details: sale.vehicle_id
+        // Get reg number: prefer direct vehicle_number, else resolve from vehicle_id
+        const regNo = (sale.vehicle_number || vehicleIdToRegNo[sale.vehicle_id] || '').toLowerCase().trim();
+        if (!regNo) return;
+        const invoiceDate = sale.sale_date ? new Date(sale.sale_date) : null;
+        if (!invoiceDate || isNaN(invoiceDate.getTime())) return;
+        // Keep the earliest invoice if somehow duplicated
+        if (!invoiceByRegNo[regNo] || invoiceDate < invoiceByRegNo[regNo].invoice_date) {
+          const customer = customers.find(c => c && c.id === sale.customer_id);
+          invoiceByRegNo[regNo] = {
+            invoice_date: invoiceDate,
+            customer_id: sale.customer_id,
+            customer_name: customer?.name || 'Unknown',
+            invoice_number: sale.invoice_number || '',
           };
         }
       });
-      
-      // Then, update with latest service dates
+
+      // ── Build per-vehicle service history ───────────────────────────────
+      // Key = customer_id + "-" + vehicle_reg_no
+      // Track: all completed services sorted by completion/service date
+      const vehicleMap = {};
+
+      const getKey = (customerId, vehicleNo) =>
+        `${customerId}-${(vehicleNo || '').toLowerCase().trim()}`;
+
       services.forEach(service => {
-        if (service && service.customer_id && service.vehicle_number) {
+        if (!service.customer_id || !service.vehicle_number) return;
+        const key = getKey(service.customer_id, service.vehicle_number);
+        const regNo = (service.vehicle_number || '').toLowerCase().trim();
+
+        if (!vehicleMap[key]) {
           const customer = customers.find(c => c && c.id === service.customer_id);
-          const customerName = customer?.name || service.customer_name || 'Unknown';
-          
-          // Skip services without valid dates
-          const serviceDateStr = service.completion_date || service.service_date || service.created_at;
-          if (!serviceDateStr) return;
-          
-          const serviceDate = new Date(serviceDateStr);
-          
-          // Skip if date is invalid
-          if (isNaN(serviceDate.getTime())) return;
-          
-          // Create a unique key for each customer-vehicle combination
-          const vehicleKey = `${service.customer_id}-${service.vehicle_number}`;
-          
-          if (!vehicleServiceMap[vehicleKey]) {
-            vehicleServiceMap[vehicleKey] = {
-              purchase_date: null,
-              latest_service_date: serviceDate,
-              customer_name: customerName,
-              vehicle_details: service.vehicle_number,
-              customer_id: service.customer_id
-            };
-          } else {
-            // Update with the latest service date
-            if (!vehicleServiceMap[vehicleKey].latest_service_date || 
-                serviceDate > vehicleServiceMap[vehicleKey].latest_service_date) {
-              vehicleServiceMap[vehicleKey].latest_service_date = serviceDate;
-            }
-            vehicleServiceMap[vehicleKey].customer_name = customerName;
-            vehicleServiceMap[vehicleKey].customer_id = service.customer_id;
+          const invoiceInfo = invoiceByRegNo[regNo] || null;
+          vehicleMap[key] = {
+            customer_id:   service.customer_id,
+            customer_name: customer?.name || service.customer_name || 'Unknown',
+            vehicle_reg_no: service.vehicle_number,
+            invoice_date:  invoiceInfo?.invoice_date || null,
+            invoice_number: invoiceInfo?.invoice_number || '',
+            // track all completed services
+            completed_services: [],
+            // track latest service date (any status) for label only
+            latest_any_service_date: null,
+            from_sales: !!invoiceInfo,  // came via a sale invoice
+          };
+        }
+
+        // Record completed services (status = completed)
+        if (service.status === 'completed') {
+          const completedDate = service.completion_date
+            ? new Date(service.completion_date)
+            : service.service_date
+              ? new Date(service.service_date)
+              : null;
+          if (completedDate && !isNaN(completedDate.getTime())) {
+            vehicleMap[key].completed_services.push(completedDate);
+          }
+        }
+
+        // Track latest service date for informational display
+        const anyDate = service.service_date ? new Date(service.service_date) : null;
+        if (anyDate && !isNaN(anyDate.getTime())) {
+          if (!vehicleMap[key].latest_any_service_date ||
+              anyDate > vehicleMap[key].latest_any_service_date) {
+            vehicleMap[key].latest_any_service_date = anyDate;
           }
         }
       });
-      
-      // Calculate due dates based on business rules
-      const vehiclesWithDueDates = Object.keys(vehicleServiceMap).map(vehicleKey => {
-        const vehicleData = vehicleServiceMap[vehicleKey];
-        let baseDate, dueDate, serviceType;
-        
-        if (vehicleData.latest_service_date) {
-          // Rule: 90 days from the date of last service
-          baseDate = vehicleData.latest_service_date;
-          dueDate = new Date(baseDate);
-          dueDate.setDate(baseDate.getDate() + 90);
-          serviceType = 'Regular Service (90 days from last service)';
-        } else if (vehicleData.purchase_date) {
-          // Rule: 30 days from the date of purchase
-          baseDate = vehicleData.purchase_date;
-          dueDate = new Date(baseDate);
-          dueDate.setDate(baseDate.getDate() + 30);
-          serviceType = 'First Service (30 days from purchase)';
+
+      // ── Also add vehicles from sales that have NO services yet ───────────
+      sales.forEach(sale => {
+        const regNo = (sale.vehicle_number || vehicleIdToRegNo[sale.vehicle_id] || '').toLowerCase().trim();
+        if (!regNo || !sale.customer_id) return;
+        const key = getKey(sale.customer_id, regNo);
+        if (!vehicleMap[key]) {
+          const customer = customers.find(c => c && c.id === sale.customer_id);
+          const invoiceDate = sale.sale_date ? new Date(sale.sale_date) : null;
+          if (!invoiceDate || isNaN(invoiceDate.getTime())) return;
+          vehicleMap[key] = {
+            customer_id:   sale.customer_id,
+            customer_name: customer?.name || 'Unknown',
+            vehicle_reg_no: sale.vehicle_number || vehicleIdToRegNo[sale.vehicle_id] || regNo,
+            invoice_date:  invoiceDate,
+            invoice_number: sale.invoice_number || '',
+            completed_services: [],
+            latest_any_service_date: null,
+            from_sales: true,
+          };
+        }
+      });
+
+      // ── Apply the 3 rules to each vehicle ────────────────────────────────
+      //
+      // RULE A — Vehicle sold via invoice, NO completed services yet:
+      //   Base date = invoice sale_date
+      //   Due date  = base + 30 days  → "First Service due"
+      //
+      // RULE B — Vehicle sold via invoice, HAS ≥1 completed service:
+      //   Base date = most recent completed service date
+      //   Due date  = base + 90 days  → "Next Service due"
+      //
+      // RULE C — Service-registered vehicle only (no invoice/sale):
+      //   Base date = most recent completed service date (if any)
+      //   Due date  = base + 90 days  → "Next Service due"
+      //   (No 30-day first-service reminder — these are walk-in service customers)
+
+      const vehiclesWithDueDates = Object.values(vehicleMap).map(v => {
+        const sortedCompleted = v.completed_services.sort((a, b) => b - a); // newest first
+        const lastCompleted   = sortedCompleted[0] || null;
+
+        let baseDate, dueDate, serviceType, intervalDays;
+
+        if (v.from_sales && !lastCompleted) {
+          // RULE A: sold vehicle, no services done yet → 30-day first service
+          if (!v.invoice_date) return null;
+          baseDate    = v.invoice_date;
+          intervalDays = 30;
+          dueDate     = new Date(baseDate);
+          dueDate.setDate(baseDate.getDate() + intervalDays);
+          serviceType = 'First Service (30 days from invoice)';
+
+        } else if (lastCompleted) {
+          // RULE B or C: has at least one completed service → 90-day next service
+          baseDate    = lastCompleted;
+          intervalDays = 90;
+          dueDate     = new Date(baseDate);
+          dueDate.setDate(baseDate.getDate() + intervalDays);
+          serviceType = v.from_sales
+            ? `Next Service (90 days from last service)`
+            : `Next Service (90 days from last service)`;
+
         } else {
-          // Skip vehicles without purchase or service dates
+          // RULE C with no completed service (service-only vehicle, never completed)
+          // Nothing to base a reminder on — skip
           return null;
         }
-        
+
         const daysDifference = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
-        
+
         return {
-          id: vehicleKey,
-          customer_name: vehicleData.customer_name || 'Unknown',
-          vehicle_reg_no: vehicleData.vehicle_details || 'N/A',
-          last_service_date: vehicleData.latest_service_date,
-          purchase_date: vehicleData.purchase_date,
-          base_date: baseDate,
-          due_date: dueDate,
-          days_until_due: daysDifference,
-          is_overdue: daysDifference < 0,
-          is_due_soon: daysDifference >= 0 && daysDifference <= 7,
-          service_type: serviceType,
-          customer_id: vehicleData.customer_id
+          id: getKey(v.customer_id, v.vehicle_reg_no),
+          customer_name:      v.customer_name || 'Unknown',
+          vehicle_reg_no:     v.vehicle_reg_no || 'N/A',
+          invoice_date:       v.invoice_date,
+          invoice_number:     v.invoice_number,
+          last_service_date:  lastCompleted,
+          completed_count:    sortedCompleted.length,
+          base_date:          baseDate,
+          due_date:           dueDate,
+          days_until_due:     daysDifference,
+          is_overdue:         daysDifference < 0,
+          is_due_soon:        daysDifference >= 0 && daysDifference <= 7,
+          service_type:       serviceType,
+          from_sales:         v.from_sales,
+          customer_id:        v.customer_id,
         };
-      }).filter(vehicle => vehicle !== null);
+      }).filter(Boolean);
       
       // Sort by priority: overdue first, then due soon, then by due date
       vehiclesWithDueDates.sort((a, b) => {
@@ -7069,14 +7136,11 @@ const ServiceDue = () => {
         if (baseDateOverrides[service.id]) {
           const newBaseDate = new Date(baseDateOverrides[service.id]);
           const dueDate = new Date(newBaseDate);
-          // Apply the same logic: 90 days for regular service, 30 days for first service
-          if (service.last_service_date) {
-            dueDate.setDate(newBaseDate.getDate() + 90);
-          } else {
-            dueDate.setDate(newBaseDate.getDate() + 30);
-          }
+          // 30 days only for sold vehicles with no completed services yet (first service)
+          // 90 days for everything else
+          const isFirstService = service.from_sales && service.completed_count === 0;
+          dueDate.setDate(newBaseDate.getDate() + (isFirstService ? 30 : 90));
           const daysDifference = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
-          
           return {
             ...service,
             base_date: newBaseDate,
@@ -7088,12 +7152,9 @@ const ServiceDue = () => {
         }
         return service;
       });
-      
-      // Only update if there are actual changes
-      const hasChanges = updatedServices.some((s, i) => 
+      const hasChanges = updatedServices.some((s, i) =>
         s.base_date !== dueServices[i].base_date
       );
-      
       if (hasChanges) {
         setDueServices(updatedServices);
       }
@@ -7161,12 +7222,9 @@ const ServiceDue = () => {
       setDueServices(prev => prev.map(s => {
         if (s.id === service.id) {
           const dueDate = new Date(newBaseDate);
-          // Apply the same logic: 90 days for regular service, 30 days for first service
-          if (s.last_service_date) {
-            dueDate.setDate(newBaseDate.getDate() + 90);
-          } else {
-            dueDate.setDate(newBaseDate.getDate() + 30);
-          }
+          // 30 days only for sold vehicles awaiting first service, 90 days otherwise
+          const isFirstService = s.from_sales && s.completed_count === 0;
+          dueDate.setDate(newBaseDate.getDate() + (isFirstService ? 30 : 90));
           const today = new Date();
           const daysDifference = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
           
@@ -7477,8 +7535,9 @@ const ServiceDue = () => {
                   </th>
                   <th className="p-3 text-left text-sm font-medium text-gray-500">Customer</th>
                   <th className="p-3 text-left text-sm font-medium text-gray-500">Vehicle</th>
+                  <th className="p-3 text-left text-sm font-medium text-gray-500">Invoice Date</th>
                   <th className="p-3 text-left text-sm font-medium text-gray-500">Base Date</th>
-                  <th className="p-3 text-left text-sm font-medium text-gray-500">Service Type</th>
+                  <th className="p-3 text-left text-sm font-medium text-gray-500">Services Done</th>
                   <th className="p-3 text-left text-sm font-medium text-gray-500">Due Date</th>
                   <th className="p-3 text-left text-sm font-medium text-gray-500">Status</th>
                   <th className="p-3 text-left text-sm font-medium text-gray-500">Actions</th>
@@ -7487,13 +7546,13 @@ const ServiceDue = () => {
               <tbody className="divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan="8" className="p-0">
-                      <TableSkeleton rows={5} columns={8} />
+                    <td colSpan="10" className="p-0">
+                      <TableSkeleton rows={5} columns={10} />
                     </td>
                   </tr>
                 ) : filteredServices.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="p-6 text-center text-gray-500">
+                    <td colSpan="10" className="p-6 text-center text-gray-500">
                       <EmptyState 
                         title="No services due"
                         description="All vehicles are up to date with their service schedules"
@@ -7517,6 +7576,16 @@ const ServiceDue = () => {
                       <td className="p-3 text-sm text-gray-600">
                         {service.vehicle_reg_no || 'N/A'}
                       </td>
+                      {/* Invoice Date */}
+                      <td className="p-3 text-sm text-gray-600">
+                        {service.invoice_date
+                          ? new Date(service.invoice_date).toLocaleDateString('en-IN')
+                          : <span className="text-gray-400 text-xs">No invoice</span>}
+                        {service.invoice_number && (
+                          <div className="text-xs text-gray-400 font-mono">{service.invoice_number}</div>
+                        )}
+                      </td>
+                      {/* Base Date — editable */}
                       <td className="p-3 text-sm">
                         {editingBaseDateId === service.id ? (
                           <div className="flex flex-col gap-1">
@@ -7527,16 +7596,16 @@ const ServiceDue = () => {
                               className="w-36 text-sm"
                             />
                             <div className="flex gap-1">
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 variant="outline"
                                 onClick={() => handleSaveBaseDate(service)}
                                 className="text-green-600 hover:bg-green-50 px-2 py-1 h-7"
                               >
                                 <Check className="w-3 h-3" />
                               </Button>
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 variant="outline"
                                 onClick={handleCancelEditBaseDate}
                                 className="text-red-600 hover:bg-red-50 px-2 py-1 h-7"
@@ -7546,41 +7615,47 @@ const ServiceDue = () => {
                             </div>
                           </div>
                         ) : (
-                          <div 
+                          <div
                             className="cursor-pointer hover:bg-gray-100 rounded p-1 -m-1 group"
                             onClick={() => handleEditBaseDate(service)}
                             title="Click to edit base date"
                           >
                             <div className="flex items-center gap-1">
                               <span className={baseDateOverrides[service.id] ? 'text-purple-600 font-medium' : ''}>
-                                {service.base_date ? 
-                                  new Date(service.base_date).toLocaleDateString('en-IN') : 
-                                  'N/A'
-                                }
+                                {service.base_date
+                                  ? new Date(service.base_date).toLocaleDateString('en-IN')
+                                  : 'N/A'}
                               </span>
                               <Edit2 className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
                             <span className="text-xs text-gray-400">
                               {baseDateOverrides[service.id] ? (
-                                <span className="text-purple-500">Custom Date</span>
+                                <span className="text-purple-500">Custom date</span>
+                              ) : service.completed_count > 0 ? (
+                                'Last service'
+                              ) : service.from_sales ? (
+                                'Invoice date'
                               ) : (
-                                service.last_service_date ? 'Last Service' : 'Purchase Date'
+                                'Service date'
                               )}
                             </span>
                           </div>
                         )}
                       </td>
+                      {/* Services Done */}
                       <td className="p-3 text-sm">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {service.last_service_date ? 'Regular Service' : 'First Service'}
-                        </span>
-                        <br />
-                        <span className="text-xs text-gray-500">
-                          {service.last_service_date ? '90 days cycle' : '30 days from purchase'}
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          service.completed_count === 0
+                            ? 'bg-orange-100 text-orange-800'
+                            : 'bg-green-100 text-green-800'
+                        }`}>
+                          {service.completed_count === 0
+                            ? 'First service due'
+                            : `${service.completed_count} done · next in 90d`}
                         </span>
                       </td>
                       <td className="p-3 text-sm font-medium">
-                        {service.due_date ? service.due_date.toLocaleDateString() : 'N/A'}
+                        {service.due_date ? service.due_date.toLocaleDateString('en-IN') : 'N/A'}
                       </td>
                       <td className="p-3 text-sm">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getDueDateColor(service)}`}>
@@ -7589,8 +7664,8 @@ const ServiceDue = () => {
                       </td>
                       <td className="p-3">
                         <div className="flex items-center gap-2">
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             onClick={() => handleSendReminder(service)}
                           >
@@ -7958,4 +8033,3 @@ const ServiceReport = () => {
 };
 
 export default Services;
-
