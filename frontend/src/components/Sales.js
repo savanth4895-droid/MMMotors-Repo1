@@ -292,10 +292,17 @@ const SalesOverview = () => {
         payMap[p] = (payMap[p] || 0) + 1;
       });
 
-      // Recent 5 sales
+      // Recent 5 sales — enrich with customer name
+      const custMap = {};
+      customers.forEach(c => { if (c.id) custMap[c.id] = c.name; });
+
       const recent = [...sales]
         .sort((a, b) => new Date(b.sale_date) - new Date(a.sale_date))
-        .slice(0, 5);
+        .slice(0, 5)
+        .map(s => ({
+          ...s,
+          customer_name: s.customer_name || custMap[s.customer_id] || 'Unknown'
+        }));
 
       // Monthly trend — last 6 months
       const trend = [];
