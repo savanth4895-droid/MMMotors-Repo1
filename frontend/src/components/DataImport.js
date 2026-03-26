@@ -62,6 +62,14 @@ const DATA_TYPES = [
       { label: 'Date',     color: 'teal',  fields: ['registration_date'] },
     ]
   },
+  {
+    value: 'service_customers', label: 'Service Customers', icon: Users, color: 'violet',
+    description: 'Customers who registered for service only — no sales data required',
+    fieldGroups: [
+      { label: 'Customer', color: 'violet', fields: ['name', 'mobile', 'phone', 'email', 'address'] },
+      { label: 'Vehicle',  color: 'green',  fields: ['vehicle_brand', 'vehicle_model', 'vehicle_year', 'vehicle_number', 'chassis_number', 'engine_number'] },
+    ]
+  },
 ];
 
 const C = {
@@ -73,6 +81,7 @@ const C = {
   orange: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', badge: 'bg-orange-100 text-orange-700',icon: 'text-orange-500', ring: 'ring-orange-400' },
   indigo: { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700', badge: 'bg-indigo-100 text-indigo-700',icon: 'text-indigo-500', ring: 'ring-indigo-400' },
   teal:   { bg: 'bg-teal-50',   border: 'border-teal-200',   text: 'text-teal-700',   badge: 'bg-teal-100 text-teal-700',   icon: 'text-teal-500',   ring: 'ring-teal-400'   },
+  violet: { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-700', badge: 'bg-violet-100 text-violet-700',icon: 'text-violet-500', ring: 'ring-violet-400' },
 };
 
 function StatusIcon({ status }) {
