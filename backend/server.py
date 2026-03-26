@@ -1933,6 +1933,22 @@ async def delete_spare_part_bill(bill_id: str, current_user: User = Depends(get_
     return {"message": "Spare part bill deleted successfully", "deleted_bill_id": bill_id}
 
 # Service Bills API Endpoints
+@api_router.get("/service-bills/next-number")
+async def get_next_service_bill_number(current_user: User = Depends(get_current_user)):
+    """Return the next SB-XXXXXX number based on actual saved bills count (not a counter)."""
+    # Count actual bills in DB — so deleting a bill doesn't skip numbers
+    count = await db.service_bills.count_documents({})
+    # Also peek at the highest existing SB number to avoid collisions
+    last = await db.service_bills.find_one({}, sort=[("bill_number", -1)])
+    last_seq = 0
+    if last and last.get("bill_number", "").startswith("SB-"):
+        try:
+            last_seq = int(last["bill_number"][3:])
+        except ValueError:
+            pass
+    next_seq = max(count, last_seq) + 1
+    return {"bill_number": f"SB-{next_seq:06d}"}
+
 @api_router.post("/service-bills", response_model=ServiceBill)
 async def create_service_bill(bill_data: ServiceBillCreate, current_user: User = Depends(get_current_user)):
     # Generate bill number if not provided
