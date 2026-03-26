@@ -6857,6 +6857,14 @@ const PendingPayments = () => {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [saving, setSaving] = useState(false);
 
+  // Add pending manually
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addSearch, setAddSearch] = useState('');
+  const [addSelected, setAddSelected] = useState(null);
+  const [addAmount, setAddAmount] = useState('');
+  const [addNote, setAddNote] = useState('');
+  const [addSaving, setAddSaving] = useState(false);
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -6935,12 +6943,55 @@ const PendingPayments = () => {
 
   if (loading) return <div className="flex justify-center p-8"><div className="spinner" /></div>;
 
+  // Invoices without pending (to pick from when adding manually)
+  const invoicesWithoutPending = invoices.filter(inv => !(inv.pending_amount > 0));
+  const addFiltered = invoicesWithoutPending.filter(inv => {
+    if (!addSearch) return true;
+    const q = addSearch.toLowerCase();
+    return (
+      inv.invoice_number?.toLowerCase().includes(q) ||
+      getCustomerName(inv.customer_id).toLowerCase().includes(q) ||
+      getCustomerMobile(inv.customer_id).includes(q)
+    );
+  });
+
+  const handleAddPending = async () => {
+    if (!addSelected) { toast.error('Select an invoice'); return; }
+    const amt = parseFloat(addAmount);
+    if (isNaN(amt) || amt <= 0) { toast.error('Enter a valid pending amount'); return; }
+    if (amt > addSelected.amount) { toast.error(`Pending cannot exceed invoice amount ₹${addSelected.amount.toLocaleString()}`); return; }
+    setAddSaving(true);
+    try {
+      await axios.put(`${API}/sales/${addSelected.id}`, { ...addSelected, pending_amount: amt });
+      toast.success(`₹${amt.toLocaleString()} marked as pending for ${addSelected.invoice_number}`);
+      setShowAddModal(false);
+      setAddSelected(null);
+      setAddAmount('');
+      setAddNote('');
+      setAddSearch('');
+      fetchData();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Failed to add pending amount');
+    } finally {
+      setAddSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">Pending Payments</h2>
-        <p className="text-gray-500 text-sm mt-0.5">Track and collect outstanding balances from sales invoices</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Pending Payments</h2>
+          <p className="text-gray-500 text-sm mt-0.5">Track and collect outstanding balances from sales invoices</p>
+        </div>
+        <Button
+          onClick={() => { setShowAddModal(true); setAddSelected(null); setAddAmount(''); setAddSearch(''); setAddNote(''); }}
+          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white"
+        >
+          <Plus className="w-4 h-4" />
+          Add Pending
+        </Button>
       </div>
 
       {/* Summary cards */}
@@ -7159,6 +7210,139 @@ const PendingPayments = () => {
                   {saving ? 'Saving...' : `Collect ₹${parseFloat(collectAmount || 0).toLocaleString()}`}
                 </Button>
                 <Button variant="outline" onClick={() => setShowCollectModal(false)} className="flex-1">
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Add Pending Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Add Pending Payment</h3>
+                  <p className="text-sm text-gray-500 mt-0.5">Mark an invoice as having an outstanding balance</p>
+                </div>
+                <button onClick={() => setShowAddModal(false)} className="p-1.5 hover:bg-gray-100 rounded-lg">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+
+              {/* Step 1 — Pick invoice */}
+              <div className="mb-4">
+                <Label className="mb-1.5 block">Search Invoice *</Label>
+                <div className="relative mb-2">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Invoice no, customer name, or mobile..."
+                    value={addSearch}
+                    onChange={(e) => { setAddSearch(e.target.value); setAddSelected(null); }}
+                    className="pl-9"
+                  />
+                </div>
+
+                {/* Invoice picker list */}
+                {addSearch && !addSelected && (
+                  <div className="border rounded-lg max-h-48 overflow-y-auto divide-y divide-gray-100">
+                    {addFiltered.length === 0 ? (
+                      <p className="text-sm text-gray-400 text-center py-4">No invoices found</p>
+                    ) : (
+                      addFiltered.slice(0, 20).map(inv => (
+                        <button
+                          key={inv.id}
+                          type="button"
+                          onClick={() => { setAddSelected(inv); setAddAmount(inv.amount?.toString() || ''); }}
+                          className="w-full text-left px-3 py-2.5 hover:bg-orange-50 transition-colors"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <span className="font-medium text-sm text-gray-900">{inv.invoice_number}</span>
+                              <span className="text-gray-500 text-xs ml-2">{getCustomerName(inv.customer_id)}</span>
+                            </div>
+                            <span className="text-sm font-semibold text-gray-700">₹{inv.amount?.toLocaleString()}</span>
+                          </div>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {[inv.vehicle_brand, inv.vehicle_model].filter(Boolean).join(' ') || '—'} · {new Date(inv.sale_date).toLocaleDateString('en-IN')}
+                          </p>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+
+                {/* Selected invoice summary */}
+                {addSelected && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-sm text-orange-800">{addSelected.invoice_number} — {getCustomerName(addSelected.customer_id)}</p>
+                      <p className="text-xs text-orange-600 mt-0.5">
+                        {[addSelected.vehicle_brand, addSelected.vehicle_model].filter(Boolean).join(' ') || '—'} · Invoice: ₹{addSelected.amount?.toLocaleString()}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { setAddSelected(null); setAddAmount(''); }}
+                      className="text-orange-400 hover:text-orange-600 ml-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Step 2 — Amount + note */}
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="add_amount" className="mb-1.5 block">Pending Amount (₹) *</Label>
+                  <Input
+                    id="add_amount"
+                    type="number"
+                    step="0.01"
+                    value={addAmount}
+                    onChange={(e) => setAddAmount(e.target.value)}
+                    placeholder="Amount still owed"
+                    disabled={!addSelected}
+                  />
+                  {addSelected && (
+                    <div className="flex gap-3 mt-1.5">
+                      {[25, 50, 75, 100].map(pct => (
+                        <button
+                          key={pct}
+                          type="button"
+                          onClick={() => setAddAmount(((addSelected.amount * pct) / 100).toFixed(0))}
+                          className="text-xs text-blue-600 hover:underline"
+                        >
+                          {pct}% (₹{((addSelected.amount * pct) / 100).toLocaleString()})
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="add_note" className="mb-1.5 block">Note (optional)</Label>
+                  <Input
+                    id="add_note"
+                    value={addNote}
+                    onChange={(e) => setAddNote(e.target.value)}
+                    placeholder="e.g. Balance after advance payment..."
+                    disabled={!addSelected}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <Button
+                  onClick={handleAddPending}
+                  disabled={addSaving || !addSelected || !addAmount}
+                  className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
+                >
+                  {addSaving ? 'Saving...' : 'Mark as Pending'}
+                </Button>
+                <Button variant="outline" onClick={() => setShowAddModal(false)} className="flex-1">
                   Cancel
                 </Button>
               </div>
