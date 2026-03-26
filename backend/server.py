@@ -211,6 +211,7 @@ class Customer(BaseModel):
     vehicle_info: Optional[Dict[str, Any]] = None
     insurance_info: Optional[Dict[str, Any]] = None
     sales_info: Optional[Dict[str, Any]] = None
+    customer_type: Optional[str] = "sales"  # "sales", "service", "both"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class CustomerCreate(BaseModel):
@@ -222,6 +223,7 @@ class CustomerCreate(BaseModel):
     vehicle_info: Optional[Dict[str, Any]] = None
     insurance_info: Optional[Dict[str, Any]] = None
     sales_info: Optional[Dict[str, Any]] = None
+    customer_type: Optional[str] = "sales"  # "sales", "service", "both"
 
 class Vehicle(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -900,6 +902,7 @@ async def get_customers(
     limit: int = 100,
     sort: str = "created_at",
     order: str = "desc",
+    customer_type: Optional[str] = None,
     current_user: User = Depends(get_current_user)
 ):
     # Validate sort field
@@ -916,11 +919,22 @@ async def get_customers(
     
     # Build sort criteria
     sort_direction = 1 if order == "asc" else -1
+
+    # Build base query filter
+    base_filter = {}
+    if customer_type:
+        if customer_type == "sales":
+            base_filter["$or"] = [{"customer_type": "sales"}, {"customer_type": {"$exists": False}}, {"customer_type": None}]
+        elif customer_type == "service":
+            base_filter["customer_type"] = "service"
+        elif customer_type == "both":
+            base_filter["customer_type"] = "both"
     
     # For total_purchases, we need to aggregate
     if sort == "total_purchases":
         # Aggregate to calculate total purchases
         pipeline = [
+            {"$match": base_filter},
             {
                 "$lookup": {
                     "from": "sales",
@@ -941,11 +955,11 @@ async def get_customers(
         customers = await db.customers.aggregate(pipeline).to_list(None)
         
         # Get total count
-        total = await db.customers.count_documents({})
+        total = await db.customers.count_documents(base_filter)
     else:
         # Regular sort
-        customers = await db.customers.find().sort(sort, sort_direction).skip(skip).limit(limit).to_list(None)
-        total = await db.customers.count_documents({})
+        customers = await db.customers.find(base_filter).sort(sort, sort_direction).skip(skip).limit(limit).to_list(None)
+        total = await db.customers.count_documents(base_filter)
     
     # Convert ObjectId to string for JSON serialization
     for customer in customers:
@@ -1566,12 +1580,17 @@ async def create_registration(reg_data: RegistrationCreate, current_user: User =
     
     if existing_customer:
         customer_id = existing_customer["id"]
-        # Update customer name if different
+        # Update customer name if different; also ensure customer_type includes service
+        updates = {}
         if existing_customer.get("name") != reg_data.customer_name:
-            await db.customers.update_one(
-                {"id": customer_id},
-                {"$set": {"name": reg_data.customer_name}}
-            )
+            updates["name"] = reg_data.customer_name
+        existing_type = existing_customer.get("customer_type", "sales")
+        if existing_type == "sales":
+            updates["customer_type"] = "both"
+        elif not existing_type:
+            updates["customer_type"] = "service"
+        if updates:
+            await db.customers.update_one({"id": customer_id}, {"$set": updates})
     else:
         # Create new customer
         customer_id = str(uuid.uuid4())
@@ -1580,6 +1599,7 @@ async def create_registration(reg_data: RegistrationCreate, current_user: User =
             "name": reg_data.customer_name,
             "mobile": reg_data.customer_mobile,
             "address": reg_data.customer_address or "",
+            "customer_type": "service",
             "created_at": datetime.now(timezone.utc)
         }
         await db.customers.insert_one(customer)
@@ -1660,8 +1680,24 @@ async def create_service(service_data: ServiceCreate, current_user: User = Depen
         service_dict['service_date'] = datetime.now(timezone.utc)
     
     service = Service(**service_dict)
-    
     await db.services.insert_one(service.dict())
+
+    # Tag this customer as a service customer (or "both" if they also have sales)
+    if service_dict.get('customer_id'):
+        existing = await db.customers.find_one({"id": service_dict['customer_id']})
+        if existing:
+            current_type = existing.get("customer_type", "sales")
+            if current_type == "sales" or not current_type:
+                await db.customers.update_one(
+                    {"id": service_dict['customer_id']},
+                    {"$set": {"customer_type": "both"}}
+                )
+            elif current_type not in ("service", "both"):
+                await db.customers.update_one(
+                    {"id": service_dict['customer_id']},
+                    {"$set": {"customer_type": "service"}}
+                )
+
     return service
 
 @api_router.get("/services", response_model=List[Service])
@@ -1743,20 +1779,28 @@ async def get_service_by_job_card(job_card_number: str, current_user: User = Dep
     if not service:
         raise HTTPException(status_code=404, detail="Service not found with this job card number")
     
-    # Get customer details
-    customer = await db.customers.find_one({"id": service["customer_id"]})
-    if not customer:
-        raise HTTPException(status_code=404, detail="Customer not found for this service")
-    
-    # Prepare service details for billing
+    # Get customer details — don't hard-fail if customer record missing
+    customer = await db.customers.find_one({"id": service["customer_id"]}) or {}
+
+    # Also try to get vehicle brand/model from vehicle record
+    vehicle_brand = service.get("vehicle_brand", "")
+    vehicle_model = service.get("vehicle_model", "")
+    if service.get("vehicle_id") and (not vehicle_brand or not vehicle_model):
+        vehicle = await db.vehicles.find_one({"id": service["vehicle_id"]}) or {}
+        vehicle_brand = vehicle_brand or vehicle.get("brand", "")
+        vehicle_model = vehicle_model or vehicle.get("model", "")
+
     service_details = {
         "service_id": service["id"],
         "job_card_number": service["job_card_number"],
         "customer_id": service["customer_id"],
-        "customer_name": customer["name"],
-        "customer_phone": customer["mobile"],
-        "customer_address": customer["address"],
+        "customer_name": customer.get("name") or service.get("customer_name") or "",
+        "customer_phone": customer.get("mobile") or customer.get("phone") or "",
+        "customer_address": customer.get("address") or "",
         "vehicle_number": service["vehicle_number"],
+        "vehicle_brand": vehicle_brand,
+        "vehicle_model": vehicle_model,
+        "vehicle_year": service.get("vehicle_year", ""),
         "service_type": service["service_type"],
         "description": service["description"],
         "service_date": service["service_date"],
@@ -2051,7 +2095,90 @@ async def delete_service_bill(bill_id: str, current_user: User = Depends(get_cur
     
     return {"message": "Service bill deleted successfully", "deleted_bill_id": bill_id}
 
-@api_router.get("/spare-parts/{part_id}", response_model=SparePart)
+
+@api_router.get("/service-report")
+async def get_service_report(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Service report: revenue breakdown by parts vs labour, per job card"""
+    query = {}
+    if start_date and end_date:
+        try:
+            sd = datetime.fromisoformat(start_date.replace("Z", "+00:00"))
+            ed = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
+            query["created_at"] = {"$gte": sd, "$lte": ed}
+        except Exception:
+            pass
+
+    bills = await db.service_bills.find(query, {"_id": 0}).sort("created_at", -1).to_list(10000)
+
+    report_rows = []
+    total_parts_revenue = 0.0
+    total_labour_revenue = 0.0
+    total_tax = 0.0
+    total_grand = 0.0
+
+    for bill in bills:
+        items = bill.get("items", [])
+        parts_revenue = 0.0
+        labour_revenue = 0.0
+        bill_tax = 0.0
+
+        for item in items:
+            qty = float(item.get("qty", 1) or 1)
+            rate = float(item.get("rate", 0) or 0)
+            labor = float(item.get("labor", 0) or 0)
+            disc = float(item.get("disc_percent", 0) or 0)
+            gst = float(item.get("gst_percent", 0) or 0)
+
+            parts_base = qty * rate
+            labour_base = labor
+            parts_after_disc = parts_base * (1 - disc / 100)
+            labour_after_disc = labour_base * (1 - disc / 100)
+            parts_tax = parts_after_disc * gst / 100
+            labour_tax = labour_after_disc * gst / 100
+
+            parts_revenue += parts_after_disc + parts_tax
+            labour_revenue += labour_after_disc + labour_tax
+            bill_tax += float(item.get("total_tax", 0) or 0)
+
+        grand = float(bill.get("total_amount", 0) or bill.get("amount", 0) or 0)
+
+        report_rows.append({
+            "bill_id": bill.get("id"),
+            "bill_number": bill.get("bill_number"),
+            "job_card_number": bill.get("job_card_number"),
+            "customer_name": bill.get("customer_name"),
+            "customer_mobile": bill.get("customer_mobile"),
+            "vehicle_number": bill.get("vehicle_number"),
+            "bill_date": bill.get("bill_date") or bill.get("created_at"),
+            "status": bill.get("status"),
+            "parts_revenue": round(parts_revenue, 2),
+            "labour_revenue": round(labour_revenue, 2),
+            "total_tax": round(bill_tax, 2),
+            "grand_total": round(grand, 2),
+            "items_count": len(items),
+        })
+
+        total_parts_revenue += parts_revenue
+        total_labour_revenue += labour_revenue
+        total_tax += bill_tax
+        total_grand += grand
+
+    return {
+        "rows": report_rows,
+        "summary": {
+            "total_bills": len(report_rows),
+            "total_parts_revenue": round(total_parts_revenue, 2),
+            "total_labour_revenue": round(total_labour_revenue, 2),
+            "total_tax": round(total_tax, 2),
+            "grand_total": round(total_grand, 2),
+        }
+    }
+
+
 async def get_spare_part(part_id: str, current_user: User = Depends(get_current_user)):
     part = await db.spare_parts.find_one({"id": part_id})
     if not part:
