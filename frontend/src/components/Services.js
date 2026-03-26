@@ -2354,71 +2354,96 @@ const JobCards = () => {
     }
   };
 
-  // Fetch ALL vehicles for a customer from sales + registrations, show picker if multiple
+  // Fetch ALL vehicles for a customer from sales + registrations + customer record
   const fetchVehicleFromSales = async (customerId) => {
     try {
       const token = localStorage.getItem('token');
-      const [salesResponse, regsResponse] = await Promise.all([
-        axios.get(`${API}/sales`, { headers: { Authorization: `Bearer ${token}` } }),
+      const [salesRes, regsRes, vehiclesRes, custRes] = await Promise.all([
+        axios.get(`${API}/sales`,         { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
         axios.get(`${API}/registrations`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
+        axios.get(`${API}/vehicles`,      { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
+        axios.get(`${API}/customers/${customerId}`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: null })),
       ]);
 
-      const sales = salesResponse.data;
-      const regs  = regsResponse.data || [];
+      const sales    = salesRes.data   || [];
+      const regs     = regsRes.data    || [];
+      const vehicles = vehiclesRes.data || [];
+      const customer = custRes.data;
+
       const customerSales = sales.filter(s => s.customer_id === customerId);
       const customerRegs  = regs.filter(r => r.customer_id === customerId);
 
-      // Build a list of vehicles from all sources
+      // vehicle_id → vehicle record lookup
+      const vehicleById = {};
+      vehicles.forEach(v => { if (v.id) vehicleById[v.id] = v; });
+
       const vehicleList = [];
 
+      // From sales invoice → resolve vehicle record
       for (const sale of customerSales) {
-        if (sale.vehicle_id) {
-          const vRes = await axios.get(`${API}/vehicles/${sale.vehicle_id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-          }).catch(() => null);
-          if (vRes?.data) {
-            const v = vRes.data;
-            vehicleList.push({
-              vehicle_number: v.vehicle_number || '',
-              vehicle_brand:  v.brand || '',
-              vehicle_model:  v.model || '',
-              vehicle_year:   v.year?.toString() || '',
-              source: 'Sales Invoice'
-            });
-          }
-        } else if (sale.vehicle_brand || sale.vehicle_model || sale.vehicle_number) {
+        let v = sale.vehicle_id ? vehicleById[sale.vehicle_id] : null;
+        // Also try matching by chassis_number stored on sale
+        if (!v && sale.chassis_number) {
+          v = vehicles.find(x => x.chassis_number === sale.chassis_number);
+        }
+        if (v) {
+          vehicleList.push({
+            vehicle_number: v.vehicle_number || '',
+            vehicle_brand:  v.brand || sale.vehicle_brand || '',
+            vehicle_model:  v.model || sale.vehicle_model || '',
+            vehicle_year:   v.year?.toString() || sale.vehicle_year || '',
+            chassis_number: v.chassis_number || sale.chassis_number || '',
+            source: 'Sales Invoice',
+          });
+        } else if (sale.vehicle_brand || sale.vehicle_model || sale.vehicle_number || sale.chassis_number) {
           vehicleList.push({
             vehicle_number: sale.vehicle_number || '',
             vehicle_brand:  sale.vehicle_brand || '',
             vehicle_model:  sale.vehicle_model || '',
-            vehicle_year:   '',
-            source: 'Sales Invoice'
+            vehicle_year:   sale.vehicle_year || '',
+            chassis_number: sale.chassis_number || '',
+            source: 'Sales Invoice',
           });
         }
       }
 
+      // From service registrations
       for (const reg of customerRegs) {
         vehicleList.push({
           vehicle_number: reg.vehicle_number || '',
           vehicle_brand:  reg.vehicle_brand || '',
           vehicle_model:  reg.vehicle_model || '',
           vehicle_year:   reg.vehicle_year || '',
-          source: 'Registration'
+          chassis_number: reg.chassis_number || '',
+          source: 'Service Registration',
         });
       }
 
-      // Deduplicate by vehicle_number
+      // From customer.vehicle_info (legacy)
+      if (customer?.vehicle_info) {
+        const vi = customer.vehicle_info;
+        vehicleList.push({
+          vehicle_number: vi.vehicle_number || vi.registration_number || '',
+          vehicle_brand:  vi.brand || '',
+          vehicle_model:  vi.model || '',
+          vehicle_year:   vi.year?.toString() || '',
+          chassis_number: vi.chassis_number || '',
+          source: 'Customer Record',
+        });
+      }
+
+      // Deduplicate — prefer non-empty vehicle_number, then chassis_number
       const seen = new Set();
       const unique = vehicleList.filter(v => {
-        if (!v.vehicle_number || seen.has(v.vehicle_number)) return false;
-        seen.add(v.vehicle_number);
+        const key = v.vehicle_number || v.chassis_number;
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
         return true;
       });
 
       if (unique.length === 0) return;
 
       if (unique.length === 1) {
-        // Only one vehicle — auto-fill directly
         setNewJobCardData(prev => ({
           ...prev,
           vehicle_number: unique[0].vehicle_number,
@@ -2428,7 +2453,6 @@ const JobCards = () => {
         }));
         toast.success('Vehicle info loaded');
       } else {
-        // Multiple vehicles — show picker
         setVehiclePickerOptions(unique);
         setShowVehiclePicker(true);
       }
@@ -3629,7 +3653,7 @@ const ServicesBilling = () => {
   const [activeDescriptionIndex, setActiveDescriptionIndex] = useState(null);
   const [billItems, setBillItems] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState('');
-  const [billNumber, setBillNumber] = useState(`SB-${Date.now().toString().slice(-6)}`);
+  const [billNumber, setBillNumber] = useState('');
   const [billDate, setBillDate] = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(false);
   
@@ -3663,9 +3687,23 @@ const ServicesBilling = () => {
     { name: 'Chain Lubricant', hsn_sac: '34031900', unit: 'Nos', rate: 95, gst_percent: 18 }
   ]);
 
+  const fetchNextBillNumber = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API}/service-bills/next-number`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setBillNumber(res.data.bill_number);
+    } catch {
+      // Fallback: count-based number
+      setBillNumber(`SB-${Date.now().toString().slice(-6)}`);
+    }
+  };
+
   useEffect(() => {
     fetchCustomers();
     fetchSpareParts();
+    fetchNextBillNumber();
     if (activeTab === 'view') {
       fetchServiceBills();
     }
@@ -3816,9 +3854,19 @@ const ServicesBilling = () => {
         service.job_card_number.toLowerCase().includes(partialJobCard.toLowerCase())
       ).slice(0, 10); // Limit to 10 suggestions
 
+      // Fetch customers to resolve names (services don't store customer_name directly)
+      const token2 = localStorage.getItem('token');
+      const custRes = await axios.get(`${API}/customers`, {
+        params: { page: 1, limit: 10000 },
+        headers: { Authorization: `Bearer ${token2}` }
+      }).catch(() => ({ data: { data: [] } }));
+      const custList = custRes.data.data || custRes.data || [];
+      const custMap = {};
+      custList.forEach(c => { if (c.id) custMap[c.id] = c.name; });
+
       setJobCardSuggestions(matchingServices.map(service => ({
         job_card_number: service.job_card_number,
-        customer_name: service.customer_name || 'Unknown Customer',
+        customer_name: custMap[service.customer_id] || service.customer_name || '',
         service_type: service.service_type,
         service_id: service.id
       })));
@@ -4278,7 +4326,7 @@ const ServicesBilling = () => {
       // Reset form
       setBillItems([]);
       setSelectedCustomer('');
-      setBillNumber(`SB-${Date.now().toString().slice(-6)}`);
+      fetchNextBillNumber();
       setBillDate(new Date().toISOString().split('T')[0]);
       setJobCardNumber('');
       setServiceDetails(null);
@@ -4294,7 +4342,7 @@ const ServicesBilling = () => {
   const handlePrintBill = (pageSize = 'A5') => {
     const selectedCustomerData = customers.find(c => c.id === selectedCustomer);
     const totals = calculateTotals();
-    const w = pageSize === 'A4' ? '210mm' : '148mm';
+    const w = pageSize === 'A4' ? '210mm' : '210mm'; // A5 landscape = 210mm wide
     const padding = pageSize === 'A4' ? '10mm' : '6mm';
     const fontSize = pageSize === 'A4' ? '11px' : '9px';
 
@@ -4365,7 +4413,7 @@ const ServicesBilling = () => {
         .bill-footer{margin-top:12px;text-align:center;color:#6b7280;font-size:${pageSize==='A4'?'10px':'8px'};border-top:1px solid #e5e7eb;padding-top:8px;}
         @media print{
           body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-          @page{size:${pageSize};margin:${padding};}
+          @page{size:${pageSize === 'A5' ? 'A5 landscape' : 'A4'};margin:${padding};}
           .bill-container{padding:0;}
         }
       </style>
@@ -5369,7 +5417,7 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
 
   const handlePrintBill = (bill, pageSize = 'A5') => {
     const hasItems = bill.items && bill.items.length > 0;
-    const w = pageSize === 'A4' ? '210mm' : '148mm';
+    const w = pageSize === 'A4' ? '210mm' : '210mm'; // A5 landscape = 210mm wide
     const padding = pageSize === 'A4' ? '10mm' : '6mm';
     const fs = pageSize === 'A4' ? '11px' : '9px';
     const fsSmall = pageSize === 'A4' ? '10px' : '8px';
@@ -5464,7 +5512,7 @@ const ViewBillsContent = ({ serviceBills, searchTerm, setSearchTerm, loading, on
         .bill-footer{margin-top:10px;text-align:center;color:#6b7280;font-size:${fsXSmall};border-top:1px solid #e5e7eb;padding-top:7px;}
         @media print{
           body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-          @page{size:${pageSize};margin:${padding};}
+          @page{size:${pageSize === 'A5' ? 'A5 landscape' : 'A4'};margin:${padding};}
           .bill-container{padding:0;}
         }
       </style>
