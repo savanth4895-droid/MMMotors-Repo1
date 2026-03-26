@@ -4,7 +4,7 @@ import axios from 'axios';
 import { Button } from './ui/button';
 import {
   Upload, Download, FileText, Users, Car, Wrench, Package,
-  CheckCircle, AlertCircle, Clock, X, Eye, RefreshCw
+  CheckCircle, AlertCircle, Clock, X, Eye, RefreshCw, ClipboardList
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -43,6 +43,25 @@ const DATA_TYPES = [
       { label: 'Service', color: 'rose', fields: ['registration_date', 'customer_name', 'customer_mobile', 'vehicle_number', 'chassis_number', 'vehicle_brand', 'vehicle_model', 'vehicle_year', 'service_type', 'description', 'amount'] },
     ]
   },
+  {
+    value: 'service_bills', label: 'Service Bills', icon: FileText, color: 'indigo',
+    description: 'Service billing records — one row per line item, grouped by job card',
+    fieldGroups: [
+      { label: 'Bill', color: 'indigo', fields: ['bill_date', 'job_card_number', 'status'] },
+      { label: 'Customer & Vehicle', color: 'blue', fields: ['customer_name', 'customer_mobile', 'vehicle_number', 'vehicle_brand', 'vehicle_model'] },
+      { label: 'Line Item', color: 'green', fields: ['item_description', 'item_hsn', 'item_qty', 'item_rate', 'item_gst_percent'] },
+      { label: 'Total (optional)', color: 'amber', fields: ['total_amount'] },
+    ]
+  },
+  {
+    value: 'registrations', label: 'Registrations', icon: ClipboardList, color: 'teal',
+    description: 'Service registrations — links customers to their vehicles (REG-XXXXXX)',
+    fieldGroups: [
+      { label: 'Customer', color: 'blue',  fields: ['customer_name', 'customer_mobile', 'customer_address'] },
+      { label: 'Vehicle',  color: 'green', fields: ['vehicle_number', 'vehicle_brand', 'vehicle_model', 'vehicle_year', 'chassis_number', 'engine_number'] },
+      { label: 'Date',     color: 'teal',  fields: ['registration_date'] },
+    ]
+  },
 ];
 
 const C = {
@@ -52,6 +71,8 @@ const C = {
   rose:   { bg: 'bg-rose-50',   border: 'border-rose-200',   text: 'text-rose-700',   badge: 'bg-rose-100 text-rose-700',    icon: 'text-rose-500',   ring: 'ring-rose-400'   },
   purple: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', badge: 'bg-purple-100 text-purple-700',icon: 'text-purple-500', ring: 'ring-purple-400' },
   orange: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', badge: 'bg-orange-100 text-orange-700',icon: 'text-orange-500', ring: 'ring-orange-400' },
+  indigo: { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700', badge: 'bg-indigo-100 text-indigo-700',icon: 'text-indigo-500', ring: 'ring-indigo-400' },
+  teal:   { bg: 'bg-teal-50',   border: 'border-teal-200',   text: 'text-teal-700',   badge: 'bg-teal-100 text-teal-700',   icon: 'text-teal-500',   ring: 'ring-teal-400'   },
 };
 
 function StatusIcon({ status }) {
