@@ -507,10 +507,17 @@ const BrandDetails = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [editVehicle, setEditVehicle] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  
+
+  // Sort & Filter state
+  const [sortBy, setSortBy] = useState('date_received');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterModel, setFilterModel] = useState('all');
+  const [filterColor, setFilterColor] = useState('all');
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(2000);
+  const [itemsPerPage] = useState(500);
 
   useEffect(() => {
     fetchBrandVehicles();
@@ -518,7 +525,7 @@ const BrandDetails = () => {
 
   useEffect(() => {
     filterVehicles();
-  }, [vehicles, searchTerm]);
+  }, [vehicles, searchTerm, sortBy, sortOrder, filterStatus, filterModel, filterColor]);
 
   const fetchBrandVehicles = async () => {
     try {
@@ -531,21 +538,86 @@ const BrandDetails = () => {
     }
   };
 
+  // Unique model and color options for filter dropdowns
+  const modelOptions = [...new Set(vehicles.map(v => v.model).filter(Boolean))].sort();
+  const colorOptions = [...new Set(vehicles.map(v => v.color).filter(Boolean))].sort();
+
   const filterVehicles = () => {
-    let filtered = vehicles;
+    let filtered = [...vehicles];
+
+    // Search
     if (searchTerm) {
-      filtered = vehicles.filter(vehicle =>
-        vehicle.chassis_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        vehicle.engine_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        vehicle.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        vehicle.color?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        vehicle.key_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        vehicle.vehicle_number?.toLowerCase().includes(searchTerm.toLowerCase())
+      const q = searchTerm.toLowerCase();
+      filtered = filtered.filter(v =>
+        v.chassis_number?.toLowerCase().includes(q) ||
+        v.engine_number?.toLowerCase().includes(q) ||
+        v.model?.toLowerCase().includes(q) ||
+        v.color?.toLowerCase().includes(q) ||
+        v.key_number?.toLowerCase().includes(q) ||
+        v.vehicle_number?.toLowerCase().includes(q) ||
+        v.inbound_location?.toLowerCase().includes(q) ||
+        v.page_number?.toLowerCase().includes(q)
       );
     }
+
+    // Status filter
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter(v => v.status === filterStatus);
+    }
+
+    // Model filter
+    if (filterModel !== 'all') {
+      filtered = filtered.filter(v => v.model === filterModel);
+    }
+
+    // Color filter
+    if (filterColor !== 'all') {
+      filtered = filtered.filter(v => v.color === filterColor);
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      let av, bv;
+      switch (sortBy) {
+        case 'date_received':
+          av = new Date(a.date_received || 0);
+          bv = new Date(b.date_received || 0);
+          break;
+        case 'model':
+          av = a.model || '';
+          bv = b.model || '';
+          break;
+        case 'color':
+          av = a.color || '';
+          bv = b.color || '';
+          break;
+        case 'status':
+          av = a.status || '';
+          bv = b.status || '';
+          break;
+        case 'chassis_number':
+          av = a.chassis_number || '';
+          bv = b.chassis_number || '';
+          break;
+        default:
+          return 0;
+      }
+      if (sortOrder === 'asc') return av > bv ? 1 : av < bv ? -1 : 0;
+      return av < bv ? 1 : av > bv ? -1 : 0;
+    });
+
     setFilteredVehicles(filtered);
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
   };
+
+  const clearFilters = () => {
+    setFilterStatus('all');
+    setFilterModel('all');
+    setFilterColor('all');
+    setSearchTerm('');
+  };
+
+  const activeFilterCount = [filterStatus, filterModel, filterColor].filter(f => f !== 'all').length;
 
   const getStatusBadge = (status) => {
     const statusConfig = {
@@ -704,49 +776,171 @@ const BrandDetails = () => {
         </Card>
       </div>
 
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-        <Input
-          placeholder="Search by chassis no, engine no, model, color, vehicle no, or key number..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
+      {/* Search + Sort + Filter Row */}
+      <div className="flex flex-wrap gap-3 items-end">
+        {/* Search */}
+        <div className="relative flex-1 min-w-56">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Search chassis, engine, model, color, vehicle no..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
+        {/* Status Filter */}
+        <div className="w-36">
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger>
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="in_stock">In Stock</SelectItem>
+              <SelectItem value="sold">Sold</SelectItem>
+              <SelectItem value="returned">Returned</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Model Filter */}
+        <div className="w-44">
+          <Select value={filterModel} onValueChange={setFilterModel}>
+            <SelectTrigger>
+              <SelectValue placeholder="Model" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Models</SelectItem>
+              {modelOptions.map(m => (
+                <SelectItem key={m} value={m}>{m}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Color Filter */}
+        <div className="w-36">
+          <Select value={filterColor} onValueChange={setFilterColor}>
+            <SelectTrigger>
+              <SelectValue placeholder="Color" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Colors</SelectItem>
+              {colorOptions.map(c => (
+                <SelectItem key={c} value={c}>{c}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Sort */}
+        <SortDropdown
+          currentSort={sortBy}
+          currentOrder={sortOrder}
+          onSortChange={(field, order) => { setSortBy(field); setSortOrder(order); }}
+          options={[
+            { field: 'date_received', order: 'desc', label: 'Newest First' },
+            { field: 'date_received', order: 'asc',  label: 'Oldest First' },
+            { field: 'model',         order: 'asc',  label: 'Model (A-Z)' },
+            { field: 'model',         order: 'desc', label: 'Model (Z-A)' },
+            { field: 'color',         order: 'asc',  label: 'Color (A-Z)' },
+            { field: 'status',        order: 'asc',  label: 'Status (A-Z)' },
+            { field: 'chassis_number',order: 'asc',  label: 'Chassis (A-Z)' },
+          ]}
         />
+
+        {/* Clear Filters */}
+        {(activeFilterCount > 0 || searchTerm) && (
+          <Button variant="outline" size="sm" onClick={clearFilters} className="flex items-center gap-1 text-gray-500">
+            <Filter className="w-3 h-3" />
+            Clear ({activeFilterCount + (searchTerm ? 1 : 0)})
+          </Button>
+        )}
       </div>
 
       {/* Vehicle Details Table */}
       <Card>
         <CardHeader>
-          <CardTitle>
-            {brand} Vehicles ({filteredVehicles.length} vehicles)
-          </CardTitle>
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <CardTitle>
+              {brand} Vehicles ({filteredVehicles.length}{filteredVehicles.length !== vehicles.length ? ` of ${vehicles.length}` : ''} vehicles)
+            </CardTitle>
+            {activeFilterCount > 0 && (
+              <div className="flex gap-2 flex-wrap">
+                {filterStatus !== 'all' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                    Status: {filterStatus.replace('_', ' ')}
+                    <button onClick={() => setFilterStatus('all')} className="ml-1 hover:text-blue-600">×</button>
+                  </span>
+                )}
+                {filterModel !== 'all' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
+                    Model: {filterModel}
+                    <button onClick={() => setFilterModel('all')} className="ml-1 hover:text-purple-600">×</button>
+                  </span>
+                )}
+                {filterColor !== 'all' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                    Color: {filterColor}
+                    <button onClick={() => setFilterColor('all')} className="ml-1 hover:text-green-600">×</button>
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b bg-gray-50">
-                  <th className="text-left p-3 font-semibold">Date</th>
-                  <th className="text-left p-3 font-semibold">Chassis No</th>
-                  <th className="text-left p-3 font-semibold">Engine No</th>
-                  <th className="text-left p-3 font-semibold">Model</th>
-                  <th className="text-left p-3 font-semibold">Color</th>
-                  <th className="text-left p-3 font-semibold">Vehicle No</th>
-                  <th className="text-left p-3 font-semibold">Key no.</th>
-                  <th className="text-left p-3 font-semibold">Inbound Location</th>
-                  <th className="text-left p-3 font-semibold">Status</th>
-                  <th className="text-left p-3 font-semibold">Return Date</th>
-                  <th className="text-left p-3 font-semibold">Page Number</th>
-                  <th className="text-left p-3 font-semibold">Outbound Location</th>
-                  <th className="text-left p-3 font-semibold">Actions</th>
+                  {[
+                    { label: 'Date',              field: 'date_received' },
+                    { label: 'Chassis No',         field: 'chassis_number' },
+                    { label: 'Engine No',          field: null },
+                    { label: 'Model',              field: 'model' },
+                    { label: 'Color',              field: 'color' },
+                    { label: 'Vehicle No',         field: null },
+                    { label: 'Key no.',            field: null },
+                    { label: 'Inbound Location',   field: null },
+                    { label: 'Status',             field: 'status' },
+                    { label: 'Return Date',        field: null },
+                    { label: 'Page Number',        field: null },
+                    { label: 'Outbound Location',  field: null },
+                    { label: 'Actions',            field: null },
+                  ].map(({ label, field }) => (
+                    <th
+                      key={label}
+                      className={`text-left p-3 font-semibold text-sm whitespace-nowrap ${field ? 'cursor-pointer select-none hover:bg-gray-100 group' : ''}`}
+                      onClick={field ? () => {
+                        if (sortBy === field) setSortOrder(o => o === 'asc' ? 'desc' : 'asc');
+                        else { setSortBy(field); setSortOrder('asc'); }
+                      } : undefined}
+                    >
+                      <span className="flex items-center gap-1">
+                        {label}
+                        {field && (
+                          <span className={`text-xs ${sortBy === field ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-400'}`}>
+                            {sortBy === field ? (sortOrder === 'asc' ? '↑' : '↓') : '↕'}
+                          </span>
+                        )}
+                      </span>
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {filteredVehicles.length === 0 ? (
                   <tr>
-                    <td colSpan="12" className="p-8 text-center text-gray-500">
-                      {searchTerm ? `No ${brand} vehicles found matching your search` : `No ${brand} vehicles found`}
+                    <td colSpan="13" className="p-8 text-center text-gray-500">
+                      {searchTerm || filterStatus !== 'all' || filterModel !== 'all' || filterColor !== 'all'
+                        ? (
+                          <div>
+                            <p className="font-medium">No vehicles match your filters</p>
+                            <button onClick={clearFilters} className="mt-2 text-sm text-blue-600 underline">Clear all filters</button>
+                          </div>
+                        ) : `No ${brand} vehicles found`}
                     </td>
                   </tr>
                 ) : (
