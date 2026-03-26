@@ -2542,7 +2542,7 @@ async def upload_import_file(
     """Upload and process import file"""
     
     # Validate data type
-    valid_types = ["customers", "vehicles", "spare_parts", "services", "service_bills", "registrations"]
+    valid_types = ["customers", "vehicles", "spare_parts", "services", "service_bills", "registrations", "service_customers"]
     if data_type not in valid_types:
         raise HTTPException(status_code=400, detail=f"Invalid data type. Must be one of: {valid_types}")
     
@@ -2583,6 +2583,8 @@ async def upload_import_file(
             result = await import_service_bills_data(data, import_job, current_user.id)
         elif data_type == "registrations":
             result = await import_registrations_data(data, import_job, current_user.id)
+        elif data_type == "service_customers":
+            result = await import_service_customers_data(data, import_job, current_user.id)
         
         import_job.status = "completed"
         import_job.end_time = datetime.now(timezone.utc)
@@ -2626,7 +2628,8 @@ async def download_import_template(
         "spare_parts": "name,part_number,brand,quantity,unit,unit_price,hsn_sac,gst_percentage,supplier,compatible_models\nBrake Pad,BP001,TVS,50,Nos,250.00,87084090,18.0,ABC Supplies,\"Apache RTR 160, Pulsar 150\"\nEngine Oil,EO001,CASTROL,25,Ltr,450.00,27101981,28.0,XYZ Motors,\"All Models\"",
         "services": "registration_date,customer_name,customer_mobile,vehicle_number,chassis_number,vehicle_brand,vehicle_model,vehicle_year,service_type,description,amount\n2025-01-15,John Doe,9876543210,KA01AB1234,ABC123456789,TVS,Apache RTR 160,2024,periodic_service,General servicing,1500.00\n2025-01-16,Jane Smith,9876543211,KA02CD5678,DEF123456789,BAJAJ,Pulsar 150,2023,repair,Brake repair,800.00",
         "service_bills": "bill_date,customer_name,customer_mobile,vehicle_number,vehicle_brand,vehicle_model,job_card_number,item_description,item_hsn,item_qty,item_rate,item_gst_percent,total_amount,status\n2025-01-15,John Doe,9876543210,KA01AB1234,TVS,Apache RTR 160,JOB-000001,Engine Oil Change,27101,1,450,18,531,paid\n2025-01-16,Jane Smith,9876543211,KA02CD5678,BAJAJ,Pulsar 150,,Brake Pad Replacement,87084090,2,250,18,590,pending",
-        "registrations": "customer_name,customer_mobile,customer_address,vehicle_number,vehicle_brand,vehicle_model,vehicle_year,chassis_number,engine_number,registration_date\nJohn Doe,9876543210,\"123 Main St, Bangalore\",KA01AB1234,TVS,Apache RTR 160,2024,ABC123456789012345,ENG987654321,2025-01-15\nJane Smith,9876543211,\"456 Oak Ave, Mysore\",KA02CD5678,BAJAJ,Pulsar 150,2023,DEF123456789012345,ENG987654322,2025-01-16"
+        "registrations": "customer_name,customer_mobile,customer_address,vehicle_number,vehicle_brand,vehicle_model,vehicle_year,chassis_number,engine_number,registration_date\nJohn Doe,9876543210,\"123 Main St, Bangalore\",KA01AB1234,TVS,Apache RTR 160,2024,ABC123456789012345,ENG987654321,2025-01-15\nJane Smith,9876543211,\"456 Oak Ave, Mysore\",KA02CD5678,BAJAJ,Pulsar 150,2023,DEF123456789012345,ENG987654322,2025-01-16",
+        "service_customers": "name,mobile,phone,email,address,vehicle_brand,vehicle_model,vehicle_year,vehicle_number,chassis_number,engine_number\nJohn Doe,9876543210,,john@example.com,\"123 Main St, Bangalore\",TVS,Apache RTR 160,2024,KA01AB1234,ABC123456789012345,ENG987654321\nJane Smith,9876543211,9876543212,jane@example.com,\"456 Oak Ave, Mysore\",BAJAJ,Pulsar 150,2023,KA02CD5678,DEF123456789012345,ENG987654322"
     }
     
     if data_type not in templates:
@@ -3614,39 +3617,46 @@ async def import_registrations_data(data: List[Dict], import_job: ImportJob, use
                 })
                 import_stats['customers_created'] += 1
 
-            # Parse registration_date
-            reg_date = datetime.now(timezone.utc)
+            # Parse registration_date — store None if not provided, don't default to today
+            reg_date = None
             raw_date = (row.get('registration_date') or '').strip()
             if raw_date:
                 try:
                     from dateutil import parser as date_parser
                     reg_date = date_parser.parse(raw_date)
                 except Exception:
-                    pass
+                    incomplete_records.append({"row": idx + 2, "missing_fields": ["registration_date (invalid format)"]})
 
             seq = await next_sequence("registrations")
             registration_number = f"REG-{seq:06d}"
 
-            registration = Registration(
-                registration_number=registration_number,
-                customer_id=customer_id,
-                customer_name=customer_name or "Unknown",
-                customer_mobile=customer_mobile,
-                customer_address=(row.get('customer_address') or '').strip() or None,
-                vehicle_number=vehicle_number,
-                vehicle_brand=(row.get('vehicle_brand') or '').strip() or None,
-                vehicle_model=(row.get('vehicle_model') or '').strip() or None,
-                vehicle_year=(row.get('vehicle_year') or '').strip() or None,
-                chassis_number=(row.get('chassis_number') or '').strip() or None,
-                engine_number=(row.get('engine_number') or '').strip() or None,
-                registration_date=reg_date,
-                created_by=user_id
-            )
-            await db.registrations.insert_one(registration.dict())
+            reg_dict = {
+                "id": str(uuid.uuid4()),
+                "registration_number": registration_number,
+                "customer_id": customer_id,
+                "customer_name": customer_name or "Unknown",
+                "customer_mobile": customer_mobile,
+                "customer_address": (row.get('customer_address') or '').strip() or None,
+                "vehicle_number": vehicle_number,
+                "vehicle_brand": (row.get('vehicle_brand') or '').strip() or None,
+                "vehicle_model": (row.get('vehicle_model') or '').strip() or None,
+                "vehicle_year": (row.get('vehicle_year') or '').strip() or None,
+                "chassis_number": (row.get('chassis_number') or '').strip() or None,
+                "engine_number": (row.get('engine_number') or '').strip() or None,
+                "registration_date": reg_date,  # None if not provided
+                "created_by": user_id,
+                "created_at": datetime.now(timezone.utc)
+            }
+            await db.registrations.insert_one(reg_dict)
             successful += 1
 
+            missing = []
             if not customer_name:
-                incomplete_records.append({"row": idx + 2, "missing_fields": ["customer_name"]})
+                missing.append("customer_name")
+            if not raw_date:
+                missing.append("registration_date")
+            if missing:
+                incomplete_records.append({"row": idx + 2, "missing_fields": missing})
 
         except Exception as e:
             failed += 1
@@ -3664,6 +3674,138 @@ async def import_registrations_data(data: List[Dict], import_job: ImportJob, use
         job_id=import_job.id,
         status="completed",
         message=f"Registrations import: {successful} created, {failed} failed, {skipped} skipped (duplicates by mobile+vehicle). {import_stats['customers_linked']} customers linked, {import_stats['customers_created']} customers created.",
+        total_records=len(data),
+        successful_records=successful,
+        failed_records=failed,
+        skipped_records=skipped,
+        errors=errors,
+        cross_reference_stats=import_stats,
+        incomplete_records=incomplete_records
+    )
+
+    return ImportResult(
+        job_id=import_job.id,
+        status="completed",
+        message=f"Registrations import: {successful} created, {failed} failed, {skipped} skipped (duplicates by mobile+vehicle). {import_stats['customers_linked']} customers linked, {import_stats['customers_created']} customers created.",
+        total_records=len(data),
+        successful_records=successful,
+        failed_records=failed,
+        skipped_records=skipped,
+        errors=errors,
+        cross_reference_stats=import_stats,
+        incomplete_records=incomplete_records
+    )
+
+async def import_service_customers_data(data: List[Dict], import_job: ImportJob, user_id: str) -> ImportResult:
+    """Import service-only customers. Sets customer_type='service'.
+    Skips if mobile already exists. Attaches vehicle_info if provided.
+    """
+    successful = 0
+    failed = 0
+    skipped = 0
+    errors = []
+    incomplete_records = []
+    import_stats = {'vehicles_linked': 0}
+
+    # Pre-fetch existing mobiles
+    existing_mobiles = set()
+    async for c in db.customers.find({}, {"mobile": 1}):
+        if c.get("mobile"):
+            existing_mobiles.add(str(c["mobile"]))
+
+    existing_vehicles = {}
+    async for v in db.vehicles.find({}, {"id": 1, "chassis_number": 1, "vehicle_number": 1}):
+        if v.get("chassis_number"):
+            existing_vehicles[v["chassis_number"]] = v
+        if v.get("vehicle_number"):
+            existing_vehicles[v["vehicle_number"]] = v
+
+    for idx, row in enumerate(data):
+        try:
+            mobile = (safe_str(row.get('mobile', '')) or safe_str(row.get('phone', ''))).strip()
+            name = safe_str(row.get('name', '')).strip() or "Unknown"
+
+            if not mobile:
+                raise ValueError("mobile is required")
+
+            if mobile in existing_mobiles:
+                # Update existing customer to include service type
+                existing = await db.customers.find_one({"mobile": mobile})
+                if existing:
+                    current_type = existing.get("customer_type", "sales")
+                    if current_type == "sales":
+                        await db.customers.update_one(
+                            {"id": existing["id"]},
+                            {"$set": {"customer_type": "both"}}
+                        )
+                skipped += 1
+                continue
+            existing_mobiles.add(mobile)
+
+            customer_id = str(uuid.uuid4())
+            customer_dict = {
+                "id": customer_id,
+                "name": name,
+                "mobile": mobile,
+                "phone": safe_str(row.get('phone', '')).strip() or None,
+                "email": safe_str(row.get('email', '')).strip() or None,
+                "address": safe_str(row.get('address', '')).strip() or "",
+                "customer_type": "service",
+                "created_at": datetime.now(timezone.utc),
+                "created_by": user_id
+            }
+
+            # Vehicle info
+            chassis = safe_str(row.get('chassis_number', '')).strip()
+            vehicle_no = safe_str(row.get('vehicle_number', '')).strip()
+            vehicle_info = {}
+            if any([row.get('vehicle_brand'), row.get('vehicle_model'), vehicle_no, chassis]):
+                vehicle_info = {
+                    "brand": safe_str(row.get('vehicle_brand', '')).strip(),
+                    "model": safe_str(row.get('vehicle_model', '')).strip(),
+                    "year": safe_str(row.get('vehicle_year', '')).strip(),
+                    "vehicle_number": vehicle_no,
+                    "chassis_number": chassis,
+                    "engine_number": safe_str(row.get('engine_number', '')).strip(),
+                }
+                customer_dict["vehicle_info"] = vehicle_info
+
+            # Link to existing vehicle in stock
+            matched = existing_vehicles.get(chassis) or existing_vehicles.get(vehicle_no)
+            if matched:
+                await db.vehicles.update_one(
+                    {"id": matched["id"]},
+                    {"$set": {"customer_id": customer_id}}
+                )
+                import_stats["vehicles_linked"] += 1
+
+            await db.customers.insert_one(customer_dict)
+            successful += 1
+
+            missing = []
+            if not safe_str(row.get('address', '')).strip():
+                missing.append("address")
+            if not vehicle_info:
+                missing.append("vehicle details")
+            if missing:
+                incomplete_records.append({"row": idx + 2, "missing_fields": missing})
+
+        except Exception as e:
+            failed += 1
+            errors.append({"row": idx + 2, "error": str(e)})
+
+    import_job.successful_records = successful
+    import_job.failed_records = failed
+    import_job.skipped_records = skipped
+    import_job.processed_records = successful + failed + skipped
+    import_job.errors = errors
+    import_job.cross_reference_stats = import_stats
+    import_job.incomplete_records = incomplete_records
+
+    return ImportResult(
+        job_id=import_job.id,
+        status="completed",
+        message=f"Service customers import: {successful} created, {failed} failed, {skipped} already existed (type updated to 'both'). {import_stats['vehicles_linked']} vehicles linked.",
         total_records=len(data),
         successful_records=successful,
         failed_records=failed,
