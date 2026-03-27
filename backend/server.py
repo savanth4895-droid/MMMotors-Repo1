@@ -98,6 +98,105 @@ SECRET_KEY = os.environ['JWT_SECRET_KEY']
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours
 
+# Google Drive Configuration
+# Set GOOGLE_SERVICE_ACCOUNT_JSON env var to the full JSON key content (as a string)
+# Set GOOGLE_DRIVE_PARENT_FOLDER_ID to the ID of the MMMotors root folder in Drive
+GOOGLE_SERVICE_ACCOUNT_JSON = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON', '')
+GOOGLE_DRIVE_PARENT_FOLDER_ID = os.environ.get('GOOGLE_DRIVE_PARENT_FOLDER_ID', '')
+
+def _get_drive_service():
+    """Build and return an authenticated Google Drive service, or None if not configured."""
+    if not GOOGLE_SERVICE_ACCOUNT_JSON:
+        return None
+    try:
+        import json as _json
+        from google.oauth2 import service_account as _sa
+        from googleapiclient.discovery import build as _build
+        creds = _sa.Credentials.from_service_account_info(
+            _json.loads(GOOGLE_SERVICE_ACCOUNT_JSON),
+            scopes=['https://www.googleapis.com/auth/drive']
+        )
+        return _build('drive', 'v3', credentials=creds, cache_discovery=False)
+    except Exception as e:
+        print(f"Google Drive init failed: {e}")
+        return None
+
+def _sanitize_folder_name(name: str) -> str:
+    """Remove characters not allowed in Drive folder names."""
+    import re as _re
+    return _re.sub(r'[\\/:*?"<>|]', '_', name).strip() or "Unknown"
+
+async def _get_or_create_drive_folder(service, name: str, parent_id: str) -> str:
+    """Return folder ID, creating it if it doesn't exist."""
+    import asyncio as _asyncio
+    safe_name = _sanitize_folder_name(name)
+    # Search for existing folder
+    query = (
+        f"name='{safe_name}' and mimeType='application/vnd.google-apps.folder'"
+        f" and '{parent_id}' in parents and trashed=false"
+    )
+    loop = _asyncio.get_event_loop()
+    results = await loop.run_in_executor(
+        None,
+        lambda: service.files().list(q=query, fields="files(id,name)").execute()
+    )
+    files = results.get('files', [])
+    if files:
+        return files[0]['id']
+    # Create it
+    meta = {'name': safe_name, 'mimeType': 'application/vnd.google-apps.folder', 'parents': [parent_id]}
+    folder = await loop.run_in_executor(None, lambda: service.files().create(body=meta, fields='id').execute())
+    return folder['id']
+
+async def upload_milestone_doc_to_drive(
+    customer_name: str,
+    vehicle_model: str,
+    milestone_key: str,
+    doc_name: str,
+    doc_base64: str,
+    mime_type: str
+) -> str | None:
+    """Upload a base64-encoded doc to Drive under MMMotors/{CustomerName - VehicleModel}/{milestone_key}/.
+    Returns the public Drive file URL, or None if Drive is not configured."""
+    service = _get_drive_service()
+    if not service or not GOOGLE_DRIVE_PARENT_FOLDER_ID:
+        return None
+    try:
+        import base64 as _b64
+        import io as _io
+        import asyncio as _asyncio
+        from googleapiclient.http import MediaIoBaseUpload
+
+        # Build folder path: root → CustomerName - VehicleModel → milestone_key
+        customer_folder_name = f"{customer_name} - {vehicle_model}".strip(" -") or "Unknown Customer"
+        customer_folder_id = await _get_or_create_drive_folder(service, customer_folder_name, GOOGLE_DRIVE_PARENT_FOLDER_ID)
+        milestone_folder_id = await _get_or_create_drive_folder(service, milestone_key.replace('_', ' ').title(), customer_folder_id)
+
+        # Decode base64 (strip data URI prefix if present)
+        if ',' in doc_base64:
+            doc_base64 = doc_base64.split(',', 1)[1]
+        file_bytes = _b64.b64decode(doc_base64)
+
+        file_meta = {'name': doc_name, 'parents': [milestone_folder_id]}
+        media = MediaIoBaseUpload(_io.BytesIO(file_bytes), mimetype=mime_type, resumable=False)
+        loop = _asyncio.get_event_loop()
+        uploaded = await loop.run_in_executor(
+            None,
+            lambda: service.files().create(body=file_meta, media_body=media, fields='id,webViewLink').execute()
+        )
+        # Make it viewable by anyone with the link
+        await loop.run_in_executor(
+            None,
+            lambda: service.permissions().create(
+                fileId=uploaded['id'],
+                body={'type': 'anyone', 'role': 'reader'}
+            ).execute()
+        )
+        return uploaded.get('webViewLink')
+    except Exception as e:
+        print(f"Drive upload failed: {e}")
+        return None
+
 # Create the main app without a prefix
 app = FastAPI(title="Two Wheeler Business Management API")
 
@@ -2198,10 +2297,40 @@ async def complete_milestone(
     body: Dict[str, Any],
     current_user: User = Depends(get_current_user)
 ):
-    """Mark a milestone complete and optionally store compressed docs."""
+    """Mark a milestone complete and optionally store compressed docs. Also uploads to Google Drive."""
     valid_keys = {"customer_docs", "invoice_insurance", "road_tax", "number_plates", "plates_attached"}
     if milestone_key not in valid_keys:
         raise HTTPException(status_code=400, detail=f"Invalid milestone key. Must be one of: {valid_keys}")
+
+    # Fetch sale + customer for Drive folder naming
+    sale = await db.sales.find_one({"id": sale_id}) or {}
+    customer = await db.customers.find_one({"id": sale.get("customer_id", "")}) or {}
+    customer_name = customer.get("name") or sale.get("customer_name") or "Unknown Customer"
+    vehicle_model = (
+        sale.get("vehicle_model")
+        or (customer.get("vehicle_info") or {}).get("model")
+        or "Unknown Vehicle"
+    )
+
+    # Upload docs to Drive and enrich with drive_url
+    docs = body.get("docs", [])
+    if isinstance(docs, list):
+        enriched_docs = []
+        for doc in docs:
+            enriched = dict(doc)
+            if not enriched.get("drive_url"):  # don't re-upload already uploaded docs
+                drive_url = await upload_milestone_doc_to_drive(
+                    customer_name=customer_name,
+                    vehicle_model=vehicle_model,
+                    milestone_key=milestone_key,
+                    doc_name=doc.get("name", "document"),
+                    doc_base64=doc.get("data", ""),
+                    mime_type=doc.get("mime_type", "application/octet-stream")
+                )
+                if drive_url:
+                    enriched["drive_url"] = drive_url
+            enriched_docs.append(enriched)
+        docs = enriched_docs
 
     # Upsert the milestone doc
     now = datetime.now(timezone.utc)
@@ -2211,26 +2340,21 @@ async def complete_milestone(
         f"milestones.{milestone_key}.notes": body.get("notes", ""),
         "updated_at": now,
     }
-    # Store docs if provided (already compressed base64 from frontend)
-    if "docs" in body and isinstance(body["docs"], list):
-        update[f"milestones.{milestone_key}.docs"] = body["docs"]
+    if docs:
+        update[f"milestones.{milestone_key}.docs"] = docs
 
     result = await db.sale_milestones.update_one(
         {"sale_id": sale_id},
         {"$set": update},
         upsert=True
     )
-    # If inserted, also set base fields
     if result.upserted_id:
-        # Fetch sale info to populate customer_name and invoice_number
-        sale = await db.sales.find_one({"id": sale_id}) or {}
-        customer = await db.customers.find_one({"id": sale.get("customer_id", "")}) or {}
         await db.sale_milestones.update_one(
             {"sale_id": sale_id},
             {"$setOnInsert": {
                 "id": str(__import__("uuid").uuid4()),
                 "sale_id": sale_id,
-                "customer_name": customer.get("name", ""),
+                "customer_name": customer_name,
                 "invoice_number": sale.get("invoice_number", ""),
                 "created_at": now,
             }},
@@ -2756,32 +2880,43 @@ async def parse_excel_file(file_content: bytes) -> List[Dict]:
     return df.to_dict('records')
 
 async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id: str) -> ImportResult:
-    """Import customers data — uses bulk pre-fetch + batch insert for speed"""
+    """Import customers data with smart merge logic:
+    - New customer (mobile not found): insert everything
+    - Existing customer (mobile found):
+        * Fill only missing fields (name, email, address, care_of, vehicle_info, insurance_info, sales_info)
+        * If same vehicle model already on record → skip entirely
+        * If different vehicle model → update with new vehicle details
+    """
     successful = 0
     failed = 0
     skipped = 0
+    updated = 0
     errors = []
     incomplete_records = []
-    import_stats = {'vehicles_linked': 0, 'sales_created': 0}
+    import_stats = {'vehicles_linked': 0, 'sales_created': 0, 'customers_updated': 0}
 
-    # ── PRE-FETCH: load all existing mobiles, vehicle numbers, chassis numbers in one query ──
-    existing_mobiles = set()
-    async for c in db.customers.find({}, {"mobile": 1}):
+    # ── PRE-FETCH ──────────────────────────────────────────────────────────────
+    # mobile -> full customer doc
+    existing_customers = {}
+    async for c in db.customers.find({}, {"_id": 0}):
         if c.get("mobile"):
-            existing_mobiles.add(str(c["mobile"]))
+            existing_customers[str(c["mobile"])] = c
 
-    existing_vehicles = {}  # chassis_number -> vehicle doc
-    existing_vehicles_by_reg = {}  # vehicle_number -> vehicle doc
+    existing_vehicles = {}        # chassis_number -> vehicle doc
+    existing_vehicles_by_reg = {} # vehicle_number -> vehicle doc
     async for v in db.vehicles.find({}, {"id": 1, "chassis_number": 1, "vehicle_number": 1}):
         if v.get("chassis_number"):
             existing_vehicles[v["chassis_number"]] = v
         if v.get("vehicle_number"):
             existing_vehicles_by_reg[v["vehicle_number"]] = v
 
-    # ── PROCESS ROWS into batches ──
+    # Track mobiles seen in this file to catch within-file dupes
+    seen_in_file = {}  # mobile -> vehicle_model (first occurrence wins per model)
+
     customers_to_insert = []
     sales_to_insert = []
-    vehicle_updates = []   # list of (filter, update) tuples
+    vehicle_updates = []
+    customer_bulk_updates = []  # (filter, update) for existing customers
 
     for idx, row in enumerate(data):
         try:
@@ -2789,55 +2924,224 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
             name = safe_str(row.get('name', '')) or "Customer"
             if not phone_number:
                 phone_number = "0000000000"
-            address = safe_str(row.get('address', '')) or "Address not provided"
+            address = safe_str(row.get('address', ''))
 
-            # Duplicate check against in-memory set — no DB query needed
-            if phone_number and phone_number != "0000000000":
-                if phone_number in existing_mobiles:
+            # ── Build sub-dicts ────────────────────────────────────────────────
+            vehicle_info = {}
+            if any(row.get(k) for k in ['brand', 'model', 'vehicle_no', 'vehicle_number', 'chassis_no', 'chassis_number']):
+                vehicle_info = {
+                    'brand':          safe_str(row.get('brand', '')),
+                    'model':          safe_str(row.get('model', '')),
+                    'color':          safe_str(row.get('color', '')),
+                    'vehicle_number': safe_str(row.get('vehicle_number', '')) or safe_str(row.get('vehicle_no', '')),
+                    'chassis_number': safe_str(row.get('chassis_number', '')) or safe_str(row.get('chassis_no', '')),
+                    'engine_number':  safe_str(row.get('engine_number', '')) or safe_str(row.get('engine_no', '')),
+                }
+
+            insurance_info = {}
+            if any(row.get(k) for k in ['nominee_name', 'relation', 'age']):
+                insurance_info = {
+                    'nominee_name': safe_str(row.get('nominee_name', '')),
+                    'relation':     safe_str(row.get('relation', '')),
+                    'age':          safe_str(row.get('age', '')),
+                }
+
+            sales_info = {}
+            if any(row.get(k) for k in ['sale_amount', 'payment_method']):
+                sales_info = {
+                    'amount':         safe_str(row.get('sale_amount', '')),
+                    'payment_method': safe_str(row.get('payment_method', '')),
+                    'hypothecation':  safe_str(row.get('hypothecation', '')),
+                    'sale_date':      safe_str(row.get('sale_date', '')),
+                    'invoice_number': safe_str(row.get('invoice_number', '')),
+                }
+
+            incoming_model = vehicle_info.get('model', '').strip().lower()
+            chassis = vehicle_info.get('chassis_number', '')
+            reg = vehicle_info.get('vehicle_number', '')
+
+            # ── LOGIC 2: within-file duplicate check ───────────────────────────
+            if phone_number != "0000000000":
+                if phone_number in seen_in_file:
+                    existing_models = seen_in_file[phone_number]
+                    if incoming_model and incoming_model in existing_models:
+                        # Same mobile + same model already seen in this file → skip
+                        skipped += 1
+                        continue
+                    # Different model (or no model) → allow through, track it
+                    if incoming_model:
+                        seen_in_file[phone_number].add(incoming_model)
+                else:
+                    seen_in_file[phone_number] = {incoming_model} if incoming_model else set()
+
+            # ── LOGIC 1 & 2: existing customer in DB ──────────────────────────
+            if phone_number != "0000000000" and phone_number in existing_customers:
+                existing = existing_customers[phone_number]
+                existing_vehicle_info = existing.get('vehicle_info') or {}
+                existing_model = existing_vehicle_info.get('model', '').strip().lower()
+
+                # LOGIC 2: same vehicle model → skip entirely
+                if incoming_model and existing_model and incoming_model == existing_model:
                     skipped += 1
                     continue
-                existing_mobiles.add(phone_number)  # prevent duplicates within the file itself
 
+                # LOGIC 2: different vehicle model → create a NEW customer record
+                # with the new vehicle details (same name/mobile but separate entry)
+                if incoming_model and existing_model and incoming_model != existing_model:
+                    new_customer_data = CustomerCreate(
+                        name=name,
+                        mobile=phone_number,
+                        email=safe_str(row.get('email', '')) or None,
+                        address=address or existing.get('address') or "Address not provided",
+                        care_of=safe_str(row.get('care_of', '')) or existing.get('care_of') or None
+                    )
+                    new_customer = Customer(**new_customer_data.dict())
+                    new_customer_dict = new_customer.dict()
+
+                    if vehicle_info and any(vehicle_info.values()):
+                        new_customer_dict['vehicle_info'] = vehicle_info
+                    if insurance_info and any(insurance_info.values()):
+                        new_customer_dict['insurance_info'] = insurance_info
+                    elif existing.get('insurance_info'):
+                        new_customer_dict['insurance_info'] = existing['insurance_info']
+                    if sales_info and any(sales_info.values()):
+                        new_customer_dict['sales_info'] = sales_info
+
+                    customers_to_insert.append(new_customer_dict)
+
+                    # Link vehicle for the new customer
+                    matched_vehicle = existing_vehicles.get(chassis) or existing_vehicles_by_reg.get(reg)
+                    if matched_vehicle:
+                        vehicle_updates.append(
+                            ({"id": matched_vehicle['id']}, {"$set": {"customer_id": new_customer.id}})
+                        )
+                        import_stats['vehicles_linked'] += 1
+
+                    # Build sale for new customer if sales info present
+                    if sales_info and sales_info.get('amount'):
+                        try:
+                            sale_date = None
+                            date_str = str(sales_info.get('sale_date', '')).strip()
+                            if date_str:
+                                try:
+                                    from datetime import datetime as _dt
+                                    import re as _re
+                                    if date_str.replace('.', '').isdigit():
+                                        excel_date = float(date_str)
+                                        if excel_date > 60: excel_date -= 1
+                                        sale_date = _dt(1900, 1, 1) + timedelta(days=excel_date - 2)
+                                    elif _re.match(r'\d{1,2}-[A-Za-z]{3}', date_str):
+                                        sale_date = _dt.strptime(f"{date_str}-{_dt.now().year}", "%d-%b-%Y")
+                                    elif _re.match(r'\d{1,2}/\d{1,2}/\d{4}', date_str):
+                                        sale_date = _dt.strptime(date_str, "%d/%m/%Y")
+                                    elif _re.match(r'\d{1,2}-\d{1,2}-\d{4}', date_str):
+                                        sale_date = _dt.strptime(date_str, "%d-%m-%Y")
+                                    elif _re.match(r'\d{4}-\d{1,2}-\d{1,2}', date_str):
+                                        sale_date = _dt.strptime(date_str, "%Y-%m-%d")
+                                    else:
+                                        from dateutil import parser as _dp
+                                        sale_date = _dp.parse(date_str)
+                                except Exception:
+                                    sale_date = datetime(datetime.now().year, 1, 1)
+                            if not sale_date:
+                                sale_date = datetime(datetime.now().year, 1, 1)
+                            vehicle_id = existing_vehicles.get(chassis, {}).get('id') if chassis else None
+                            sale_record = Sale(
+                                customer_id=new_customer.id,
+                                vehicle_id=vehicle_id,
+                                amount=float(sales_info['amount']),
+                                payment_method=(sales_info.get('payment_method') or 'CASH').upper(),
+                                hypothecation=sales_info.get('hypothecation', ''),
+                                sale_date=sale_date,
+                                invoice_number=sales_info.get('invoice_number') or f"IMP-{new_customer.id[:8]}",
+                                vehicle_brand=vehicle_info.get('brand', ''),
+                                vehicle_model=vehicle_info.get('model', ''),
+                                vehicle_color=vehicle_info.get('color', ''),
+                                vehicle_chassis=vehicle_info.get('chassis_number', ''),
+                                vehicle_engine=vehicle_info.get('engine_number', ''),
+                                vehicle_registration=vehicle_info.get('vehicle_number', ''),
+                                insurance_nominee=insurance_info.get('nominee_name', ''),
+                                insurance_relation=insurance_info.get('relation', ''),
+                                insurance_age=insurance_info.get('age', ''),
+                                source="import",
+                                created_by="import_system"
+                            )
+                            sales_to_insert.append(sale_record.dict())
+                            import_stats['sales_created'] += 1
+                        except Exception as sale_error:
+                            print(f"Warning: Could not build sale for row {idx+2}: {sale_error}")
+
+                    successful += 1
+                    continue
+
+                # LOGIC 1: same mobile, no vehicle model conflict → fill only missing fields
+                update_fields = {}
+
+                if name and name != "Customer" and not existing.get('name'):
+                    update_fields['name'] = name
+                if address and not existing.get('address'):
+                    update_fields['address'] = address
+                if safe_str(row.get('email', '')) and not existing.get('email'):
+                    update_fields['email'] = safe_str(row.get('email', ''))
+                if safe_str(row.get('care_of', '')) and not existing.get('care_of'):
+                    update_fields['care_of'] = safe_str(row.get('care_of', ''))
+
+                if vehicle_info and any(vehicle_info.values()):
+                    existing_vi = existing.get('vehicle_info') or {}
+                    merged_vi = dict(existing_vi)
+                    for k, v in vehicle_info.items():
+                        if v and not merged_vi.get(k):
+                            merged_vi[k] = v
+                    if merged_vi != existing_vi:
+                        update_fields['vehicle_info'] = merged_vi
+
+                if insurance_info and any(insurance_info.values()):
+                    existing_ii = existing.get('insurance_info') or {}
+                    merged_ii = dict(existing_ii)
+                    for k, v in insurance_info.items():
+                        if v and not merged_ii.get(k):
+                            merged_ii[k] = v
+                    if merged_ii != existing_ii:
+                        update_fields['insurance_info'] = merged_ii
+
+                if sales_info and any(sales_info.values()):
+                    existing_si = existing.get('sales_info') or {}
+                    merged_si = dict(existing_si)
+                    for k, v in sales_info.items():
+                        if v and not merged_si.get(k):
+                            merged_si[k] = v
+                    if merged_si != existing_si:
+                        update_fields['sales_info'] = merged_si
+
+                if update_fields:
+                    customer_bulk_updates.append(
+                        ({"id": existing['id']}, {"$set": update_fields})
+                    )
+                    import_stats['customers_updated'] += 1
+                    updated += 1
+                    existing_customers[phone_number] = {**existing, **update_fields}
+                else:
+                    skipped += 1
+
+                matched_vehicle = existing_vehicles.get(chassis) or existing_vehicles_by_reg.get(reg)
+                if matched_vehicle and not matched_vehicle.get('customer_id'):
+                    vehicle_updates.append(
+                        ({"id": matched_vehicle['id']}, {"$set": {"customer_id": existing['id']}})
+                    )
+                    import_stats['vehicles_linked'] += 1
+
+                successful += 1
+                continue
+
+            # ── NEW CUSTOMER ───────────────────────────────────────────────────
             customer_data = CustomerCreate(
                 name=name, mobile=phone_number,
                 email=safe_str(row.get('email', '')) or None,
-                address=address,
+                address=address or "Address not provided",
                 care_of=safe_str(row.get('care_of', '')) or None
             )
             customer = Customer(**customer_data.dict())
             customer_dict = customer.dict()
-
-            vehicle_info = {}
-            insurance_info = {}
-            sales_info = {}
-
-            if (row.get('brand') or row.get('model') or
-                row.get('vehicle_no') or row.get('vehicle_number') or
-                row.get('chassis_no') or row.get('chassis_number')):
-                vehicle_info = {
-                    'brand': safe_str(row.get('brand', '')),
-                    'model': safe_str(row.get('model', '')),
-                    'color': safe_str(row.get('color', '')),
-                    'vehicle_number': (safe_str(row.get('vehicle_number', '')) or safe_str(row.get('vehicle_no', ''))),
-                    'chassis_number': (safe_str(row.get('chassis_number', '')) or safe_str(row.get('chassis_no', ''))),
-                    'engine_number': (safe_str(row.get('engine_number', '')) or safe_str(row.get('engine_no', '')))
-                }
-
-            if row.get('nominee_name') or row.get('relation') or row.get('age'):
-                insurance_info = {
-                    'nominee_name': safe_str(row.get('nominee_name', '')),
-                    'relation': safe_str(row.get('relation', '')),
-                    'age': safe_str(row.get('age', ''))
-                }
-
-            if row.get('sale_amount') or row.get('payment_method'):
-                sales_info = {
-                    'amount': safe_str(row.get('sale_amount', '')),
-                    'payment_method': safe_str(row.get('payment_method', '')),
-                    'hypothecation': safe_str(row.get('hypothecation', '')),
-                    'sale_date': safe_str(row.get('sale_date', '')),
-                    'invoice_number': safe_str(row.get('invoice_number', ''))
-                }
 
             if vehicle_info and any(vehicle_info.values()):
                 customer_dict['vehicle_info'] = vehicle_info
@@ -2847,24 +3151,18 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                 customer_dict['sales_info'] = sales_info
 
             customers_to_insert.append(customer_dict)
+            # Cache so later rows in this file see it
+            existing_customers[phone_number] = customer_dict
 
-            # Queue vehicle link update using in-memory lookup — no DB query
-            chassis = vehicle_info.get('chassis_number')
-            reg = vehicle_info.get('vehicle_number')
-            matched_vehicle = None
-            if chassis and chassis in existing_vehicles:
-                matched_vehicle = existing_vehicles[chassis]
-            elif reg and reg in existing_vehicles_by_reg:
-                matched_vehicle = existing_vehicles_by_reg[reg]
-
+            # Queue vehicle link
+            matched_vehicle = existing_vehicles.get(chassis) or existing_vehicles_by_reg.get(reg)
             if matched_vehicle:
-                vehicle_updates.append((
-                    {"id": matched_vehicle['id']},
-                    {"$set": {"customer_id": customer.id}}
-                ))
+                vehicle_updates.append(
+                    ({"id": matched_vehicle['id']}, {"$set": {"customer_id": customer.id}})
+                )
                 import_stats['vehicles_linked'] += 1
 
-            # Build sale record if sales info present
+            # Build sale record
             if sales_info and sales_info.get('amount'):
                 try:
                     sale_date = None
@@ -2890,9 +3188,9 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                                 from dateutil import parser as _dp
                                 sale_date = _dp.parse(date_str)
                         except Exception:
-                            sale_date = datetime(datetime.now().year, 1, 1)  # Unknown date — use year start
+                            sale_date = datetime(datetime.now().year, 1, 1)
                     if not sale_date:
-                        sale_date = datetime(datetime.now().year, 1, 1)  # Unknown date — use year start
+                        sale_date = datetime(datetime.now().year, 1, 1)
 
                     vehicle_id = None
                     if chassis and chassis in existing_vehicles:
@@ -2939,17 +3237,16 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
             failed += 1
             errors.append({"row": idx + 2, "data": row, "error": str(e)})
 
-    # ── BULK WRITE: single round-trip per collection ──
+    # ── BULK WRITE ─────────────────────────────────────────────────────────────
     if customers_to_insert:
         await db.customers.insert_many(customers_to_insert, ordered=False)
     if sales_to_insert:
         await db.sales.insert_many(sales_to_insert, ordered=False)
-    # Vehicle updates — run concurrently
+    import asyncio as _asyncio
     if vehicle_updates:
-        import asyncio as _asyncio
-        await _asyncio.gather(*[
-            db.vehicles.update_one(f, u) for f, u in vehicle_updates
-        ])
+        await _asyncio.gather(*[db.vehicles.update_one(f, u) for f, u in vehicle_updates])
+    if customer_bulk_updates:
+        await _asyncio.gather(*[db.customers.update_one(f, u) for f, u in customer_bulk_updates])
 
     import_job.successful_records = successful
     import_job.failed_records = failed
@@ -2962,7 +3259,7 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
     return ImportResult(
         job_id=import_job.id,
         status="completed",
-        message=f"Import completed: {successful} successful, {failed} failed, {skipped} skipped (duplicates). Cross-referenced: {import_stats['vehicles_linked']} vehicles linked, {import_stats['sales_created']} sales created.",
+        message=f"Import completed: {successful} processed ({import_stats['customers_updated']} existing updated, {successful - import_stats['customers_updated']} new), {failed} failed, {skipped} skipped (same vehicle model). Vehicles linked: {import_stats['vehicles_linked']}, sales created: {import_stats['sales_created']}.",
         total_records=len(data),
         successful_records=successful,
         failed_records=failed,
@@ -2973,7 +3270,176 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
     )
 
 async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id: str) -> ImportResult:
-    """Import vehicles data with cross-referencing support"""
+    """Import vehicles with smart merge logic:
+    - New vehicle (chassis not found): insert everything
+    - Existing vehicle (chassis found):
+        * All fields same → skip
+        * Missing fields found → fill only the missing ones
+    """
+    successful = 0
+    failed = 0
+    skipped = 0
+    updated = 0
+    errors = []
+    incomplete_records = []
+    import_stats = {'customers_linked': 0, 'customers_created': 0, 'sales_created': 0, 'vehicles_updated': 0}
+
+    valid_brands = ["TVS", "BAJAJ", "HERO", "HONDA", "TRIUMPH", "KTM", "SUZUKI", "APRILIA", "YAMAHA", "PIAGGIO", "ROYAL ENFIELD"]
+
+    # Pre-fetch all existing vehicles by chassis for O(1) lookup
+    existing_vehicles = {}  # chassis_number -> full vehicle doc
+    async for v in db.vehicles.find({}, {"_id": 0}):
+        if v.get("chassis_number"):
+            existing_vehicles[v["chassis_number"]] = v
+
+    for idx, row in enumerate(data):
+        try:
+            brand = safe_str(row.get('brand', '')).upper() or 'UNKNOWN'
+            if brand != 'UNKNOWN' and brand not in valid_brands:
+                brand = 'UNKNOWN'
+
+            chassis_number = safe_str(row.get('chassis_number', '')) or safe_str(row.get('chassis_no', ''))
+            engine_number  = safe_str(row.get('engine_number', ''))  or safe_str(row.get('engine_no', ''))
+            key_number     = safe_str(row.get('key_number', ''))     or safe_str(row.get('key_no', ''))
+            vehicle_number = safe_str(row.get('vehicle_number', ''))
+            model          = safe_str(row.get('model', '')) or 'Unknown Model'
+            color          = safe_str(row.get('color', '')) or 'Unknown Color'
+            inbound_loc    = safe_str(row.get('inbound_location', '')) or 'Unknown Location'
+            page_number    = safe_str(row.get('page_number', '')) or None
+            customer_mobile = safe_str(row.get('customer_mobile', ''))
+            customer_name   = safe_str(row.get('customer_name', ''))
+            sale_amount     = safe_str(row.get('sale_amount', ''))
+            payment_method  = safe_str(row.get('payment_method', ''))
+
+            status = safe_str(row.get('status', '')).lower()
+            if status not in ['available', 'in_stock', 'sold', 'returned']:
+                status = 'available'
+
+            date_received = datetime.now(timezone.utc)
+            date_str = safe_str(row.get('date_received', ''))
+            if date_str:
+                try:
+                    date_received = parse_date_flexible(date_str)
+                except Exception:
+                    pass
+
+            # ── EXISTING VEHICLE ───────────────────────────────────────────────
+            if chassis_number and chassis_number in existing_vehicles:
+                existing = existing_vehicles[chassis_number]
+
+                # Build incoming field set (non-empty values only)
+                incoming = {
+                    'brand':           brand if brand != 'UNKNOWN' else None,
+                    'model':           model if model != 'Unknown Model' else None,
+                    'color':           color if color != 'Unknown Color' else None,
+                    'engine_number':   engine_number or None,
+                    'vehicle_number':  vehicle_number or None,
+                    'key_number':      key_number or None,
+                    'inbound_location': inbound_loc if inbound_loc != 'Unknown Location' else None,
+                    'page_number':     page_number,
+                }
+
+                # Fill only fields that are blank/missing on existing doc
+                update_fields = {}
+                for field, val in incoming.items():
+                    if val and not existing.get(field):
+                        update_fields[field] = val
+
+                if not update_fields:
+                    # All fields same (or nothing new to add) → skip
+                    skipped += 1
+                    continue
+
+                await db.vehicles.update_one({"id": existing['id']}, {"$set": update_fields})
+                existing_vehicles[chassis_number] = {**existing, **update_fields}
+                import_stats['vehicles_updated'] += 1
+                updated += 1
+                successful += 1
+                continue
+
+            # ── NEW VEHICLE ────────────────────────────────────────────────────
+            vehicle_dict = {
+                'id': str(uuid.uuid4()),
+                'brand': brand,
+                'model': model,
+                'chassis_number': chassis_number or 'Unknown Chassis',
+                'engine_number': engine_number or 'Unknown Engine',
+                'color': color,
+                'vehicle_number': vehicle_number or None,
+                'key_number': key_number or 'Unknown Key',
+                'inbound_location': inbound_loc,
+                'page_number': page_number,
+                'status': status,
+                'date_received': date_received,
+                'created_at': datetime.now(timezone.utc),
+            }
+
+            customer_id = None
+            if customer_mobile:
+                customer_id = await find_or_create_customer(
+                    customer_mobile, {'name': customer_name or 'Unknown Customer'}, import_stats
+                )
+                vehicle_dict['customer_id'] = customer_id
+
+            vehicle = Vehicle(**vehicle_dict)
+            await db.vehicles.insert_one(vehicle.dict())
+            existing_vehicles[chassis_number] = vehicle.dict()
+
+            if sale_amount and customer_id:
+                try:
+                    sale_record = Sale(
+                        customer_id=customer_id,
+                        vehicle_id=vehicle.id,
+                        amount=float(sale_amount),
+                        payment_method=payment_method.upper() or 'CASH',
+                        sale_date=datetime.now(timezone.utc),
+                        invoice_number=f"IMP-VEH-{vehicle.id[:8]}",
+                        vehicle_brand=brand,
+                        vehicle_model=model,
+                        vehicle_color=color,
+                        vehicle_chassis=chassis_number,
+                        vehicle_engine=engine_number,
+                        vehicle_registration=vehicle_number,
+                        source="import",
+                        created_by=user_id
+                    )
+                    await db.sales.insert_one(sale_record.dict())
+                    import_stats['sales_created'] += 1
+                    await db.vehicles.update_one({"id": vehicle.id}, {"$set": {"status": "sold"}})
+                except Exception as sale_error:
+                    print(f"Warning: Could not create sale for vehicle {vehicle.id}: {sale_error}")
+
+            if not customer_id and customer_mobile:
+                incomplete_records.append({"record_id": vehicle.id, "row": idx + 2, "missing_fields": ["customer_details"], "data": row})
+
+            successful += 1
+
+        except Exception as e:
+            failed += 1
+            errors.append({"row": idx + 2, "data": row, "error": str(e)})
+
+    import_job.successful_records = successful
+    import_job.failed_records = failed
+    import_job.skipped_records = skipped
+    import_job.processed_records = successful + failed + skipped
+    import_job.errors = errors
+    import_job.cross_reference_stats = import_stats
+    import_job.incomplete_records = incomplete_records
+
+    return ImportResult(
+        job_id=import_job.id,
+        status="completed",
+        message=f"Vehicles import: {successful} processed ({successful - updated} new, {updated} updated with missing fields), {failed} failed, {skipped} skipped (no new data). Customers linked: {import_stats['customers_linked']}, created: {import_stats['customers_created']}, sales: {import_stats['sales_created']}.",
+        total_records=len(data),
+        successful_records=successful,
+        failed_records=failed,
+        skipped_records=skipped,
+        errors=errors,
+        cross_reference_stats=import_stats,
+        incomplete_records=incomplete_records
+    )
+
+
     successful = 0
     failed = 0
     skipped = 0
@@ -3138,65 +3604,116 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
     )
 
 async def import_spare_parts_data(data: List[Dict], import_job: ImportJob, user_id: str) -> ImportResult:
-    """Import spare parts data"""
+    """Import spare parts with smart merge logic:
+    - New part (part_number not found): insert everything
+    - Existing part (part_number found):
+        * All fields identical → skip
+        * Missing/blank fields → fill only those
+    Also: 28% GST is replaced with 18% on import and fixed in DB for existing records.
+    """
     successful = 0
     failed = 0
     skipped = 0
+    updated = 0
     errors = []
-    
+    gst_fixed = 0
+
+    def fix_gst(val: float) -> float:
+        """Replace 28% GST with 18%."""
+        return 18.0 if val == 28.0 else val
+
+    # ── Fix existing 28% GST records in DB ──────────────────────────────────
+    fix_result = await db.spare_parts.update_many(
+        {"gst_percentage": 28.0},
+        {"$set": {"gst_percentage": 18.0}}
+    )
+    gst_fixed = fix_result.modified_count
+
+    # Pre-fetch all existing parts by part_number
+    existing_parts = {}
+    async for p in db.spare_parts.find({}, {"_id": 0}):
+        if p.get("part_number"):
+            existing_parts[p["part_number"].strip()] = p
+
     for idx, row in enumerate(data):
         try:
-            # Validate required fields
             required_fields = ['name', 'part_number', 'brand', 'quantity', 'unit_price']
             for field in required_fields:
                 if not row.get(field):
                     raise ValueError(f"{field} is required")
-            
-            part_number = row['part_number'].strip()
-            
-            # Check for duplicate spare part by part_number
-            existing_part = await db.spare_parts.find_one({"part_number": part_number})
-            if existing_part:
-                # Skip duplicate spare part
-                skipped += 1
+
+            part_number = str(row['part_number']).strip()
+            name        = str(row['name']).strip()
+            brand       = str(row['brand']).strip()
+            quantity    = int(row['quantity'])
+            unit_price  = float(row['unit_price'])
+            unit        = str(row.get('unit', 'Nos')).strip()
+            hsn_sac     = str(row.get('hsn_sac', '') or '').strip() or None
+            gst_pct     = fix_gst(float(row.get('gst_percentage', 18.0) or 18.0))
+            compat      = str(row.get('compatible_models', '') or '').strip() or None
+            threshold   = int(row.get('low_stock_threshold', 5) or 5)
+            supplier    = str(row.get('supplier', '') or '').strip() or None
+
+            # ── EXISTING PART ──────────────────────────────────────────────────
+            if part_number in existing_parts:
+                existing = existing_parts[part_number]
+
+                incoming = {
+                    'name':              name,
+                    'brand':             brand,
+                    'unit':              unit,
+                    'unit_price':        unit_price,
+                    'hsn_sac':           hsn_sac,
+                    'gst_percentage':    gst_pct,
+                    'compatible_models': compat,
+                    'supplier':          supplier,
+                }
+
+                update_fields = {}
+                for field, val in incoming.items():
+                    if val is not None and val != '' and not existing.get(field):
+                        update_fields[field] = val
+
+                # Quantity: add incoming to existing (restocking logic)
+                if quantity and quantity > 0 and existing.get('quantity', 0) == 0:
+                    update_fields['quantity'] = quantity
+
+                if not update_fields:
+                    skipped += 1
+                    continue
+
+                await db.spare_parts.update_one({"part_number": part_number}, {"$set": update_fields})
+                existing_parts[part_number] = {**existing, **update_fields}
+                updated += 1
+                successful += 1
                 continue
-            
+
+            # ── NEW PART ───────────────────────────────────────────────────────
             spare_part_data = SparePartCreate(
-                name=row['name'].strip(),
-                part_number=part_number,
-                brand=row['brand'].strip(),
-                quantity=int(row['quantity']),
-                unit=row.get('unit', 'Nos').strip(),
-                unit_price=float(row['unit_price']),
-                hsn_sac=row.get('hsn_sac', '').strip() or None,
-                gst_percentage=float(row.get('gst_percentage', 18.0)),
-                compatible_models=row.get('compatible_models', '').strip() or None,
-                low_stock_threshold=int(row.get('low_stock_threshold', 5)),
-                supplier=row.get('supplier', '').strip() or None
+                name=name, part_number=part_number, brand=brand,
+                quantity=quantity, unit=unit, unit_price=unit_price,
+                hsn_sac=hsn_sac, gst_percentage=gst_pct,
+                compatible_models=compat, low_stock_threshold=threshold, supplier=supplier
             )
-            
             spare_part = SparePart(**spare_part_data.dict())
             await db.spare_parts.insert_one(spare_part.dict())
+            existing_parts[part_number] = spare_part.dict()
             successful += 1
-            
+
         except Exception as e:
             failed += 1
-            errors.append({
-                "row": idx + 2,
-                "data": row,
-                "error": str(e)
-            })
-    
+            errors.append({"row": idx + 2, "data": row, "error": str(e)})
+
     import_job.successful_records = successful
     import_job.failed_records = failed
     import_job.skipped_records = skipped
     import_job.processed_records = successful + failed + skipped
     import_job.errors = errors
-    
+
     return ImportResult(
         job_id=import_job.id,
         status="completed",
-        message=f"Import completed: {successful} successful, {failed} failed, {skipped} skipped (duplicates)",
+        message=f"Spare parts import: {successful} processed ({successful - updated} new, {updated} updated with missing fields), {failed} failed, {skipped} skipped (no new data). {gst_fixed} existing records fixed (28% → 18% GST).",
         total_records=len(data),
         successful_records=successful,
         failed_records=failed,
@@ -3205,7 +3722,184 @@ async def import_spare_parts_data(data: List[Dict], import_job: ImportJob, user_
     )
 
 async def import_services_data(data: List[Dict], import_job: ImportJob, user_id: str) -> ImportResult:
-    """Import services data with cross-referencing support"""
+    """Import services (job cards) with smart merge logic:
+    - Duplicate check: same customer_id + vehicle_number + service_type + amount → skip
+    - If existing service found with same key but missing fields → fill only missing ones
+    Also: fix any 28% GST items on existing service bills → 18%.
+    """
+    successful = 0
+    failed = 0
+    skipped = 0
+    updated = 0
+    errors = []
+    incomplete_records = []
+    import_stats = {'customers_linked': 0, 'customers_created': 0, 'vehicles_linked': 0, 'services_updated': 0}
+
+    # ── Fix 28% GST on existing service bill items ───────────────────────────
+    gst_fixed_bills = 0
+    async for bill in db.service_bills.find({"items.gst_percentage": 28.0}, {"_id": 0, "id": 1, "items": 1}):
+        fixed_items = []
+        changed = False
+        for item in bill.get("items", []):
+            if item.get("gst_percentage") == 28.0:
+                item = dict(item)
+                item["gst_percentage"] = 18.0
+                # Recalculate tax
+                rate = item.get("rate", 0)
+                qty  = item.get("quantity", 1)
+                subtotal = rate * qty
+                cgst = round(subtotal * 0.09, 2)
+                sgst = round(subtotal * 0.09, 2)
+                item["cgst"] = cgst
+                item["sgst"] = sgst
+                item["total"] = round(subtotal + cgst + sgst, 2)
+                changed = True
+            fixed_items.append(item)
+        if changed:
+            await db.service_bills.update_one({"id": bill["id"]}, {"$set": {"items": fixed_items}})
+            gst_fixed_bills += 1
+
+    for idx, row in enumerate(data):
+        try:
+            customer_mobile = (row.get('customer_mobile') or '').strip()
+            customer_name   = (row.get('customer_name') or '').strip()
+            vehicle_number  = (row.get('vehicle_number') or '').strip()
+            chassis_number  = (row.get('chassis_number') or '').strip()
+            service_type    = (row.get('service_type') or 'general_service').strip()
+            description     = (row.get('description') or '').strip() or 'Imported service'
+            amount          = float(row.get('amount', 0) or 0)
+
+            if not customer_mobile and not vehicle_number and not chassis_number:
+                raise ValueError("Either customer_mobile or vehicle identifiers required")
+
+            # Resolve customer
+            customer_id = None
+            if customer_mobile:
+                customer_id = await find_or_create_customer(
+                    customer_mobile, {'name': customer_name or 'Unknown Customer'}, import_stats
+                )
+
+            # Resolve vehicle
+            vehicle_id = None
+            vehicle_brand = vehicle_model = vehicle_year = None
+            if vehicle_number or chassis_number:
+                vehicle = await find_vehicle_by_identifiers(vehicle_number, chassis_number)
+                if vehicle:
+                    vehicle_id    = vehicle.get('id')
+                    vehicle_number = vehicle.get('vehicle_number', vehicle_number)
+                    vehicle_brand  = vehicle.get('brand')
+                    vehicle_model  = vehicle.get('model')
+                    vehicle_year   = vehicle.get('year')
+                    import_stats['vehicles_linked'] += 1
+                    if not customer_id and vehicle.get('customer_id'):
+                        customer_id = vehicle.get('customer_id')
+                        import_stats['customers_linked'] += 1
+
+            # Fallback vehicle details from CSV
+            vehicle_brand = vehicle_brand or (row.get('vehicle_brand') or '').strip() or None
+            vehicle_model = vehicle_model or (row.get('vehicle_model') or '').strip() or None
+            vehicle_year  = vehicle_year  or (row.get('vehicle_year')  or '').strip() or None
+
+            if not customer_id:
+                customer_id = await find_or_create_customer(
+                    f"AUTO-{str(uuid.uuid4())[:8]}",
+                    {'name': customer_name or 'Unknown Customer'},
+                    import_stats
+                )
+                incomplete_records.append({"row": idx + 2, "missing_fields": ["customer_mobile"], "data": row})
+
+            # ── DEDUP CHECK ────────────────────────────────────────────────────
+            dup_key = {
+                "customer_id":  customer_id,
+                "vehicle_number": vehicle_number or chassis_number or 'Unknown',
+                "service_type": service_type,
+                "amount":       amount
+            }
+            existing_service = await db.services.find_one(dup_key)
+
+            if existing_service:
+                # Fill only missing fields on existing record
+                update_fields = {}
+                if description and not existing_service.get('description'):
+                    update_fields['description'] = description
+                if vehicle_brand and not existing_service.get('vehicle_brand'):
+                    update_fields['vehicle_brand'] = vehicle_brand
+                if vehicle_model and not existing_service.get('vehicle_model'):
+                    update_fields['vehicle_model'] = vehicle_model
+                if vehicle_year and not existing_service.get('vehicle_year'):
+                    update_fields['vehicle_year'] = vehicle_year
+                if vehicle_id and not existing_service.get('vehicle_id'):
+                    update_fields['vehicle_id'] = vehicle_id
+
+                if not update_fields:
+                    skipped += 1
+                    continue
+
+                await db.services.update_one({"id": existing_service['id']}, {"$set": update_fields})
+                import_stats['services_updated'] += 1
+                updated += 1
+                successful += 1
+                continue
+
+            # ── NEW SERVICE ────────────────────────────────────────────────────
+            service_data = ServiceCreate(
+                customer_id=customer_id,
+                vehicle_id=vehicle_id,
+                vehicle_number=vehicle_number or chassis_number or 'Unknown',
+                service_type=service_type,
+                description=description,
+                amount=amount
+            )
+
+            count = await db.services.count_documents({})
+            job_card_number = f"JOB-{count + 1:06d}"
+
+            service_dict = service_data.dict()
+            service_dict['job_card_number'] = job_card_number
+            service_dict['created_by'] = user_id
+
+            reg_date = (row.get('registration_date') or '').strip()
+            if reg_date:
+                try:
+                    from dateutil import parser as date_parser
+                    service_dict['service_date'] = date_parser.parse(reg_date)
+                except Exception:
+                    pass  # leave service_date unset — don't default to today
+
+            if vehicle_brand: service_dict['vehicle_brand'] = vehicle_brand
+            if vehicle_model: service_dict['vehicle_model'] = vehicle_model
+            if vehicle_year:  service_dict['vehicle_year']  = vehicle_year
+
+            service = Service(**service_dict)
+            await db.services.insert_one(service.dict())
+            successful += 1
+
+        except Exception as e:
+            failed += 1
+            errors.append({"row": idx + 2, "data": row, "error": str(e)})
+
+    import_job.successful_records = successful
+    import_job.failed_records = failed
+    import_job.skipped_records = skipped
+    import_job.processed_records = successful + failed + skipped
+    import_job.errors = errors
+    import_job.cross_reference_stats = import_stats
+    import_job.incomplete_records = incomplete_records
+
+    return ImportResult(
+        job_id=import_job.id,
+        status="completed",
+        message=f"Services import: {successful} processed ({successful - updated} new, {updated} updated with missing fields), {failed} failed, {skipped} skipped (identical). Customers: {import_stats['customers_linked']} linked, {import_stats['customers_created']} created. Vehicles: {import_stats['vehicles_linked']} linked. {gst_fixed_bills} service bill(s) fixed (28% → 18% GST).",
+        total_records=len(data),
+        successful_records=successful,
+        failed_records=failed,
+        skipped_records=skipped,
+        errors=errors,
+        cross_reference_stats=import_stats,
+        incomplete_records=incomplete_records
+    )
+
+
     successful = 0
     failed = 0
     skipped = 0
@@ -3351,19 +4045,6 @@ async def import_services_data(data: List[Dict], import_job: ImportJob, user_id:
     import_job.cross_reference_stats = import_stats
     import_job.incomplete_records = incomplete_records
     
-    return ImportResult(
-        job_id=import_job.id,
-        status="completed",
-        message=f"Import completed: {successful} successful, {failed} failed, {skipped} skipped (duplicates). Cross-referenced: {import_stats['customers_linked']} customers linked, {import_stats['customers_created']} customers created, {import_stats['vehicles_linked']} vehicles linked.",
-        total_records=len(data),
-        successful_records=successful,
-        failed_records=failed,
-        skipped_records=skipped,
-        errors=errors,
-        cross_reference_stats=import_stats,
-        incomplete_records=incomplete_records
-    )
-
     return ImportResult(
         job_id=import_job.id,
         status="completed",
