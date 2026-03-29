@@ -2343,23 +2343,36 @@ async def complete_milestone(
     # Upload docs to Drive and enrich with drive_url
     docs = body.get("docs", [])
     drive_upload_errors = []
+    drive_uploads_attempted = 0
     if isinstance(docs, list):
         enriched_docs = []
         for doc in docs:
             enriched = dict(doc)
-            if not enriched.get("drive_url"):  # don't re-upload already uploaded docs
-                drive_url = await upload_milestone_doc_to_drive(
-                    customer_name=customer_name,
-                    vehicle_model=vehicle_model,
-                    milestone_key=milestone_key,
-                    doc_name=doc.get("name", "document"),
-                    doc_base64=doc.get("data", ""),
-                    mime_type=doc.get("mime_type", "application/octet-stream")
-                )
-                if drive_url:
-                    enriched["drive_url"] = drive_url
-                else:
-                    drive_upload_errors.append(doc.get("name", "document"))
+            # Skip if already uploaded to Drive
+            if enriched.get("drive_url"):
+                enriched_docs.append(enriched)
+                continue
+            # Skip if no base64 data present (e.g. doc fetched from DB without data field)
+            raw_data = doc.get("data", "")
+            if not raw_data or len(raw_data) < 10:
+                print(f"Drive: skipping '{doc.get('name')}' — no data field present")
+                enriched_docs.append(enriched)
+                continue
+            drive_uploads_attempted += 1
+            drive_url = await upload_milestone_doc_to_drive(
+                customer_name=customer_name,
+                vehicle_model=vehicle_model,
+                milestone_key=milestone_key,
+                doc_name=doc.get("name", "document"),
+                doc_base64=raw_data,
+                mime_type=doc.get("mime_type", "application/octet-stream")
+            )
+            if drive_url:
+                enriched["drive_url"] = drive_url
+                print(f"Drive: ✓ '{doc.get('name')}' uploaded → {drive_url}")
+            else:
+                drive_upload_errors.append(doc.get("name", "document"))
+                print(f"Drive: ✗ '{doc.get('name')}' upload failed")
             enriched_docs.append(enriched)
         docs = enriched_docs
 
@@ -2394,7 +2407,8 @@ async def complete_milestone(
     return {
         "message": "Milestone updated",
         "milestone_key": milestone_key,
-        "drive_uploads": len(docs) - len(drive_upload_errors),
+        "drive_uploads_attempted": drive_uploads_attempted,
+        "drive_uploads_succeeded": drive_uploads_attempted - len(drive_upload_errors),
         "drive_upload_errors": drive_upload_errors if drive_upload_errors else None
     }
 
