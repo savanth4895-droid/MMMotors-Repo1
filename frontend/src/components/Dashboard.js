@@ -409,82 +409,6 @@ const Dashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Service Overview */}
-      <Card className="border-l-4 border-l-blue-500">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Wrench className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">Service Overview</CardTitle>
-                <CardDescription>Job cards and service billing revenue</CardDescription>
-              </div>
-            </div>
-            <Link to="/services">
-              <Button variant="outline" size="sm">
-                View Services
-              </Button>
-            </Link>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <p className="text-2xl font-bold text-blue-600">
-                ₹{stats.service_stats?.total_service_revenue?.toLocaleString('en-IN', { maximumFractionDigits: 0 }) || '0'}
-              </p>
-              <p className="text-xs text-gray-600">Total Revenue</p>
-            </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <p className="text-2xl font-bold text-green-600">
-                ₹{stats.service_stats?.paid_revenue?.toLocaleString('en-IN', { maximumFractionDigits: 0 }) || '0'}
-              </p>
-              <p className="text-xs text-gray-600">Collected</p>
-            </div>
-            <div className="text-center p-4 bg-orange-50 rounded-lg">
-              <p className="text-2xl font-bold text-orange-600">
-                ₹{stats.service_stats?.pending_revenue?.toLocaleString('en-IN', { maximumFractionDigits: 0 }) || '0'}
-              </p>
-              <p className="text-xs text-gray-600">Outstanding</p>
-            </div>
-            <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <p className="text-2xl font-bold text-purple-600">
-                {stats.service_stats?.total_service_bills || 0}
-              </p>
-              <p className="text-xs text-gray-600">Total Bills</p>
-            </div>
-          </div>
-          <div className="mt-4 grid grid-cols-4 gap-4">
-            <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <p className="text-lg font-semibold text-gray-900">
-                {stats.service_stats?.total_service_jobs || 0}
-              </p>
-              <p className="text-xs text-gray-600">Total Jobs</p>
-            </div>
-            <div className="text-center p-3 bg-green-50 rounded-lg">
-              <p className="text-lg font-semibold text-green-700">
-                {stats.service_stats?.completed_services || 0}
-              </p>
-              <p className="text-xs text-gray-600">Completed</p>
-            </div>
-            <div className="text-center p-3 bg-yellow-50 rounded-lg">
-              <p className="text-lg font-semibold text-yellow-700">
-                {stats.service_stats?.in_progress_services || 0}
-              </p>
-              <p className="text-xs text-gray-600">In Progress</p>
-            </div>
-            <div className="text-center p-3 bg-red-50 rounded-lg">
-              <p className="text-lg font-semibold text-red-700">
-                {stats.service_stats?.pending_services || 0}
-              </p>
-              <p className="text-xs text-gray-600">Pending</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Backup Status */}
       {backupStats && (
         <Card className="border-l-4 border-l-blue-500">
@@ -738,9 +662,21 @@ const SalesMilestoneTracker = ({ onClose }) => {
   const handleDeleteDoc = async (key, idx) => {
     if (!selectedSale || !window.confirm('Delete this document?')) return;
     const token = localStorage.getItem('token');
-    await axios.delete(`${API}/sale-milestones/${selectedSale.id}/milestone/${key}/doc/${idx}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    try {
+      await axios.delete(`${API}/sale-milestones/${selectedSale.id}/milestone/${key}/doc/${idx}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (e) {
+      // If index is out of sync, fall back to patching via complete endpoint
+      if (e.response?.status === 400) {
+        const currentDocs = (ms(key).docs || []).filter((_, i) => i !== idx);
+        await axios.post(
+          `${API}/sale-milestones/${selectedSale.id}/milestone/${key}/complete`,
+          { docs: currentDocs, notes: notes[key] || '' },
+          { headers: { Authorization: `Bearer ${token}` } }
+        ).catch(() => {});
+      }
+    }
     await fetchMilestones(selectedSale.id);
   };
 
@@ -958,6 +894,11 @@ const SalesMilestoneTracker = ({ onClose }) => {
                             </div>
                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 transition-opacity rounded-lg">
                               <button onClick={() => setViewDoc(doc)} className="text-white hover:text-blue-300"><Eye className="w-4 h-4" /></button>
+                              {doc.drive_url && (
+                                <a href={doc.drive_url} target="_blank" rel="noopener noreferrer" className="text-white hover:text-green-300" title="View in Drive">
+                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6.28 3L1 12.5 6.28 22h11.44L23 12.5 17.72 3H6.28zM12 16.5L7.5 9h9L12 16.5z"/></svg>
+                                </a>
+                              )}
                               <button onClick={() => handleDeleteDoc(activeMilestone, i)} className="text-white hover:text-red-300"><X className="w-4 h-4" /></button>
                             </div>
                           </div>
