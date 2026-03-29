@@ -147,14 +147,19 @@ async def _get_or_create_drive_folder(service, name: str, parent_id: str) -> str
     loop = _asyncio.get_event_loop()
     results = await loop.run_in_executor(
         None,
-        lambda: service.files().list(q=query, fields="files(id,name)").execute()
+        lambda: service.files().list(
+            q=query, fields="files(id,name)",
+            supportsAllDrives=True, includeItemsFromAllDrives=True
+        ).execute()
     )
     files = results.get('files', [])
     if files:
         print(f"Drive: found existing folder '{safe_name}' → {files[0]['id']}")
         return files[0]['id']
     meta = {'name': safe_name, 'mimeType': 'application/vnd.google-apps.folder', 'parents': [parent_id]}
-    folder = await loop.run_in_executor(None, lambda: service.files().create(body=meta, fields='id').execute())
+    folder = await loop.run_in_executor(None, lambda: service.files().create(
+        body=meta, fields='id', supportsAllDrives=True
+    ).execute())
     print(f"Drive: created folder '{safe_name}' → {folder['id']}")
     return folder['id']
 
@@ -204,7 +209,10 @@ async def upload_milestone_doc_to_drive(
         loop = _asyncio.get_event_loop()
         uploaded = await loop.run_in_executor(
             None,
-            lambda: service.files().create(body=file_meta, media_body=media, fields='id,webViewLink').execute()
+            lambda: service.files().create(
+                body=file_meta, media_body=media,
+                fields='id,webViewLink', supportsAllDrives=True
+            ).execute()
         )
         print(f"Drive: uploaded '{doc_name}' → {uploaded.get('id')}")
 
@@ -213,7 +221,8 @@ async def upload_milestone_doc_to_drive(
             None,
             lambda: service.permissions().create(
                 fileId=uploaded['id'],
-                body={'type': 'anyone', 'role': 'reader'}
+                body={'type': 'anyone', 'role': 'reader'},
+                supportsAllDrives=True
             ).execute()
         )
         link = uploaded.get('webViewLink')
@@ -2651,7 +2660,10 @@ async def test_drive_connection(current_user: User = Depends(get_current_user)):
 
         # Verify parent folder is accessible
         folder_meta = await loop.run_in_executor(
-            None, lambda: service.files().get(fileId=folder_id, fields="id,name,mimeType").execute()
+            None, lambda: service.files().get(
+                fileId=folder_id, fields="id,name,mimeType",
+                supportsAllDrives=True
+            ).execute()
         )
         result["parent_folder_name"] = folder_meta.get("name")
         result["parent_folder_accessible"] = True
