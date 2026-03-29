@@ -98,142 +98,6 @@ SECRET_KEY = os.environ['JWT_SECRET_KEY']
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours
 
-# Google Drive Configuration
-# Set GOOGLE_SERVICE_ACCOUNT_JSON env var to the full JSON key content (as a string)
-# Set GOOGLE_DRIVE_PARENT_FOLDER_ID to the ID of the MMMotors root folder in Drive
-GOOGLE_SERVICE_ACCOUNT_JSON = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON', '')
-GOOGLE_DRIVE_PARENT_FOLDER_ID = os.environ.get('GOOGLE_DRIVE_PARENT_FOLDER_ID', '')
-
-def _get_drive_service():
-    """Build and return an authenticated Google Drive service, or None if not configured.
-    Re-reads env vars at call time so Render env var changes take effect without redeploy."""
-    sa_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON', '') or GOOGLE_SERVICE_ACCOUNT_JSON
-    if not sa_json or not sa_json.strip():
-        print("Drive: GOOGLE_SERVICE_ACCOUNT_JSON not set")
-        return None
-    try:
-        import json as _json
-        from google.oauth2 import service_account as _sa
-        from googleapiclient.discovery import build as _build
-        info = _json.loads(sa_json)
-        creds = _sa.Credentials.from_service_account_info(
-            info,
-            scopes=['https://www.googleapis.com/auth/drive']
-        )
-        svc = _build('drive', 'v3', credentials=creds, cache_discovery=False)
-        print(f"Drive: service built for {info.get('client_email', 'unknown')}")
-        return svc
-    except Exception as e:
-        print(f"Drive: init failed — {type(e).__name__}: {e}")
-        return None
-
-def _get_drive_folder_id() -> str:
-    """Re-read folder ID env var at call time."""
-    return os.environ.get('GOOGLE_DRIVE_PARENT_FOLDER_ID', '') or GOOGLE_DRIVE_PARENT_FOLDER_ID
-
-def _sanitize_folder_name(name: str) -> str:
-    """Remove characters not allowed in Drive folder names."""
-    import re as _re
-    return _re.sub(r'[\\/:*?"<>|]', '_', (name or '').strip()) or "Unknown"
-
-async def _get_or_create_drive_folder(service, name: str, parent_id: str) -> str:
-    """Return folder ID, creating it if it doesn't exist."""
-    import asyncio as _asyncio
-    safe_name = _sanitize_folder_name(name)
-    query = (
-        f"name='{safe_name}' and mimeType='application/vnd.google-apps.folder'"
-        f" and '{parent_id}' in parents and trashed=false"
-    )
-    loop = _asyncio.get_event_loop()
-    results = await loop.run_in_executor(
-        None,
-        lambda: service.files().list(
-            q=query, fields="files(id,name)",
-            supportsAllDrives=True, includeItemsFromAllDrives=True
-        ).execute()
-    )
-    files = results.get('files', [])
-    if files:
-        print(f"Drive: found existing folder '{safe_name}' → {files[0]['id']}")
-        return files[0]['id']
-    meta = {'name': safe_name, 'mimeType': 'application/vnd.google-apps.folder', 'parents': [parent_id]}
-    folder = await loop.run_in_executor(None, lambda: service.files().create(
-        body=meta, fields='id', supportsAllDrives=True
-    ).execute())
-    print(f"Drive: created folder '{safe_name}' → {folder['id']}")
-    return folder['id']
-
-async def upload_milestone_doc_to_drive(
-    customer_name: str,
-    vehicle_model: str,
-    milestone_key: str,
-    doc_name: str,
-    doc_base64: str,
-    mime_type: str
-) -> str | None:
-    """Upload a base64-encoded doc to Drive under MMMotors/{CustomerName - VehicleModel}/{Milestone}/.
-    Returns the Drive webViewLink, or None if Drive is not configured or upload fails."""
-    folder_id = _get_drive_folder_id()
-    service = _get_drive_service()
-    if not service:
-        print("Drive: skipping upload — service not available")
-        return None
-    if not folder_id:
-        print("Drive: skipping upload — GOOGLE_DRIVE_PARENT_FOLDER_ID not set")
-        return None
-    try:
-        import base64 as _b64
-        import io as _io
-        import asyncio as _asyncio
-        from googleapiclient.http import MediaIoBaseUpload
-
-        # Strip data URI prefix if present (e.g. "data:image/jpeg;base64,...")
-        raw_b64 = doc_base64.split(',', 1)[1] if ',' in doc_base64 else doc_base64
-        # Pad base64 if needed
-        padding = 4 - len(raw_b64) % 4
-        if padding != 4:
-            raw_b64 += '=' * padding
-        file_bytes = _b64.b64decode(raw_b64)
-
-        print(f"Drive: uploading '{doc_name}' ({len(file_bytes)} bytes, {mime_type})")
-
-        # Folder path: root → CustomerName - VehicleModel → Milestone label
-        customer_folder_name = f"{customer_name} - {vehicle_model}".strip(" -") or "Unknown Customer"
-        customer_folder_id = await _get_or_create_drive_folder(service, customer_folder_name, folder_id)
-        milestone_folder_name = milestone_key.replace('_', ' ').title()
-        milestone_folder_id = await _get_or_create_drive_folder(service, milestone_folder_name, customer_folder_id)
-
-        file_meta = {'name': doc_name or 'document', 'parents': [milestone_folder_id]}
-        media = MediaIoBaseUpload(_io.BytesIO(file_bytes), mimetype=mime_type or 'application/octet-stream', resumable=False)
-
-        loop = _asyncio.get_event_loop()
-        uploaded = await loop.run_in_executor(
-            None,
-            lambda: service.files().create(
-                body=file_meta, media_body=media,
-                fields='id,webViewLink', supportsAllDrives=True
-            ).execute()
-        )
-        print(f"Drive: uploaded '{doc_name}' → {uploaded.get('id')}")
-
-        # Make viewable by anyone with the link
-        await loop.run_in_executor(
-            None,
-            lambda: service.permissions().create(
-                fileId=uploaded['id'],
-                body={'type': 'anyone', 'role': 'reader'},
-                supportsAllDrives=True
-            ).execute()
-        )
-        link = uploaded.get('webViewLink')
-        print(f"Drive: share link → {link}")
-        return link
-    except Exception as e:
-        print(f"Drive: upload failed for '{doc_name}' — {type(e).__name__}: {e}")
-        import traceback
-        traceback.print_exc()
-        return None
-
 # Create the main app without a prefix
 app = FastAPI(title="Two Wheeler Business Management API")
 
@@ -362,12 +226,6 @@ class CustomerCreate(BaseModel):
     customer_type: Optional[str] = "sales"  # "sales", "service", "both"
 
 
-class MilestoneDoc(BaseModel):
-    name: str
-    data: str  # base64 compressed image or PDF
-    mime_type: str
-    size_kb: float
-    uploaded_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class SalesMilestone(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -2334,58 +2192,11 @@ async def complete_milestone(
     body: Dict[str, Any],
     current_user: User = Depends(get_current_user)
 ):
-    """Mark a milestone complete and optionally store compressed docs. Also uploads to Google Drive."""
+    """Mark a milestone complete with optional notes."""
     valid_keys = {"customer_docs", "invoice_insurance", "road_tax", "number_plates", "plates_attached"}
     if milestone_key not in valid_keys:
         raise HTTPException(status_code=400, detail=f"Invalid milestone key. Must be one of: {valid_keys}")
 
-    # Fetch sale + customer for Drive folder naming
-    sale = await db.sales.find_one({"id": sale_id}) or {}
-    customer = await db.customers.find_one({"id": sale.get("customer_id", "")}) or {}
-    customer_name = customer.get("name") or sale.get("customer_name") or "Unknown Customer"
-    vehicle_model = (
-        sale.get("vehicle_model")
-        or (customer.get("vehicle_info") or {}).get("model")
-        or "Unknown Vehicle"
-    )
-
-    # Upload docs to Drive and enrich with drive_url
-    docs = body.get("docs", [])
-    drive_upload_errors = []
-    drive_uploads_attempted = 0
-    if isinstance(docs, list):
-        enriched_docs = []
-        for doc in docs:
-            enriched = dict(doc)
-            # Skip if already uploaded to Drive
-            if enriched.get("drive_url"):
-                enriched_docs.append(enriched)
-                continue
-            # Skip if no base64 data present (e.g. doc fetched from DB without data field)
-            raw_data = doc.get("data", "")
-            if not raw_data or len(raw_data) < 10:
-                print(f"Drive: skipping '{doc.get('name')}' — no data field present")
-                enriched_docs.append(enriched)
-                continue
-            drive_uploads_attempted += 1
-            drive_url = await upload_milestone_doc_to_drive(
-                customer_name=customer_name,
-                vehicle_model=vehicle_model,
-                milestone_key=milestone_key,
-                doc_name=doc.get("name", "document"),
-                doc_base64=raw_data,
-                mime_type=doc.get("mime_type", "application/octet-stream")
-            )
-            if drive_url:
-                enriched["drive_url"] = drive_url
-                print(f"Drive: ✓ '{doc.get('name')}' uploaded → {drive_url}")
-            else:
-                drive_upload_errors.append(doc.get("name", "document"))
-                print(f"Drive: ✗ '{doc.get('name')}' upload failed")
-            enriched_docs.append(enriched)
-        docs = enriched_docs
-
-    # Upsert the milestone doc
     now = datetime.now(timezone.utc)
     update = {
         f"milestones.{milestone_key}.completed": True,
@@ -2393,8 +2204,6 @@ async def complete_milestone(
         f"milestones.{milestone_key}.notes": body.get("notes", ""),
         "updated_at": now,
     }
-    if docs:
-        update[f"milestones.{milestone_key}.docs"] = docs
 
     result = await db.sale_milestones.update_one(
         {"sale_id": sale_id},
@@ -2402,24 +2211,20 @@ async def complete_milestone(
         upsert=True
     )
     if result.upserted_id:
+        sale = await db.sales.find_one({"id": sale_id}) or {}
+        customer = await db.customers.find_one({"id": sale.get("customer_id", "")}) or {}
         await db.sale_milestones.update_one(
             {"sale_id": sale_id},
-            {"$setOnInsert": {
+            {"$set": {
                 "id": str(__import__("uuid").uuid4()),
                 "sale_id": sale_id,
-                "customer_name": customer_name,
+                "customer_name": customer.get("name") or sale.get("customer_name", ""),
                 "invoice_number": sale.get("invoice_number", ""),
                 "created_at": now,
             }},
             upsert=True
         )
-    return {
-        "message": "Milestone updated",
-        "milestone_key": milestone_key,
-        "drive_uploads_attempted": drive_uploads_attempted,
-        "drive_uploads_succeeded": drive_uploads_attempted - len(drive_upload_errors),
-        "drive_upload_errors": drive_upload_errors if drive_upload_errors else None
-    }
+    return {"message": "Milestone updated", "milestone_key": milestone_key}
 
 @api_router.post("/sale-milestones/{sale_id}/milestone/{milestone_key}/uncomplete")
 async def uncomplete_milestone(
@@ -2439,27 +2244,6 @@ async def uncomplete_milestone(
         upsert=True
     )
     return {"message": "Milestone unmarked"}
-
-@api_router.delete("/sale-milestones/{sale_id}/milestone/{milestone_key}/doc/{doc_index}")
-async def delete_milestone_doc(
-    sale_id: str,
-    milestone_key: str,
-    doc_index: int,
-    current_user: User = Depends(get_current_user)
-):
-    """Remove a specific document from a milestone."""
-    doc = await db.sale_milestones.find_one({"sale_id": sale_id}, {"_id": 0})
-    if not doc:
-        raise HTTPException(status_code=404, detail="Milestone record not found")
-    docs = doc.get("milestones", {}).get(milestone_key, {}).get("docs", [])
-    if doc_index < 0 or doc_index >= len(docs):
-        raise HTTPException(status_code=400, detail="Invalid document index")
-    docs.pop(doc_index)
-    await db.sale_milestones.update_one(
-        {"sale_id": sale_id},
-        {"$set": {f"milestones.{milestone_key}.docs": docs, "updated_at": datetime.now(timezone.utc)}}
-    )
-    return {"message": "Document deleted"}
 
 @api_router.post("/sale-milestones/init/{sale_id}")
 async def init_sale_milestone(sale_id: str, current_user: User = Depends(get_current_user)):
@@ -2618,63 +2402,6 @@ async def delete_spare_part(part_id: str, current_user: User = Depends(get_curre
     return {"message": "Spare part deleted successfully", "deleted_part_id": part_id}
 
 # Dashboard stats
-@api_router.get("/drive/test")
-async def test_drive_connection(current_user: User = Depends(get_current_user)):
-    """Diagnostic endpoint — tests Google Drive connectivity and returns status."""
-    sa_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON', '')
-    folder_id = _get_drive_folder_id()
-    result = {
-        "service_account_configured": bool(sa_json and sa_json.strip()),
-        "folder_id_configured": bool(folder_id),
-        "folder_id": folder_id or None,
-    }
-    if not result["service_account_configured"]:
-        result["error"] = "GOOGLE_SERVICE_ACCOUNT_JSON env var is not set or empty"
-        return result
-    if not result["folder_id_configured"]:
-        result["error"] = "GOOGLE_DRIVE_PARENT_FOLDER_ID env var is not set or empty"
-        return result
-    try:
-        import json as _json
-        info = _json.loads(sa_json)
-        result["service_account_email"] = info.get("client_email", "unknown")
-        result["project_id"] = info.get("project_id", "unknown")
-    except Exception as e:
-        result["error"] = f"Failed to parse service account JSON: {e}"
-        return result
-
-    service = _get_drive_service()
-    if not service:
-        result["error"] = "Drive service could not be built — check server logs"
-        return result
-
-    try:
-        import asyncio as _asyncio
-        loop = _asyncio.get_event_loop()
-        # Try to list files in the parent folder
-        about = await loop.run_in_executor(
-            None, lambda: service.about().get(fields="user").execute()
-        )
-        result["drive_connected"] = True
-        result["drive_user"] = about.get("user", {}).get("emailAddress", "unknown")
-
-        # Verify parent folder is accessible
-        folder_meta = await loop.run_in_executor(
-            None, lambda: service.files().get(
-                fileId=folder_id, fields="id,name,mimeType",
-                supportsAllDrives=True
-            ).execute()
-        )
-        result["parent_folder_name"] = folder_meta.get("name")
-        result["parent_folder_accessible"] = True
-        result["status"] = "OK — Drive is connected and folder is accessible"
-    except Exception as e:
-        result["drive_connected"] = False
-        result["error"] = f"{type(e).__name__}: {e}"
-        result["status"] = "FAILED — see error above"
-
-    return result
-
 @api_router.get("/dashboard/stats")
 async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
     total_customers = await db.customers.count_documents({})
