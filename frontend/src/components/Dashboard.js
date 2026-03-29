@@ -790,5 +790,6 @@ const SalesMilestoneTracker = ({ onClose }) => {
       </div>
     </div>
   );
+};
 
 export default Dashboard;
