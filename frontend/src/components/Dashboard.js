@@ -12,15 +12,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Database,
-  ChevronDown,
-  ChevronUp,
-  Upload,
   X,
-  FileText,
-  Image,
-  Eye,
-  CheckSquare,
-  Square,
   Search,
   RotateCcw
 } from 'lucide-react';
