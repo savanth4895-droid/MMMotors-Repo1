@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
 import { 
   Users, 
   ShoppingCart, 
@@ -12,9 +11,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Database,
-  X,
-  Search,
-  RotateCcw
+  X
 } from 'lucide-react';
 
 // Custom Motorcycle Icon Component
@@ -535,13 +532,12 @@ const MILESTONES = [
 const SalesMilestoneTracker = ({ onClose }) => {
   const [sales, setSales] = useState([]);
   const [milestoneData, setMilestoneData] = useState({});
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedSale, setSelectedSale] = useState(null);
-  const [activeMilestone, setActiveMilestone] = useState(null);
   const [notes, setNotes] = useState({});
   const [loading, setLoading] = useState(false);
   const [savingNote, setSavingNote] = useState({});
   const [toggling, setToggling] = useState({});
+  const [expandedNote, setExpandedNote] = useState(null);
 
   useEffect(() => { fetchRecentSales(); }, []);
   useEffect(() => { if (selectedSale) fetchMilestones(selectedSale.id); }, [selectedSale]);
@@ -556,8 +552,12 @@ const SalesMilestoneTracker = ({ onClose }) => {
       const customers = custRes.data.data || custRes.data || [];
       const custMap = {};
       customers.forEach(c => { if (c.id) custMap[c.id] = c.name; });
-      const sales = (salesRes.data || []).map(s => ({ ...s, customer_name: s.customer_name || custMap[s.customer_id] || '' }));
-      setSales(sales.sort((a, b) => new Date(b.sale_date || b.created_at) - new Date(a.sale_date || a.created_at)).slice(0, 100));
+      const enriched = (salesRes.data || [])
+        .map(s => ({ ...s, customer_name: s.customer_name || custMap[s.customer_id] || 'Unknown' }))
+        .sort((a, b) => new Date(b.sale_date || b.created_at) - new Date(a.sale_date || a.created_at))
+        .slice(0, 5);
+      setSales(enriched);
+      if (enriched.length > 0 && !selectedSale) setSelectedSale(enriched[0]);
     } catch { /* silent */ }
   };
 
@@ -597,196 +597,192 @@ const SalesMilestoneTracker = ({ onClose }) => {
     if (!selectedSale) return;
     setSavingNote(p => ({ ...p, [key]: true }));
     const token = localStorage.getItem('token');
-    const isCompleted = ms(key).completed;
-    const url = isCompleted
-      ? `${API}/sale-milestones/${selectedSale.id}/milestone/${key}/complete`
-      : `${API}/sale-milestones/${selectedSale.id}/milestone/${key}/complete`;
-    await axios.post(url, { notes: notes[key] || '' }, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
+    await axios.post(
+      `${API}/sale-milestones/${selectedSale.id}/milestone/${key}/complete`,
+      { notes: notes[key] || '' },
+      { headers: { Authorization: `Bearer ${token}` } }
+    ).catch(() => {});
     await fetchMilestones(selectedSale.id);
     setSavingNote(p => ({ ...p, [key]: false }));
+    setExpandedNote(null);
   };
 
-  const filteredSales = sales.filter(s =>
-    !searchTerm ||
-    s.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.invoice_number?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100 bg-gray-50">
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-100">
         <div className="flex items-center gap-2">
-          <span className="text-base">📋</span>
-          <h3 className="text-xs font-semibold text-gray-800">Sales Process Tracker</h3>
+          <span className="text-sm">📋</span>
+          <span className="text-sm font-semibold text-gray-800">Sales Process Tracker</span>
         </div>
         <div className="flex items-center gap-2">
           {selectedSale && (
-            <button
-              onClick={() => { setSelectedSale(null); setMilestoneData({}); setActiveMilestone(null); }}
-              className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1 border border-gray-200 rounded-lg px-2 py-1"
-            >
-              <RotateCcw className="w-3 h-3" /> Change
-            </button>
+            <span className="text-xs text-gray-400 font-mono">{selectedSale.invoice_number}</span>
           )}
           {onClose && (
-            <button onClick={onClose} className="text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md p-1 transition-colors">
+            <button onClick={onClose} className="text-gray-400 hover:text-red-500 p-1 rounded transition-colors">
               <X className="w-4 h-4" />
             </button>
           )}
         </div>
       </div>
 
-      <div className="p-3">
-        {!selectedSale ? (
-          /* Sale Picker */
-          <div className="space-y-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-              <Input
-                placeholder="Search customer or invoice..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="pl-9 text-xs h-8"
-              />
-            </div>
-            <div className="rounded-lg border border-gray-100 divide-y divide-gray-50 max-h-72 overflow-y-auto">
-              {filteredSales.length === 0 ? (
-                <p className="text-center text-gray-400 text-sm py-6">No sales found</p>
-              ) : filteredSales.map(sale => (
-                <button key={sale.id} onClick={() => setSelectedSale(sale)}
-                  className="w-full text-left px-3 py-1.5 hover:bg-blue-50 flex items-center justify-between group transition-colors">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-xs font-medium text-gray-800 truncate">{sale.customer_name || 'Unknown'}</span>
-                    <span className="text-xs text-gray-400 font-mono flex-shrink-0">{sale.invoice_number}</span>
+      <div className="flex" style={{ minHeight: 0 }}>
+        {/* ── Left: Recent 5 sales list (fixed) ── */}
+        <div className="w-56 flex-shrink-0 border-r border-gray-100 bg-gray-50">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 pt-3 pb-1.5">Recent Sales</p>
+          <div className="divide-y divide-gray-100">
+            {sales.length === 0 ? (
+              <p className="text-xs text-gray-400 text-center py-4">No sales yet</p>
+            ) : sales.map(sale => {
+              const isActive = selectedSale?.id === sale.id;
+              const saleMs = milestoneData;
+              // Count completed for this sale only when selected
+              const done = isActive ? completedCount : null;
+              return (
+                <button
+                  key={sale.id}
+                  onClick={() => setSelectedSale(sale)}
+                  className={`w-full text-left px-3 py-2.5 transition-colors ${isActive ? 'bg-blue-50 border-l-2 border-blue-500' : 'hover:bg-white border-l-2 border-transparent'}`}
+                >
+                  <p className={`text-xs font-semibold truncate ${isActive ? 'text-blue-700' : 'text-gray-800'}`}>
+                    {sale.customer_name}
+                  </p>
+                  <div className="flex items-center justify-between mt-0.5">
+                    <span className="text-xs text-gray-400 font-mono">{sale.invoice_number}</span>
+                    {isActive && done !== null && (
+                      <span className={`text-xs font-semibold ${done === MILESTONES.length ? 'text-green-600' : 'text-blue-500'}`}>
+                        {done}/{MILESTONES.length}
+                      </span>
+                    )}
                   </div>
-                  <span className="text-xs text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-2">→</span>
+                  {isActive && (
+                    <div className="w-full bg-gray-200 rounded-full h-1 mt-1.5">
+                      <div
+                        className={`h-1 rounded-full transition-all ${done === MILESTONES.length ? 'bg-green-500' : 'bg-blue-500'}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  )}
                 </button>
-              ))}
-            </div>
+              );
+            })}
           </div>
-        ) : (
-          <div className="space-y-3">
-            {/* Sale summary bar */}
-            <div className="flex items-center gap-3 bg-gray-50 rounded-lg px-3 py-2">
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-800 text-xs truncate">{selectedSale.customer_name}</p>
-                <p className="text-xs text-gray-400 font-mono">{selectedSale.invoice_number}</p>
-              </div>
-              <div className="flex items-center gap-3 flex-shrink-0">
-                <span className={`text-lg font-bold ${completedCount === MILESTONES.length ? 'text-green-600' : 'text-blue-600'}`}>
-                  {completedCount}<span className="text-gray-400 font-normal text-sm">/{MILESTONES.length}</span>
-                </span>
-                <div className="w-24">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full transition-all duration-500 ${completedCount === MILESTONES.length ? 'bg-green-500' : 'bg-blue-500'}`}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-gray-400 text-right mt-0.5">{pct}%</p>
-                </div>
-              </div>
-            </div>
+        </div>
 
-            {loading ? (
-              <div className="flex justify-center py-4"><div className="spinner" /></div>
-            ) : (
-              /* Milestone checklist */
-              <div className="space-y-1">
-                {MILESTONES.map((m) => {
-                  const state = ms(m.key);
-                  const done = state.completed;
-                  const active = activeMilestone === m.key;
-
-                  return (
-                    <div key={m.key} className={`rounded-lg border transition-all ${done ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-white'}`}>
-                      {/* Milestone row */}
-                      <div className="flex items-center gap-3 px-3 py-2.5">
-                        {/* Checkbox */}
+        {/* ── Right: Horizontal milestone timeline ── */}
+        <div className="flex-1 p-4">
+          {!selectedSale ? (
+            <p className="text-sm text-gray-400 text-center py-8">Select a sale to track</p>
+          ) : loading ? (
+            <div className="flex justify-center py-8"><div className="spinner" /></div>
+          ) : (
+            <div className="space-y-4">
+              {/* Horizontal timeline */}
+              <div className="relative">
+                {/* Connector line */}
+                <div className="absolute top-5 left-5 right-5 h-0.5 bg-gray-200 z-0" />
+                {/* Completed fill */}
+                <div
+                  className={`absolute top-5 left-5 h-0.5 z-0 transition-all duration-700 ${completedCount === MILESTONES.length ? 'bg-green-500' : 'bg-blue-500'}`}
+                  style={{ width: completedCount === 0 ? '0' : `calc(${((completedCount - 0.5) / MILESTONES.length) * 100}% - 10px)` }}
+                />
+                {/* Steps */}
+                <div className="relative z-10 grid grid-cols-5 gap-1">
+                  {MILESTONES.map((m) => {
+                    const state = ms(m.key);
+                    const done = state.completed;
+                    const noteActive = expandedNote === m.key;
+                    return (
+                      <div key={m.key} className="flex flex-col items-center gap-1.5">
+                        {/* Circle checkbox */}
                         <button
                           onClick={() => handleToggle(m.key)}
                           disabled={toggling[m.key]}
-                          className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                            done
-                              ? 'bg-green-500 border-green-500 text-white'
-                              : 'border-gray-300 hover:border-green-400 bg-white'
-                          } ${toggling[m.key] ? 'opacity-50' : ''}`}
+                          className={`w-10 h-10 rounded-full flex items-center justify-center text-base border-2 transition-all shadow-sm
+                            ${done ? 'bg-green-500 border-green-500 text-white scale-105' : 'bg-white border-gray-300 hover:border-blue-400 hover:scale-105'}
+                            ${toggling[m.key] ? 'opacity-50' : ''}`}
                         >
-                          {done && (
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          {done ? (
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                             </svg>
-                          )}
+                          ) : m.icon}
                         </button>
 
-                        {/* Icon + label */}
-                        <span className="text-sm flex-shrink-0">{m.icon}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-xs font-semibold ${done ? 'text-green-700 line-through' : 'text-gray-800'}`}>
+                        {/* Label */}
+                        <div className="text-center w-full">
+                          <p className={`font-semibold leading-tight ${done ? 'text-green-700' : 'text-gray-700'}`} style={{ fontSize: '10px' }}>
                             {m.label}
                           </p>
-                          <p className="text-xs text-gray-400">{m.sub}</p>
-                        </div>
-
-                        {/* Completed date */}
-                        {done && state.completed_at && (
-                          <span className="text-xs text-green-500 flex-shrink-0">
-                            {new Date(state.completed_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                          </span>
-                        )}
-
-                        {/* Note indicator + expand */}
-                        <button
-                          onClick={() => setActiveMilestone(active ? null : m.key)}
-                          className={`flex-shrink-0 flex items-center gap-1 text-xs px-2 py-1 rounded-lg border transition-colors ${
-                            active ? 'bg-blue-500 text-white border-blue-500' : 'border-gray-200 text-gray-400 hover:border-blue-300 hover:text-blue-500'
-                          }`}
-                        >
-                          {state.notes ? '📝' : '+'} Note
-                        </button>
-                      </div>
-
-                      {/* Expanded note panel */}
-                      {active && (
-                        <div className="px-3 pb-3 pt-0 border-t border-gray-100">
-                          <div className="flex gap-2 mt-2">
-                            <input
-                              type="text"
-                              placeholder={`Add a note for ${m.label}...`}
-                              value={notes[m.key] || ''}
-                              onChange={e => setNotes(p => ({ ...p, [m.key]: e.target.value }))}
-                              onKeyDown={e => e.key === 'Enter' && handleSaveNote(m.key)}
-                              className="flex-1 text-xs border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                            />
-                            <button
-                              onClick={() => handleSaveNote(m.key)}
-                              className="text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg transition-colors flex-shrink-0"
-                            >
-                              {savingNote[m.key] ? '...' : 'Save'}
-                            </button>
-                          </div>
-                          {state.notes && (
-                            <p className="text-xs text-gray-500 bg-amber-50 border border-amber-100 rounded-lg px-3 py-1.5 mt-2">
-                              📝 {state.notes}
+                          <p className="text-gray-400 leading-tight" style={{ fontSize: '9px' }}>{m.sub}</p>
+                          {done && state.completed_at && (
+                            <p className="text-green-500 mt-0.5" style={{ fontSize: '9px' }}>
+                              {new Date(state.completed_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                             </p>
                           )}
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
 
-            {/* All done banner */}
-            {completedCount === MILESTONES.length && (
-              <div className="text-center py-2 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm font-semibold text-green-700">🎉 All steps complete!</p>
+                        {/* Note toggle button */}
+                        <button
+                          onClick={() => setExpandedNote(noteActive ? null : m.key)}
+                          className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
+                            state.notes
+                              ? 'bg-amber-50 border-amber-200 text-amber-600'
+                              : noteActive
+                              ? 'bg-blue-500 text-white border-blue-500'
+                              : 'bg-white text-gray-400 border-gray-200 hover:border-blue-300 hover:text-blue-500'
+                          }`}
+                          style={{ fontSize: '9px' }}
+                        >
+                          {state.notes ? '📝 Note' : '+ Note'}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            )}
-          </div>
-        )}
+
+              {/* Expanded note input */}
+              {expandedNote && (() => {
+                const m = MILESTONES.find(x => x.key === expandedNote);
+                const state = ms(expandedNote);
+                return (
+                  <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                    <p className="text-xs font-semibold text-gray-600 mb-2">{m.icon} {m.label} — Note</p>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder={`Add a note for ${m.label}...`}
+                        value={notes[expandedNote] || ''}
+                        onChange={e => setNotes(p => ({ ...p, [expandedNote]: e.target.value }))}
+                        onKeyDown={e => e.key === 'Enter' && handleSaveNote(expandedNote)}
+                        className="flex-1 text-xs border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-200 bg-white"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => handleSaveNote(expandedNote)}
+                        className="text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg transition-colors"
+                      >
+                        {savingNote[expandedNote] ? '...' : 'Save'}
+                      </button>
+                    </div>
+                    {state.notes && (
+                      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded px-2 py-1 mt-2">📝 {state.notes}</p>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* All done banner */}
+              {completedCount === MILESTONES.length && (
+                <div className="text-center py-1.5 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-xs font-semibold text-green-700">🎉 All steps complete for {selectedSale.customer_name}!</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
