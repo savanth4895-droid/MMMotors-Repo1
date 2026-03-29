@@ -594,6 +594,10 @@ class ServiceDueBaseDateOverride(BaseModel):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     notes: Optional[str] = None
 
+class BulkDeleteRequest(BaseModel):
+    ids: List[str]
+    force_delete: bool = False
+
 # Utility functions
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -1060,67 +1064,6 @@ async def update_customer(customer_id: str, customer_data: CustomerCreate, curre
     updated_customer = Customer(**complete_update_data)
     await db.customers.replace_one({"id": customer_id}, updated_customer.dict())
     return updated_customer
-
-@api_router.delete("/customers/{customer_id}")
-async def delete_customer(customer_id: str, current_user: User = Depends(get_current_user)):
-    # Check if customer exists
-    existing_customer = await db.customers.find_one({"id": customer_id})
-    if not existing_customer:
-        raise HTTPException(status_code=404, detail="Customer not found")
-    
-    # Check if customer has associated sales records
-    sales_count = await db.sales.count_documents({"customer_id": customer_id})
-    if sales_count > 0:
-        raise HTTPException(status_code=400, detail=f"Cannot delete customer. Customer has {sales_count} associated sales record(s). Please delete sales records first.")
-    
-    # Delete the customer
-    result = await db.customers.delete_one({"id": customer_id})
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Customer not found")
-    
-    return {"message": "Customer deleted successfully", "deleted_customer_id": customer_id}
-
-class BulkDeleteRequest(BaseModel):
-    ids: List[str]
-    force_delete: bool = False
-
-@api_router.delete("/customers")
-async def bulk_delete_customers(request: BulkDeleteRequest, current_user: User = Depends(get_current_user)):
-    """Bulk delete customers"""
-    if not request.ids:
-        raise HTTPException(status_code=400, detail="No customer IDs provided")
-    
-    deleted = []
-    failed = []
-    
-    for customer_id in request.ids:
-        try:
-            # Check if customer exists
-            existing_customer = await db.customers.find_one({"id": customer_id})
-            if not existing_customer:
-                failed.append({"id": customer_id, "error": "Customer not found"})
-                continue
-            
-            # Check if customer has associated sales records
-            sales_count = await db.sales.count_documents({"customer_id": customer_id})
-            if sales_count > 0:
-                failed.append({"id": customer_id, "error": f"Customer has {sales_count} associated sales record(s)"})
-                continue
-            
-            # Delete the customer
-            result = await db.customers.delete_one({"id": customer_id})
-            if result.deleted_count > 0:
-                deleted.append(customer_id)
-            else:
-                failed.append({"id": customer_id, "error": "Failed to delete"})
-        except Exception as e:
-            failed.append({"id": customer_id, "error": str(e)})
-    
-    return {
-        "deleted": len(deleted),
-        "deleted_ids": deleted,
-        "failed": failed
-    }
 
 # Vehicle endpoints
 @api_router.post("/vehicles", response_model=Vehicle)
