@@ -14,6 +14,7 @@ import {
   X
 } from 'lucide-react';
 
+
 // Custom Motorcycle Icon Component
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -42,99 +43,28 @@ const Dashboard = () => {
       imported_revenue: 0
     }
   });
-  const [backupStats, setBackupStats] = useState(null);
-  const [recentActivities, setRecentActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [showTracker, setShowTracker] = useState(true);
 
   useEffect(() => {
-    // Initial fetch
     fetchStats();
-    fetchRecentActivities();
-    
-    // Set up auto-refresh every 30 seconds for real-time updates
-    const refreshInterval = setInterval(() => {
-      fetchStats();
-      fetchRecentActivities();
-    }, 10000); // 10 seconds — real-time dashboard
-    
-    // Cleanup interval on component unmount
+    const refreshInterval = setInterval(fetchStats, 10000);
     return () => clearInterval(refreshInterval);
   }, []);
 
   const fetchStats = async () => {
     try {
-      const [dashboardRes, backupRes] = await Promise.all([
-        axios.get(`${API}/dashboard/stats`),
-        axios.get(`${API}/backup/stats`).catch(() => ({ data: null }))
-      ]);
-      
+      const dashboardRes = await axios.get(`${API}/dashboard/stats`);
       setStats(dashboardRes.data);
-      setBackupStats(backupRes.data);
       setLastUpdate(new Date());
     } catch (error) {
       if (loading) {
         toast.error('Failed to fetch dashboard statistics');
       }
-      // Silently fail for auto-refresh to avoid annoying the user
     } finally {
       setLoading(false);
     }
-  };
-
-  const fetchRecentActivities = async () => {
-    try {
-      const response = await axios.get(`${API}/activities?limit=5`);
-      setRecentActivities(response.data.activities || []);
-    } catch (error) {
-      console.error('Failed to fetch recent activities:', error);
-    }
-  };
-
-  const getActivityIcon = (type, icon) => {
-    const iconClasses = "w-4 h-4";
-    const colorMap = {
-      success: { bg: 'bg-green-100', text: 'text-green-600', icon: CheckCircle },
-      warning: { bg: 'bg-yellow-100', text: 'text-yellow-600', icon: AlertTriangle },
-      error: { bg: 'bg-red-100', text: 'text-red-600', icon: AlertTriangle },
-      info: { bg: 'bg-blue-100', text: 'text-blue-600', icon: Database }
-    };
-
-    const typeIconMap = {
-      sale_created: ShoppingCart,
-      service_completed: Wrench,
-      service_created: Wrench,
-      vehicle_added: MotorcycleIcon,
-      vehicle_sold: ShoppingCart,
-      low_stock: AlertTriangle,
-      customer_added: Users,
-      backup_created: Database
-    };
-
-    const color = colorMap[icon] || colorMap.info;
-    const IconComponent = typeIconMap[type] || color.icon;
-
-    return (
-      <div className={`w-8 h-8 ${color.bg} rounded-full flex items-center justify-center`}>
-        <IconComponent className={`${iconClasses} ${color.text}`} />
-      </div>
-    );
-  };
-
-  const formatTimeAgo = (timestamp) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-    return date.toLocaleDateString();
   };
 
   const mainModules = [
@@ -398,122 +328,6 @@ const Dashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Backup Status */}
-      {backupStats && (
-        <Card className="border-l-4 border-l-blue-500">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Database className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">Data Backup Status</CardTitle>
-                  <CardDescription>System backup and data protection</CardDescription>
-                </div>
-              </div>
-              <Link to="/backup">
-                <Button variant="outline" size="sm">
-                  Manage Backups
-                </Button>
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-3 bg-gray-50 rounded-lg">
-                <p className="text-2xl font-bold text-blue-600">{backupStats.total_backups}</p>
-                <p className="text-xs text-gray-600">Total Backups</p>
-              </div>
-              <div className="text-center p-3 bg-gray-50 rounded-lg">
-                <p className="text-2xl font-bold text-green-600">
-                  {backupStats.total_backups > 0 
-                    ? Math.round((backupStats.successful_backups / backupStats.total_backups) * 100)
-                    : 0}%
-                </p>
-                <p className="text-xs text-gray-600">Success Rate</p>
-              </div>
-              <div className="text-center p-3 bg-gray-50 rounded-lg">
-                <p className="text-2xl font-bold text-purple-600">
-                  {backupStats.total_storage_used_mb > 1024 
-                    ? `${(backupStats.total_storage_used_mb / 1024).toFixed(1)}GB`
-                    : `${backupStats.total_storage_used_mb.toFixed(0)}MB`}
-                </p>
-                <p className="text-xs text-gray-600">Storage Used</p>
-              </div>
-              <div className="text-center p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center justify-center space-x-1">
-                  {backupStats.last_backup_date ? (
-                    <>
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-sm font-bold text-green-600">Active</span>
-                    </>
-                  ) : (
-                    <>
-                      <AlertTriangle className="w-4 h-4 text-red-500" />
-                      <span className="text-sm font-bold text-red-600">No Backups</span>
-                    </>
-                  )}
-                </div>
-                <p className="text-xs text-gray-600">Backup Status</p>
-              </div>
-            </div>
-            {backupStats.last_backup_date && (
-              <div className="mt-3 text-center">
-                <p className="text-sm text-gray-600">
-                  Last backup: {new Date(backupStats.last_backup_date).toLocaleString('en-IN', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: false,
-                    timeZone: 'Asia/Kolkata'
-                  })} IST
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-          <CardDescription>Latest updates from your business</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {recentActivities.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <Database className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-              <p className="text-sm">No recent activity</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {recentActivities.map((activity) => (
-                <div 
-                  key={activity.id} 
-                  className={`flex items-center space-x-4 p-3 rounded-lg ${
-                    activity.icon === 'success' ? 'bg-green-50' :
-                    activity.icon === 'warning' ? 'bg-yellow-50' :
-                    activity.icon === 'error' ? 'bg-red-50' : 'bg-blue-50'
-                  }`}
-                >
-                  {getActivityIcon(activity.type, activity.icon)}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{activity.title}</p>
-                    <p className="text-xs text-gray-500 truncate">{activity.description}</p>
-                  </div>
-                  <span className="text-xs text-gray-400 whitespace-nowrap">
-                    {formatTimeAgo(activity.created_at)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 };
@@ -522,15 +336,16 @@ const Dashboard = () => {
 // ─── Sales Process Milestone Tracker ─────────────────────────────────────────
 
 const MILESTONES = [
-  { key: 'customer_docs',      label: 'Customer Docs',      sub: 'Aadhaar, PAN, RTO', icon: '🪪', color: '#3b82f6' },
-  { key: 'invoice_insurance',  label: 'Invoice & Insurance',sub: 'Invoice, policy',    icon: '📄', color: '#8b5cf6' },
-  { key: 'road_tax',           label: 'Road Tax',           sub: 'Tax receipt',        icon: '🛣️', color: '#f97316' },
-  { key: 'number_plates',      label: 'Number Plates',      sub: 'Front & back',       icon: '🔢', color: '#10b981' },
-  { key: 'plates_attached',    label: 'Plates on Bike',     sub: 'Final attachment',   icon: '🏍️', color: '#06b6d4' },
+  { key: 'customer_docs',      label: 'Customer Docs',       sub: 'Aadhaar, PAN, RTO', icon: '🪪' },
+  { key: 'invoice_insurance',  label: 'Invoice & Insurance', sub: 'Invoice, policy',    icon: '📄' },
+  { key: 'road_tax',           label: 'Road Tax',            sub: 'Tax receipt',        icon: '🛣️' },
+  { key: 'number_plates',      label: 'Number Plates',       sub: 'Front & back',       icon: '🔢' },
+  { key: 'plates_attached',    label: 'Plates on Bike',      sub: 'Final attachment',   icon: '🏍️' },
 ];
 
 const SalesMilestoneTracker = ({ onClose }) => {
   const [sales, setSales] = useState([]);
+  const [allSales, setAllSales] = useState([]);
   const [milestoneData, setMilestoneData] = useState({});
   const [selectedSale, setSelectedSale] = useState(null);
   const [notes, setNotes] = useState({});
@@ -538,9 +353,24 @@ const SalesMilestoneTracker = ({ onClose }) => {
   const [savingNote, setSavingNote] = useState({});
   const [toggling, setToggling] = useState({});
   const [expandedNote, setExpandedNote] = useState(null);
+  const [search, setSearch] = useState('');
 
   useEffect(() => { fetchRecentSales(); }, []);
   useEffect(() => { if (selectedSale) fetchMilestones(selectedSale.id); }, [selectedSale]);
+
+  // Filter sales by search
+  useEffect(() => {
+    if (!search.trim()) {
+      setSales(allSales.slice(0, 8));
+    } else {
+      const q = search.toLowerCase();
+      setSales(allSales.filter(s =>
+        s.customer_name?.toLowerCase().includes(q) ||
+        s.invoice_number?.toLowerCase().includes(q) ||
+        s.vehicle_model?.toLowerCase().includes(q)
+      ).slice(0, 8));
+    }
+  }, [search, allSales]);
 
   const fetchRecentSales = async () => {
     try {
@@ -554,9 +384,9 @@ const SalesMilestoneTracker = ({ onClose }) => {
       customers.forEach(c => { if (c.id) custMap[c.id] = c.name; });
       const enriched = (salesRes.data || [])
         .map(s => ({ ...s, customer_name: s.customer_name || custMap[s.customer_id] || 'Unknown' }))
-        .sort((a, b) => new Date(b.sale_date || b.created_at) - new Date(a.sale_date || a.created_at))
-        .slice(0, 5);
-      setSales(enriched);
+        .sort((a, b) => new Date(b.sale_date || b.created_at) - new Date(a.sale_date || a.created_at));
+      setAllSales(enriched);
+      setSales(enriched.slice(0, 8));
       if (enriched.length > 0 && !selectedSale) setSelectedSale(enriched[0]);
     } catch { /* silent */ }
   };
@@ -597,27 +427,39 @@ const SalesMilestoneTracker = ({ onClose }) => {
     if (!selectedSale) return;
     setSavingNote(p => ({ ...p, [key]: true }));
     const token = localStorage.getItem('token');
-    await axios.post(
-      `${API}/sale-milestones/${selectedSale.id}/milestone/${key}/complete`,
-      { notes: notes[key] || '' },
-      { headers: { Authorization: `Bearer ${token}` } }
-    ).catch(() => {});
+    const isCompleted = ms(key).completed;
+    const url = isCompleted
+      ? `${API}/sale-milestones/${selectedSale.id}/milestone/${key}/complete`
+      : `${API}/sale-milestones/${selectedSale.id}/milestone/${key}/complete`;
+    await axios.post(url, { notes: notes[key] || '' }, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
     await fetchMilestones(selectedSale.id);
     setSavingNote(p => ({ ...p, [key]: false }));
     setExpandedNote(null);
   };
 
+  const allDone = completedCount === MILESTONES.length;
+
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
       {/* ── Header ── */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          <span className="text-sm">📋</span>
-          <span className="text-sm font-semibold text-gray-800">Sales Process Tracker</span>
+      <div className={`flex items-center justify-between px-5 py-3 border-b border-gray-100 ${allDone && selectedSale ? 'bg-green-50' : 'bg-gray-50'}`}>
+        <div className="flex items-center gap-3">
+          <span className="text-lg">📋</span>
+          <div>
+            <span className="text-sm font-bold text-gray-800">Sales Process Tracker</span>
+            {selectedSale && (
+              <span className="ml-2 text-xs text-gray-400">— {selectedSale.customer_name}</span>
+            )}
+          </div>
+          {selectedSale && (
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${allDone ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-600'}`}>
+              {completedCount}/{MILESTONES.length} done
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {selectedSale && (
-            <span className="text-xs text-gray-400 font-mono">{selectedSale.invoice_number}</span>
+            <span className="text-xs text-gray-400 font-mono bg-gray-100 px-2 py-0.5 rounded">{selectedSale.invoice_number}</span>
           )}
           {onClose && (
             <button onClick={onClose} className="text-gray-400 hover:text-red-500 p-1 rounded transition-colors">
@@ -627,41 +469,54 @@ const SalesMilestoneTracker = ({ onClose }) => {
         </div>
       </div>
 
-      <div className="flex" style={{ minHeight: 0 }}>
-        {/* ── Left: Recent 5 sales list (fixed) ── */}
-        <div className="w-56 flex-shrink-0 border-r border-gray-100 bg-gray-50">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 pt-3 pb-1.5">Recent Sales</p>
-          <div className="divide-y divide-gray-100">
+      <div className="flex" style={{ minHeight: 260 }}>
+        {/* ── Left: Sales list with search ── */}
+        <div className="w-64 flex-shrink-0 border-r border-gray-100 bg-gray-50 flex flex-col">
+          {/* Search */}
+          <div className="px-3 pt-3 pb-2">
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search name / invoice..."
+              className="w-full text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-200 placeholder-gray-400"
+            />
+          </div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 pb-1.5">
+            {search ? 'Results' : 'Recent Sales'}
+          </p>
+          <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
             {sales.length === 0 ? (
-              <p className="text-xs text-gray-400 text-center py-4">No sales yet</p>
+              <p className="text-xs text-gray-400 text-center py-6">No sales found</p>
             ) : sales.map(sale => {
               const isActive = selectedSale?.id === sale.id;
-              const saleMs = milestoneData;
-              // Count completed for this sale only when selected
-              const done = isActive ? completedCount : null;
               return (
                 <button
                   key={sale.id}
                   onClick={() => setSelectedSale(sale)}
-                  className={`w-full text-left px-3 py-2.5 transition-colors ${isActive ? 'bg-blue-50 border-l-2 border-blue-500' : 'hover:bg-white border-l-2 border-transparent'}`}
+                  className={`w-full text-left px-3 py-3 transition-colors border-l-2 ${isActive ? 'bg-blue-50 border-l-blue-500' : 'border-l-transparent hover:bg-white hover:border-l-gray-200'}`}
                 >
-                  <p className={`text-xs font-semibold truncate ${isActive ? 'text-blue-700' : 'text-gray-800'}`}>
+                  <p className={`text-sm font-semibold truncate ${isActive ? 'text-blue-700' : 'text-gray-800'}`}>
                     {sale.customer_name}
                   </p>
                   <div className="flex items-center justify-between mt-0.5">
                     <span className="text-xs text-gray-400 font-mono">{sale.invoice_number}</span>
-                    {isActive && done !== null && (
-                      <span className={`text-xs font-semibold ${done === MILESTONES.length ? 'text-green-600' : 'text-blue-500'}`}>
-                        {done}/{MILESTONES.length}
-                      </span>
+                    {sale.vehicle_model && (
+                      <span className="text-xs text-gray-400 truncate ml-1 max-w-20">{sale.vehicle_model}</span>
                     )}
                   </div>
+                  {/* Mini progress bar always visible */}
                   {isActive && (
-                    <div className="w-full bg-gray-200 rounded-full h-1 mt-1.5">
-                      <div
-                        className={`h-1 rounded-full transition-all ${done === MILESTONES.length ? 'bg-green-500' : 'bg-blue-500'}`}
-                        style={{ width: `${pct}%` }}
-                      />
+                    <div className="mt-1.5 flex items-center gap-1.5">
+                      <div className="flex-1 bg-gray-200 rounded-full h-1.5">
+                        <div
+                          className={`h-1.5 rounded-full transition-all ${allDone ? 'bg-green-500' : 'bg-blue-500'}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className={`text-xs font-bold ${allDone ? 'text-green-600' : 'text-blue-500'}`}>
+                        {pct}%
+                      </span>
                     </div>
                   )}
                 </button>
@@ -670,70 +525,81 @@ const SalesMilestoneTracker = ({ onClose }) => {
           </div>
         </div>
 
-        {/* ── Right: Horizontal milestone timeline ── */}
-        <div className="flex-1 p-4">
+        {/* ── Right: Milestone area ── */}
+        <div className="flex-1 p-6 flex flex-col">
           {!selectedSale ? (
-            <p className="text-sm text-gray-400 text-center py-8">Select a sale to track</p>
+            <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
+              Select a sale to track its progress
+            </div>
           ) : loading ? (
-            <div className="flex justify-center py-8"><div className="spinner" /></div>
+            <div className="flex-1 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+            </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Horizontal timeline */}
-              <div className="relative">
-                {/* Connector line */}
-                <div className="absolute top-5 left-5 right-5 h-0.5 bg-gray-200 z-0" />
-                {/* Completed fill */}
+              <div className="relative pt-2">
+                {/* Background connector */}
+                <div className="absolute top-[36px] left-[calc(10%)] right-[calc(10%)] h-1 bg-gray-200 z-0 rounded-full" />
+                {/* Progress fill */}
                 <div
-                  className={`absolute top-5 left-5 h-0.5 z-0 transition-all duration-700 ${completedCount === MILESTONES.length ? 'bg-green-500' : 'bg-blue-500'}`}
-                  style={{ width: completedCount === 0 ? '0' : `calc(${((completedCount - 0.5) / MILESTONES.length) * 100}% - 10px)` }}
+                  className={`absolute top-[36px] left-[calc(10%)] h-1 z-0 rounded-full transition-all duration-700 ${allDone ? 'bg-green-500' : 'bg-blue-500'}`}
+                  style={{ width: completedCount === 0 ? '0%' : `calc(${((completedCount - 0.5) / MILESTONES.length) * 80}%)` }}
                 />
+
                 {/* Steps */}
-                <div className="relative z-10 grid grid-cols-5 gap-1">
+                <div className="relative z-10 grid grid-cols-5">
                   {MILESTONES.map((m) => {
                     const state = ms(m.key);
                     const done = state.completed;
                     const noteActive = expandedNote === m.key;
                     return (
-                      <div key={m.key} className="flex flex-col items-center gap-1.5">
-                        {/* Circle checkbox */}
+                      <div key={m.key} className="flex flex-col items-center gap-2">
+                        {/* Big circle button */}
                         <button
                           onClick={() => handleToggle(m.key)}
                           disabled={toggling[m.key]}
-                          className={`w-10 h-10 rounded-full flex items-center justify-center text-base border-2 transition-all shadow-sm
-                            ${done ? 'bg-green-500 border-green-500 text-white scale-105' : 'bg-white border-gray-300 hover:border-blue-400 hover:scale-105'}
-                            ${toggling[m.key] ? 'opacity-50' : ''}`}
+                          title={done ? `Unmark ${m.label}` : `Mark ${m.label} as done`}
+                          className={`w-[60px] h-[60px] rounded-full flex items-center justify-center text-2xl border-3 transition-all shadow-md
+                            ${done
+                              ? 'bg-green-500 border-green-500 text-white shadow-green-200 scale-105'
+                              : 'bg-white border-2 border-gray-300 hover:border-blue-400 hover:shadow-blue-100 hover:scale-105'}
+                            ${toggling[m.key] ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                         >
                           {done ? (
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                             </svg>
-                          ) : m.icon}
+                          ) : (
+                            <span>{m.icon}</span>
+                          )}
                         </button>
 
-                        {/* Label */}
-                        <div className="text-center w-full">
-                          <p className={`font-semibold leading-tight ${done ? 'text-green-700' : 'text-gray-700'}`} style={{ fontSize: '10px' }}>
+                        {/* Label block */}
+                        <div className="text-center px-1">
+                          <p className={`text-xs font-bold leading-tight ${done ? 'text-green-700' : 'text-gray-700'}`}>
                             {m.label}
                           </p>
-                          <p className="text-gray-400 leading-tight" style={{ fontSize: '9px' }}>{m.sub}</p>
+                          <p className="text-gray-400 leading-tight mt-0.5" style={{ fontSize: '10px' }}>
+                            {m.sub}
+                          </p>
                           {done && state.completed_at && (
-                            <p className="text-green-500 mt-0.5" style={{ fontSize: '9px' }}>
-                              {new Date(state.completed_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                            <p className="text-green-500 font-medium mt-0.5" style={{ fontSize: '10px' }}>
+                              ✓ {new Date(state.completed_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                             </p>
                           )}
                         </div>
 
-                        {/* Note toggle button */}
+                        {/* Note button */}
                         <button
                           onClick={() => setExpandedNote(noteActive ? null : m.key)}
-                          className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
+                          className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
                             state.notes
-                              ? 'bg-amber-50 border-amber-200 text-amber-600'
+                              ? 'bg-amber-50 border-amber-300 text-amber-700 font-medium'
                               : noteActive
                               ? 'bg-blue-500 text-white border-blue-500'
                               : 'bg-white text-gray-400 border-gray-200 hover:border-blue-300 hover:text-blue-500'
                           }`}
-                          style={{ fontSize: '9px' }}
                         >
                           {state.notes ? '📝 Note' : '+ Note'}
                         </button>
@@ -743,41 +609,56 @@ const SalesMilestoneTracker = ({ onClose }) => {
                 </div>
               </div>
 
-              {/* Expanded note input */}
+              {/* Expanded note editor */}
               {expandedNote && (() => {
                 const m = MILESTONES.find(x => x.key === expandedNote);
                 const state = ms(expandedNote);
                 return (
-                  <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-                    <p className="text-xs font-semibold text-gray-600 mb-2">{m.icon} {m.label} — Note</p>
+                  <div className="border border-blue-100 rounded-xl p-4 bg-blue-50">
+                    <p className="text-sm font-semibold text-gray-700 mb-3">
+                      {m.icon} {m.label} — Add Note
+                    </p>
                     <div className="flex gap-2">
                       <input
                         type="text"
-                        placeholder={`Add a note for ${m.label}...`}
+                        placeholder={`Note for ${m.label}...`}
                         value={notes[expandedNote] || ''}
                         onChange={e => setNotes(p => ({ ...p, [expandedNote]: e.target.value }))}
                         onKeyDown={e => e.key === 'Enter' && handleSaveNote(expandedNote)}
-                        className="flex-1 text-xs border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-200 bg-white"
+                        className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white"
                         autoFocus
                       />
                       <button
                         onClick={() => handleSaveNote(expandedNote)}
-                        className="text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg transition-colors"
+                        disabled={savingNote[expandedNote]}
+                        className="text-sm bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors font-medium"
                       >
-                        {savingNote[expandedNote] ? '...' : 'Save'}
+                        {savingNote[expandedNote] ? 'Saving…' : 'Save'}
+                      </button>
+                      <button
+                        onClick={() => setExpandedNote(null)}
+                        className="text-sm text-gray-400 hover:text-gray-600 px-3 py-2 rounded-lg border border-gray-200 bg-white"
+                      >
+                        Cancel
                       </button>
                     </div>
                     {state.notes && (
-                      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded px-2 py-1 mt-2">📝 {state.notes}</p>
+                      <div className="mt-3 flex items-start gap-2 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                        <span>📝</span>
+                        <span>{state.notes}</span>
+                      </div>
                     )}
                   </div>
                 );
               })()}
 
-              {/* All done banner */}
-              {completedCount === MILESTONES.length && (
-                <div className="text-center py-1.5 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-xs font-semibold text-green-700">🎉 All steps complete for {selectedSale.customer_name}!</p>
+              {/* Completion banner */}
+              {allDone && (
+                <div className="flex items-center justify-center gap-2 py-3 bg-green-50 border border-green-200 rounded-xl">
+                  <span className="text-xl">🎉</span>
+                  <p className="text-sm font-bold text-green-700">
+                    All steps complete for {selectedSale.customer_name}!
+                  </p>
                 </div>
               )}
             </div>
