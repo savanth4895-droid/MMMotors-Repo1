@@ -322,6 +322,9 @@ const SalesOverview = () => {
       }
       const maxTrend = Math.max(...trend.map(t => t.total), 1);
 
+      // Count unique customers with sales (avoids inflated count from duplicate imports)
+      const customersWithSales = new Set(sales.map(s => s.customer_id).filter(Boolean)).size;
+
       setStats({
         totalSales: sales.length,
         currentMonthSales: currentMonthSales.length,
@@ -331,7 +334,7 @@ const SalesOverview = () => {
         todayRev: revenue(todaySales),
         yearSales: yearSales.length,
         yearRev: revenue(yearSales),
-        totalCustomers: customers.length,
+        totalCustomers: customersWithSales,
         brandBreakdown,
         payMap,
         recent,
@@ -399,7 +402,7 @@ const SalesOverview = () => {
           <CardContent className="p-5">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">All Time</p>
             <p className="text-3xl font-bold text-gray-800">{stats.totalSales}</p>
-            <p className="text-xs text-gray-500 mt-1">{stats.totalCustomers} customers</p>
+            <p className="text-xs text-gray-500 mt-1">{stats.totalCustomers} unique buyers</p>
           </CardContent>
         </Card>
       </div>
@@ -1900,7 +1903,7 @@ const ViewInvoices = () => {
   
   // Pagination & Sorting
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(500);
+  const [itemsPerPage] = useState(25);
   const [sortBy, setSortBy] = useState('sale_date');
   const [sortOrder, setSortOrder] = useState('desc');
 
