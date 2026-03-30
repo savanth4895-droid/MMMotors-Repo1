@@ -3843,9 +3843,9 @@ async def import_service_bills_data(data: List[Dict], import_job: ImportJob, use
     # Group rows by bill key so multiple items land on one bill
     bill_groups: Dict[str, List[Dict]] = {}
     for idx, row in enumerate(data):
-        jcn = (row.get('job_card_number') or '').strip()
-        mobile = (row.get('customer_mobile') or '').strip()
-        date = (row.get('bill_date') or '').strip()
+        jcn = safe_str(row.get('job_card_number') or '')
+        mobile = safe_str(row.get('customer_mobile') or '')
+        date = safe_str(row.get('bill_date') or '')
         # Key: prefer job card number, fall back to mobile+date
         key = jcn if jcn else f"{mobile}__{date}__{idx}"
         bill_groups.setdefault(key, []).append((idx, row))
@@ -3853,13 +3853,13 @@ async def import_service_bills_data(data: List[Dict], import_job: ImportJob, use
     for key, rows in bill_groups.items():
         idx0, first = rows[0]
         try:
-            customer_name = (first.get('customer_name') or '').strip()
-            customer_mobile = (first.get('customer_mobile') or '').strip()
-            vehicle_number = (first.get('vehicle_number') or '').strip()
-            vehicle_brand = (first.get('vehicle_brand') or '').strip() or None
-            vehicle_model = (first.get('vehicle_model') or '').strip() or None
-            job_card_number = (first.get('job_card_number') or '').strip() or None
-            status = (first.get('status') or 'pending').strip().lower()
+            customer_name = safe_str(first.get('customer_name') or '')
+            customer_mobile = safe_str(first.get('customer_mobile') or '')
+            vehicle_number = safe_str(first.get('vehicle_number') or '')
+            vehicle_brand = safe_str(first.get('vehicle_brand') or '') or None
+            vehicle_model = safe_str(first.get('vehicle_model') or '') or None
+            job_card_number = safe_str(first.get('job_card_number') or '') or None
+            status = safe_str(first.get('status') or 'pending').lower()
             if status not in ('paid', 'pending', 'cancelled'):
                 status = 'pending'
 
@@ -3895,8 +3895,8 @@ async def import_service_bills_data(data: List[Dict], import_job: ImportJob, use
             total_sgst = 0.0
 
             for _, row in rows:
-                desc = (row.get('item_description') or '').strip() or 'Service'
-                hsn = (row.get('item_hsn') or '').strip()
+                desc = safe_str(row.get('item_description') or '') or 'Service'
+                hsn = safe_str(row.get('item_hsn') or '')
                 try:
                     qty = float(row.get('item_qty') or 1)
                     rate = float(row.get('item_rate') or 0)
@@ -3939,7 +3939,7 @@ async def import_service_bills_data(data: List[Dict], import_job: ImportJob, use
 
             # Bill date
             bill_date = datetime.now(timezone.utc)
-            raw_date = (first.get('bill_date') or '').strip()
+            raw_date = safe_str(first.get('bill_date') or '')
             if raw_date:
                 try:
                     from dateutil import parser as date_parser
