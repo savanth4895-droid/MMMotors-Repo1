@@ -1900,7 +1900,7 @@ const ViewInvoices = () => {
   
   // Pagination & Sorting
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(25);
+  const [itemsPerPage] = useState(500);
   const [sortBy, setSortBy] = useState('sale_date');
   const [sortOrder, setSortOrder] = useState('desc');
 
