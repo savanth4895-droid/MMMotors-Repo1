@@ -2693,14 +2693,12 @@ def _parse_sale_date(date_str: str):
         return _dt(datetime.now().year, 1, 1)
 
 async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id: str) -> ImportResult:
-    """Import customers data with smart merge logic:
-    - New customer (mobile not found): insert everything
-    - Existing customer (mobile found):
-        * Fill only missing fields
-        * Always attempt vehicle linking and sale creation if not already done
-        * Same mobile + same vehicle model + sale already exists → skip
-        * Same mobile + same vehicle model + no sale yet → create sale
-        * Same mobile + different vehicle model → fill missing fields, create sale
+    """Import customers data:
+    - Dedup by mobile + chassis (both must match to skip)
+    - Existing customer: fill missing fields only, link vehicle, create sale if not exists
+    - New customer: insert, link vehicle, create sale
+    - All imported sales get sequential INV-XXXXXX numbers
+    - Vehicle status set to sold when sale is created
     """
     successful = 0
     failed = 0
@@ -2711,38 +2709,47 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
     import_stats = {'vehicles_linked': 0, 'sales_created': 0, 'customers_updated': 0}
 
     # ── PRE-FETCH ──────────────────────────────────────────────────────────────
-    existing_customers = {}
+    # Key: mobile -> list of customer docs (one customer can have multiple records with same mobile)
+    existing_customers_by_mobile = {}  # mobile -> first customer doc
+    existing_customers_by_chassis = {}  # chassis_number -> customer doc
     async for c in db.customers.find({}, {"_id": 0}):
-        if c.get("mobile"):
-            existing_customers[str(c["mobile"])] = c
+        mob = str(c.get("mobile", "")).strip()
+        if mob:
+            if mob not in existing_customers_by_mobile:
+                existing_customers_by_mobile[mob] = c
+        chassis_key = (c.get("vehicle_info") or {}).get("chassis_number", "")
+        if chassis_key:
+            existing_customers_by_chassis[chassis_key] = c
 
-    existing_vehicles = {}
-    existing_vehicles_by_reg = {}
-    async for v in db.vehicles.find({}, {"id": 1, "chassis_number": 1, "vehicle_number": 1, "customer_id": 1}):
+    existing_vehicles = {}          # chassis_number -> vehicle doc
+    existing_vehicles_by_reg = {}   # vehicle_number -> vehicle doc
+    async for v in db.vehicles.find({}, {"_id": 0}):
         if v.get("chassis_number"):
             existing_vehicles[v["chassis_number"]] = v
         if v.get("vehicle_number"):
             existing_vehicles_by_reg[v["vehicle_number"]] = v
 
-    # Pre-fetch existing sales: set of (customer_id, invoice_number) and (customer_id, vehicle_model) to avoid duplicates
-    existing_sales_keys = set()  # (customer_id, invoice_number)
-    existing_sales_by_customer_model = set()  # (customer_id, vehicle_model_lower)
-    async for s in db.sales.find({}, {"customer_id": 1, "invoice_number": 1, "vehicle_model": 1}):
-        if s.get("customer_id") and s.get("invoice_number"):
-            existing_sales_keys.add((s["customer_id"], s["invoice_number"]))
-        if s.get("customer_id") and s.get("vehicle_model"):
-            existing_sales_by_customer_model.add((s["customer_id"], s["vehicle_model"].strip().lower()))
+    # Pre-fetch existing sales to avoid duplicates
+    # Key by invoice_number (canonical) and by chassis_number (to catch re-imports)
+    existing_sales_by_invoice = set()   # invoice_number strings
+    existing_sales_by_chassis = set()   # chassis_number strings
+    async for s in db.sales.find({}, {"invoice_number": 1, "vehicle_chassis": 1}):
+        if s.get("invoice_number"):
+            existing_sales_by_invoice.add(s["invoice_number"].strip())
+        if s.get("vehicle_chassis"):
+            existing_sales_by_chassis.add(s["vehicle_chassis"].strip())
 
-    # Track what we're inserting this run to avoid within-batch dupes
-    inserting_sales_keys = set()  # (customer_id, invoice_number)
+    # Track within-batch inserts to catch dupes across rows in this file
+    inserting_invoices = set()    # invoice numbers we're inserting this run
+    inserting_chassis = set()     # chassis numbers we're creating sales for this run
 
-    # Track mobiles seen in this file
-    seen_in_file = {}  # mobile -> set of vehicle_model_lower
+    # Track rows seen in this file: chassis -> True (most reliable dedup key)
+    seen_chassis_in_file = set()
 
     customers_to_insert = []
     sales_to_insert = []
-    vehicle_updates = []
-    customer_bulk_updates = []
+    vehicle_updates = []      # (filter, update) for vehicles
+    customer_bulk_updates = []  # (filter, update) for customers
 
     for idx, row in enumerate(data):
         try:
@@ -2782,28 +2789,34 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                     'invoice_number': safe_str(row.get('invoice_number', '')),
                 }
 
+            chassis = vehicle_info.get('chassis_number', '').strip()
+            reg = vehicle_info.get('vehicle_number', '').strip()
             incoming_model = vehicle_info.get('model', '').strip().lower()
-            chassis = vehicle_info.get('chassis_number', '')
-            reg = vehicle_info.get('vehicle_number', '')
 
-            # ── Within-file duplicate check ────────────────────────────────────
-            incoming_invoice = sales_info.get('invoice_number', '').strip()
-            if phone_number != "0000000000":
-                if phone_number in seen_in_file:
-                    if incoming_model and incoming_model in seen_in_file[phone_number]:
-                        skipped += 1
-                        continue
-                    if incoming_model:
-                        seen_in_file[phone_number].add(incoming_model)
-                else:
-                    seen_in_file[phone_number] = {incoming_model} if incoming_model else set()
+            # ── Primary dedup: chassis number (most reliable key) ─────────────
+            # If we've already processed this chassis in this file, skip
+            if chassis and chassis in seen_chassis_in_file:
+                skipped += 1
+                continue
 
-            # ── Existing customer in DB ────────────────────────────────────────
-            if phone_number != "0000000000" and phone_number in existing_customers:
-                existing = existing_customers[phone_number]
+            # If a sale already exists for this chassis, skip entirely
+            if chassis and chassis in existing_sales_by_chassis:
+                skipped += 1
+                continue
+            if chassis and chassis in inserting_chassis:
+                skipped += 1
+                continue
+
+            if chassis:
+                seen_chassis_in_file.add(chassis)
+
+            # ── Existing customer lookup: prefer chassis match, fall back to mobile ──
+            existing = existing_customers_by_chassis.get(chassis) or existing_customers_by_mobile.get(phone_number)
+
+            if existing:
                 existing_id = existing['id']
 
-                # Always fill missing fields regardless of vehicle model match
+                # Fill only missing fields
                 update_fields = {}
                 if name and name != "Customer" and not existing.get('name'):
                     update_fields['name'] = name
@@ -2844,71 +2857,60 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                     )
                     import_stats['customers_updated'] += 1
                     updated += 1
-                    existing_customers[phone_number] = {**existing, **update_fields}
+                    existing_customers_by_mobile[phone_number] = {**existing, **update_fields}
 
-                # Link vehicle if unlinked
+                # Link vehicle if currently unlinked
                 matched_vehicle = existing_vehicles.get(chassis) or existing_vehicles_by_reg.get(reg)
                 if matched_vehicle and not matched_vehicle.get('customer_id'):
                     vehicle_updates.append(
                         ({"id": matched_vehicle['id']}, {"$set": {"customer_id": existing_id}})
                     )
-                    existing_vehicles_by_reg[reg] = {**matched_vehicle, 'customer_id': existing_id}
-                    if chassis:
-                        existing_vehicles[chassis] = {**matched_vehicle, 'customer_id': existing_id}
+                    matched_vehicle['customer_id'] = existing_id  # update local cache
                     import_stats['vehicles_linked'] += 1
 
-                # Create sale only if it doesn't already exist
+                # Create sale if amount present and no sale exists for this chassis
                 if sales_info and sales_info.get('amount'):
-                    sale_key_inv = (existing_id, incoming_invoice) if incoming_invoice else None
-                    sale_key_model = (existing_id, incoming_model) if incoming_model else None
-                    already_has_sale = (
-                        (sale_key_inv and sale_key_inv in existing_sales_keys) or
-                        (sale_key_inv and sale_key_inv in inserting_sales_keys) or
-                        (sale_key_model and sale_key_model in existing_sales_by_customer_model)
-                    )
-                    if not already_has_sale:
-                        try:
-                            sale_date = _parse_sale_date(sales_info.get('sale_date', ''))
-                            vehicle_id = existing_vehicles.get(chassis, {}).get('id') if chassis else None
-                            inv_num = incoming_invoice or f"IMP-{existing_id[:8]}"
-                            sale_record = Sale(
-                                customer_id=existing_id,
-                                vehicle_id=vehicle_id,
-                                amount=float(sales_info['amount']),
-                                payment_method=(sales_info.get('payment_method') or 'CASH').upper(),
-                                hypothecation=sales_info.get('hypothecation', ''),
-                                sale_date=sale_date,
-                                invoice_number=inv_num,
-                                vehicle_brand=vehicle_info.get('brand', ''),
-                                vehicle_model=vehicle_info.get('model', ''),
-                                vehicle_color=vehicle_info.get('color', ''),
-                                vehicle_chassis=vehicle_info.get('chassis_number', ''),
-                                vehicle_engine=vehicle_info.get('engine_number', ''),
-                                vehicle_registration=vehicle_info.get('vehicle_number', ''),
-                                insurance_nominee=insurance_info.get('nominee_name', ''),
-                                insurance_relation=insurance_info.get('relation', ''),
-                                insurance_age=insurance_info.get('age', ''),
-                                customer_name=existing.get('name', name),
-                                source="import",
-                                created_by="import_system"
+                    try:
+                        # Always assign a fresh sequential invoice number
+                        inv_num = f"INV-{await next_sequence('sales'):06d}"
+                        while inv_num in existing_sales_by_invoice or inv_num in inserting_invoices:
+                            inv_num = f"INV-{await next_sequence('sales'):06d}"
+
+                        sale_date = _parse_sale_date(sales_info.get('sale_date', ''))
+                        vehicle_id = existing_vehicles.get(chassis, {}).get('id') if chassis else None
+                        sale_record = Sale(
+                            customer_id=existing_id,
+                            vehicle_id=vehicle_id,
+                            amount=float(sales_info['amount']),
+                            payment_method=(sales_info.get('payment_method') or 'CASH').upper(),
+                            hypothecation=sales_info.get('hypothecation', ''),
+                            sale_date=sale_date,
+                            invoice_number=inv_num,
+                            vehicle_brand=vehicle_info.get('brand', ''),
+                            vehicle_model=vehicle_info.get('model', ''),
+                            vehicle_color=vehicle_info.get('color', ''),
+                            vehicle_chassis=chassis,
+                            vehicle_engine=vehicle_info.get('engine_number', ''),
+                            vehicle_registration=reg,
+                            insurance_nominee=insurance_info.get('nominee_name', ''),
+                            insurance_relation=insurance_info.get('relation', ''),
+                            insurance_age=insurance_info.get('age', ''),
+                            customer_name=existing.get('name', name),
+                            source="import",
+                            created_by="import_system"
+                        )
+                        sales_to_insert.append(sale_record.dict())
+                        inserting_invoices.add(inv_num)
+                        if chassis:
+                            inserting_chassis.add(chassis)
+                        # Mark vehicle as sold
+                        if matched_vehicle:
+                            vehicle_updates.append(
+                                ({"id": matched_vehicle['id']}, {"$set": {"status": "sold", "date_sold": sale_date}})
                             )
-                            sales_to_insert.append(sale_record.dict())
-                            inserting_sales_keys.add((existing_id, inv_num))
-                            if sale_key_model:
-                                existing_sales_by_customer_model.add(sale_key_model)
-                            import_stats['sales_created'] += 1
-                        except Exception as sale_error:
-                            print(f"Warning: Could not build sale for existing customer row {idx+2}: {sale_error}")
-                    else:
-                        if not update_fields:
-                            skipped += 1
-                            successful += 1
-                            continue
-                else:
-                    if not update_fields and not matched_vehicle:
-                        skipped += 1
-                        successful += 1
-                        continue
+                        import_stats['sales_created'] += 1
+                    except Exception as sale_error:
+                        print(f"Warning: Could not build sale for existing customer row {idx+2}: {sale_error}")
 
                 successful += 1
                 continue
@@ -2931,49 +2933,60 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                 customer_dict['sales_info'] = sales_info
 
             customers_to_insert.append(customer_dict)
-            # Cache so later rows in this file see it
-            existing_customers[phone_number] = customer_dict
+            # Cache so later rows in this file see this customer
+            existing_customers_by_mobile[phone_number] = customer_dict
+            if chassis:
+                existing_customers_by_chassis[chassis] = customer_dict
 
-            # Queue vehicle link
+            # Link vehicle
             matched_vehicle = existing_vehicles.get(chassis) or existing_vehicles_by_reg.get(reg)
             if matched_vehicle:
                 vehicle_updates.append(
                     ({"id": matched_vehicle['id']}, {"$set": {"customer_id": customer.id}})
                 )
+                matched_vehicle['customer_id'] = customer.id
                 import_stats['vehicles_linked'] += 1
 
-            # Build sale record for new customer
+            # Create sale with sequential invoice number
             if sales_info and sales_info.get('amount'):
                 try:
-                    inv_num = incoming_invoice or f"IMP-{customer.id[:8]}"
-                    sale_key = (customer.id, inv_num)
-                    if sale_key not in inserting_sales_keys:
-                        sale_date = _parse_sale_date(sales_info.get('sale_date', ''))
-                        vehicle_id = existing_vehicles.get(chassis, {}).get('id') if chassis else None
-                        sale_record = Sale(
-                            customer_id=customer.id,
-                            vehicle_id=vehicle_id,
-                            amount=float(sales_info['amount']),
-                            payment_method=(sales_info.get('payment_method') or 'CASH').upper(),
-                            hypothecation=sales_info.get('hypothecation', ''),
-                            sale_date=sale_date,
-                            invoice_number=inv_num,
-                            vehicle_brand=vehicle_info.get('brand', ''),
-                            vehicle_model=vehicle_info.get('model', ''),
-                            vehicle_color=vehicle_info.get('color', ''),
-                            vehicle_chassis=vehicle_info.get('chassis_number', ''),
-                            vehicle_engine=vehicle_info.get('engine_number', ''),
-                            vehicle_registration=vehicle_info.get('vehicle_number', ''),
-                            insurance_nominee=insurance_info.get('nominee_name', ''),
-                            insurance_relation=insurance_info.get('relation', ''),
-                            insurance_age=insurance_info.get('age', ''),
-                            customer_name=name,
-                            source="import",
-                            created_by="import_system"
+                    inv_num = f"INV-{await next_sequence('sales'):06d}"
+                    while inv_num in existing_sales_by_invoice or inv_num in inserting_invoices:
+                        inv_num = f"INV-{await next_sequence('sales'):06d}"
+
+                    sale_date = _parse_sale_date(sales_info.get('sale_date', ''))
+                    vehicle_id = existing_vehicles.get(chassis, {}).get('id') if chassis else None
+                    sale_record = Sale(
+                        customer_id=customer.id,
+                        vehicle_id=vehicle_id,
+                        amount=float(sales_info['amount']),
+                        payment_method=(sales_info.get('payment_method') or 'CASH').upper(),
+                        hypothecation=sales_info.get('hypothecation', ''),
+                        sale_date=sale_date,
+                        invoice_number=inv_num,
+                        vehicle_brand=vehicle_info.get('brand', ''),
+                        vehicle_model=vehicle_info.get('model', ''),
+                        vehicle_color=vehicle_info.get('color', ''),
+                        vehicle_chassis=chassis,
+                        vehicle_engine=vehicle_info.get('engine_number', ''),
+                        vehicle_registration=reg,
+                        insurance_nominee=insurance_info.get('nominee_name', ''),
+                        insurance_relation=insurance_info.get('relation', ''),
+                        insurance_age=insurance_info.get('age', ''),
+                        customer_name=name,
+                        source="import",
+                        created_by="import_system"
+                    )
+                    sales_to_insert.append(sale_record.dict())
+                    inserting_invoices.add(inv_num)
+                    if chassis:
+                        inserting_chassis.add(chassis)
+                    # Mark vehicle as sold
+                    if matched_vehicle:
+                        vehicle_updates.append(
+                            ({"id": matched_vehicle['id']}, {"$set": {"status": "sold", "date_sold": sale_date}})
                         )
-                        sales_to_insert.append(sale_record.dict())
-                        inserting_sales_keys.add(sale_key)
-                        import_stats['sales_created'] += 1
+                    import_stats['sales_created'] += 1
                 except Exception as sale_error:
                     print(f"Warning: Could not build sale for row {idx+2}: {sale_error}")
 
@@ -3015,7 +3028,7 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
     return ImportResult(
         job_id=import_job.id,
         status="completed",
-        message=f"Import completed: {successful} processed ({import_stats['customers_updated']} existing updated, {successful - import_stats['customers_updated']} new), {failed} failed, {skipped} skipped (same vehicle model). Vehicles linked: {import_stats['vehicles_linked']}, sales created: {import_stats['sales_created']}.",
+        message=f"Import completed: {successful} processed ({import_stats['customers_updated']} existing updated, {successful - import_stats['customers_updated']} new), {failed} failed, {skipped} skipped. Vehicles linked: {import_stats['vehicles_linked']}, sales created: {import_stats['sales_created']}.",
         total_records=len(data),
         successful_records=successful,
         failed_records=failed,
@@ -3024,6 +3037,7 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
         cross_reference_stats=import_stats,
         incomplete_records=incomplete_records
     )
+
 
 async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id: str) -> ImportResult:
     """Import vehicles with smart merge logic:
