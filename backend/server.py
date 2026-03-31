@@ -762,19 +762,6 @@ async def require_admin(current_user: User = Depends(get_current_user)) -> User:
         )
     return current_user
 
-async def require_admin_token(current_user: dict = Depends(verify_token)) -> dict:
-    """Admin guard for @app routes that use verify_token (returns dict, not User).
-
-    Mirrors require_admin but works with the dict payload returned by verify_token.
-    Used by backup and activity @app routes registered directly on the app instance.
-    """
-    if current_user.get("role") != UserRole.ADMIN:
-        raise HTTPException(
-            status_code=403,
-            detail="Admin access required. This action is restricted to admin users."
-        )
-    return current_user
-
 async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Verify JWT token and return user data"""
     try:
@@ -792,6 +779,19 @@ async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(secur
         return {"user_id": user_id, "username": user["username"], "role": user.get("role", "user")}
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+
+async def require_admin_token(current_user: dict = Depends(verify_token)) -> dict:
+    """Admin guard for @app routes that use verify_token (returns dict, not User).
+
+    Mirrors require_admin but works with the dict payload returned by verify_token.
+    Used by backup and activity @app routes registered directly on the app instance.
+    """
+    if current_user.get("role") != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=403,
+            detail="Admin access required. This action is restricted to admin users."
+        )
+    return current_user
 
 def parse_date_flexible(date_str: str, *, fallback: bool = False) -> datetime:
     """Parse a date string from any of the common formats used in import files.
