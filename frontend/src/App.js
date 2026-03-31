@@ -108,5 +108,4 @@ function App() {
   );
 }
 
-export { AuthContext };
 export default App;
