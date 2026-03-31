@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Request
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Request, Response
 from contextlib import asynccontextmanager
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
@@ -1327,10 +1327,11 @@ async def get_vehicles(
         db.vehicles.find(filter_dict).sort("date_received", -1).skip(skip).limit(limit).to_list(limit),
         db.vehicles.count_documents(filter_dict),
     )
-    return {
-        "data": [Vehicle(**v).dict() for v in vehicles],
-        "meta": {"total": total, "page": page, "limit": limit, "totalPages": (total + limit - 1) // limit},
-    }
+    return Response(
+        content=__import__('json').dumps([Vehicle(**v).dict() for v in vehicles], default=str),
+        media_type="application/json",
+        headers={"X-Total-Count": str(total), "X-Page": str(page), "X-Total-Pages": str((total + limit - 1) // limit), "Access-Control-Expose-Headers": "X-Total-Count, X-Page, X-Total-Pages"},
+    )
 
 @api_router.get("/vehicles/brands")
 async def get_vehicle_brands(current_user: User = Depends(get_current_user)):
@@ -1590,10 +1591,11 @@ async def get_sales(
         db.sales.find().sort("created_at", -1).skip(skip).limit(limit).to_list(limit),
         db.sales.count_documents({}),
     )
-    return {
-        "data": [Sale(**s).dict() for s in sales],
-        "meta": {"total": total, "page": page, "limit": limit, "totalPages": (total + limit - 1) // limit},
-    }
+    return Response(
+        content=__import__('json').dumps([Sale(**s).dict() for s in sales], default=str),
+        media_type="application/json",
+        headers={"X-Total-Count": str(total), "X-Page": str(page), "X-Total-Pages": str((total + limit - 1) // limit), "Access-Control-Expose-Headers": "X-Total-Count, X-Page, X-Total-Pages"},
+    )
 
 @api_router.get("/sales/summary/chart")
 async def get_sales_summary(
@@ -1860,10 +1862,11 @@ async def get_registrations(
         db.registrations.find({}, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit),
         db.registrations.count_documents({}),
     )
-    return {
-        "data": registrations,
-        "meta": {"total": total, "page": page, "limit": limit, "totalPages": (total + limit - 1) // limit},
-    }
+    return Response(
+        content=__import__('json').dumps(registrations, default=str),
+        media_type="application/json",
+        headers={"X-Total-Count": str(total), "X-Page": str(page), "X-Total-Pages": str((total + limit - 1) // limit), "Access-Control-Expose-Headers": "X-Total-Count, X-Page, X-Total-Pages"},
+    )
 
 @api_router.get("/registrations/{reg_id}")
 async def get_registration(reg_id: str, current_user: User = Depends(get_current_user)):
@@ -1950,10 +1953,11 @@ async def get_services(
         db.services.find(filter_dict).sort("created_at", -1).skip(skip).limit(limit).to_list(limit),
         db.services.count_documents(filter_dict),
     )
-    return {
-        "data": [Service(**s).dict() for s in services],
-        "meta": {"total": total, "page": page, "limit": limit, "totalPages": (total + limit - 1) // limit},
-    }
+    return Response(
+        content=__import__('json').dumps([Service(**s).dict() for s in services], default=str),
+        media_type="application/json",
+        headers={"X-Total-Count": str(total), "X-Page": str(page), "X-Total-Pages": str((total + limit - 1) // limit), "Access-Control-Expose-Headers": "X-Total-Count, X-Page, X-Total-Pages"},
+    )
 
 @api_router.get("/services/{service_id}", response_model=Service)
 async def get_service(service_id: str, current_user: User = Depends(get_current_user)):
@@ -2103,10 +2107,11 @@ async def get_spare_parts(
         if 'compatible_models' not in part:
             part['compatible_models'] = None
         processed_parts.append(SparePart(**part))
-    return {
-        "data": [p.dict() for p in processed_parts],
-        "meta": {"total": total, "page": page, "limit": limit, "totalPages": (total + limit - 1) // limit},
-    }
+    return Response(
+        content=__import__('json').dumps([p.dict() for p in processed_parts], default=str),
+        media_type="application/json",
+        headers={"X-Total-Count": str(total), "X-Page": str(page), "X-Total-Pages": str((total + limit - 1) // limit), "Access-Control-Expose-Headers": "X-Total-Count, X-Page, X-Total-Pages"},
+    )
 
 @api_router.post("/spare-parts/bills", response_model=SparePartBill)
 async def create_spare_part_bill(bill_data: SparePartBillCreate, current_user: User = Depends(get_current_user)):
@@ -2176,10 +2181,11 @@ async def get_spare_part_bills(
         if 'customer_id' not in bill:
             bill['customer_id'] = None
         processed_bills.append(SparePartBill(**bill))
-    return {
-        "data": [b.dict() for b in processed_bills],
-        "meta": {"total": total, "page": page, "limit": limit, "totalPages": (total + limit - 1) // limit},
-    }
+    return Response(
+        content=__import__('json').dumps([b.dict() for b in processed_bills], default=str),
+        media_type="application/json",
+        headers={"X-Total-Count": str(total), "X-Page": str(page), "X-Total-Pages": str((total + limit - 1) // limit), "Access-Control-Expose-Headers": "X-Total-Count, X-Page, X-Total-Pages"},
+    )
 
 @api_router.delete("/spare-parts/bills/{bill_id}")
 async def delete_spare_part_bill(bill_id: str, current_user: User = Depends(require_admin)):
@@ -2299,10 +2305,11 @@ async def get_service_bills(
         db.service_bills.find({}, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit),
         db.service_bills.count_documents({}),
     )
-    return {
-        "data": bills,
-        "meta": {"total": total, "page": page, "limit": limit, "totalPages": (total + limit - 1) // limit},
-    }
+    return Response(
+        content=__import__('json').dumps(bills, default=str),
+        media_type="application/json",
+        headers={"X-Total-Count": str(total), "X-Page": str(page), "X-Total-Pages": str((total + limit - 1) // limit), "Access-Control-Expose-Headers": "X-Total-Count, X-Page, X-Total-Pages"},
+    )
 
 @api_router.get("/service-bills/{bill_id}")
 async def get_service_bill(bill_id: str, current_user: User = Depends(get_current_user)):
@@ -2401,10 +2408,11 @@ async def list_sale_milestones(
             }
         summary["milestones"] = milestone_summary
         result.append(summary)
-    return {
-        "data": result,
-        "meta": {"total": total, "page": page, "limit": limit, "totalPages": (total + limit - 1) // limit},
-    }
+    return Response(
+        content=__import__('json').dumps(result, default=str),
+        media_type="application/json",
+        headers={"X-Total-Count": str(total), "X-Page": str(page), "X-Total-Pages": str((total + limit - 1) // limit), "Access-Control-Expose-Headers": "X-Total-Count, X-Page, X-Total-Pages"},
+    )
 
 @api_router.get("/sale-milestones/{sale_id}")
 async def get_sale_milestone(sale_id: str, current_user: User = Depends(get_current_user)):
