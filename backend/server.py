@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -11,12 +11,11 @@ import aiofiles
 import zipfile
 import shutil
 import json
-from pathlib import Path
 import pandas as pd
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils.dataframe import dataframe_to_rows
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, validator
 from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -27,9 +26,17 @@ from fastapi import UploadFile, File
 import csv
 import io
 import re
+import threading
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
+
+# Configure logging early so logger is available throughout the module
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # MongoDB connection with Atlas-compatible settings
 mongo_url = os.environ['MONGO_URL']
@@ -144,7 +151,7 @@ async def startup_db_client():
         for counter_name, coll in counter_sources:
             existing = await db.counters.find_one({"_id": counter_name})
             real_count = await coll.count_documents({})
-            if existing is None or existing.get("seq", 0) > real_count + 10000:
+            if existing is None or existing.get("seq", 0) > real_count + 100:
                 # Counter is missing or wildly wrong — reset it to real count
                 await db.counters.update_one(
                     {"_id": counter_name},
@@ -280,7 +287,7 @@ class VehicleUpdate(BaseModel):
     outbound_location: Optional[str] = None
     status: Optional[str] = None
     date_received: Optional[datetime] = None
-    date_returned: Optional[str] = None
+    date_returned: Optional[datetime] = None
 
 class Sale(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -296,6 +303,7 @@ class Sale(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
     # Additional fields for imported sales data (not in create model)
+    customer_name: Optional[str] = None
     vehicle_brand: Optional[str] = None
     vehicle_model: Optional[str] = None
     vehicle_color: Optional[str] = None
@@ -390,6 +398,12 @@ class ServiceCreate(BaseModel):
     service_type: str
     description: str
     amount: float
+
+    @validator('amount')
+    def amount_must_be_positive(cls, v):
+        if v <= 0:
+            raise ValueError('amount must be greater than 0')
+        return v
     service_number: Optional[str] = None
     kms_driven: Optional[int] = None
     service_date: Optional[datetime] = None  # Service date (defaults to now if not provided)
@@ -505,6 +519,15 @@ class ServiceBillCreate(BaseModel):
     bill_date: Optional[str] = None
     status: str = "pending"
 
+class ServiceBillUpdate(BaseModel):
+    bill_number: Optional[str] = None
+    job_card_number: Optional[str] = None
+    customer_name: Optional[str] = None
+    vehicle_reg_no: Optional[str] = None
+    status: Optional[str] = None
+    amount: Optional[float] = None
+    items: Optional[List[Dict[str, Any]]] = None
+
 # Backup Models
 class BackupConfig(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -598,6 +621,32 @@ class BulkDeleteRequest(BaseModel):
     ids: List[str]
     force_delete: bool = False
 
+# Simple in-memory rate limiter for login attempts.
+# NOTE: This only works correctly with a single process. If running multiple
+# uvicorn workers, use a shared store (e.g. Redis) instead.
+class LoginRateLimiter:
+    def __init__(self, max_attempts: int = 5, window_seconds: int = 300):
+        self.max_attempts = max_attempts
+        self.window_seconds = window_seconds
+        self._attempts: Dict[str, list] = {}
+        self._lock = threading.Lock()
+
+    def is_allowed(self, key: str) -> bool:
+        now = datetime.now(timezone.utc).timestamp()
+        window_start = now - self.window_seconds
+        with self._lock:
+            attempts = self._attempts.get(key, [])
+            # Drop attempts outside the window
+            attempts = [t for t in attempts if t > window_start]
+            if len(attempts) >= self.max_attempts:
+                self._attempts[key] = attempts
+                return False
+            attempts.append(now)
+            self._attempts[key] = attempts
+            return True
+
+login_limiter = LoginRateLimiter(max_attempts=5, window_seconds=300)
+
 # Utility functions
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -654,7 +703,7 @@ def parse_date_flexible(date_str: str) -> datetime:
         excel_date = float(date_str)
         if excel_date > 59:
             excel_date -= 1
-        return datetime(1900, 1, 1, tzinfo=timezone.utc) + timedelta(days=excel_date - 2)
+        return datetime(1900, 1, 1, tzinfo=timezone.utc) + timedelta(days=excel_date - 1)
     except (ValueError, TypeError):
         pass
     
@@ -687,7 +736,7 @@ def parse_date_flexible(date_str: str) -> datetime:
             from dateutil import parser
             return parser.parse(date_str).replace(tzinfo=timezone.utc)
         except (ValueError, TypeError, OverflowError):
-            return datetime.now(timezone.utc)
+            raise ValueError(f"Unrecognised date format: {date_str!r}")
 
 def safe_str(value) -> str:
     """Safely convert a value to string, handling NaN, None, and floats from Excel/pandas"""
@@ -857,7 +906,12 @@ async def delete_base_date_override(key: str, current_user: User = Depends(get_c
 
 # Authentication endpoints
 @api_router.post("/auth/register")
-async def register_user(user_data: UserCreate):
+async def register_user(user_data: UserCreate, current_user: User = Depends(get_current_user)):
+    # Only admins can create new users
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can register new users")
+    if len(user_data.password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
     # Check if user exists
     existing_user = await db.users.find_one({"$or": [{"username": user_data.username}, {"email": user_data.email}]})
     if existing_user:
@@ -878,7 +932,13 @@ async def register_user(user_data: UserCreate):
     return {"message": "User registered successfully", "user_id": user_dict['id']}
 
 @api_router.post("/auth/login")
-async def login_user(user_credentials: UserLogin):
+async def login_user(user_credentials: UserLogin, request: Request):
+    client_ip = request.client.host if request.client else None
+    if client_ip and not login_limiter.is_allowed(client_ip):
+        raise HTTPException(
+            status_code=429,
+            detail="Too many login attempts. Please wait 5 minutes before trying again."
+        )
     user = await db.users.find_one({"username": user_credentials.username})
     if not user or not verify_password(user_credentials.password, user['hashed_password']):
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -1120,14 +1180,6 @@ async def update_vehicle(vehicle_id: str, vehicle_data: VehicleUpdate, current_u
     # Update vehicle data - only update fields that are provided
     update_data = {k: v for k, v in vehicle_data.dict().items() if v is not None}
     update_data["id"] = vehicle_id  # Keep the original ID
-    
-    # Handle date_returned if provided
-    if "date_returned" in update_data and update_data["date_returned"]:
-        try:
-            from dateutil import parser as date_parser
-            update_data["date_returned"] = date_parser.parse(update_data["date_returned"])
-        except (ValueError, TypeError):
-            pass
     
     # Merge existing data with updates
     merged_data = {**existing_vehicle, **update_data}
@@ -1374,6 +1426,8 @@ async def get_sales_summary(
     """Get sales summary for chart - monthly or yearly"""
     if granularity not in ["monthly", "yearly"]:
         raise HTTPException(status_code=400, detail="Granularity must be 'monthly' or 'yearly'")
+    if not (1 <= years <= 20):
+        raise HTTPException(status_code=400, detail="years must be between 1 and 20")
     
     from datetime import datetime, timezone
     
@@ -1396,10 +1450,11 @@ async def get_sales_summary(
                     "count": {"$sum": 1}
                 }
             },
-            {"$sort": {"_id.year": 1, "_id.month": 1}},
-            {"$limit": 12}
+            {"$sort": {"_id.year": -1, "_id.month": -1}},
+            {"$limit": 12},
+            {"$sort": {"_id.year": 1, "_id.month": 1}}
         ]
-        
+
         results = await db.sales.aggregate(pipeline).to_list(None)
         
         labels = []
@@ -1426,10 +1481,11 @@ async def get_sales_summary(
                     "count": {"$sum": 1}
                 }
             },
-            {"$sort": {"_id": 1}},
-            {"$limit": years}
+            {"$sort": {"_id": -1}},
+            {"$limit": years},
+            {"$sort": {"_id": 1}}
         ]
-        
+
         results = await db.sales.aggregate(pipeline).to_list(None)
         
         labels = [str(result["_id"]) for result in results]
@@ -1920,18 +1976,13 @@ async def delete_spare_part_bill(bill_id: str, current_user: User = Depends(get_
 # Service Bills API Endpoints
 @api_router.get("/service-bills/next-number")
 async def get_next_service_bill_number(current_user: User = Depends(get_current_user)):
-    """Return the next SB-XXXXXX number based on actual saved bills count (not a counter)."""
-    # Count actual bills in DB — so deleting a bill doesn't skip numbers
-    count = await db.service_bills.count_documents({})
-    # Also peek at the highest existing SB number to avoid collisions
-    last = await db.service_bills.find_one({}, sort=[("bill_number", -1)])
-    last_seq = 0
-    if last and last.get("bill_number", "").startswith("SB-"):
-        try:
-            last_seq = int(last["bill_number"][3:])
-        except ValueError:
-            pass
-    next_seq = max(count, last_seq) + 1
+    """Return the next SB-XXXXXX number by peeking at the atomic counter (no increment)."""
+    counter = await db.counters.find_one({"_id": "service_bills"})
+    if counter:
+        next_seq = counter["seq"] + 1
+    else:
+        # Counter not yet seeded — fall back to collection count
+        next_seq = await db.service_bills.count_documents({}) + 1
     return {"bill_number": f"SB-{next_seq:06d}"}
 
 @api_router.post("/service-bills", response_model=ServiceBill)
@@ -2045,33 +2096,14 @@ async def update_service_bill_status(bill_id: str, status_update: dict, current_
     return {"message": f"Bill status updated to {new_status}", "bill_id": bill_id, "status": new_status}
 
 @api_router.put("/service-bills/{bill_id}")
-async def update_service_bill(bill_id: str, bill_update: dict, current_user: User = Depends(get_current_user)):
+async def update_service_bill(bill_id: str, bill_update: ServiceBillUpdate, current_user: User = Depends(get_current_user)):
     """Full update of service bill including items"""
     existing_bill = await db.service_bills.find_one({"id": bill_id})
     if not existing_bill:
         raise HTTPException(status_code=404, detail="Service bill not found")
-    
-    # Build update data
-    update_data = {}
-    
-    if "bill_number" in bill_update:
-        update_data["bill_number"] = bill_update["bill_number"]
-        update_data["job_card_number"] = bill_update["bill_number"]  # Keep both in sync
-    
-    if "customer_name" in bill_update:
-        update_data["customer_name"] = bill_update["customer_name"]
-    
-    if "vehicle_reg_no" in bill_update:
-        update_data["vehicle_reg_no"] = bill_update["vehicle_reg_no"]
-    
-    if "status" in bill_update:
-        update_data["status"] = bill_update["status"]
-    
-    if "amount" in bill_update:
-        update_data["amount"] = bill_update["amount"]
-    
-    if "items" in bill_update:
-        update_data["items"] = bill_update["items"]
+
+    # Build update data from validated Pydantic model
+    update_data = bill_update.model_dump(exclude_none=True)
     
     update_data["updated_at"] = datetime.now(timezone.utc)
     
@@ -2093,7 +2125,17 @@ async def delete_service_bill(bill_id: str, current_user: User = Depends(get_cur
     result = await db.service_bills.delete_one({"id": bill_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Service bill not found")
-    
+
+    # Restore spare part inventory for items that consumed stock
+    for item in existing_bill.get("items", []):
+        if isinstance(item, dict) and item.get("spare_part_id"):
+            spare_part_id = item["spare_part_id"]
+            qty_used = item.get("qty", 1)
+            await db.spare_parts.update_one(
+                {"id": spare_part_id},
+                {"$inc": {"quantity": qty_used}}
+            )
+
     return {"message": "Service bill deleted successfully", "deleted_bill_id": bill_id}
 
 
@@ -2148,25 +2190,22 @@ async def complete_milestone(
         "updated_at": now,
     }
 
-    result = await db.sale_milestones.update_one(
+    sale = await db.sales.find_one({"id": sale_id}) or {}
+    customer = await db.customers.find_one({"id": sale.get("customer_id", "")}) or {}
+    await db.sale_milestones.update_one(
         {"sale_id": sale_id},
-        {"$set": update},
-        upsert=True
-    )
-    if result.upserted_id:
-        sale = await db.sales.find_one({"id": sale_id}) or {}
-        customer = await db.customers.find_one({"id": sale.get("customer_id", "")}) or {}
-        await db.sale_milestones.update_one(
-            {"sale_id": sale_id},
-            {"$set": {
-                "id": str(__import__("uuid").uuid4()),
+        {
+            "$set": update,
+            "$setOnInsert": {
+                "id": str(uuid.uuid4()),
                 "sale_id": sale_id,
                 "customer_name": customer.get("name") or sale.get("customer_name", ""),
                 "invoice_number": sale.get("invoice_number", ""),
                 "created_at": now,
-            }},
-            upsert=True
-        )
+            },
+        },
+        upsert=True
+    )
     return {"message": "Milestone updated", "milestone_key": milestone_key}
 
 @api_router.post("/sale-milestones/{sale_id}/milestone/{milestone_key}/uncomplete")
@@ -2198,7 +2237,7 @@ async def init_sale_milestone(sale_id: str, current_user: User = Depends(get_cur
     customer = await db.customers.find_one({"id": sale.get("customer_id", "")}) or {}
     now = datetime.now(timezone.utc)
     rec = {
-        "id": str(__import__("uuid").uuid4()),
+        "id": str(uuid.uuid4()),
         "sale_id": sale_id,
         "customer_name": customer.get("name", ""),
         "invoice_number": sale.get("invoice_number", ""),
@@ -2336,6 +2375,7 @@ async def get_service_report(
     }
 
 
+@api_router.get("/spare-parts/{part_id}", response_model=SparePart)
 async def get_spare_part(part_id: str, current_user: User = Depends(get_current_user)):
     part = await db.spare_parts.find_one({"id": part_id})
     if not part:
@@ -2712,35 +2752,45 @@ async def check_vehicle_duplicate(chassis_number: str) -> bool:
 
 async def parse_excel_file(file_content: bytes) -> List[Dict]:
     """Parse Excel file content"""
-    df = pd.read_excel(io.BytesIO(file_content))
-    return df.to_dict('records')
+    try:
+        df = pd.read_excel(io.BytesIO(file_content))
+        return df.to_dict('records')
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to parse Excel file: {str(e)}")
 
 def _parse_sale_date(date_str: str):
-    """Parse sale date from various formats. Returns datetime or falls back to Jan 1 of current year."""
+    """Parse sale date from various formats. Returns timezone-aware datetime or falls back to Jan 1 of current year (UTC)."""
     import re as _re
-    from datetime import datetime as _dt
+    from datetime import datetime as _dt, timezone as _tz
     date_str = str(date_str).strip()
     if not date_str:
-        return _dt(datetime.now().year, 1, 1)
+        return _dt(_dt.now(_tz.utc).year, 1, 1, tzinfo=_tz.utc)
     try:
         if date_str.replace('.', '').isdigit():
             excel_date = float(date_str)
-            if excel_date > 60:
+            if excel_date > 59:
                 excel_date -= 1
-            return _dt(1900, 1, 1) + timedelta(days=excel_date - 2)
+            return (_dt(1900, 1, 1, tzinfo=_tz.utc) + timedelta(days=excel_date - 1))
         elif _re.match(r'\d{1,2}-[A-Za-z]{3}', date_str):
-            return _dt.strptime(f"{date_str}-{_dt.now().year}", "%d-%b-%Y")
+            return _dt.strptime(f"{date_str}-{_dt.now().year}", "%d-%b-%Y").replace(tzinfo=_tz.utc)
         elif _re.match(r'\d{1,2}/\d{1,2}/\d{4}', date_str):
-            return _dt.strptime(date_str, "%d/%m/%Y")
+            return _dt.strptime(date_str, "%d/%m/%Y").replace(tzinfo=_tz.utc)
         elif _re.match(r'\d{1,2}-\d{1,2}-\d{4}', date_str):
-            return _dt.strptime(date_str, "%d-%m-%Y")
+            return _dt.strptime(date_str, "%d-%m-%Y").replace(tzinfo=_tz.utc)
         elif _re.match(r'\d{4}-\d{1,2}-\d{1,2}', date_str):
-            return _dt.strptime(date_str, "%Y-%m-%d")
+            return _dt.strptime(date_str, "%Y-%m-%d").replace(tzinfo=_tz.utc)
         else:
             from dateutil import parser as _dp
-            return _dp.parse(date_str)
+            parsed = _dp.parse(date_str)
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=_tz.utc)
+            return parsed
     except Exception:
-        return _dt(datetime.now().year, 1, 1)
+        fallback = _dt(_dt.now(_tz.utc).year, 1, 1, tzinfo=_tz.utc)
+        logging.getLogger(__name__).warning(
+            "Could not parse date %r — falling back to %s", date_str, fallback.strftime("%Y-%m-%d")
+        )
+        return fallback
 
 async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id: str) -> ImportResult:
     """Import customers data:
@@ -2921,6 +2971,10 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                 # Create sale if amount present and no sale exists for this chassis
                 if sales_info and sales_info.get('amount'):
                     try:
+                        # Validate amount before consuming a sequence number
+                        sale_amount = float(str(sales_info['amount']).replace(',', ''))
+                        if sale_amount <= 0:
+                            raise ValueError(f"Sale amount must be positive, got {sale_amount}")
                         # Always assign a fresh sequential invoice number
                         inv_num = f"INV-{await next_sequence('sales'):06d}"
                         while inv_num in existing_sales_by_invoice or inv_num in inserting_invoices:
@@ -2931,7 +2985,7 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                         sale_record = Sale(
                             customer_id=existing_id,
                             vehicle_id=vehicle_id,
-                            amount=float(sales_info['amount']),
+                            amount=sale_amount,
                             payment_method=(sales_info.get('payment_method') or 'CASH').upper(),
                             hypothecation=sales_info.get('hypothecation', ''),
                             sale_date=sale_date,
@@ -3000,6 +3054,10 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
             # Create sale with sequential invoice number
             if sales_info and sales_info.get('amount'):
                 try:
+                    # Validate amount before consuming a sequence number
+                    sale_amount = float(str(sales_info['amount']).replace(',', ''))
+                    if sale_amount <= 0:
+                        raise ValueError(f"Sale amount must be positive, got {sale_amount}")
                     inv_num = f"INV-{await next_sequence('sales'):06d}"
                     while inv_num in existing_sales_by_invoice or inv_num in inserting_invoices:
                         inv_num = f"INV-{await next_sequence('sales'):06d}"
@@ -3009,7 +3067,7 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                     sale_record = Sale(
                         customer_id=customer.id,
                         vehicle_id=vehicle_id,
-                        amount=float(sales_info['amount']),
+                        amount=sale_amount,
                         payment_method=(sales_info.get('payment_method') or 'CASH').upper(),
                         hypothecation=sales_info.get('hypothecation', ''),
                         sale_date=sale_date,
@@ -3259,195 +3317,20 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
         incomplete_records=incomplete_records
     )
 
-
-    successful = 0
-    failed = 0
-    skipped = 0
-    errors = []
-    incomplete_records = []
-    import_stats = {
-        'customers_linked': 0,
-        'customers_created': 0,
-        'sales_created': 0
-    }
-    
-    valid_brands = ["TVS", "BAJAJ", "HERO", "HONDA", "TRIUMPH", "KTM", "SUZUKI", "APRILIA", "YAMAHA", "PIAGGIO", "ROYAL ENFIELD"]
-    
-    for idx, row in enumerate(data):
-        try:
-            # Get fields with fallback values - use safe_str to handle float/NaN values
-            brand = safe_str(row.get('brand', '')).upper() or 'UNKNOWN'
-            if brand != 'UNKNOWN' and brand not in valid_brands:
-                brand = 'UNKNOWN'
-            
-            # Support both old and new field names for backward compatibility
-            chassis_number = (safe_str(row.get('chassis_number', '')) or 
-                            safe_str(row.get('chassis_no', '')))
-            engine_number = (safe_str(row.get('engine_number', '')) or 
-                           safe_str(row.get('engine_no', '')))
-            key_number = (safe_str(row.get('key_number', '')) or 
-                        safe_str(row.get('key_no', '')))
-            vehicle_number = safe_str(row.get('vehicle_number', ''))
-            
-            # Handle status field with validation
-            status = safe_str(row.get('status', '')).lower()
-            valid_statuses = ['available', 'in_stock', 'sold', 'returned']
-            if status not in valid_statuses:
-                status = 'available'
-            
-            # Check for duplicate chassis number before inserting
-            if chassis_number and chassis_number != 'Unknown Chassis':
-                existing_vehicle = await db.vehicles.find_one({"chassis_number": chassis_number})
-                if existing_vehicle:
-                    # Skip duplicate vehicle (don't count as error)
-                    skipped += 1
-                    continue
-            
-            vehicle_data = VehicleCreate(
-                brand=brand,
-                model=safe_str(row.get('model', '')) or 'Unknown Model',
-                chassis_number=chassis_number or 'Unknown Chassis',
-                engine_number=engine_number or 'Unknown Engine',
-                color=safe_str(row.get('color', '')) or 'Unknown Color',
-                vehicle_number=vehicle_number or None,
-                key_number=key_number or 'Unknown Key',
-                inbound_location=safe_str(row.get('inbound_location', '')) or 'Unknown Location',
-                page_number=safe_str(row.get('page_number', '')) or None
-            )
-            
-            # Create vehicle with proper status
-            vehicle_dict = vehicle_data.dict()
-            vehicle_dict['status'] = status
-            
-            # Handle date_received field
-            date_received_str = safe_str(row.get('date_received', ''))
-            if date_received_str:
-                try:
-                    # Try to parse the date in various formats
-                    date_received = parse_date_flexible(date_received_str)
-                    vehicle_dict['date_received'] = date_received
-                except Exception as e:
-                    # If date parsing fails, use start of year (avoids inflating this-month stats)
-                    vehicle_dict['date_received'] = datetime.now(timezone.utc)
-            else:
-                vehicle_dict['date_received'] = datetime.now(timezone.utc)
-            
-            vehicle = Vehicle(**vehicle_dict)
-            
-            # CROSS-REFERENCE: Check if customer mobile is provided
-            customer_mobile = safe_str(row.get('customer_mobile', ''))
-            customer_name = safe_str(row.get('customer_name', ''))
-            customer_id = None
-            
-            if customer_mobile:
-                # Find or create customer
-                customer_id = await find_or_create_customer(
-                    customer_mobile, 
-                    {'name': customer_name or 'Unknown Customer'}, 
-                    import_stats
-                )
-                vehicle.customer_id = customer_id
-            
-            await db.vehicles.insert_one(vehicle.dict())
-            
-            # CROSS-REFERENCE: Create sales record if sale data is provided
-            sale_amount = safe_str(row.get('sale_amount', ''))
-            payment_method = safe_str(row.get('payment_method', ''))
-            
-            if sale_amount and customer_id:
-                try:
-                    sale_record = Sale(
-                        customer_id=customer_id,
-                        vehicle_id=vehicle.id,
-                        amount=float(sale_amount),
-                        payment_method=payment_method.upper() or 'CASH',
-                        sale_date=datetime.now(timezone.utc),
-                        invoice_number=f"IMP-VEH-{vehicle.id[:8]}",
-                        vehicle_brand=brand,
-                        vehicle_model=vehicle_data.model,
-                        vehicle_color=vehicle_data.color,
-                        vehicle_chassis=chassis_number,
-                        vehicle_engine=engine_number,
-                        vehicle_registration=vehicle_number,
-                        source="import",
-                        created_by=user_id
-                    )
-                    await db.sales.insert_one(sale_record.dict())
-                    import_stats['sales_created'] += 1
-                    
-                    # Update vehicle status to sold if sale is created
-                    await db.vehicles.update_one(
-                        {"id": vehicle.id},
-                        {"$set": {"status": "sold"}}
-                    )
-                except Exception as sale_error:
-                    print(f"Warning: Could not create sale record for vehicle {vehicle.id}: {sale_error}")
-            
-            # Track incomplete records (vehicles without customer linkage)
-            if not customer_id and customer_mobile:
-                incomplete_records.append({
-                    "record_id": vehicle.id,
-                    "row": idx + 2,
-                    "missing_fields": ["customer_details"],
-                    "data": row
-                })
-            
-            successful += 1
-            
-        except Exception as e:
-            failed += 1
-            errors.append({
-                "row": idx + 2,
-                "data": row,
-                "error": str(e)
-            })
-    
-    import_job.successful_records = successful
-    import_job.failed_records = failed
-    import_job.skipped_records = skipped
-    import_job.processed_records = successful + failed + skipped
-    import_job.errors = errors
-    import_job.cross_reference_stats = import_stats
-    import_job.incomplete_records = incomplete_records
-    
-    return ImportResult(
-        job_id=import_job.id,
-        status="completed",
-        message=f"Import completed: {successful} successful, {failed} failed, {skipped} skipped (duplicates). Cross-referenced: {import_stats['customers_linked']} customers linked, {import_stats['customers_created']} customers created, {import_stats['sales_created']} sales created.",
-        total_records=len(data),
-        successful_records=successful,
-        failed_records=failed,
-        skipped_records=skipped,
-        errors=errors,
-        cross_reference_stats=import_stats,
-        incomplete_records=incomplete_records
-    )
-
 async def import_spare_parts_data(data: List[Dict], import_job: ImportJob, user_id: str) -> ImportResult:
     """Import spare parts with smart merge logic:
     - New part (part_number not found): insert everything
     - Existing part (part_number found):
         * All fields identical → skip
         * Missing/blank fields → fill only those
-    Also: 28% GST is replaced with 18% on import and fixed in DB for existing records.
     """
     successful = 0
     failed = 0
     skipped = 0
     updated = 0
     errors = []
-    gst_fixed = 0
 
-    def fix_gst(val: float) -> float:
-        """Replace 28% GST with 18%."""
-        return 18.0 if val == 28.0 else val
-
-    # ── Fix existing 28% GST records in DB ──────────────────────────────────
-    fix_result = await db.spare_parts.update_many(
-        {"gst_percentage": 28.0},
-        {"$set": {"gst_percentage": 18.0}}
-    )
-    gst_fixed = fix_result.modified_count
+    VALID_GST_RATES = {0.0, 5.0, 12.0, 18.0, 28.0}
 
     # Pre-fetch all existing parts by part_number
     existing_parts = {}
@@ -3469,7 +3352,9 @@ async def import_spare_parts_data(data: List[Dict], import_job: ImportJob, user_
             unit_price  = float(row['unit_price'])
             unit        = str(row.get('unit', 'Nos')).strip()
             hsn_sac     = str(row.get('hsn_sac', '') or '').strip() or None
-            gst_pct     = fix_gst(float(row.get('gst_percentage', 18.0) or 18.0))
+            gst_pct     = float(row.get('gst_percentage', 18.0) or 18.0)
+            if gst_pct not in VALID_GST_RATES:
+                raise ValueError(f"Invalid GST percentage {gst_pct}. Must be one of {sorted(VALID_GST_RATES)}")
             compat      = str(row.get('compatible_models', '') or '').strip() or None
             threshold   = int(row.get('low_stock_threshold', 5) or 5)
             supplier    = str(row.get('supplier', '') or '').strip() or None
@@ -3533,7 +3418,7 @@ async def import_spare_parts_data(data: List[Dict], import_job: ImportJob, user_
     return ImportResult(
         job_id=import_job.id,
         status="completed",
-        message=f"Spare parts import: {successful} processed ({successful - updated} new, {updated} updated with missing fields), {failed} failed, {skipped} skipped (no new data). {gst_fixed} existing records fixed (28% → 18% GST).",
+        message=f"Spare parts import: {successful} processed ({successful - updated} new, {updated} updated with missing fields), {failed} failed, {skipped} skipped (no new data).",
         total_records=len(data),
         successful_records=successful,
         failed_records=failed,
@@ -3975,165 +3860,6 @@ async def import_services_data(data: List[Dict], import_job: ImportJob, user_id:
         incomplete_records=incomplete_records
     )
 
-
-    successful = 0
-    failed = 0
-    skipped = 0
-    errors = []
-    incomplete_records = []
-    import_stats = {
-        'customers_linked': 0,
-        'customers_created': 0,
-        'vehicles_linked': 0
-    }
-    
-    for idx, row in enumerate(data):
-        try:
-            # Validate required fields (relaxed - only need mobile or vehicle identifier)
-            customer_mobile = (row.get('customer_mobile') or '').strip()
-            customer_name = (row.get('customer_name') or '').strip()
-            vehicle_number = (row.get('vehicle_number') or '').strip()
-            chassis_number = (row.get('chassis_number') or '').strip()
-            service_type = (row.get('service_type') or 'general_service').strip()
-            amount = float(row.get('amount', 0) or 0)
-            
-            if not customer_mobile and not vehicle_number and not chassis_number:
-                raise ValueError("Either customer_mobile or vehicle identifiers (vehicle_number/chassis_number) must be provided")
-            
-            # CROSS-REFERENCE: Find or create customer
-            customer_id = None
-            if customer_mobile:
-                customer_id = await find_or_create_customer(
-                    customer_mobile,
-                    {'name': customer_name or 'Unknown Customer'},
-                    import_stats
-                )
-            
-            # CROSS-REFERENCE: Find vehicle by identifiers
-            vehicle_id = None
-            vehicle_brand = None
-            vehicle_model = None
-            vehicle_year = None
-            
-            if vehicle_number or chassis_number:
-                vehicle = await find_vehicle_by_identifiers(vehicle_number, chassis_number)
-                if vehicle:
-                    vehicle_id = vehicle.get('id')
-                    vehicle_number = vehicle.get('vehicle_number', vehicle_number)
-                    vehicle_brand = vehicle.get('brand')
-                    vehicle_model = vehicle.get('model')
-                    vehicle_year = vehicle.get('year')
-                    import_stats['vehicles_linked'] += 1
-                    
-                    # If no customer was found by mobile, try to get from vehicle
-                    if not customer_id and vehicle.get('customer_id'):
-                        customer_id = vehicle.get('customer_id')
-                        import_stats['customers_linked'] += 1
-            
-            # If vehicle not found in database, use CSV-provided vehicle details
-            if not vehicle_brand:
-                vehicle_brand = (row.get('vehicle_brand') or '').strip() or None
-            if not vehicle_model:
-                vehicle_model = (row.get('vehicle_model') or '').strip() or None
-            if not vehicle_year:
-                vehicle_year = (row.get('vehicle_year') or '').strip() or None
-            
-            # If still no customer, create a placeholder
-            if not customer_id:
-                customer_id = await find_or_create_customer(
-                    f"AUTO-{str(uuid.uuid4())[:8]}",
-                    {'name': customer_name or 'Unknown Customer'},
-                    import_stats
-                )
-                incomplete_records.append({
-                    "row": idx + 2,
-                    "missing_fields": ["customer_mobile"],
-                    "data": row
-                })
-            
-            # Check for duplicate service (same customer, vehicle, service_type, and similar amount)
-            duplicate_check = {
-                "customer_id": customer_id,
-                "vehicle_number": vehicle_number or chassis_number or 'Unknown',
-                "service_type": service_type,
-                "amount": amount
-            }
-            existing_service = await db.services.find_one(duplicate_check)
-            if existing_service:
-                # Skip duplicate service
-                skipped += 1
-                continue
-            
-            service_data = ServiceCreate(
-                customer_id=customer_id,
-                vehicle_id=vehicle_id,
-                vehicle_number=vehicle_number or chassis_number or 'Unknown',
-                service_type=service_type,
-                description=(row.get('description') or '').strip() or 'Imported service',
-                amount=amount
-            )
-            
-            # Generate job card number
-            count = await db.services.count_documents({})
-            job_card_number = f"JOB-{count + 1:06d}"
-            
-            service_dict = service_data.dict()
-            service_dict['job_card_number'] = job_card_number
-            service_dict['created_by'] = user_id
-            
-            # Handle registration_date (service_date)
-            registration_date = (row.get('registration_date') or '').strip()
-            if registration_date:
-                try:
-                    from dateutil import parser as date_parser
-                    parsed_date = date_parser.parse(registration_date)
-                    service_dict['service_date'] = parsed_date
-                except Exception:
-                    # If parsing fails, use current datetime
-                    service_dict['service_date'] = datetime.now(timezone.utc)
-            
-            # Add vehicle details for imported services (so they can be displayed even if vehicle is deleted)
-            if vehicle_brand:
-                service_dict['vehicle_brand'] = vehicle_brand
-            if vehicle_model:
-                service_dict['vehicle_model'] = vehicle_model
-            if vehicle_year:
-                service_dict['vehicle_year'] = vehicle_year
-            
-            service = Service(**service_dict)
-            
-            await db.services.insert_one(service.dict())
-            successful += 1
-            
-        except Exception as e:
-            failed += 1
-            errors.append({
-                "row": idx + 2,
-                "data": row,
-                "error": str(e)
-            })
-    
-    import_job.successful_records = successful
-    import_job.failed_records = failed
-    import_job.skipped_records = skipped
-    import_job.processed_records = successful + failed + skipped
-    import_job.errors = errors
-    import_job.cross_reference_stats = import_stats
-    import_job.incomplete_records = incomplete_records
-    
-    return ImportResult(
-        job_id=import_job.id,
-        status="completed",
-        message=f"Import completed: {successful} successful, {failed} failed, {skipped} skipped (duplicates). Cross-referenced: {import_stats['customers_linked']} customers linked, {import_stats['customers_created']} customers created, {import_stats['vehicles_linked']} vehicles linked.",
-        total_records=len(data),
-        successful_records=successful,
-        failed_records=failed,
-        skipped_records=skipped,
-        errors=errors,
-        cross_reference_stats=import_stats,
-        incomplete_records=incomplete_records
-    )
-
 async def import_service_bills_data(data: List[Dict], import_job: ImportJob, user_id: str) -> ImportResult:
     """Import service bills from CSV/Excel.
     Each row = one bill with a single line item. Multiple rows with the same
@@ -4153,7 +3879,7 @@ async def import_service_bills_data(data: List[Dict], import_job: ImportJob, use
         mobile = safe_str(row.get('customer_mobile') or '')
         date = safe_str(row.get('bill_date') or '')
         # Key: prefer job card number, fall back to mobile+date
-        key = jcn if jcn else f"{mobile}__{date}__{idx}"
+        key = jcn if jcn else f"{mobile}__{date}"
         bill_groups.setdefault(key, []).append((idx, row))
 
     for key, rows in bill_groups.items():
@@ -4178,7 +3904,6 @@ async def import_service_bills_data(data: List[Dict], import_job: ImportJob, use
                     import_stats['customers_linked'] += 1
                 else:
                     # Create minimal customer
-                    from models import Customer  # noqa – already imported via *
                     new_cust_id = str(uuid.uuid4())
                     await db.customers.insert_one({
                         "id": new_cust_id, "name": customer_name or "Unknown",
@@ -4428,19 +4153,6 @@ async def import_registrations_data(data: List[Dict], import_job: ImportJob, use
     import_job.errors = errors
     import_job.cross_reference_stats = import_stats
     import_job.incomplete_records = incomplete_records
-
-    return ImportResult(
-        job_id=import_job.id,
-        status="completed",
-        message=f"Registrations import: {successful} created, {failed} failed, {skipped} skipped (duplicates by mobile+vehicle). {import_stats['customers_linked']} customers linked, {import_stats['customers_created']} customers created.",
-        total_records=len(data),
-        successful_records=successful,
-        failed_records=failed,
-        skipped_records=skipped,
-        errors=errors,
-        cross_reference_stats=import_stats,
-        incomplete_records=incomplete_records
-    )
 
     return ImportResult(
         job_id=import_job.id,
@@ -4729,7 +4441,7 @@ class BackupService:
         """Create a new backup job with specified format"""
         job = BackupJob(
             status="running",
-            start_time=datetime.utcnow(),
+            start_time=datetime.now(timezone.utc),
             created_by=user_id,
             backup_type=backup_type
         )
@@ -4792,7 +4504,7 @@ class BackupService:
             
             # Update job with completion details
             job.status = "completed"
-            job.end_time = datetime.utcnow()
+            job.end_time = datetime.now(timezone.utc)
             job.total_records = total_records
             job.backup_size_mb = round(backup_size, 2)
             job.backup_file_path = final_path
@@ -4800,7 +4512,7 @@ class BackupService:
             
         except Exception as e:
             job.status = "failed"
-            job.end_time = datetime.utcnow()
+            job.end_time = datetime.now(timezone.utc)
             job.error_message = str(e)
         
         # Save job to database
@@ -4881,7 +4593,7 @@ class BackupService:
             summary_sheet = workbook.create_sheet(title="Backup Summary", index=0)
             
             # Summary data with IST timezone
-            current_utc = datetime.utcnow()
+            current_utc = datetime.now(timezone.utc)
             ist_time = current_utc + timedelta(hours=5, minutes=30)
             
             summary_data = [
@@ -4970,7 +4682,7 @@ class BackupService:
                     logger.warning(f"Failed to create CSV for {collection_name}: {e}")
         
         # Create backup summary with IST timezone
-        current_utc = datetime.utcnow()
+        current_utc = datetime.now(timezone.utc)
         ist_time = current_utc + timedelta(hours=5, minutes=30)
         
         summary = {
@@ -5020,7 +4732,7 @@ class BackupService:
     
     async def cleanup_old_backups(self, retention_days: int):
         """Clean up backups older than retention period"""
-        cutoff_date = datetime.utcnow() - timedelta(days=retention_days)
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=retention_days)
         
         # Remove old backup files
         for backup_path in self.backup_root.glob('backup_*'):
@@ -5079,7 +4791,7 @@ async def update_backup_config(
     current_user: dict = Depends(verify_token)
 ):
     """Update backup configuration"""
-    config_update['updated_at'] = datetime.utcnow()
+    config_update['updated_at'] = datetime.now(timezone.utc)
     
     result = await db.backup_config.update_one(
         {}, 
@@ -5261,23 +4973,14 @@ async def delete_activity(
 
 # ==================== End Activity/Notifications System ====================
 
-app.include_router(api_router)
-
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
     allow_origins=os.environ.get("CORS_ORIGINS", "http://localhost:3000").split(","),
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allow_headers=["*"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
 )
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+app.include_router(api_router)
 
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
+
