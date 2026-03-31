@@ -2425,8 +2425,10 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
             "_id": None,
             "total_revenue": {"$sum": "$amount"},
             "direct_revenue": {"$sum": {"$cond": [
-                {"$or": [{"$not": ["$source"]}, {"$eq": ["$source", "direct"]}]},
-                "$amount", 
+                {"$or": [
+                    {"$eq": [{"$ifNull": ["$source", "direct"]}, "direct"]}
+                ]},
+                "$amount",
                 0
             ]}},
             "imported_revenue": {"$sum": {"$cond": [
