@@ -4,7 +4,7 @@ import axios from 'axios';
 import { Button } from './ui/button';
 import {
   Upload, Download, FileText, Users, Car, Wrench, Package,
-  CheckCircle, AlertCircle, Clock, X, Eye, RefreshCw, ClipboardList
+  CheckCircle, AlertCircle, Clock, X, Eye, RefreshCw
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -37,37 +37,23 @@ const DATA_TYPES = [
     ]
   },
   {
-    value: 'services', label: 'Services', icon: Wrench, color: 'rose',
-    description: 'Service records — auto-links customers & vehicles',
+    value: 'service_history', label: 'Service History', icon: Wrench, color: 'indigo',
+    description: 'All service data in one — customer, vehicle, registration, job card & billing',
     fieldGroups: [
-      { label: 'Service', color: 'rose', fields: ['registration_date', 'customer_name', 'customer_mobile', 'vehicle_number', 'chassis_number', 'vehicle_brand', 'vehicle_model', 'vehicle_year', 'service_type', 'description', 'amount'] },
+      { label: 'Customer',     color: 'blue',   fields: ['customer_name', 'customer_mobile', 'customer_address'] },
+      { label: 'Vehicle',      color: 'green',  fields: ['vehicle_number', 'vehicle_brand', 'vehicle_model', 'vehicle_year', 'chassis_number', 'engine_number'] },
+      { label: 'Service',      color: 'indigo', fields: ['service_date', 'service_type', 'description', 'job_card_number', 'status'] },
+      { label: 'Bill (optional)', color: 'amber', fields: ['bill_date', 'item_description', 'item_qty', 'item_rate', 'item_gst_percent', 'total_amount'] },
     ]
   },
   {
-    value: 'service_bills', label: 'Service Bills', icon: FileText, color: 'indigo',
+    value: 'service_bills', label: 'Service Bills', icon: FileText, color: 'rose',
     description: 'Service billing records — one row per line item, grouped by job card',
     fieldGroups: [
-      { label: 'Bill', color: 'indigo', fields: ['bill_date', 'job_card_number', 'status'] },
+      { label: 'Bill', color: 'rose', fields: ['bill_date', 'job_card_number', 'status'] },
       { label: 'Customer & Vehicle', color: 'blue', fields: ['customer_name', 'customer_mobile', 'vehicle_number', 'vehicle_brand', 'vehicle_model'] },
       { label: 'Line Item', color: 'green', fields: ['item_description', 'item_hsn', 'item_qty', 'item_rate', 'item_gst_percent'] },
       { label: 'Total (optional)', color: 'amber', fields: ['total_amount'] },
-    ]
-  },
-  {
-    value: 'registrations', label: 'Registrations', icon: ClipboardList, color: 'teal',
-    description: 'Service registrations — links customers to their vehicles (REG-XXXXXX)',
-    fieldGroups: [
-      { label: 'Customer', color: 'blue',  fields: ['customer_name', 'customer_mobile', 'customer_address'] },
-      { label: 'Vehicle',  color: 'green', fields: ['vehicle_number', 'vehicle_brand', 'vehicle_model', 'vehicle_year', 'chassis_number', 'engine_number'] },
-      { label: 'Date',     color: 'teal',  fields: ['registration_date'] },
-    ]
-  },
-  {
-    value: 'service_customers', label: 'Service Customers', icon: Users, color: 'violet',
-    description: 'Customers who registered for service only — no sales data required',
-    fieldGroups: [
-      { label: 'Customer', color: 'violet', fields: ['name', 'mobile', 'phone', 'email', 'address'] },
-      { label: 'Vehicle',  color: 'green',  fields: ['vehicle_brand', 'vehicle_model', 'vehicle_year', 'vehicle_number', 'chassis_number', 'engine_number'] },
     ]
   },
 ];
