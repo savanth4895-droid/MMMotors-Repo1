@@ -55,7 +55,10 @@ const Dashboard = () => {
 
   const fetchStats = async () => {
     try {
-      const dashboardRes = await axios.get(`${API}/dashboard/stats`);
+      const token = localStorage.getItem('token');
+      const dashboardRes = await axios.get(`${API}/dashboard/stats`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setStats(dashboardRes.data);
       setLastUpdate(new Date());
     } catch (error) {
