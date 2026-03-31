@@ -2675,10 +2675,15 @@ async def delete_spare_part(part_id: str, current_user: User = Depends(require_a
 # Dashboard stats
 @api_router.get("/dashboard/stats")
 async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
-    # All count queries and aggregations run concurrently — one MongoDB
-    # round-trip batch instead of 15+ sequential awaits.
+    # Count queries and aggregation pipelines run concurrently.
+    # Motor aggregate cursors are not plain coroutines, so they are gathered
+    # separately from the count_documents calls using a dedicated helper.
     today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     today_end   = datetime.now(timezone.utc).replace(hour=23, minute=59, second=59, microsecond=999999)
+
+    async def _agg(collection, pipeline):
+        """Wrap aggregate().to_list() so it behaves as a plain coroutine for gather."""
+        return await collection.aggregate(pipeline).to_list(1)
 
     sales_pipeline = [
         {"$group": {
@@ -2750,8 +2755,8 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
         db.services.count_documents({}),
         db.services.count_documents({"status": ServiceStatus.COMPLETED}),
         db.services.count_documents({"status": ServiceStatus.IN_PROGRESS}),
-        db.sales.aggregate(sales_pipeline).to_list(1),
-        db.service_bills.aggregate(service_bill_pipeline).to_list(1),
+        _agg(db.sales, sales_pipeline),
+        _agg(db.service_bills, service_bill_pipeline),
     )
 
     total_revenue    = revenue_stats[0]["total_revenue"]    if revenue_stats else 0
