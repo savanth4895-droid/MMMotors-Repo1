@@ -1,4 +1,5 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Request
+from contextlib import asynccontextmanager
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -26,7 +27,7 @@ from fastapi import UploadFile, File
 import csv
 import io
 import re
-import threading
+import math
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -105,16 +106,36 @@ SECRET_KEY = os.environ['JWT_SECRET_KEY']
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours
 
-# Create the main app without a prefix
-app = FastAPI(title="Two Wheeler Business Management API")
-
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
-# Startup event to verify MongoDB connection
-@app.on_event("startup")
-async def startup_db_client():
-    """Test MongoDB connection and create indexes on startup"""
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """FastAPI lifespan: runs startup logic before yield, shutdown after.
+
+    Replaces the deprecated @app.on_event("startup") / ("shutdown") pattern
+    so startup/shutdown code is co-located and easier to test.
+    """
+    await _startup()
+    yield
+    client.close()
+    print("✅ MongoDB connection closed")
+
+# Create the main app without a prefix
+app = FastAPI(title="Two Wheeler Business Management API", lifespan=lifespan)
+
+# Register CORS middleware before any routes so preflight OPTIONS
+# requests are handled before route-specific exception handlers fire.
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=os.environ.get("CORS_ORIGINS", "http://localhost:3000").split(","),
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
+)
+
+async def _startup():
+    """Initialise DB connection, indexes, and sequence counters at startup."""
     try:
         await client.admin.command('ping')
         print("✅ Successfully connected to MongoDB Atlas")
@@ -134,6 +155,14 @@ async def startup_db_client():
         await db.sales.create_index("customer_id")
         await db.spare_parts.create_index("part_number", sparse=True)
         await db.activities.create_index([("created_at", -1)])
+        # Additional indexes for fields queried frequently but not yet covered
+        await db.sales.create_index("vehicle_chassis", sparse=True)       # import dedup + reporting
+        await db.services.create_index("vehicle_number", sparse=True)     # service-due lookups
+        await db.service_bills.create_index("job_card_number", sparse=True)  # bill import dedup
+        await db.spare_parts.create_index("name")                         # search/filter
+        await db.spare_parts.create_index("brand")                        # search/filter
+        # TTL index: login_attempts documents expire automatically after the rate-limit window
+        await db.login_attempts.create_index("ts", expireAfterSeconds=_RATE_LIMIT_WINDOW_SECONDS)
         print("✅ MongoDB indexes created")
     except Exception as e:
         print(f"⚠️ Index creation warning: {e}")
@@ -150,24 +179,23 @@ async def startup_db_client():
         ]
         for counter_name, coll in counter_sources:
             existing = await db.counters.find_one({"_id": counter_name})
-            real_count = await coll.count_documents({})
-            if existing is None or existing.get("seq", 0) > real_count + 100:
-                # Counter is missing or wildly wrong — reset it to real count
+            if existing is None:
+                # Counter is completely missing — seed it from the actual collection count.
+                # We only do this when the document is absent; a counter that is higher
+                # than the current record count is NORMAL after bulk deletes and must NOT
+                # be reset (doing so would cause duplicate invoice/job-card numbers).
+                real_count = await coll.count_documents({})
                 await db.counters.update_one(
                     {"_id": counter_name},
-                    {"$set": {"seq": real_count}},
-                    upsert=True
+                    {"$setOnInsert": {"seq": real_count}},
+                    upsert=True,
                 )
-                print(f"✅ Reset {counter_name} counter to {real_count}")
+                print(f"✅ Seeded missing {counter_name} counter to {real_count}")
         print("✅ Sequence counters verified")
     except Exception as e:
         print(f"⚠️ Counter reset warning: {e}")
 
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    """Close MongoDB connection on shutdown"""
-    client.close()
-    print("✅ MongoDB connection closed")
+
 
 # Security
 security = HTTPBearer()
@@ -621,31 +649,75 @@ class BulkDeleteRequest(BaseModel):
     ids: List[str]
     force_delete: bool = False
 
-# Simple in-memory rate limiter for login attempts.
-# NOTE: This only works correctly with a single process. If running multiple
-# uvicorn workers, use a shared store (e.g. Redis) instead.
-class LoginRateLimiter:
-    def __init__(self, max_attempts: int = 5, window_seconds: int = 300):
-        self.max_attempts = max_attempts
-        self.window_seconds = window_seconds
-        self._attempts: Dict[str, list] = {}
-        self._lock = threading.Lock()
+# ==================== Activity/Notifications System ====================
 
-    def is_allowed(self, key: str) -> bool:
-        now = datetime.now(timezone.utc).timestamp()
-        window_start = now - self.window_seconds
-        with self._lock:
-            attempts = self._attempts.get(key, [])
-            # Drop attempts outside the window
-            attempts = [t for t in attempts if t > window_start]
-            if len(attempts) >= self.max_attempts:
-                self._attempts[key] = attempts
-                return False
-            attempts.append(now)
-            self._attempts[key] = attempts
-            return True
+class ActivityType(str, Enum):
+    SALE_CREATED = "sale_created"
+    SERVICE_COMPLETED = "service_completed"
+    SERVICE_CREATED = "service_created"
+    VEHICLE_ADDED = "vehicle_added"
+    VEHICLE_SOLD = "vehicle_sold"
+    LOW_STOCK = "low_stock"
+    CUSTOMER_ADDED = "customer_added"
+    BACKUP_CREATED = "backup_created"
 
-login_limiter = LoginRateLimiter(max_attempts=5, window_seconds=300)
+class Activity(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    type: ActivityType
+    title: str
+    description: str
+    icon: str = "info"  # info, success, warning, error
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    read: bool = False
+    metadata: Optional[Dict[str, Any]] = None
+
+class ActivityCreate(BaseModel):
+    type: ActivityType
+    title: str
+    description: str
+    icon: str = "info"
+    metadata: Optional[Dict[str, Any]] = None
+
+async def create_activity(activity_data: ActivityCreate):
+    """Helper function to create an activity"""
+    activity = Activity(**activity_data.dict())
+    await db.activities.insert_one(activity.dict())
+    return activity
+
+# MongoDB-backed rate limiter for login attempts.
+# Works correctly across multiple uvicorn workers / processes because state
+# is stored in the shared database rather than in-process memory.
+# A TTL index on the `ts` field (created at startup) automatically removes
+# records older than the window, so no manual cleanup is needed.
+_RATE_LIMIT_MAX_ATTEMPTS = 5
+_RATE_LIMIT_WINDOW_SECONDS = 300  # 5 minutes
+
+async def check_login_rate_limit(ip: str) -> None:
+    """Raise HTTP 429 if `ip` has exceeded the login attempt threshold.
+
+    Uses an insert-then-count strategy:
+      1. Insert a new attempt document (always).
+      2. Count how many attempts exist within the window.
+      3. If the count exceeds the limit, raise 429.
+    This approach is safe under concurrent requests from the same IP because
+    both the insert and the count hit the same MongoDB collection.
+    """
+    now = datetime.now(timezone.utc)
+    window_start = now - timedelta(seconds=_RATE_LIMIT_WINDOW_SECONDS)
+
+    # Record this attempt
+    await db.login_attempts.insert_one({"ip": ip, "ts": now})
+
+    # Count attempts within the current window (includes the one just inserted)
+    count = await db.login_attempts.count_documents(
+        {"ip": ip, "ts": {"$gte": window_start}}
+    )
+
+    if count > _RATE_LIMIT_MAX_ATTEMPTS:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many login attempts. Please wait 5 minutes before trying again."
+        )
 
 # Utility functions
 def hash_password(password: str) -> str:
@@ -676,6 +748,33 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid authentication credentials")
 
+async def require_admin(current_user: User = Depends(get_current_user)) -> User:
+    """Dependency that requires the caller to have the admin role.
+
+    Use this instead of get_current_user on any endpoint that performs
+    destructive or privileged operations (DELETE, bulk-delete, import,
+    duplicate cleanup, backup management).
+    """
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=403,
+            detail="Admin access required. This action is restricted to admin users."
+        )
+    return current_user
+
+async def require_admin_token(current_user: dict = Depends(verify_token)) -> dict:
+    """Admin guard for @app routes that use verify_token (returns dict, not User).
+
+    Mirrors require_admin but works with the dict payload returned by verify_token.
+    Used by backup and activity @app routes registered directly on the app instance.
+    """
+    if current_user.get("role") != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=403,
+            detail="Admin access required. This action is restricted to admin users."
+        )
+    return current_user
+
 async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Verify JWT token and return user data"""
     try:
@@ -694,53 +793,79 @@ async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(secur
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid authentication credentials")
 
-def parse_date_flexible(date_str: str) -> datetime:
-    """Parse date from various formats"""
-    date_str = date_str.strip()
-    
-    # Try to parse as Excel serial date number
+def parse_date_flexible(date_str: str, *, fallback: bool = False) -> datetime:
+    """Parse a date string from any of the common formats used in import files.
+
+    Handles Excel serial numbers, DD/MM/YYYY, DD-MM-YYYY, DD-MMM, YYYY-MM-DD,
+    DD MMM YYYY, MMM DD YYYY, and falls back to dateutil for everything else.
+
+    Args:
+        date_str:  Raw string value from a CSV/Excel cell.
+        fallback:  If True, return Jan 1 of the current year instead of raising
+                   when the format is unrecognised. Pass fallback=True for import
+                   paths where a bad date should not abort the whole row.
+                   If False (default), raise ValueError on unrecognised input.
+    """
+    date_str = str(date_str).strip()
+
+    if not date_str:
+        if fallback:
+            return datetime(datetime.now(timezone.utc).year, 1, 1, tzinfo=timezone.utc)
+        raise ValueError("Empty date string")
+
+    # Excel serial date number (e.g. 45123)
     try:
         excel_date = float(date_str)
-        if excel_date > 59:
-            excel_date -= 1
-        return datetime(1900, 1, 1, tzinfo=timezone.utc) + timedelta(days=excel_date - 1)
+        if date_str.replace('.', '').isdigit():   # avoid parsing "03-Mar" as float
+            if excel_date > 59:
+                excel_date -= 1
+            return datetime(1900, 1, 1, tzinfo=timezone.utc) + timedelta(days=excel_date - 1)
     except (ValueError, TypeError):
         pass
-    
-    # Try various string date formats
-    # Format: DD-MMM (03-Mar) - add current year
-    if re.match(r'\d{1,2}-[A-Za-z]{3}', date_str):
-        date_str = f"{date_str}-{datetime.now().year}"
-        return datetime.strptime(date_str, "%d-%b-%Y").replace(tzinfo=timezone.utc)
-    # Format: DD/MM/YYYY (15/01/2024)
-    elif re.match(r'\d{1,2}/\d{1,2}/\d{4}', date_str):
-        return datetime.strptime(date_str, "%d/%m/%Y").replace(tzinfo=timezone.utc)
-    # Format: DD-MM-YYYY (15-01-2024)
-    elif re.match(r'\d{1,2}-\d{1,2}-\d{4}', date_str):
-        return datetime.strptime(date_str, "%d-%m-%Y").replace(tzinfo=timezone.utc)
-    # Format: YYYY-MM-DD (2024-01-15) - ISO format
-    elif re.match(r'\d{4}-\d{1,2}-\d{1,2}', date_str):
-        return datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-    # Format: YYYY/MM/DD (2024/01/15)
-    elif re.match(r'\d{4}/\d{1,2}/\d{1,2}', date_str):
-        return datetime.strptime(date_str, "%Y/%m/%d").replace(tzinfo=timezone.utc)
-    # Format: DD MMM YYYY (15 Jan 2024)
-    elif re.match(r'\d{1,2}\s+[A-Za-z]{3}\s+\d{4}', date_str):
-        return datetime.strptime(date_str, "%d %b %Y").replace(tzinfo=timezone.utc)
-    # Format: MMM DD, YYYY (Jan 15, 2024)
-    elif re.match(r'[A-Za-z]{3}\s+\d{1,2},?\s+\d{4}', date_str):
-        return datetime.strptime(date_str.replace(',', ''), "%b %d %Y").replace(tzinfo=timezone.utc)
-    else:
-        # Try generic parser as last resort
-        try:
-            from dateutil import parser
-            return parser.parse(date_str).replace(tzinfo=timezone.utc)
-        except (ValueError, TypeError, OverflowError):
-            raise ValueError(f"Unrecognised date format: {date_str!r}")
+
+    _FORMATS = [
+        (r'\d{1,2}-[A-Za-z]{3}$',           lambda s: datetime.strptime(f"{s}-{datetime.now().year}", "%d-%b-%Y")),
+        (r'\d{1,2}/\d{1,2}/\d{4}',          lambda s: datetime.strptime(s, "%d/%m/%Y")),
+        (r'\d{1,2}-\d{1,2}-\d{4}',          lambda s: datetime.strptime(s, "%d-%m-%Y")),
+        (r'\d{4}-\d{1,2}-\d{1,2}',          lambda s: datetime.strptime(s, "%Y-%m-%d")),
+        (r'\d{4}/\d{1,2}/\d{1,2}',          lambda s: datetime.strptime(s, "%Y/%m/%d")),
+        (r'\d{1,2}\s+[A-Za-z]{3}\s+\d{4}', lambda s: datetime.strptime(s, "%d %b %Y")),
+        (r'[A-Za-z]{3}\s+\d{1,2},?\s+\d{4}',lambda s: datetime.strptime(s.replace(',', ''), "%b %d %Y")),
+    ]
+
+    for pattern, parser_fn in _FORMATS:
+        if re.match(pattern, date_str):
+            try:
+                return parser_fn(date_str).replace(tzinfo=timezone.utc)
+            except ValueError:
+                continue
+
+    # Last resort: dateutil
+    try:
+        from dateutil import parser as _dateutil_parser
+        parsed = _dateutil_parser.parse(date_str)
+        return parsed.replace(tzinfo=timezone.utc) if parsed.tzinfo is None else parsed
+    except Exception:
+        pass
+
+    if fallback:
+        _fb = datetime(datetime.now(timezone.utc).year, 1, 1, tzinfo=timezone.utc)
+        logger.warning("Could not parse date %r — falling back to %s", date_str, _fb.strftime("%Y-%m-%d"))
+        return _fb
+    raise ValueError(f"Unrecognised date format: {date_str!r}")
+
+
+# Backward-compatible alias used throughout import pipelines.
+# The fallback=True behaviour matches the old _parse_sale_date semantics.
+def _parse_sale_date(date_str: str) -> datetime:
+    """Thin alias: parse_date_flexible with fallback=True.
+
+    Kept so existing call sites don't need to be changed.
+    """
+    return parse_date_flexible(date_str, fallback=True)
 
 def safe_str(value) -> str:
     """Safely convert a value to string, handling NaN, None, and floats from Excel/pandas"""
-    import math
     if value is None:
         return ''
     if isinstance(value, float):
@@ -756,6 +881,39 @@ def safe_str(value) -> str:
     if isinstance(value, str):
         return value.strip()
     return str(value).strip() if value else ''
+
+# Payment method values accepted by create_sale() validation:
+#   "Cash", "Card", "UPI", "Bank Transfer", "Cheque", "Finance"
+# Import rows arrive in various casings (CASH, cash, upi, etc.).
+# This map normalises them so imported sales match the same values
+# that the API enforces — preventing filter mismatches in reporting.
+_PAYMENT_METHOD_MAP: Dict[str, str] = {
+    "cash":          "Cash",
+    "card":          "Card",
+    "credit card":   "Card",
+    "debit card":    "Card",
+    "upi":           "UPI",
+    "gpay":          "UPI",
+    "phonepe":       "UPI",
+    "paytm":         "UPI",
+    "bank transfer": "Bank Transfer",
+    "neft":          "Bank Transfer",
+    "rtgs":          "Bank Transfer",
+    "imps":          "Bank Transfer",
+    "cheque":        "Cheque",
+    "check":         "Cheque",
+    "finance":       "Finance",
+    "loan":          "Finance",
+    "emi":           "Finance",
+}
+
+def normalise_payment_method(raw: str) -> str:
+    """Normalise a raw payment method string to one of the accepted API values.
+
+    Falls back to "Cash" for unrecognised inputs so imports never fail
+    silently with an invalid value stored in the database.
+    """
+    return _PAYMENT_METHOD_MAP.get(raw.strip().lower(), "Cash")
 
 # Health check endpoints for Kubernetes (both root and /api paths for compatibility)
 @app.get("/health")
@@ -933,12 +1091,8 @@ async def register_user(user_data: UserCreate, current_user: User = Depends(get_
 
 @api_router.post("/auth/login")
 async def login_user(user_credentials: UserLogin, request: Request):
-    client_ip = request.client.host if request.client else None
-    if client_ip and not login_limiter.is_allowed(client_ip):
-        raise HTTPException(
-            status_code=429,
-            detail="Too many login attempts. Please wait 5 minutes before trying again."
-        )
+    client_ip = request.client.host if request.client else "unknown"
+    await check_login_rate_limit(client_ip)
     user = await db.users.find_one({"username": user_credentials.username})
     if not user or not verify_password(user_credentials.password, user['hashed_password']):
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -1154,16 +1308,29 @@ async def create_vehicle(vehicle_data: VehicleCreate, current_user: User = Depen
     
     return vehicle
 
-@api_router.get("/vehicles", response_model=List[Vehicle])
-async def get_vehicles(brand: Optional[str] = None, status: Optional[VehicleStatus] = None, current_user: User = Depends(get_current_user)):
+@api_router.get("/vehicles")
+async def get_vehicles(
+    brand: Optional[str] = None,
+    status: Optional[VehicleStatus] = None,
+    page: int = 1,
+    limit: int = 100,
+    current_user: User = Depends(get_current_user)
+):
     filter_dict = {}
     if brand:
         filter_dict["brand"] = brand
     if status:
         filter_dict["status"] = status
-    
-    vehicles = await db.vehicles.find(filter_dict).to_list(1000)
-    return [Vehicle(**vehicle) for vehicle in vehicles]
+
+    skip = (page - 1) * limit
+    vehicles, total = await asyncio.gather(
+        db.vehicles.find(filter_dict).sort("date_received", -1).skip(skip).limit(limit).to_list(limit),
+        db.vehicles.count_documents(filter_dict),
+    )
+    return {
+        "data": [Vehicle(**v).dict() for v in vehicles],
+        "meta": {"total": total, "page": page, "limit": limit, "totalPages": (total + limit - 1) // limit},
+    }
 
 @api_router.get("/vehicles/brands")
 async def get_vehicle_brands(current_user: User = Depends(get_current_user)):
@@ -1257,7 +1424,7 @@ async def update_vehicle_status(vehicle_id: str, status_data: VehicleStatusUpdat
     return Vehicle(**updated_vehicle)
 
 @api_router.delete("/vehicles/{vehicle_id}")
-async def delete_vehicle(vehicle_id: str, current_user: User = Depends(get_current_user)):
+async def delete_vehicle(vehicle_id: str, current_user: User = Depends(require_admin)):
     # Check if vehicle exists
     existing_vehicle = await db.vehicles.find_one({"id": vehicle_id})
     if not existing_vehicle:
@@ -1281,7 +1448,7 @@ async def delete_vehicle(vehicle_id: str, current_user: User = Depends(get_curre
     return {"message": "Vehicle deleted successfully", "deleted_vehicle_id": vehicle_id}
 
 @api_router.delete("/vehicles")
-async def bulk_delete_vehicles(request: BulkDeleteRequest, current_user: User = Depends(get_current_user)):
+async def bulk_delete_vehicles(request: BulkDeleteRequest, current_user: User = Depends(require_admin)):
     """Bulk delete vehicles with optional force delete (cascade)"""
     if not request.ids:
         raise HTTPException(status_code=400, detail="No vehicle IDs provided")
@@ -1412,10 +1579,21 @@ async def create_sale(sale_data: SaleCreate, current_user: User = Depends(get_cu
     
     return sale
 
-@api_router.get("/sales", response_model=List[Sale])
-async def get_sales(current_user: User = Depends(get_current_user)):
-    sales = await db.sales.find().to_list(1000)
-    return [Sale(**sale) for sale in sales]
+@api_router.get("/sales")
+async def get_sales(
+    page: int = 1,
+    limit: int = 100,
+    current_user: User = Depends(get_current_user)
+):
+    skip = (page - 1) * limit
+    sales, total = await asyncio.gather(
+        db.sales.find().sort("created_at", -1).skip(skip).limit(limit).to_list(limit),
+        db.sales.count_documents({}),
+    )
+    return {
+        "data": [Sale(**s).dict() for s in sales],
+        "meta": {"total": total, "page": page, "limit": limit, "totalPages": (total + limit - 1) // limit},
+    }
 
 @api_router.get("/sales/summary/chart")
 async def get_sales_summary(
@@ -1544,17 +1722,21 @@ async def record_sale_payment(sale_id: str, payment: dict, current_user: User = 
         current_pending = total_amount
     
     new_pending = max(0, current_pending - amount_paid)
-    
+
+    # Use None (not 0) when the balance is cleared — the Sale model's contract is:
+    #   None  → fully paid
+    #   > 0   → balance still outstanding
+    # Storing 0 instead of None breaks any strict `is None` check in reporting.
     await db.sales.update_one(
         {"id": sale_id},
-        {"$set": {"pending_amount": new_pending if new_pending > 0 else 0}}
+        {"$set": {"pending_amount": new_pending if new_pending > 0 else None}}
     )
     
     updated = await db.sales.find_one({"id": sale_id}, {"_id": 0})
     return {"message": "Payment recorded", "pending_amount": new_pending, "sale": updated}
 
 @api_router.delete("/sales/{sale_id}")
-async def delete_sale(sale_id: str, current_user: User = Depends(get_current_user)):
+async def delete_sale(sale_id: str, current_user: User = Depends(require_admin)):
     # Check if sale exists
     existing_sale = await db.sales.find_one({"id": sale_id})
     if not existing_sale:
@@ -1575,7 +1757,7 @@ async def delete_sale(sale_id: str, current_user: User = Depends(get_current_use
     return {"message": "Sale deleted successfully", "deleted_sale_id": sale_id}
 
 @api_router.delete("/sales")
-async def bulk_delete_sales(request: BulkDeleteRequest, current_user: User = Depends(get_current_user)):
+async def bulk_delete_sales(request: BulkDeleteRequest, current_user: User = Depends(require_admin)):
     """Bulk delete sales/invoices"""
     if not request.ids:
         raise HTTPException(status_code=400, detail="No sale IDs provided")
@@ -1668,9 +1850,20 @@ async def create_registration(reg_data: RegistrationCreate, current_user: User =
     return registration
 
 @api_router.get("/registrations")
-async def get_registrations(current_user: User = Depends(get_current_user)):
-    registrations = await db.registrations.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
-    return registrations
+async def get_registrations(
+    page: int = 1,
+    limit: int = 100,
+    current_user: User = Depends(get_current_user)
+):
+    skip = (page - 1) * limit
+    registrations, total = await asyncio.gather(
+        db.registrations.find({}, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit),
+        db.registrations.count_documents({}),
+    )
+    return {
+        "data": registrations,
+        "meta": {"total": total, "page": page, "limit": limit, "totalPages": (total + limit - 1) // limit},
+    }
 
 @api_router.get("/registrations/{reg_id}")
 async def get_registration(reg_id: str, current_user: User = Depends(get_current_user)):
@@ -1697,7 +1890,7 @@ async def update_registration(reg_id: str, reg_data: RegistrationCreate, current
     return update_data
 
 @api_router.delete("/registrations/{reg_id}")
-async def delete_registration(reg_id: str, current_user: User = Depends(get_current_user)):
+async def delete_registration(reg_id: str, current_user: User = Depends(require_admin)):
     existing = await db.registrations.find_one({"id": reg_id})
     if not existing:
         raise HTTPException(status_code=404, detail="Registration not found")
@@ -1741,14 +1934,26 @@ async def create_service(service_data: ServiceCreate, current_user: User = Depen
 
     return service
 
-@api_router.get("/services", response_model=List[Service])
-async def get_services(status: Optional[ServiceStatus] = None, current_user: User = Depends(get_current_user)):
+@api_router.get("/services")
+async def get_services(
+    status: Optional[ServiceStatus] = None,
+    page: int = 1,
+    limit: int = 100,
+    current_user: User = Depends(get_current_user)
+):
     filter_dict = {}
     if status:
         filter_dict["status"] = status
-    
-    services = await db.services.find(filter_dict).to_list(1000)
-    return [Service(**service) for service in services]
+
+    skip = (page - 1) * limit
+    services, total = await asyncio.gather(
+        db.services.find(filter_dict).sort("created_at", -1).skip(skip).limit(limit).to_list(limit),
+        db.services.count_documents(filter_dict),
+    )
+    return {
+        "data": [Service(**s).dict() for s in services],
+        "meta": {"total": total, "page": page, "limit": limit, "totalPages": (total + limit - 1) // limit},
+    }
 
 @api_router.get("/services/{service_id}", response_model=Service)
 async def get_service(service_id: str, current_user: User = Depends(get_current_user)):
@@ -1853,7 +2058,7 @@ async def get_service_by_job_card(job_card_number: str, current_user: User = Dep
     return service_details
 
 @api_router.delete("/services/{service_id}")
-async def delete_service(service_id: str, current_user: User = Depends(get_current_user)):
+async def delete_service(service_id: str, current_user: User = Depends(require_admin)):
     # Check if service exists
     existing_service = await db.services.find_one({"id": service_id})
     if not existing_service:
@@ -1873,17 +2078,22 @@ async def create_spare_part(spare_part_data: SparePartCreate, current_user: User
     await db.spare_parts.insert_one(spare_part.dict())
     return spare_part
 
-@api_router.get("/spare-parts", response_model=List[SparePart])
-async def get_spare_parts(low_stock: bool = False, current_user: User = Depends(get_current_user)):
-    filter_dict = {}
-    if low_stock:
-        filter_dict = {"$expr": {"$lte": ["$quantity", "$low_stock_threshold"]}}
-    
-    spare_parts = await db.spare_parts.find(filter_dict).to_list(1000)
+@api_router.get("/spare-parts")
+async def get_spare_parts(
+    low_stock: bool = False,
+    page: int = 1,
+    limit: int = 200,
+    current_user: User = Depends(get_current_user)
+):
+    filter_dict = {"$expr": {"$lte": ["$quantity", "$low_stock_threshold"]}} if low_stock else {}
+    skip = (page - 1) * limit
+    spare_parts, total = await asyncio.gather(
+        db.spare_parts.find(filter_dict).sort("name", 1).skip(skip).limit(limit).to_list(limit),
+        db.spare_parts.count_documents(filter_dict),
+    )
     # Handle legacy spare parts that don't have GST fields
     processed_parts = []
     for part in spare_parts:
-        # Add default values for missing GST fields
         if 'hsn_sac' not in part:
             part['hsn_sac'] = None
         if 'gst_percentage' not in part:
@@ -1893,7 +2103,10 @@ async def get_spare_parts(low_stock: bool = False, current_user: User = Depends(
         if 'compatible_models' not in part:
             part['compatible_models'] = None
         processed_parts.append(SparePart(**part))
-    return processed_parts
+    return {
+        "data": [p.dict() for p in processed_parts],
+        "meta": {"total": total, "page": page, "limit": limit, "totalPages": (total + limit - 1) // limit},
+    }
 
 @api_router.post("/spare-parts/bills", response_model=SparePartBill)
 async def create_spare_part_bill(bill_data: SparePartBillCreate, current_user: User = Depends(get_current_user)):
@@ -1934,13 +2147,20 @@ async def create_spare_part_bill(bill_data: SparePartBillCreate, current_user: U
     await db.spare_part_bills.insert_one(bill.dict())
     return bill
 
-@api_router.get("/spare-parts/bills", response_model=List[SparePartBill])
-async def get_spare_part_bills(current_user: User = Depends(get_current_user)):
-    bills = await db.spare_part_bills.find().to_list(1000)
+@api_router.get("/spare-parts/bills")
+async def get_spare_part_bills(
+    page: int = 1,
+    limit: int = 100,
+    current_user: User = Depends(get_current_user)
+):
+    skip = (page - 1) * limit
+    bills, total = await asyncio.gather(
+        db.spare_part_bills.find().sort("created_at", -1).skip(skip).limit(limit).to_list(limit),
+        db.spare_part_bills.count_documents({}),
+    )
     # Handle legacy bills that don't have GST fields or customer data
     processed_bills = []
     for bill in bills:
-        # Add default values for missing GST fields
         if 'subtotal' not in bill:
             bill['subtotal'] = bill.get('total_amount', 0)
         if 'total_discount' not in bill:
@@ -1951,16 +2171,18 @@ async def get_spare_part_bills(current_user: User = Depends(get_current_user)):
             bill['total_sgst'] = 0
         if 'total_tax' not in bill:
             bill['total_tax'] = 0
-        # Handle customer data backwards compatibility
         if 'customer_data' not in bill:
             bill['customer_data'] = None
         if 'customer_id' not in bill:
             bill['customer_id'] = None
         processed_bills.append(SparePartBill(**bill))
-    return processed_bills
+    return {
+        "data": [b.dict() for b in processed_bills],
+        "meta": {"total": total, "page": page, "limit": limit, "totalPages": (total + limit - 1) // limit},
+    }
 
 @api_router.delete("/spare-parts/bills/{bill_id}")
-async def delete_spare_part_bill(bill_id: str, current_user: User = Depends(get_current_user)):
+async def delete_spare_part_bill(bill_id: str, current_user: User = Depends(require_admin)):
     # Check if spare part bill exists
     existing_bill = await db.spare_part_bills.find_one({"id": bill_id})
     if not existing_bill:
@@ -2067,9 +2289,20 @@ async def create_service_bill(bill_data: ServiceBillCreate, current_user: User =
     return bill
 
 @api_router.get("/service-bills")
-async def get_service_bills(current_user: User = Depends(get_current_user)):
-    bills = await db.service_bills.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
-    return bills
+async def get_service_bills(
+    page: int = 1,
+    limit: int = 100,
+    current_user: User = Depends(get_current_user)
+):
+    skip = (page - 1) * limit
+    bills, total = await asyncio.gather(
+        db.service_bills.find({}, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit),
+        db.service_bills.count_documents({}),
+    )
+    return {
+        "data": bills,
+        "meta": {"total": total, "page": page, "limit": limit, "totalPages": (total + limit - 1) // limit},
+    }
 
 @api_router.get("/service-bills/{bill_id}")
 async def get_service_bill(bill_id: str, current_user: User = Depends(get_current_user)):
@@ -2117,7 +2350,7 @@ async def update_service_bill(bill_id: str, bill_update: ServiceBillUpdate, curr
     return updated_bill
 
 @api_router.delete("/service-bills/{bill_id}")
-async def delete_service_bill(bill_id: str, current_user: User = Depends(get_current_user)):
+async def delete_service_bill(bill_id: str, current_user: User = Depends(require_admin)):
     existing_bill = await db.service_bills.find_one({"id": bill_id})
     if not existing_bill:
         raise HTTPException(status_code=404, detail="Service bill not found")
@@ -2143,9 +2376,17 @@ async def delete_service_bill(bill_id: str, current_user: User = Depends(get_cur
 # ─── Sales Milestone Tracker ──────────────────────────────────────────────────
 
 @api_router.get("/sale-milestones")
-async def list_sale_milestones(current_user: User = Depends(get_current_user)):
+async def list_sale_milestones(
+    page: int = 1,
+    limit: int = 100,
+    current_user: User = Depends(get_current_user)
+):
     """List all sale milestones (summary only, no image data)."""
-    docs = await db.sale_milestones.find({}, {"_id": 0}).sort("updated_at", -1).to_list(1000)
+    skip = (page - 1) * limit
+    docs, total = await asyncio.gather(
+        db.sale_milestones.find({}, {"_id": 0}).sort("updated_at", -1).skip(skip).limit(limit).to_list(limit),
+        db.sale_milestones.count_documents({}),
+    )
     # Strip image data from listing to keep response small
     result = []
     for doc in docs:
@@ -2160,7 +2401,10 @@ async def list_sale_milestones(current_user: User = Depends(get_current_user)):
             }
         summary["milestones"] = milestone_summary
         result.append(summary)
-    return result
+    return {
+        "data": result,
+        "meta": {"total": total, "page": page, "limit": limit, "totalPages": (total + limit - 1) // limit},
+    }
 
 @api_router.get("/sale-milestones/{sale_id}")
 async def get_sale_milestone(sale_id: str, current_user: User = Depends(get_current_user)):
@@ -2274,7 +2518,7 @@ async def get_service_report(
         except Exception:
             pass
 
-    bills = await db.service_bills.find(query, {"_id": 0}).sort("bill_date", -1).to_list(10000)
+    bills = await db.service_bills.find(query, {"_id": 0}).sort("bill_date", -1).to_list(5000)
 
     report_rows = []
     total_parts_revenue = 0.0
@@ -2410,7 +2654,7 @@ async def update_spare_part(part_id: str, spare_part_data: SparePartCreate, curr
     return updated_part
 
 @api_router.delete("/spare-parts/{part_id}")
-async def delete_spare_part(part_id: str, current_user: User = Depends(get_current_user)):
+async def delete_spare_part(part_id: str, current_user: User = Depends(require_admin)):
     # Check if spare part exists
     existing_part = await db.spare_parts.find_one({"id": part_id})
     if not existing_part:
@@ -2431,111 +2675,123 @@ async def delete_spare_part(part_id: str, current_user: User = Depends(get_curre
 # Dashboard stats
 @api_router.get("/dashboard/stats")
 async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
-    total_customers = await db.customers.count_documents({})
-    total_vehicles = await db.vehicles.count_documents({})
-    total_parts = await db.spare_parts.count_documents({})
-    vehicles_in_stock = await db.vehicles.count_documents({"status": VehicleStatus.IN_STOCK})
-    vehicles_sold = await db.vehicles.count_documents({"status": VehicleStatus.SOLD})
-    pending_services = await db.services.count_documents({"status": ServiceStatus.PENDING})
-    active_jobs = await db.services.count_documents({"status": ServiceStatus.IN_PROGRESS})
-    # Use safe low-stock query that works even if low_stock_threshold field is missing
-    low_stock_parts = await db.spare_parts.count_documents({
-        "$and": [
-            {"low_stock_threshold": {"$exists": True, "$ne": None}},
-            {"$expr": {"$lte": ["$quantity", "$low_stock_threshold"]}}
-        ]
-    })
-
-    # Calculate completed services today
+    # All count queries and aggregations run concurrently — one MongoDB
+    # round-trip batch instead of 15+ sequential awaits.
     today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-    today_end = datetime.now(timezone.utc).replace(hour=23, minute=59, second=59, microsecond=999999)
-    completed_today = await db.services.count_documents({
-        "status": ServiceStatus.COMPLETED,
-        "updated_at": {"$gte": today_start, "$lte": today_end}
-    })
-    
-    # Sales statistics including imported data
-    total_sales = await db.sales.count_documents({})
-    direct_sales = await db.sales.count_documents({"$or": [{"source": {"$exists": False}}, {"source": "direct"}]})
-    imported_sales = await db.sales.count_documents({"source": "import"})
-    
-    # Calculate total sales revenue (including imported sales)
+    today_end   = datetime.now(timezone.utc).replace(hour=23, minute=59, second=59, microsecond=999999)
+
     sales_pipeline = [
         {"$group": {
             "_id": None,
             "total_revenue": {"$sum": "$amount"},
             "direct_revenue": {"$sum": {"$cond": [
-                {"$or": [
-                    {"$eq": [{"$ifNull": ["$source", "direct"]}, "direct"]}
-                ]},
-                "$amount",
-                0
+                {"$eq": [{"$ifNull": ["$source", "direct"]}, "direct"]},
+                "$amount", 0
             ]}},
             "imported_revenue": {"$sum": {"$cond": [
-                {"$eq": ["$source", "import"]},
-                "$amount", 
-                0
+                {"$eq": ["$source", "import"]}, "$amount", 0
             ]}}
         }}
     ]
-    
-    revenue_stats = await db.sales.aggregate(sales_pipeline).to_list(1)
-    total_revenue = revenue_stats[0]["total_revenue"] if revenue_stats else 0
-    direct_revenue = revenue_stats[0]["direct_revenue"] if revenue_stats else 0
-    imported_revenue = revenue_stats[0]["imported_revenue"] if revenue_stats else 0
-
-    # Service bill statistics
-    total_service_bills = await db.service_bills.count_documents({})
-    paid_service_bills = await db.service_bills.count_documents({"status": "paid"})
-    pending_service_bills = await db.service_bills.count_documents({"status": "pending"})
     service_bill_pipeline = [
         {"$group": {
             "_id": None,
             "total_service_revenue": {"$sum": "$total_amount"},
-            "paid_revenue": {"$sum": {"$cond": [{"$eq": ["$status", "paid"]}, "$total_amount", 0]}},
+            "paid_revenue":    {"$sum": {"$cond": [{"$eq": ["$status", "paid"]},    "$total_amount", 0]}},
             "pending_revenue": {"$sum": {"$cond": [{"$eq": ["$status", "pending"]}, "$total_amount", 0]}}
         }}
     ]
-    service_bill_stats = await db.service_bills.aggregate(service_bill_pipeline).to_list(1)
-    total_service_revenue = service_bill_stats[0]["total_service_revenue"] if service_bill_stats else 0
-    paid_service_revenue = service_bill_stats[0]["paid_revenue"] if service_bill_stats else 0
-    pending_service_revenue = service_bill_stats[0]["pending_revenue"] if service_bill_stats else 0
 
-    # Total service jobs (job cards)
-    total_service_jobs = await db.services.count_documents({})
-    completed_services = await db.services.count_documents({"status": ServiceStatus.COMPLETED})
-    in_progress_services = await db.services.count_documents({"status": ServiceStatus.IN_PROGRESS})
+    (
+        total_customers,
+        total_vehicles,
+        total_parts,
+        vehicles_in_stock,
+        vehicles_sold,
+        pending_services,
+        active_jobs,
+        low_stock_parts,
+        completed_today,
+        total_sales,
+        direct_sales,
+        imported_sales,
+        total_service_bills,
+        paid_service_bills,
+        pending_service_bills,
+        total_service_jobs,
+        completed_services,
+        in_progress_services,
+        revenue_stats,
+        service_bill_stats,
+    ) = await asyncio.gather(
+        db.customers.count_documents({}),
+        db.vehicles.count_documents({}),
+        db.spare_parts.count_documents({}),
+        db.vehicles.count_documents({"status": VehicleStatus.IN_STOCK}),
+        db.vehicles.count_documents({"status": VehicleStatus.SOLD}),
+        db.services.count_documents({"status": ServiceStatus.PENDING}),
+        db.services.count_documents({"status": ServiceStatus.IN_PROGRESS}),
+        db.spare_parts.count_documents({
+            "$and": [
+                {"low_stock_threshold": {"$exists": True, "$ne": None}},
+                {"$expr": {"$lte": ["$quantity", "$low_stock_threshold"]}}
+            ]
+        }),
+        db.services.count_documents({
+            "status": ServiceStatus.COMPLETED,
+            "updated_at": {"$gte": today_start, "$lte": today_end}
+        }),
+        db.sales.count_documents({}),
+        db.sales.count_documents({"$or": [{"source": {"$exists": False}}, {"source": "direct"}]}),
+        db.sales.count_documents({"source": "import"}),
+        db.service_bills.count_documents({}),
+        db.service_bills.count_documents({"status": "paid"}),
+        db.service_bills.count_documents({"status": "pending"}),
+        db.services.count_documents({}),
+        db.services.count_documents({"status": ServiceStatus.COMPLETED}),
+        db.services.count_documents({"status": ServiceStatus.IN_PROGRESS}),
+        db.sales.aggregate(sales_pipeline).to_list(1),
+        db.service_bills.aggregate(service_bill_pipeline).to_list(1),
+    )
+
+    total_revenue    = revenue_stats[0]["total_revenue"]    if revenue_stats else 0
+    direct_revenue   = revenue_stats[0]["direct_revenue"]   if revenue_stats else 0
+    imported_revenue = revenue_stats[0]["imported_revenue"] if revenue_stats else 0
+
+    total_service_revenue   = service_bill_stats[0]["total_service_revenue"] if service_bill_stats else 0
+    paid_service_revenue    = service_bill_stats[0]["paid_revenue"]           if service_bill_stats else 0
+    pending_service_revenue = service_bill_stats[0]["pending_revenue"]        if service_bill_stats else 0
 
     return {
-        "total_customers": total_customers,
-        "total_vehicles": total_vehicles,
-        "total_parts": total_parts,
+        "total_customers":  total_customers,
+        "total_vehicles":   total_vehicles,
+        "total_parts":      total_parts,
         "vehicles_in_stock": vehicles_in_stock,
-        "vehicles_sold": vehicles_sold,
+        "vehicles_sold":    vehicles_sold,
         "pending_services": pending_services,
-        "active_jobs": active_jobs,
-        "completed_today": completed_today,
-        "low_stock_parts": low_stock_parts,
+        "active_jobs":      active_jobs,
+        "completed_today":  completed_today,
+        "low_stock_parts":  low_stock_parts,
         "sales_stats": {
-            "total_sales": total_sales,
-            "direct_sales": direct_sales,
-            "imported_sales": imported_sales,
-            "total_revenue": total_revenue,
-            "direct_revenue": direct_revenue,
-            "imported_revenue": imported_revenue
+            "total_sales":      total_sales,
+            "direct_sales":     direct_sales,
+            "imported_sales":   imported_sales,
+            "total_revenue":    total_revenue,
+            "direct_revenue":   direct_revenue,
+            "imported_revenue": imported_revenue,
         },
         "service_stats": {
-            "total_service_bills": total_service_bills,
-            "paid_bills": paid_service_bills,
-            "pending_bills": pending_service_bills,
-            "total_service_revenue": total_service_revenue,
-            "paid_revenue": paid_service_revenue,
-            "pending_revenue": pending_service_revenue,
-            "total_service_jobs": total_service_jobs,
-            "completed_services": completed_services,
-            "in_progress_services": in_progress_services,
-            "pending_services": pending_services
-        }
+            "total_service_bills":    total_service_bills,
+            "paid_bills":             paid_service_bills,
+            "pending_bills":          pending_service_bills,
+            "total_service_revenue":  total_service_revenue,
+            "paid_revenue":           paid_service_revenue,
+            "pending_revenue":        pending_service_revenue,
+            "total_service_jobs":     total_service_jobs,
+            "completed_services":     completed_services,
+            "in_progress_services":   in_progress_services,
+            "pending_services":       pending_services,
+        },
     }
 
 # Import/Export endpoints
@@ -2543,7 +2799,7 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
 async def upload_import_file(
     data_type: str,
     file: UploadFile = File(...),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_admin)
 ):
     """Upload and process import file"""
     
@@ -2758,39 +3014,65 @@ async def parse_excel_file(file_content: bytes) -> List[Dict]:
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to parse Excel file: {str(e)}")
 
-def _parse_sale_date(date_str: str):
-    """Parse sale date from various formats. Returns timezone-aware datetime or falls back to Jan 1 of current year (UTC)."""
-    import re as _re
-    from datetime import datetime as _dt, timezone as _tz
-    date_str = str(date_str).strip()
-    if not date_str:
-        return _dt(_dt.now(_tz.utc).year, 1, 1, tzinfo=_tz.utc)
-    try:
-        if date_str.replace('.', '').isdigit():
-            excel_date = float(date_str)
-            if excel_date > 59:
-                excel_date -= 1
-            return (_dt(1900, 1, 1, tzinfo=_tz.utc) + timedelta(days=excel_date - 1))
-        elif _re.match(r'\d{1,2}-[A-Za-z]{3}', date_str):
-            return _dt.strptime(f"{date_str}-{_dt.now().year}", "%d-%b-%Y").replace(tzinfo=_tz.utc)
-        elif _re.match(r'\d{1,2}/\d{1,2}/\d{4}', date_str):
-            return _dt.strptime(date_str, "%d/%m/%Y").replace(tzinfo=_tz.utc)
-        elif _re.match(r'\d{1,2}-\d{1,2}-\d{4}', date_str):
-            return _dt.strptime(date_str, "%d-%m-%Y").replace(tzinfo=_tz.utc)
-        elif _re.match(r'\d{4}-\d{1,2}-\d{1,2}', date_str):
-            return _dt.strptime(date_str, "%Y-%m-%d").replace(tzinfo=_tz.utc)
-        else:
-            from dateutil import parser as _dp
-            parsed = _dp.parse(date_str)
-            if parsed.tzinfo is None:
-                parsed = parsed.replace(tzinfo=_tz.utc)
-            return parsed
-    except Exception:
-        fallback = _dt(_dt.now(_tz.utc).year, 1, 1, tzinfo=_tz.utc)
-        logging.getLogger(__name__).warning(
-            "Could not parse date %r — falling back to %s", date_str, fallback.strftime("%Y-%m-%d")
-        )
-        return fallback
+
+
+async def _build_import_sale_record(
+    *,
+    customer_id: str,
+    customer_name: str,
+    sales_info: dict,
+    vehicle_info: dict,
+    insurance_info: dict,
+    chassis: str,
+    reg: str,
+    existing_vehicles: dict,
+    existing_sales_by_invoice: set,
+    inserting_invoices: set,
+) -> "tuple[dict, str, float, datetime]":
+    """Build a Sale dict ready for bulk-insert during customer import.
+
+    Extracted from import_customers_data to eliminate the duplicated 25-line
+    block that was copy-pasted for the existing-customer and new-customer paths.
+
+    Returns (sale_dict, invoice_number, sale_amount, sale_date).
+    Raises ValueError if the amount is invalid.
+    """
+    sale_amount = float(str(sales_info['amount']).replace(',', ''))
+    if sale_amount <= 0:
+        raise ValueError(f"Sale amount must be positive, got {sale_amount}")
+
+    # Atomically claim the next invoice number, skipping any that are
+    # already used (extremely unlikely but guards against counter drift).
+    inv_num = f"INV-{await next_sequence('sales'):06d}"
+    while inv_num in existing_sales_by_invoice or inv_num in inserting_invoices:
+        inv_num = f"INV-{await next_sequence('sales'):06d}"
+
+    sale_date = _parse_sale_date(sales_info.get('sale_date', ''))
+    vehicle_id = existing_vehicles.get(chassis, {}).get('id') if chassis else None
+
+    sale_record = Sale(
+        customer_id=customer_id,
+        vehicle_id=vehicle_id,
+        amount=sale_amount,
+        payment_method=normalise_payment_method(sales_info.get('payment_method') or ''),
+        hypothecation=sales_info.get('hypothecation', ''),
+        sale_date=sale_date,
+        invoice_number=inv_num,
+        vehicle_brand=vehicle_info.get('brand', ''),
+        vehicle_model=vehicle_info.get('model', ''),
+        vehicle_color=vehicle_info.get('color', ''),
+        vehicle_chassis=chassis,
+        vehicle_engine=vehicle_info.get('engine_number', ''),
+        vehicle_registration=reg,
+        insurance_nominee=insurance_info.get('nominee_name', ''),
+        insurance_relation=insurance_info.get('relation', ''),
+        insurance_age=insurance_info.get('age', ''),
+        customer_name=customer_name,
+        source="import",
+        created_by="import_system",
+    )
+    return sale_record.dict(), inv_num, sale_amount, sale_date
+
 
 async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id: str) -> ImportResult:
     """Import customers data:
@@ -2971,43 +3253,22 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                 # Create sale if amount present and no sale exists for this chassis
                 if sales_info and sales_info.get('amount'):
                     try:
-                        # Validate amount before consuming a sequence number
-                        sale_amount = float(str(sales_info['amount']).replace(',', ''))
-                        if sale_amount <= 0:
-                            raise ValueError(f"Sale amount must be positive, got {sale_amount}")
-                        # Always assign a fresh sequential invoice number
-                        inv_num = f"INV-{await next_sequence('sales'):06d}"
-                        while inv_num in existing_sales_by_invoice or inv_num in inserting_invoices:
-                            inv_num = f"INV-{await next_sequence('sales'):06d}"
-
-                        sale_date = _parse_sale_date(sales_info.get('sale_date', ''))
-                        vehicle_id = existing_vehicles.get(chassis, {}).get('id') if chassis else None
-                        sale_record = Sale(
+                        sale_dict, inv_num, sale_amount, sale_date = await _build_import_sale_record(
                             customer_id=existing_id,
-                            vehicle_id=vehicle_id,
-                            amount=sale_amount,
-                            payment_method=(sales_info.get('payment_method') or 'CASH').upper(),
-                            hypothecation=sales_info.get('hypothecation', ''),
-                            sale_date=sale_date,
-                            invoice_number=inv_num,
-                            vehicle_brand=vehicle_info.get('brand', ''),
-                            vehicle_model=vehicle_info.get('model', ''),
-                            vehicle_color=vehicle_info.get('color', ''),
-                            vehicle_chassis=chassis,
-                            vehicle_engine=vehicle_info.get('engine_number', ''),
-                            vehicle_registration=reg,
-                            insurance_nominee=insurance_info.get('nominee_name', ''),
-                            insurance_relation=insurance_info.get('relation', ''),
-                            insurance_age=insurance_info.get('age', ''),
                             customer_name=existing.get('name', name),
-                            source="import",
-                            created_by="import_system"
+                            sales_info=sales_info,
+                            vehicle_info=vehicle_info,
+                            insurance_info=insurance_info,
+                            chassis=chassis,
+                            reg=reg,
+                            existing_vehicles=existing_vehicles,
+                            existing_sales_by_invoice=existing_sales_by_invoice,
+                            inserting_invoices=inserting_invoices,
                         )
-                        sales_to_insert.append(sale_record.dict())
+                        sales_to_insert.append(sale_dict)
                         inserting_invoices.add(inv_num)
                         if chassis:
                             inserting_chassis.add(chassis)
-                        # Mark vehicle as sold
                         if matched_vehicle:
                             vehicle_updates.append(
                                 ({"id": matched_vehicle['id']}, {"$set": {"status": "sold", "date_sold": sale_date}})
@@ -3054,42 +3315,22 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
             # Create sale with sequential invoice number
             if sales_info and sales_info.get('amount'):
                 try:
-                    # Validate amount before consuming a sequence number
-                    sale_amount = float(str(sales_info['amount']).replace(',', ''))
-                    if sale_amount <= 0:
-                        raise ValueError(f"Sale amount must be positive, got {sale_amount}")
-                    inv_num = f"INV-{await next_sequence('sales'):06d}"
-                    while inv_num in existing_sales_by_invoice or inv_num in inserting_invoices:
-                        inv_num = f"INV-{await next_sequence('sales'):06d}"
-
-                    sale_date = _parse_sale_date(sales_info.get('sale_date', ''))
-                    vehicle_id = existing_vehicles.get(chassis, {}).get('id') if chassis else None
-                    sale_record = Sale(
+                    sale_dict, inv_num, sale_amount, sale_date = await _build_import_sale_record(
                         customer_id=customer.id,
-                        vehicle_id=vehicle_id,
-                        amount=sale_amount,
-                        payment_method=(sales_info.get('payment_method') or 'CASH').upper(),
-                        hypothecation=sales_info.get('hypothecation', ''),
-                        sale_date=sale_date,
-                        invoice_number=inv_num,
-                        vehicle_brand=vehicle_info.get('brand', ''),
-                        vehicle_model=vehicle_info.get('model', ''),
-                        vehicle_color=vehicle_info.get('color', ''),
-                        vehicle_chassis=chassis,
-                        vehicle_engine=vehicle_info.get('engine_number', ''),
-                        vehicle_registration=reg,
-                        insurance_nominee=insurance_info.get('nominee_name', ''),
-                        insurance_relation=insurance_info.get('relation', ''),
-                        insurance_age=insurance_info.get('age', ''),
                         customer_name=name,
-                        source="import",
-                        created_by="import_system"
+                        sales_info=sales_info,
+                        vehicle_info=vehicle_info,
+                        insurance_info=insurance_info,
+                        chassis=chassis,
+                        reg=reg,
+                        existing_vehicles=existing_vehicles,
+                        existing_sales_by_invoice=existing_sales_by_invoice,
+                        inserting_invoices=inserting_invoices,
                     )
-                    sales_to_insert.append(sale_record.dict())
+                    sales_to_insert.append(sale_dict)
                     inserting_invoices.add(inv_num)
                     if chassis:
                         inserting_chassis.add(chassis)
-                    # Mark vehicle as sold
                     if matched_vehicle:
                         vehicle_updates.append(
                             ({"id": matched_vehicle['id']}, {"$set": {"status": "sold", "date_sold": sale_date}})
@@ -3269,7 +3510,7 @@ async def import_vehicles_data(data: List[Dict], import_job: ImportJob, user_id:
                         customer_id=customer_id,
                         vehicle_id=vehicle.id,
                         amount=float(sale_amount),
-                        payment_method=payment_method.upper() or 'CASH',
+                        payment_method=normalise_payment_method(payment_method or ''),
                         sale_date=datetime.now(timezone.utc),
                         invoice_number=f"IMP-VEH-{vehicle.id[:8]}",
                         vehicle_brand=brand,
@@ -3812,8 +4053,10 @@ async def import_services_data(data: List[Dict], import_job: ImportJob, user_id:
                 amount=amount
             )
 
-            count = await db.services.count_documents({})
-            job_card_number = f"JOB-{count + 1:06d}"
+            # Use the same atomic counter as create_service() to prevent
+            # duplicate JOB numbers when multiple rows are inserted in one import.
+            seq = await next_sequence("services")
+            job_card_number = f"JOB-{seq:06d}"
 
             service_dict = service_data.dict()
             service_dict['job_card_number'] = job_card_number
@@ -3822,8 +4065,7 @@ async def import_services_data(data: List[Dict], import_job: ImportJob, user_id:
             reg_date = (row.get('registration_date') or '').strip()
             if reg_date:
                 try:
-                    from dateutil import parser as date_parser
-                    service_dict['service_date'] = date_parser.parse(reg_date)
+                    service_dict['service_date'] = parse_date_flexible(reg_date, fallback=True)
                 except Exception:
                     pass  # leave service_date unset — don't default to today
 
@@ -3975,8 +4217,7 @@ async def import_service_bills_data(data: List[Dict], import_job: ImportJob, use
             raw_date = safe_str(first.get('bill_date') or '')
             if raw_date:
                 try:
-                    from dateutil import parser as date_parser
-                    bill_date = date_parser.parse(raw_date)
+                    bill_date = parse_date_flexible(raw_date, fallback=True)
                 except Exception:
                     pass
 
@@ -4106,8 +4347,7 @@ async def import_registrations_data(data: List[Dict], import_job: ImportJob, use
             raw_date = (row.get('registration_date') or '').strip()
             if raw_date:
                 try:
-                    from dateutil import parser as date_parser
-                    reg_date = date_parser.parse(raw_date)
+                    reg_date = parse_date_flexible(raw_date, fallback=True)
                 except Exception:
                     incomplete_records.append({"row": idx + 2, "missing_fields": ["registration_date (invalid format)"]})
 
@@ -4356,7 +4596,7 @@ async def detect_duplicates(current_user: User = Depends(get_current_user)):
     return duplicates
 
 @api_router.post("/duplicates/cleanup")
-async def cleanup_duplicates(current_user: User = Depends(get_current_user)):
+async def cleanup_duplicates(current_user: User = Depends(require_admin)):
     """Remove duplicate records, keeping the oldest one in each group"""
     
     cleanup_results = {
@@ -4788,7 +5028,7 @@ async def get_backup_config(current_user: dict = Depends(verify_token)):
 @app.put("/api/backup/config", response_model=BackupConfig)
 async def update_backup_config(
     config_update: dict,
-    current_user: dict = Depends(verify_token)
+    current_user: dict = Depends(require_admin_token)
 ):
     """Update backup configuration"""
     config_update['updated_at'] = datetime.now(timezone.utc)
@@ -4809,7 +5049,7 @@ async def update_backup_config(
 @app.post("/api/backup/create", response_model=BackupJob)
 async def create_manual_backup(
     backup_create: BackupJobCreate,
-    current_user: dict = Depends(verify_token)
+    current_user: dict = Depends(require_admin_token)
 ):
     """Create a manual backup"""
     service = await get_backup_service()
@@ -4839,7 +5079,7 @@ async def get_backup_statistics(current_user: dict = Depends(verify_token)):
 @app.delete("/api/backup/cleanup")
 async def cleanup_old_backups(
     retention_days: int = 30,
-    current_user: dict = Depends(verify_token)
+    current_user: dict = Depends(require_admin_token)
 ):
     """Clean up old backups"""
     service = await get_backup_service()
@@ -4871,40 +5111,7 @@ async def download_backup(
         media_type='application/octet-stream'
     )
 
-# ==================== Activity/Notifications System ====================
-
-class ActivityType(str, Enum):
-    SALE_CREATED = "sale_created"
-    SERVICE_COMPLETED = "service_completed"
-    SERVICE_CREATED = "service_created"
-    VEHICLE_ADDED = "vehicle_added"
-    VEHICLE_SOLD = "vehicle_sold"
-    LOW_STOCK = "low_stock"
-    CUSTOMER_ADDED = "customer_added"
-    BACKUP_CREATED = "backup_created"
-
-class Activity(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    type: ActivityType
-    title: str
-    description: str
-    icon: str = "info"  # info, success, warning, error
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    read: bool = False
-    metadata: Optional[Dict[str, Any]] = None
-
-class ActivityCreate(BaseModel):
-    type: ActivityType
-    title: str
-    description: str
-    icon: str = "info"
-    metadata: Optional[Dict[str, Any]] = None
-
-async def create_activity(activity_data: ActivityCreate):
-    """Helper function to create an activity"""
-    activity = Activity(**activity_data.dict())
-    await db.activities.insert_one(activity.dict())
-    return activity
+# ==================== Activity/Notifications System (moved to models section) ====================
 
 @app.get("/api/activities")
 async def get_activities(
@@ -4961,7 +5168,7 @@ async def mark_all_activities_read(current_user: dict = Depends(verify_token)):
 @app.delete("/api/activities/{activity_id}")
 async def delete_activity(
     activity_id: str,
-    current_user: dict = Depends(verify_token)
+    current_user: dict = Depends(require_admin_token)
 ):
     """Delete an activity"""
     result = await db.activities.delete_one({"id": activity_id})
@@ -4973,14 +5180,5 @@ async def delete_activity(
 
 # ==================== End Activity/Notifications System ====================
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get("CORS_ORIGINS", "http://localhost:3000").split(","),
-    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "Accept"],
-)
 
 app.include_router(api_router)
-
-
