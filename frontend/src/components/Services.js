@@ -192,28 +192,40 @@ const ServicesOverview = () => {
         ? (withTurnaround.reduce((s, x) => s + (new Date(x.completion_date) - new Date(x.service_date)) / 86400000, 0) / withTurnaround.length).toFixed(1)
         : null;
 
+      // When no job cards exist but bills do, use bills as the job count proxy
+      const hasJobCards = services.length > 0;
+      const billPaid   = bills.filter(b => b.status === 'paid' || b.status === 'completed');
+      const billUnpaid = bills.filter(b => b.status !== 'paid' && b.status !== 'completed');
+
+      const totalForDisplay      = hasJobCards ? services.length    : bills.length;
+      const completedForDisplay  = hasJobCards ? completed.length   : billPaid.length;
+      const pendingForDisplay    = hasJobCards ? pending.length     : billUnpaid.length;
+      const curMonthForDisplay   = hasJobCards ? curMonthJobs.length
+        : bills.filter(b => isCurMonth(b.bill_date || b.created_at)).length;
+      const allTimeRevForDisplay = totalRev;
+
       setStats({
-        total: services.length,
-        pending: pending.length,
-        inProgress: inProgress.length,
-        completed: completed.length,
-        cancelled: cancelled.length,
-        todayJobs: todayJobs.length,
-        completedToday: completedToday.length,
-        curMonthJobs: curMonthJobs.length,
+        total: totalForDisplay,
+        pending: pendingForDisplay,
+        inProgress: hasJobCards ? inProgress.length : 0,
+        completed: completedForDisplay,
+        cancelled: hasJobCards ? cancelled.length : 0,
+        todayJobs: hasJobCards ? todayJobs.length : bills.filter(b => isToday(b.bill_date || b.created_at)).length,
+        completedToday: hasJobCards ? completedToday.length : bills.filter(b => (b.status === 'paid' || b.status === 'completed') && isToday(b.bill_date || b.created_at)).length,
+        curMonthJobs: curMonthForDisplay,
         prevMonthJobs: prevMonthJobs.length,
         jobChange,
         curMonthRev,
         prevMonthRev,
         revChange,
-        totalRev,
+        totalRev: allTimeRevForDisplay,
         typeBreakdown,
         trend,
         maxCount,
         recent,
         avgTurnaround,
-        paidBills: bills.filter(b => b.status === 'paid' || b.status === 'completed').length,
-        unpaidBills: bills.filter(b => b.status !== 'paid' && b.status !== 'completed').length,
+        paidBills: billPaid.length,
+        unpaidBills: billUnpaid.length,
         partsRevenue: reportSummary.total_parts_revenue || 0,
         labourRevenue: reportSummary.total_labour_revenue || 0,
       });
@@ -1037,7 +1049,7 @@ const ViewRegistration = () => {
   
   // Pagination & Sorting
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(25);
+  const [itemsPerPage] = useState(250);
   const [sortBy, setSortBy] = useState('registration_date');
   const [sortOrder, setSortOrder] = useState('desc');
 
@@ -2432,10 +2444,14 @@ const JobCards = () => {
         });
       }
 
-      // Deduplicate — prefer non-empty vehicle_number, then chassis_number
+      // Deduplicate — normalize keys, fallback to brand+model when no reg/chassis
       const seen = new Set();
       const unique = vehicleList.filter(v => {
-        const key = v.vehicle_number || v.chassis_number;
+        const reg     = (v.vehicle_number || '').trim().toUpperCase();
+        const chassis = (v.chassis_number || '').trim().toUpperCase();
+        const model   = ((v.vehicle_brand || '') + '|' + (v.vehicle_model || '')).trim().toUpperCase();
+        // Primary key: registration number; secondary: chassis; tertiary: brand+model
+        const key = reg || chassis || model;
         if (!key || seen.has(key)) return false;
         seen.add(key);
         return true;
