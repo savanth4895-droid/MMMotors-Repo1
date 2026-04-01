@@ -2861,7 +2861,22 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                 seen_chassis_in_file.add(chassis)
 
             # ── Existing customer lookup: prefer chassis match, fall back to mobile ──
-            existing = existing_customers_by_chassis.get(chassis) or existing_customers_by_mobile.get(phone_number)
+            # When falling back to mobile, also check vehicle model:
+            # same mobile + same model → same customer (merge)
+            # same mobile + different model → different customer (new record)
+            _chassis_match = existing_customers_by_chassis.get(chassis)
+            _mobile_match  = existing_customers_by_mobile.get(phone_number)
+            if _chassis_match:
+                existing = _chassis_match
+            elif _mobile_match:
+                existing_model = (_mobile_match.get('vehicle_info') or {}).get('model', '').strip().lower()
+                if existing_model and incoming_model and existing_model != incoming_model:
+                    # Same mobile, different vehicle model → treat as a new customer
+                    existing = None
+                else:
+                    existing = _mobile_match
+            else:
+                existing = None
 
             if existing:
                 existing_id = existing['id']
