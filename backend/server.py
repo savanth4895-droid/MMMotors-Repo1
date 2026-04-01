@@ -66,7 +66,33 @@ if is_atlas:
 client = AsyncIOMotorClient(mongo_url, **client_options)
 db = client[os.environ['DB_NAME']]
 
-async def next_sequence(name: str) -> int:
+async def _sync_counter(name: str) -> int:
+    """Reset a sequence counter to the current document count in its collection.
+
+    Called automatically after every delete so the next number issued is always
+    exactly (remaining_records + 1) — no gaps in the sequence.
+
+    Returns the new counter value (i.e. the current record count).
+    """
+    collection_map = {
+        "sales":            db.sales,
+        "services":         db.services,
+        "registrations":    db.registrations,
+        "spare_part_bills": db.spare_part_bills,
+        "service_bills":    db.service_bills,
+    }
+    coll = collection_map.get(name)
+    if coll is None:
+        return 0
+    real_count = await coll.count_documents({})
+    await db.counters.update_one(
+        {"_id": name},
+        {"$set": {"seq": real_count}},
+        upsert=True,
+    )
+    return real_count
+
+
     """Atomically increment a named counter — prevents duplicate invoice/job numbers.
     If counter doesn't exist yet, seeds it from actual collection count so numbers
     stay sensible (e.g. INV-000448 after 447 existing sales).
@@ -1131,7 +1157,7 @@ async def get_customer_by_mobile(mobile: str, current_user: User = Depends(get_c
 @api_router.get("/customers")
 async def get_customers(
     page: int = 1,
-    limit: int = 1000,
+    limit: int = 100,
     sort: str = "created_at",
     order: str = "desc",
     customer_type: Optional[str] = None,
@@ -1313,7 +1339,7 @@ async def get_vehicles(
     brand: Optional[str] = None,
     status: Optional[VehicleStatus] = None,
     page: int = 1,
-    limit: int = 1000,
+    limit: int = 10000,
     current_user: User = Depends(get_current_user)
 ):
     filter_dict = {}
@@ -1509,7 +1535,12 @@ async def bulk_delete_vehicles(request: BulkDeleteRequest, current_user: User = 
     # Include cascade statistics if force delete was used
     if request.force_delete:
         response["cascade_deleted"] = cascade_stats
-    
+
+    # Sync counters for everything that was deleted
+    if deleted:
+        await _sync_counter("sales")      # sales may have been cascade-deleted
+        await _sync_counter("services")   # services may have been cascade-deleted
+
     return response
 
 # Sales endpoints
@@ -1755,7 +1786,7 @@ async def delete_sale(sale_id: str, current_user: User = Depends(require_admin))
     result = await db.sales.delete_one({"id": sale_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Sale not found")
-    
+    await _sync_counter("sales")
     return {"message": "Sale deleted successfully", "deleted_sale_id": sale_id}
 
 @api_router.delete("/sales")
@@ -1791,6 +1822,8 @@ async def bulk_delete_sales(request: BulkDeleteRequest, current_user: User = Dep
         except Exception as e:
             failed.append({"id": sale_id, "error": str(e)})
     
+    if deleted:
+        await _sync_counter("sales")
     return {
         "deleted": len(deleted),
         "deleted_ids": deleted,
@@ -1899,6 +1932,7 @@ async def delete_registration(reg_id: str, current_user: User = Depends(require_
         raise HTTPException(status_code=404, detail="Registration not found")
     
     await db.registrations.delete_one({"id": reg_id})
+    await _sync_counter("registrations")
     return {"message": "Registration deleted successfully"}
 
 # Service endpoints
@@ -2072,7 +2106,7 @@ async def delete_service(service_id: str, current_user: User = Depends(require_a
     result = await db.services.delete_one({"id": service_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Service not found")
-    
+    await _sync_counter("services")
     return {"message": "Service deleted successfully", "deleted_service_id": service_id}
 
 # Spare Parts endpoints
@@ -2086,7 +2120,7 @@ async def create_spare_part(spare_part_data: SparePartCreate, current_user: User
 async def get_spare_parts(
     low_stock: bool = False,
     page: int = 1,
-    limit: int = 200,
+    limit: int = 2000,
     current_user: User = Depends(get_current_user)
 ):
     filter_dict = {"$expr": {"$lte": ["$quantity", "$low_stock_threshold"]}} if low_stock else {}
@@ -2198,7 +2232,7 @@ async def delete_spare_part_bill(bill_id: str, current_user: User = Depends(requ
     result = await db.spare_part_bills.delete_one({"id": bill_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Spare part bill not found")
-    
+    await _sync_counter("spare_part_bills")
     return {"message": "Spare part bill deleted successfully", "deleted_bill_id": bill_id}
 
 # Service Bills API Endpoints
@@ -2376,6 +2410,7 @@ async def delete_service_bill(bill_id: str, current_user: User = Depends(require
                 {"$inc": {"quantity": qty_used}}
             )
 
+    await _sync_counter("service_bills")
     return {"message": "Service bill deleted successfully", "deleted_bill_id": bill_id}
 
 
@@ -2683,15 +2718,20 @@ async def delete_spare_part(part_id: str, current_user: User = Depends(require_a
 # Dashboard stats
 @api_router.get("/dashboard/stats")
 async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
-    # Count queries and aggregation pipelines run concurrently.
-    # Motor aggregate cursors are not plain coroutines, so they are gathered
-    # separately from the count_documents calls using a dedicated helper.
     today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     today_end   = datetime.now(timezone.utc).replace(hour=23, minute=59, second=59, microsecond=999999)
 
     async def _agg(collection, pipeline):
         """Wrap aggregate().to_list() so it behaves as a plain coroutine for gather."""
         return await collection.aggregate(pipeline).to_list(1)
+
+    async def _count(collection, query=None):
+        """Safe count wrapper — returns 0 instead of raising if the query fails."""
+        try:
+            return await collection.count_documents(query or {})
+        except Exception as e:
+            logger.warning("dashboard count_documents failed: %s", e)
+            return 0
 
     sales_pipeline = [
         {"$group": {
@@ -2737,32 +2777,34 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
         revenue_stats,
         service_bill_stats,
     ) = await asyncio.gather(
-        db.customers.count_documents({}),
-        db.vehicles.count_documents({}),
-        db.spare_parts.count_documents({}),
-        db.vehicles.count_documents({"status": VehicleStatus.IN_STOCK}),
-        db.vehicles.count_documents({"status": VehicleStatus.SOLD}),
-        db.services.count_documents({"status": ServiceStatus.PENDING}),
-        db.services.count_documents({"status": ServiceStatus.IN_PROGRESS}),
-        db.spare_parts.count_documents({
+        _count(db.customers),
+        _count(db.vehicles),
+        _count(db.spare_parts),
+        _count(db.vehicles, {"status": VehicleStatus.IN_STOCK}),
+        _count(db.vehicles, {"status": VehicleStatus.SOLD}),
+        _count(db.services, {"status": ServiceStatus.PENDING}),
+        _count(db.services, {"status": ServiceStatus.IN_PROGRESS}),
+        _count(db.spare_parts, {
             "$and": [
                 {"low_stock_threshold": {"$exists": True, "$ne": None}},
                 {"$expr": {"$lte": ["$quantity", "$low_stock_threshold"]}}
             ]
         }),
-        db.services.count_documents({
+        _count(db.services, {
             "status": ServiceStatus.COMPLETED,
-            "updated_at": {"$gte": today_start, "$lte": today_end}
+            # Use completion_date — the field actually set when a service is marked
+            # complete. The Service model has no updated_at field.
+            "completion_date": {"$gte": today_start, "$lte": today_end}
         }),
-        db.sales.count_documents({}),
-        db.sales.count_documents({"$or": [{"source": {"$exists": False}}, {"source": "direct"}]}),
-        db.sales.count_documents({"source": "import"}),
-        db.service_bills.count_documents({}),
-        db.service_bills.count_documents({"status": "paid"}),
-        db.service_bills.count_documents({"status": "pending"}),
-        db.services.count_documents({}),
-        db.services.count_documents({"status": ServiceStatus.COMPLETED}),
-        db.services.count_documents({"status": ServiceStatus.IN_PROGRESS}),
+        _count(db.sales),
+        _count(db.sales, {"$or": [{"source": {"$exists": False}}, {"source": "direct"}]}),
+        _count(db.sales, {"source": "import"}),
+        _count(db.service_bills),
+        _count(db.service_bills, {"status": "paid"}),
+        _count(db.service_bills, {"status": "pending"}),
+        _count(db.services),
+        _count(db.services, {"status": ServiceStatus.COMPLETED}),
+        _count(db.services, {"status": ServiceStatus.IN_PROGRESS}),
         _agg(db.sales, sales_pipeline),
         _agg(db.service_bills, service_bill_pipeline),
     )
@@ -4681,8 +4723,71 @@ async def cleanup_duplicates(current_user: User = Depends(require_admin)):
     
     return cleanup_results
 
-# Include the router in the main app
-# Backup Service Class
+
+# ── Counter reset endpoint ────────────────────────────────────────────────────
+# Use this after bulk-deleting data and before re-importing so sequence numbers
+# restart from 1 (or from the current record count) rather than continuing from
+# wherever the counter was left.
+
+_RESETTABLE_COUNTERS = {
+    "sales":            db.sales,
+    "services":         db.services,
+    "registrations":    db.registrations,
+    "spare_part_bills": db.spare_part_bills,
+    "service_bills":    db.service_bills,
+}
+
+@api_router.post("/counters/reset")
+async def reset_sequence_counters(
+    body: dict = None,
+    current_user: User = Depends(require_admin)
+):
+    """Reset sequence counters so the next created record starts from 1.
+
+    Call this **after** deleting old data and **before** importing fresh data.
+    Each counter is reset to the current number of documents in its collection,
+    so if you deleted everything the next number will be 1; if you kept some
+    records it continues cleanly from there.
+
+    Body (optional):
+        { "counters": ["sales", "services"] }   ← reset only specific counters
+        {}  or omitted                           ← reset all counters
+
+    Returns the new seq value for each reset counter.
+    """
+    requested = (body or {}).get("counters") if body else None
+
+    if requested:
+        unknown = [c for c in requested if c not in _RESETTABLE_COUNTERS]
+        if unknown:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unknown counter(s): {unknown}. Valid values: {list(_RESETTABLE_COUNTERS)}"
+            )
+        targets = {k: v for k, v in _RESETTABLE_COUNTERS.items() if k in requested}
+    else:
+        targets = _RESETTABLE_COUNTERS
+
+    results = {}
+    for counter_name, coll in targets.items():
+        real_count = await coll.count_documents({})
+        await db.counters.update_one(
+            {"_id": counter_name},
+            {"$set": {"seq": real_count}},
+            upsert=True,
+        )
+        results[counter_name] = {
+            "reset_to": real_count,
+            "next_number": real_count + 1,
+        }
+        logger.info("Counter '%s' reset to %d by user %s", counter_name, real_count, current_user.id)
+
+    return {
+        "message": f"Reset {len(results)} counter(s) successfully.",
+        "counters": results,
+    }
+
+
 class BackupService:
     def __init__(self, db, backup_config: BackupConfig):
         self.db = db
