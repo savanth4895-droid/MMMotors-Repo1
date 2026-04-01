@@ -110,8 +110,37 @@ function JobDetailsModal({ job, onClose }) {
           </div>
           {job.skipped_records > 0 && (
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
-              <h4 className="font-semibold text-amber-800 mb-1 flex items-center gap-2"><AlertCircle className="w-4 h-4" />{job.skipped_records} Duplicates Skipped</h4>
-              <p className="text-sm text-amber-700">Detected by unique identifiers (mobile / chassis / part number).</p>
+              <h4 className="font-semibold text-amber-800 mb-2 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />{job.skipped_records} Duplicates Skipped
+              </h4>
+              {job.skipped_details && job.skipped_details.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-amber-100 text-amber-900">
+                        <th className="text-left px-2 py-1.5 rounded-tl font-semibold">Row</th>
+                        <th className="text-left px-2 py-1.5 font-semibold">Name</th>
+                        <th className="text-left px-2 py-1.5 font-semibold">Mobile</th>
+                        <th className="text-left px-2 py-1.5 font-semibold">Chassis</th>
+                        <th className="text-left px-2 py-1.5 rounded-tr font-semibold">Reason</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {job.skipped_details.map((d, i) => (
+                        <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-amber-50/60'}>
+                          <td className="px-2 py-1.5 text-amber-800 font-mono">{d.row}</td>
+                          <td className="px-2 py-1.5 text-amber-900">{d.name || '—'}</td>
+                          <td className="px-2 py-1.5 text-amber-800 font-mono">{d.mobile || '—'}</td>
+                          <td className="px-2 py-1.5 text-amber-800 font-mono">{d.chassis || '—'}</td>
+                          <td className="px-2 py-1.5 text-amber-700 italic">{d.reason}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-sm text-amber-700">Detected by unique identifiers (mobile / chassis / part number).</p>
+              )}
             </div>
           )}
           {job.cross_reference_stats && Object.keys(job.cross_reference_stats).length > 0 && (
