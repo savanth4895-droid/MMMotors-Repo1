@@ -59,11 +59,9 @@ client = AsyncIOMotorClient(mongo_url, **client_options)
 db = client[os.environ['DB_NAME']]
 
 async def next_sequence(name: str) -> int:
-    """Atomically increment a named counter — prevents duplicate invoice/job numbers.
-    If counter doesn't exist yet, seeds it from actual collection count so numbers
-    stay sensible (e.g. INV-000448 after 447 existing sales).
+    """Return count_documents + 1 for the named collection.
+    Simple and always in sync with actual data — no separate counters collection needed.
     """
-    # Collection name map: counter name -> db collection
     collection_map = {
         "sales": db.sales,
         "services": db.services,
@@ -71,26 +69,11 @@ async def next_sequence(name: str) -> int:
         "spare_part_bills": db.spare_part_bills,
         "service_bills": db.service_bills,
     }
-
-    # Check if counter already exists
-    existing = await db.counters.find_one({"_id": name})
-    if not existing:
-        # Seed from actual count so we don't start from 0 or a crazy number
-        coll = collection_map.get(name)
-        seed = await coll.count_documents({}) if coll is not None else 0
-        await db.counters.update_one(
-            {"_id": name},
-            {"$setOnInsert": {"seq": seed}},
-            upsert=True
-        )
-
-    result = await db.counters.find_one_and_update(
-        {"_id": name},
-        {"$inc": {"seq": 1}},
-        upsert=True,
-        return_document=True
-    )
-    return result["seq"]
+    coll = collection_map.get(name)
+    if coll is None:
+        return 1
+    count = await coll.count_documents({})
+    return count + 1
 
 
 # JWT Configuration
@@ -131,30 +114,7 @@ async def startup_db_client():
     except Exception as e:
         print(f"⚠️ Index creation warning: {e}")
 
-    # Fix corrupted sequence counters — reset to actual collection counts
-    # This runs every startup but is a no-op if counters are already correct
-    try:
-        counter_sources = [
-            ("sales",            db.sales),
-            ("services",         db.services),
-            ("registrations",    db.registrations),
-            ("spare_part_bills", db.spare_part_bills),
-            ("service_bills",    db.service_bills),
-        ]
-        for counter_name, coll in counter_sources:
-            existing = await db.counters.find_one({"_id": counter_name})
-            real_count = await coll.count_documents({})
-            if existing is None or existing.get("seq", 0) > real_count + 10000:
-                # Counter is missing or wildly wrong — reset it to real count
-                await db.counters.update_one(
-                    {"_id": counter_name},
-                    {"$set": {"seq": real_count}},
-                    upsert=True
-                )
-                print(f"✅ Reset {counter_name} counter to {real_count}")
-        print("✅ Sequence counters verified")
-    except Exception as e:
-        print(f"⚠️ Counter reset warning: {e}")
+    print("✅ Sequence numbering: count+1 (no counter collection needed)")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
@@ -554,6 +514,7 @@ class ImportJob(BaseModel):
     successful_records: int = 0
     failed_records: int = 0
     skipped_records: int = 0  # Records skipped due to duplicates
+    skipped_details: List[Dict[str, Any]] = []  # Per-skipped-record detail: row, reason, key fields
     errors: List[Dict[str, Any]] = []
     cross_reference_stats: Optional[Dict[str, int]] = {}  # Track linking statistics
     incomplete_records: List[Dict[str, Any]] = []  # Records with missing data
@@ -570,6 +531,7 @@ class ImportResult(BaseModel):
     successful_records: int = 0
     failed_records: int = 0
     skipped_records: int = 0  # Records skipped due to duplicates
+    skipped_details: List[Dict[str, Any]] = []  # Per-skipped-record detail: row, reason, key fields
     errors: List[Dict[str, Any]] = []
     cross_reference_stats: Optional[Dict[str, int]] = {}  # Linking statistics
     incomplete_records: List[Dict[str, Any]] = []  # Records needing completion
@@ -2755,6 +2717,7 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
     skipped = 0
     updated = 0
     errors = []
+    skipped_details = []
     incomplete_records = []
     import_stats = {'vehicles_linked': 0, 'sales_created': 0, 'customers_updated': 0}
 
@@ -2847,14 +2810,17 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
             # If we've already processed this chassis in this file, skip
             if chassis and chassis in seen_chassis_in_file:
                 skipped += 1
+                skipped_details.append({"row": idx + 2, "name": name, "mobile": phone_number, "chassis": chassis, "reason": "Duplicate chassis in this file"})
                 continue
 
             # If a sale already exists for this chassis, skip entirely
             if chassis and chassis in existing_sales_by_chassis:
                 skipped += 1
+                skipped_details.append({"row": idx + 2, "name": name, "mobile": phone_number, "chassis": chassis, "reason": "Sale already exists for this chassis"})
                 continue
             if chassis and chassis in inserting_chassis:
                 skipped += 1
+                skipped_details.append({"row": idx + 2, "name": name, "mobile": phone_number, "chassis": chassis, "reason": "Chassis already being inserted in this batch"})
                 continue
 
             if chassis:
@@ -3089,6 +3055,7 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
     import_job.errors = errors
     import_job.cross_reference_stats = import_stats
     import_job.incomplete_records = incomplete_records
+    import_job.skipped_details = skipped_details
 
     return ImportResult(
         job_id=import_job.id,
@@ -3098,6 +3065,7 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
         successful_records=successful,
         failed_records=failed,
         skipped_records=skipped,
+        skipped_details=skipped_details,
         errors=errors,
         cross_reference_stats=import_stats,
         incomplete_records=incomplete_records
