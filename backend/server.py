@@ -1131,7 +1131,7 @@ async def get_customer_by_mobile(mobile: str, current_user: User = Depends(get_c
 @api_router.get("/customers")
 async def get_customers(
     page: int = 1,
-    limit: int = 100,
+    limit: int = 1000,
     sort: str = "created_at",
     order: str = "desc",
     customer_type: Optional[str] = None,
@@ -1313,7 +1313,7 @@ async def get_vehicles(
     brand: Optional[str] = None,
     status: Optional[VehicleStatus] = None,
     page: int = 1,
-    limit: int = 100,
+    limit: int = 1000,
     current_user: User = Depends(get_current_user)
 ):
     filter_dict = {}
@@ -1583,7 +1583,7 @@ async def create_sale(sale_data: SaleCreate, current_user: User = Depends(get_cu
 @api_router.get("/sales")
 async def get_sales(
     page: int = 1,
-    limit: int = 100,
+    limit: int = 1000,
     current_user: User = Depends(get_current_user)
 ):
     skip = (page - 1) * limit
@@ -1854,7 +1854,7 @@ async def create_registration(reg_data: RegistrationCreate, current_user: User =
 @api_router.get("/registrations")
 async def get_registrations(
     page: int = 1,
-    limit: int = 100,
+    limit: int = 1000,
     current_user: User = Depends(get_current_user)
 ):
     skip = (page - 1) * limit
@@ -1941,7 +1941,7 @@ async def create_service(service_data: ServiceCreate, current_user: User = Depen
 async def get_services(
     status: Optional[ServiceStatus] = None,
     page: int = 1,
-    limit: int = 100,
+    limit: int = 1000,
     current_user: User = Depends(get_current_user)
 ):
     filter_dict = {}
@@ -2155,7 +2155,7 @@ async def create_spare_part_bill(bill_data: SparePartBillCreate, current_user: U
 @api_router.get("/spare-parts/bills")
 async def get_spare_part_bills(
     page: int = 1,
-    limit: int = 100,
+    limit: int = 1000,
     current_user: User = Depends(get_current_user)
 ):
     skip = (page - 1) * limit
@@ -2297,7 +2297,7 @@ async def create_service_bill(bill_data: ServiceBillCreate, current_user: User =
 @api_router.get("/service-bills")
 async def get_service_bills(
     page: int = 1,
-    limit: int = 100,
+    limit: int = 10000,
     current_user: User = Depends(get_current_user)
 ):
     skip = (page - 1) * limit
@@ -2385,7 +2385,7 @@ async def delete_service_bill(bill_id: str, current_user: User = Depends(require
 @api_router.get("/sale-milestones")
 async def list_sale_milestones(
     page: int = 1,
-    limit: int = 100,
+    limit: int = 1000,
     current_user: User = Depends(get_current_user)
 ):
     """List all sale milestones (summary only, no image data)."""
