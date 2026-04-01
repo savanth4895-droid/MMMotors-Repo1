@@ -2514,13 +2514,15 @@ async def upload_import_file(
         import_job.end_time = datetime.now(timezone.utc)
         
     except Exception as e:
+        import traceback
+        error_detail = f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
         import_job.status = "failed"
         import_job.end_time = datetime.now(timezone.utc)
-        import_job.errors.append({"error": str(e), "row": 0})
+        import_job.errors.append({"error": error_detail, "row": 0})
         result = ImportResult(
             job_id=import_job.id,
             status="failed",
-            message=str(e)
+            message=f"{type(e).__name__}: {str(e)}"
         )
     
     # Save import job to database
