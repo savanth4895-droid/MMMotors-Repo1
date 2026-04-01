@@ -46,14 +46,13 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [showTracker, setShowTracker] = useState(true);
+  // Use a ref to track initial-load state so the catch block in fetchStats
+  // always reads the current value, not a stale closure capture (Bug 1 fix).
+  const isInitialLoad = React.useRef(true);
 
-  useEffect(() => {
-    fetchStats();
-    const refreshInterval = setInterval(fetchStats, 10000);
-    return () => clearInterval(refreshInterval);
-  }, []);
-
-  const fetchStats = async () => {
+  // fetchStats is defined before the useEffect so the interval always calls
+  // the latest version — avoids the stale-closure interval bug (Bug 4 fix).
+  const fetchStats = React.useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const dashboardRes = await axios.get(`${API}/dashboard/stats`, {
@@ -62,13 +61,22 @@ const Dashboard = () => {
       setStats(dashboardRes.data);
       setLastUpdate(new Date());
     } catch (error) {
-      if (loading) {
+      // Only show the error toast on the very first load — suppress it on
+      // background auto-refresh failures so it doesn't spam the UI (Bug 1 fix).
+      if (isInitialLoad.current) {
         toast.error('Failed to fetch dashboard statistics');
       }
     } finally {
+      isInitialLoad.current = false;
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchStats();
+    const refreshInterval = setInterval(fetchStats, 10000);
+    return () => clearInterval(refreshInterval);
+  }, [fetchStats]);
 
   const mainModules = [
     {
@@ -120,7 +128,7 @@ const Dashboard = () => {
   const quickStats = [
     {
       title: 'Total Revenue',
-      value: `₹${stats.sales_stats?.total_revenue?.toLocaleString() || '0'}`,
+      value: `₹${stats.sales_stats?.total_revenue?.toLocaleString('en-IN', { maximumFractionDigits: 0 }) || '0'}`,
       change: stats.sales_stats?.imported_sales > 0 ? `${stats.sales_stats.imported_sales} imported` : 'No imports',
       changeType: 'positive',
       icon: TrendingUp
@@ -291,19 +299,19 @@ const Dashboard = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-4 bg-blue-50 rounded-lg">
               <p className="text-2xl font-bold text-blue-600">
-                ₹{stats.sales_stats?.total_revenue?.toLocaleString() || '0'}
+                ₹{stats.sales_stats?.total_revenue?.toLocaleString('en-IN', { maximumFractionDigits: 0 }) || '0'}
               </p>
               <p className="text-xs text-gray-600">Total Revenue</p>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
               <p className="text-2xl font-bold text-green-600">
-                ₹{stats.sales_stats?.direct_revenue?.toLocaleString() || '0'}
+                ₹{stats.sales_stats?.direct_revenue?.toLocaleString('en-IN', { maximumFractionDigits: 0 }) || '0'}
               </p>
               <p className="text-xs text-gray-600">Direct Sales</p>
             </div>
             <div className="text-center p-4 bg-orange-50 rounded-lg">
               <p className="text-2xl font-bold text-orange-600">
-                ₹{stats.sales_stats?.imported_revenue?.toLocaleString() || '0'}
+                ₹{stats.sales_stats?.imported_revenue?.toLocaleString('en-IN', { maximumFractionDigits: 0 }) || '0'}
               </p>
               <p className="text-xs text-gray-600">Imported Sales</p>
             </div>
@@ -379,13 +387,16 @@ const SalesMilestoneTracker = ({ onClose }) => {
     try {
       const token = localStorage.getItem('token');
       const [salesRes, custRes] = await Promise.all([
-        axios.get(`${API}/sales`, { headers: { Authorization: `Bearer ${token}` } }),
+        // limit=500: tracker only shows 8 at a time but needs enough to sort by date.
+        // Using a high limit ensures recent sales are always included (Bug 3 fix).
+        axios.get(`${API}/sales`, { params: { page: 1, limit: 500 }, headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/customers`, { params: { page: 1, limit: 10000 }, headers: { Authorization: `Bearer ${token}` } })
       ]);
       const customers = custRes.data.data || custRes.data || [];
       const custMap = {};
       customers.forEach(c => { if (c.id) custMap[c.id] = c.name; });
-      const enriched = (salesRes.data || [])
+      // salesRes.data is a plain array (backend returns array with X-Total-Count header)
+      const enriched = (Array.isArray(salesRes.data) ? salesRes.data : salesRes.data?.data || [])
         .map(s => ({ ...s, customer_name: s.customer_name || custMap[s.customer_id] || 'Unknown' }))
         .sort((a, b) => new Date(b.sale_date || b.created_at) - new Date(a.sale_date || a.created_at));
       setAllSales(enriched);
@@ -416,28 +427,39 @@ const SalesMilestoneTracker = ({ onClose }) => {
   const handleToggle = async (key) => {
     if (!selectedSale || toggling[key]) return;
     setToggling(p => ({ ...p, [key]: true }));
-    const token = localStorage.getItem('token');
-    const isCompleted = ms(key).completed;
-    const url = isCompleted
-      ? `${API}/sale-milestones/${selectedSale.id}/milestone/${key}/uncomplete`
-      : `${API}/sale-milestones/${selectedSale.id}/milestone/${key}/complete`;
-    await axios.post(url, { notes: notes[key] || '' }, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
-    await fetchMilestones(selectedSale.id);
-    setToggling(p => ({ ...p, [key]: false }));
+    try {
+      const token = localStorage.getItem('token');
+      const isCompleted = ms(key).completed;
+      const url = isCompleted
+        ? `${API}/sale-milestones/${selectedSale.id}/milestone/${key}/uncomplete`
+        : `${API}/sale-milestones/${selectedSale.id}/milestone/${key}/complete`;
+      await axios.post(url, { notes: notes[key] || '' }, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
+      await fetchMilestones(selectedSale.id);
+    } finally {
+      // Always clear the toggling state even if fetchMilestones throws,
+      // so the button doesn't get permanently stuck in disabled state (Bug 6 fix).
+      setToggling(p => ({ ...p, [key]: false }));
+    }
   };
 
   const handleSaveNote = async (key) => {
     if (!selectedSale) return;
     setSavingNote(p => ({ ...p, [key]: true }));
-    const token = localStorage.getItem('token');
-    const isCompleted = ms(key).completed;
-    const url = isCompleted
-      ? `${API}/sale-milestones/${selectedSale.id}/milestone/${key}/complete`
-      : `${API}/sale-milestones/${selectedSale.id}/milestone/${key}/complete`;
-    await axios.post(url, { notes: notes[key] || '' }, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
-    await fetchMilestones(selectedSale.id);
-    setSavingNote(p => ({ ...p, [key]: false }));
-    setExpandedNote(null);
+    try {
+      const token = localStorage.getItem('token');
+      // Saving a note always posts to /complete (which upserts the milestone record
+      // with the new note text). Using /uncomplete when the step is done would
+      // accidentally unmark it — Bug 2 fix: always use /complete for note saves.
+      await axios.post(
+        `${API}/sale-milestones/${selectedSale.id}/milestone/${key}/complete`,
+        { notes: notes[key] || '', preserve_completed: true },
+        { headers: { Authorization: `Bearer ${token}` } }
+      ).catch(() => {});
+      await fetchMilestones(selectedSale.id);
+    } finally {
+      setSavingNote(p => ({ ...p, [key]: false }));
+      setExpandedNote(null);
+    }
   };
 
   const allDone = completedCount === MILESTONES.length;
@@ -547,7 +569,7 @@ const SalesMilestoneTracker = ({ onClose }) => {
                 {/* Progress fill */}
                 <div
                   className={`absolute top-[36px] left-[calc(10%)] h-1 z-0 rounded-full transition-all duration-700 ${allDone ? 'bg-green-500' : 'bg-blue-500'}`}
-                  style={{ width: completedCount === 0 ? '0%' : `calc(${((completedCount - 0.5) / MILESTONES.length) * 80}%)` }}
+                  style={{ width: `${(completedCount / MILESTONES.length) * 100}%` }}
                 />
 
                 {/* Steps */}
