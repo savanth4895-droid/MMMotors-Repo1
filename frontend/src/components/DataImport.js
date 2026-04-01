@@ -176,8 +176,10 @@ function JobDetailsModal({ job, onClose }) {
               <div className="max-h-48 overflow-y-auto space-y-1.5">
                 {job.errors.map((e, i) => (
                   <div key={i} className="bg-red-50 border border-red-200 rounded px-3 py-2 text-sm">
-                    <span className="font-medium text-red-800">Row {e.row}</span>
-                    <span className="text-red-600 ml-2">{e.error}</span>
+                    {e.row > 0
+                      ? <><span className="font-medium text-red-800">Row {e.row}: </span><span className="text-red-600">{e.error}</span></>
+                      : <span className="text-red-700 font-mono whitespace-pre-wrap break-all text-xs">{e.error}</span>
+                    }
                   </div>
                 ))}
               </div>
@@ -230,12 +232,12 @@ const DataImport = () => {
         timeout: 300000,
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
       });
-      setImportResult({ success: res.data.status === 'completed', message: res.data.message });
+      setImportResult({ success: res.data.status === 'completed', message: res.data.message, data: res.data });
       if (res.data.status === 'completed') toast.success(res.data.message);
       else toast.error(res.data.message);
       await fetchImportJobs();
     } catch (e) {
-      const msg = e.response?.data?.detail || 'Import failed';
+      const msg = e.response?.data?.detail || e.response?.data?.message || e.message || 'Import failed';
       toast.error(msg);
       setImportResult({ success: false, message: msg });
     } finally {
@@ -397,6 +399,15 @@ const DataImport = () => {
                   {importResult.success ? 'Import complete' : 'Import failed'}
                 </p>
                 <p className={`text-xs mt-0.5 ${importResult.success ? 'text-green-700' : 'text-red-700'}`}>{importResult.message}</p>
+                {!importResult.success && importResult.data?.errors?.length > 0 && (
+                  <div className="mt-2 max-h-32 overflow-y-auto space-y-1">
+                    {importResult.data.errors.map((err, i) => (
+                      <div key={i} className="text-xs bg-red-100 border border-red-200 rounded px-2 py-1 text-red-800 font-mono whitespace-pre-wrap break-all">
+                        {err.row > 0 && <span className="font-semibold mr-1">Row {err.row}:</span>}{err.error}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <button onClick={reset}><X className="w-4 h-4 text-gray-400 hover:text-gray-600" /></button>
             </div>
