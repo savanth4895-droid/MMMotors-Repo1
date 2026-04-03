@@ -59,9 +59,11 @@ client = AsyncIOMotorClient(mongo_url, **client_options)
 db = client[os.environ['DB_NAME']]
 
 async def next_sequence(name: str) -> int:
-    """Return count_documents + 1 for the named collection.
-    Simple and always in sync with actual data — no separate counters collection needed.
+    """Atomically increment a named counter — prevents duplicate invoice/job numbers.
+    If counter doesn't exist yet, seeds it from actual collection count so numbers
+    stay sensible (e.g. INV-000448 after 447 existing sales).
     """
+    # Collection name map: counter name -> db collection
     collection_map = {
         "sales": db.sales,
         "services": db.services,
@@ -69,11 +71,59 @@ async def next_sequence(name: str) -> int:
         "spare_part_bills": db.spare_part_bills,
         "service_bills": db.service_bills,
     }
-    coll = collection_map.get(name)
-    if coll is None:
-        return 1
-    count = await coll.count_documents({})
-    return count + 1
+
+    # Check if counter already exists
+    existing = await db.counters.find_one({"_id": name})
+    if not existing:
+        # Seed from actual count so we don't start from 0 or a crazy number
+        coll = collection_map.get(name)
+        seed = await coll.count_documents({}) if coll is not None else 0
+        await db.counters.update_one(
+            {"_id": name},
+            {"$setOnInsert": {"seq": seed}},
+            upsert=True
+        )
+
+    result = await db.counters.find_one_and_update(
+        {"_id": name},
+        {"$inc": {"seq": 1}},
+        upsert=True,
+        return_document=True
+    )
+    return result["seq"]
+
+
+async def next_sequence_batch(name: str, count: int) -> list:
+    """Reserve `count` sequential numbers in ONE round-trip.
+    Returns a list of ints: [start+1, start+2, ..., start+count].
+    Used by bulk imports so we don't do N Atlas calls for N invoice numbers.
+    """
+    if count <= 0:
+        return []
+    collection_map = {
+        "sales": db.sales,
+        "services": db.services,
+        "registrations": db.registrations,
+        "spare_part_bills": db.spare_part_bills,
+        "service_bills": db.service_bills,
+    }
+    existing = await db.counters.find_one({"_id": name})
+    if not existing:
+        coll = collection_map.get(name)
+        seed = await coll.count_documents({}) if coll is not None else 0
+        await db.counters.update_one(
+            {"_id": name},
+            {"$setOnInsert": {"seq": seed}},
+            upsert=True
+        )
+    result = await db.counters.find_one_and_update(
+        {"_id": name},
+        {"$inc": {"seq": count}},
+        upsert=True,
+        return_document=False  # return doc BEFORE increment = start value
+    )
+    start = result["seq"] if result else 0
+    return list(range(start + 1, start + count + 1))
 
 
 # JWT Configuration
@@ -114,7 +164,30 @@ async def startup_db_client():
     except Exception as e:
         print(f"⚠️ Index creation warning: {e}")
 
-    print("✅ Sequence numbering: count+1 (no counter collection needed)")
+    # Fix corrupted sequence counters — reset to actual collection counts
+    # This runs every startup but is a no-op if counters are already correct
+    try:
+        counter_sources = [
+            ("sales",            db.sales),
+            ("services",         db.services),
+            ("registrations",    db.registrations),
+            ("spare_part_bills", db.spare_part_bills),
+            ("service_bills",    db.service_bills),
+        ]
+        for counter_name, coll in counter_sources:
+            existing = await db.counters.find_one({"_id": counter_name})
+            real_count = await coll.count_documents({})
+            if existing is None or existing.get("seq", 0) > real_count + 10000:
+                # Counter is missing or wildly wrong — reset it to real count
+                await db.counters.update_one(
+                    {"_id": counter_name},
+                    {"$set": {"seq": real_count}},
+                    upsert=True
+                )
+                print(f"✅ Reset {counter_name} counter to {real_count}")
+        print("✅ Sequence counters verified")
+    except Exception as e:
+        print(f"⚠️ Counter reset warning: {e}")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
@@ -514,7 +587,6 @@ class ImportJob(BaseModel):
     successful_records: int = 0
     failed_records: int = 0
     skipped_records: int = 0  # Records skipped due to duplicates
-    skipped_details: List[Dict[str, Any]] = []  # Per-skipped-record detail: row, reason, key fields
     errors: List[Dict[str, Any]] = []
     cross_reference_stats: Optional[Dict[str, int]] = {}  # Track linking statistics
     incomplete_records: List[Dict[str, Any]] = []  # Records with missing data
@@ -531,7 +603,6 @@ class ImportResult(BaseModel):
     successful_records: int = 0
     failed_records: int = 0
     skipped_records: int = 0  # Records skipped due to duplicates
-    skipped_details: List[Dict[str, Any]] = []  # Per-skipped-record detail: row, reason, key fields
     errors: List[Dict[str, Any]] = []
     cross_reference_stats: Optional[Dict[str, int]] = {}  # Linking statistics
     incomplete_records: List[Dict[str, Any]] = []  # Records needing completion
@@ -2461,74 +2532,91 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
     }
 
 # Import/Export endpoints
-@api_router.post("/import/upload", response_model=ImportResult)
+@api_router.post("/import/upload")
 async def upload_import_file(
     data_type: str,
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user)
 ):
-    """Upload and process import file"""
-    
-    # Validate data type
+    """Upload import file — returns job_id immediately; import runs in background."""
     valid_types = ["customers", "vehicles", "spare_parts", "service_history", "service_bills"]
     if data_type not in valid_types:
         raise HTTPException(status_code=400, detail=f"Invalid data type. Must be one of: {valid_types}")
-    
-    # Validate file format
     if not file.filename or not (file.filename.endswith('.csv') or file.filename.endswith('.xlsx')):
         raise HTTPException(status_code=400, detail="Only CSV and Excel files are supported")
-    
-    # Create import job
+
+    file_content = await file.read()
+    filename = file.filename
+
     import_job = ImportJob(
-        file_name=file.filename,
+        file_name=filename,
         data_type=data_type,
         status="processing",
         created_by=current_user.id
     )
-    
-    try:
-        # Read file content
-        file_content = await file.read()
-        
-        # Parse file based on type
-        if file.filename.endswith('.csv'):
-            data = await parse_csv_file(file_content)
-        else:
-            data = await parse_excel_file(file_content)
-        
-        import_job.total_records = len(data)
-        
-        # Process import based on data type
-        if data_type == "customers":
-            result = await import_customers_data(data, import_job, current_user.id)
-        elif data_type == "vehicles":
-            result = await import_vehicles_data(data, import_job, current_user.id)
-        elif data_type == "spare_parts":
-            result = await import_spare_parts_data(data, import_job, current_user.id)
-        elif data_type == "service_history":
-            result = await import_service_history_data(data, import_job, current_user.id)
-        elif data_type == "service_bills":
-            result = await import_service_bills_data(data, import_job, current_user.id)
-        
-        import_job.status = "completed"
-        import_job.end_time = datetime.now(timezone.utc)
-        
-    except Exception as e:
-        import traceback
-        error_detail = f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
-        import_job.status = "failed"
-        import_job.end_time = datetime.now(timezone.utc)
-        import_job.errors.append({"error": error_detail, "row": 0})
-        result = ImportResult(
-            job_id=import_job.id,
-            status="failed",
-            message=f"{type(e).__name__}: {str(e)}"
-        )
-    
-    # Save import job to database
     await db.import_jobs.insert_one(import_job.dict())
-    
-    return result
+
+    import asyncio as _aio
+
+    async def _run():
+        update_payload = {}
+        try:
+            if filename.endswith('.csv'):
+                data = await parse_csv_file(file_content)
+            else:
+                data = await parse_excel_file(file_content)
+            import_job.total_records = len(data)
+
+            if data_type == "customers":
+                result = await import_customers_data(data, import_job, current_user.id)
+            elif data_type == "vehicles":
+                result = await import_vehicles_data(data, import_job, current_user.id)
+            elif data_type == "spare_parts":
+                result = await import_spare_parts_data(data, import_job, current_user.id)
+            elif data_type == "service_history":
+                result = await import_service_history_data(data, import_job, current_user.id)
+            elif data_type == "service_bills":
+                result = await import_service_bills_data(data, import_job, current_user.id)
+            else:
+                result = None
+
+            import_job.status = "completed"
+            import_job.end_time = datetime.now(timezone.utc)
+            update_payload = {
+                **import_job.dict(),
+                **({"successful_records": result.successful_records,
+                    "failed_records": result.failed_records,
+                    "skipped_records": result.skipped_records,
+                    "processed_records": result.successful_records + result.failed_records + result.skipped_records,
+                    "errors": result.errors,
+                    "cross_reference_stats": result.cross_reference_stats,
+                    "incomplete_records": result.incomplete_records,
+                    "message": result.message,
+                } if result else {})
+            }
+        except Exception as e:
+            import_job.status = "failed"
+            import_job.end_time = datetime.now(timezone.utc)
+            update_payload = {**import_job.dict(), "errors": [{"error": str(e), "row": 0}], "message": str(e)}
+
+        await db.import_jobs.update_one({"id": import_job.id}, {"$set": update_payload})
+
+    _aio.ensure_future(_run())
+
+    return {
+        "job_id": import_job.id,
+        "status": "processing",
+        "message": f"Import started. Poll /api/import/jobs/{import_job.id} for status."
+    }
+
+
+@api_router.get("/import/jobs/{job_id}")
+async def get_import_job_status(job_id: str, current_user: User = Depends(get_current_user)):
+    """Poll the status of a specific import job."""
+    job = await db.import_jobs.find_one({"id": job_id}, {"_id": 0})
+    if not job:
+        raise HTTPException(status_code=404, detail="Import job not found")
+    return job
 
 @api_router.get("/import/jobs", response_model=List[ImportJob])
 async def get_import_jobs(
@@ -2719,7 +2807,6 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
     skipped = 0
     updated = 0
     errors = []
-    skipped_details = []
     incomplete_records = []
     import_stats = {'vehicles_linked': 0, 'sales_created': 0, 'customers_updated': 0}
 
@@ -2760,6 +2847,22 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
 
     # Track rows seen in this file: chassis -> True (most reliable dedup key)
     seen_chassis_in_file = set()
+
+    # Pre-allocate a batch of invoice numbers — one Atlas round-trip instead of N
+    # Upper bound: every row could create a sale, so reserve len(data) numbers.
+    _invoice_pool = iter(
+        [f"INV-{n:06d}" for n in await next_sequence_batch("sales", len(data))]
+    )
+
+    def _next_invoice_from_pool(existing_set: set, inserting_set: set) -> str:
+        """Pull from pre-allocated pool, skipping any already-used numbers."""
+        for num in _invoice_pool:
+            if num not in existing_set and num not in inserting_set:
+                return num
+        # Pool exhausted (shouldn't happen) — fall back to single DB call
+        import asyncio as _aio
+        loop = _aio.get_event_loop()
+        return f"INV-{loop.run_until_complete(next_sequence('sales')):06d}"
 
     customers_to_insert = []
     sales_to_insert = []
@@ -2812,39 +2915,21 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
             # If we've already processed this chassis in this file, skip
             if chassis and chassis in seen_chassis_in_file:
                 skipped += 1
-                skipped_details.append({"row": idx + 2, "name": name, "mobile": phone_number, "chassis": chassis, "reason": "Duplicate chassis in this file"})
                 continue
 
             # If a sale already exists for this chassis, skip entirely
             if chassis and chassis in existing_sales_by_chassis:
                 skipped += 1
-                skipped_details.append({"row": idx + 2, "name": name, "mobile": phone_number, "chassis": chassis, "reason": "Sale already exists for this chassis"})
                 continue
             if chassis and chassis in inserting_chassis:
                 skipped += 1
-                skipped_details.append({"row": idx + 2, "name": name, "mobile": phone_number, "chassis": chassis, "reason": "Chassis already being inserted in this batch"})
                 continue
 
             if chassis:
                 seen_chassis_in_file.add(chassis)
 
             # ── Existing customer lookup: prefer chassis match, fall back to mobile ──
-            # When falling back to mobile, also check vehicle model:
-            # same mobile + same model → same customer (merge)
-            # same mobile + different model → different customer (new record)
-            _chassis_match = existing_customers_by_chassis.get(chassis)
-            _mobile_match  = existing_customers_by_mobile.get(phone_number)
-            if _chassis_match:
-                existing = _chassis_match
-            elif _mobile_match:
-                existing_model = (_mobile_match.get('vehicle_info') or {}).get('model', '').strip().lower()
-                if existing_model and incoming_model and existing_model != incoming_model:
-                    # Same mobile, different vehicle model → treat as a new customer
-                    existing = None
-                else:
-                    existing = _mobile_match
-            else:
-                existing = None
+            existing = existing_customers_by_chassis.get(chassis) or existing_customers_by_mobile.get(phone_number)
 
             if existing:
                 existing_id = existing['id']
@@ -2904,10 +2989,8 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
                 # Create sale if amount present and no sale exists for this chassis
                 if sales_info and sales_info.get('amount'):
                     try:
-                        # Always assign a fresh sequential invoice number
-                        inv_num = f"INV-{await next_sequence('sales'):06d}"
-                        while inv_num in existing_sales_by_invoice or inv_num in inserting_invoices:
-                            inv_num = f"INV-{await next_sequence('sales'):06d}"
+                        # Pull from pre-allocated pool — no extra DB round-trip
+                        inv_num = _next_invoice_from_pool(existing_sales_by_invoice, inserting_invoices)
 
                         sale_date = _parse_sale_date(sales_info.get('sale_date', ''))
                         vehicle_id = existing_vehicles.get(chassis, {}).get('id') if chassis else None
@@ -2983,9 +3066,7 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
             # Create sale with sequential invoice number
             if sales_info and sales_info.get('amount'):
                 try:
-                    inv_num = f"INV-{await next_sequence('sales'):06d}"
-                    while inv_num in existing_sales_by_invoice or inv_num in inserting_invoices:
-                        inv_num = f"INV-{await next_sequence('sales'):06d}"
+                    inv_num = _next_invoice_from_pool(existing_sales_by_invoice, inserting_invoices)
 
                     sale_date = _parse_sale_date(sales_info.get('sale_date', ''))
                     vehicle_id = existing_vehicles.get(chassis, {}).get('id') if chassis else None
@@ -3057,7 +3138,6 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
     import_job.errors = errors
     import_job.cross_reference_stats = import_stats
     import_job.incomplete_records = incomplete_records
-    import_job.skipped_details = skipped_details
 
     return ImportResult(
         job_id=import_job.id,
@@ -3067,7 +3147,6 @@ async def import_customers_data(data: List[Dict], import_job: ImportJob, user_id
         successful_records=successful,
         failed_records=failed,
         skipped_records=skipped,
-        skipped_details=skipped_details,
         errors=errors,
         cross_reference_stats=import_stats,
         incomplete_records=incomplete_records
