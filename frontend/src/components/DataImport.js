@@ -110,37 +110,8 @@ function JobDetailsModal({ job, onClose }) {
           </div>
           {job.skipped_records > 0 && (
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
-              <h4 className="font-semibold text-amber-800 mb-2 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4" />{job.skipped_records} Duplicates Skipped
-              </h4>
-              {job.skipped_details && job.skipped_details.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs border-collapse">
-                    <thead>
-                      <tr className="bg-amber-100 text-amber-900">
-                        <th className="text-left px-2 py-1.5 rounded-tl font-semibold">Row</th>
-                        <th className="text-left px-2 py-1.5 font-semibold">Name</th>
-                        <th className="text-left px-2 py-1.5 font-semibold">Mobile</th>
-                        <th className="text-left px-2 py-1.5 font-semibold">Chassis</th>
-                        <th className="text-left px-2 py-1.5 rounded-tr font-semibold">Reason</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {job.skipped_details.map((d, i) => (
-                        <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-amber-50/60'}>
-                          <td className="px-2 py-1.5 text-amber-800 font-mono">{d.row}</td>
-                          <td className="px-2 py-1.5 text-amber-900">{d.name || '—'}</td>
-                          <td className="px-2 py-1.5 text-amber-800 font-mono">{d.mobile || '—'}</td>
-                          <td className="px-2 py-1.5 text-amber-800 font-mono">{d.chassis || '—'}</td>
-                          <td className="px-2 py-1.5 text-amber-700 italic">{d.reason}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <p className="text-sm text-amber-700">Detected by unique identifiers (mobile / chassis / part number).</p>
-              )}
+              <h4 className="font-semibold text-amber-800 mb-1 flex items-center gap-2"><AlertCircle className="w-4 h-4" />{job.skipped_records} Duplicates Skipped</h4>
+              <p className="text-sm text-amber-700">Detected by unique identifiers (mobile / chassis / part number).</p>
             </div>
           )}
           {job.cross_reference_stats && Object.keys(job.cross_reference_stats).length > 0 && (
@@ -176,10 +147,8 @@ function JobDetailsModal({ job, onClose }) {
               <div className="max-h-48 overflow-y-auto space-y-1.5">
                 {job.errors.map((e, i) => (
                   <div key={i} className="bg-red-50 border border-red-200 rounded px-3 py-2 text-sm">
-                    {e.row > 0
-                      ? <><span className="font-medium text-red-800">Row {e.row}: </span><span className="text-red-600">{e.error}</span></>
-                      : <span className="text-red-700 font-mono whitespace-pre-wrap break-all text-xs">{e.error}</span>
-                    }
+                    <span className="font-medium text-red-800">Row {e.row}</span>
+                    <span className="text-red-600 ml-2">{e.error}</span>
                   </div>
                 ))}
               </div>
@@ -224,23 +193,69 @@ const DataImport = () => {
   const handleImport = async () => {
     if (!file || !selectedType) return;
     setImporting(true);
+    setImportResult(null);
     try {
       const formData = new FormData();
       formData.append('file', file);
       const token = localStorage.getItem('token');
+
+      // Upload — returns immediately with job_id
       const res = await axios.post(`${API}/import/upload?data_type=${selectedType}`, formData, {
-        timeout: 300000,
+        timeout: 30000,
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
       });
-      setImportResult({ success: res.data.status === 'completed', message: res.data.message, data: res.data });
-      if (res.data.status === 'completed') toast.success(res.data.message);
-      else toast.error(res.data.message);
-      await fetchImportJobs();
+
+      const jobId = res.data.job_id;
+      if (!jobId) throw new Error('No job ID returned from server');
+
+      // Poll until completed or failed
+      const poll = async () => {
+        const maxWaitMs = 10 * 60 * 1000; // 10 min ceiling
+        const intervalMs = 2500;
+        const start = Date.now();
+
+        while (Date.now() - start < maxWaitMs) {
+          await new Promise(r => setTimeout(r, intervalMs));
+          try {
+            const statusRes = await axios.get(`${API}/import/jobs/${jobId}`, {
+              headers: { Authorization: `Bearer ${token}` },
+              timeout: 10000,
+            });
+            const job = statusRes.data;
+            if (job.status === 'completed') {
+              const msg = job.message || `Import complete: ${job.successful_records} processed, ${job.failed_records} failed, ${job.skipped_records || 0} skipped.`;
+              setImportResult({ success: true, message: msg });
+              toast.success('Import complete');
+              await fetchImportJobs();
+              setImporting(false);
+              return;
+            }
+            if (job.status === 'failed') {
+              const msg = job.message || (job.errors?.[0]?.error) || 'Import failed';
+              setImportResult({ success: false, message: msg });
+              toast.error(msg);
+              await fetchImportJobs();
+              setImporting(false);
+              return;
+            }
+            // still processing — keep polling
+          } catch {
+            // network hiccup — keep polling
+          }
+        }
+        // Timed out on client side
+        setImportResult({ success: false, message: 'Import is taking longer than expected. Check History for status.' });
+        toast.warning('Import still running — check History tab for result.');
+        await fetchImportJobs();
+        setImporting(false);
+      };
+
+      poll();
+      // Don't await poll() — let it run in background so UI stays responsive
     } catch (e) {
-      const msg = e.response?.data?.detail || e.response?.data?.message || e.message || 'Import failed';
+      const msg = e.response?.data?.detail || 'Upload failed';
       toast.error(msg);
       setImportResult({ success: false, message: msg });
-    } finally {
       setImporting(false);
     }
   };
@@ -389,6 +404,16 @@ const DataImport = () => {
         <div>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">3 · Upload your file</p>
 
+          {importing && !importResult && (
+            <div className="flex items-center gap-3 p-4 rounded-xl mb-4 bg-blue-50 border border-blue-200">
+              <RefreshCw className="w-5 h-5 text-blue-600 animate-spin shrink-0" />
+              <div>
+                <p className="font-medium text-sm text-blue-800">Import in progress</p>
+                <p className="text-xs text-blue-600 mt-0.5">Processing your file on the server — this may take a minute for large files.</p>
+              </div>
+            </div>
+          )}
+
           {importResult && (
             <div className={`flex items-start gap-3 p-4 rounded-xl mb-4 ${importResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
               {importResult.success
@@ -399,15 +424,6 @@ const DataImport = () => {
                   {importResult.success ? 'Import complete' : 'Import failed'}
                 </p>
                 <p className={`text-xs mt-0.5 ${importResult.success ? 'text-green-700' : 'text-red-700'}`}>{importResult.message}</p>
-                {!importResult.success && importResult.data?.errors?.length > 0 && (
-                  <div className="mt-2 max-h-32 overflow-y-auto space-y-1">
-                    {importResult.data.errors.map((err, i) => (
-                      <div key={i} className="text-xs bg-red-100 border border-red-200 rounded px-2 py-1 text-red-800 font-mono whitespace-pre-wrap break-all">
-                        {err.row > 0 && <span className="font-semibold mr-1">Row {err.row}:</span>}{err.error}
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
               <button onClick={reset}><X className="w-4 h-4 text-gray-400 hover:text-gray-600" /></button>
             </div>
@@ -445,7 +461,7 @@ const DataImport = () => {
                 <div className="flex items-center gap-2">
                   <Button onClick={handleImport} disabled={importing} className="bg-green-600 hover:bg-green-700 text-white">
                     {importing
-                      ? <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Importing...</>
+                      ? <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Importing…</>
                       : <><Upload className="w-4 h-4 mr-2" />Import Now</>}
                   </Button>
                   <button onClick={reset} disabled={importing} className="p-2 rounded-lg hover:bg-green-200 text-green-700 transition-colors">
