@@ -5207,24 +5207,56 @@ async def download_backup(
     job_id: str,
     current_user: dict = Depends(verify_token)
 ):
-    """Download a backup file"""
-    from fastapi.responses import FileResponse
-    
+    """Download a backup — streams data live from MongoDB so it always works,
+    even on Render where the ephemeral filesystem is wiped on restart/redeploy."""
+    from fastapi.responses import StreamingResponse
+    import io
+
     job = await db.backup_jobs.find_one({"id": job_id})
     if not job:
         raise HTTPException(status_code=404, detail="Backup job not found")
-    
     if job['status'] != 'completed':
         raise HTTPException(status_code=400, detail="Backup is not completed")
-    
-    backup_path = Path(job['backup_file_path'])
-    if not backup_path.exists():
-        raise HTTPException(status_code=404, detail="Backup file not found")
-    
-    return FileResponse(
-        path=backup_path,
-        filename=backup_path.name,
-        media_type='application/octet-stream'
+
+    # Always regenerate from MongoDB — no filesystem dependency
+    collections = ['users', 'customers', 'vehicles', 'sales', 'services',
+                   'spare_parts', 'spare_part_bills']
+    data = {}
+    for name in collections:
+        docs = await getattr(db, name).find({}, {"_id": 0}).to_list(length=None)
+        # Make datetimes JSON-serialisable
+        for doc in docs:
+            for k, v in doc.items():
+                if isinstance(v, datetime):
+                    doc[k] = v.isoformat()
+        data[name] = docs
+
+    timestamp = job.get('created_at', datetime.utcnow())
+    if isinstance(timestamp, datetime):
+        ts_str = timestamp.strftime('%Y%m%d_%H%M%S')
+    else:
+        ts_str = str(timestamp)[:19].replace(':', '').replace('-', '').replace('T', '_').replace(' ', '_')
+
+    # Build an in-memory zip with one JSON file per collection
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for name, docs in data.items():
+            zf.writestr(f"{name}.json", json.dumps(docs, indent=2, default=str))
+        # Summary
+        summary = {
+            "backup_id": job_id,
+            "created_at": ts_str,
+            "records": {name: len(docs) for name, docs in data.items()},
+            "total": sum(len(d) for d in data.values()),
+        }
+        zf.writestr("_summary.json", json.dumps(summary, indent=2))
+    buf.seek(0)
+
+    filename = f"mmotors_backup_{ts_str}.zip"
+    return StreamingResponse(
+        buf,
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )
 
 # ==================== Activity/Notifications System ====================
