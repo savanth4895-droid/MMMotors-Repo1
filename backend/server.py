@@ -58,26 +58,44 @@ if is_atlas:
 client = AsyncIOMotorClient(mongo_url, **client_options)
 db = client[os.environ['DB_NAME']]
 
+async def _max_seq_from_collection(name: str) -> int:
+    """Scan a collection and extract the highest numeric suffix from its numbered field.
+    e.g.  sales → invoice_number "INV-000950" → 950
+          services → job_card_number "JC-000123" → 123
+    Falls back to count_documents if no numbered field is found.
+    """
+    field_map = {
+        "sales":            ("sales",            "invoice_number"),
+        "services":         ("services",          "job_card_number"),
+        "registrations":    ("registrations",     "registration_number"),
+        "spare_part_bills": ("spare_part_bills",  "bill_number"),
+        "service_bills":    ("service_bills",     "bill_number"),
+    }
+    coll_name, field = field_map.get(name, (name, None))
+    coll = getattr(db, coll_name, None)
+    if coll is None or field is None:
+        return 0
+
+    max_num = 0
+    async for doc in coll.find({field: {"$exists": True}}, {field: 1, "_id": 0}):
+        raw = str(doc.get(field, ""))
+        # Extract trailing digits, e.g. "INV-000950" → 950, "JC-000123" → 123
+        parts = re.findall(r"\d+", raw)
+        if parts:
+            n = int(parts[-1])
+            if n > max_num:
+                max_num = n
+    return max_num
+
+
 async def next_sequence(name: str) -> int:
     """Atomically increment a named counter — prevents duplicate invoice/job numbers.
-    If counter doesn't exist yet, seeds it from actual collection count so numbers
-    stay sensible (e.g. INV-000448 after 447 existing sales).
+    Seeds from the highest existing numbered document if counter doesn't exist yet,
+    so numbering always continues from where it left off (not from doc count).
     """
-    # Collection name map: counter name -> db collection
-    collection_map = {
-        "sales": db.sales,
-        "services": db.services,
-        "registrations": db.registrations,
-        "spare_part_bills": db.spare_part_bills,
-        "service_bills": db.service_bills,
-    }
-
-    # Check if counter already exists
     existing = await db.counters.find_one({"_id": name})
     if not existing:
-        # Seed from actual count so we don't start from 0 or a crazy number
-        coll = collection_map.get(name)
-        seed = await coll.count_documents({}) if coll is not None else 0
+        seed = await _max_seq_from_collection(name)
         await db.counters.update_one(
             {"_id": name},
             {"$setOnInsert": {"seq": seed}},
@@ -100,17 +118,9 @@ async def next_sequence_batch(name: str, count: int) -> list:
     """
     if count <= 0:
         return []
-    collection_map = {
-        "sales": db.sales,
-        "services": db.services,
-        "registrations": db.registrations,
-        "spare_part_bills": db.spare_part_bills,
-        "service_bills": db.service_bills,
-    }
     existing = await db.counters.find_one({"_id": name})
     if not existing:
-        coll = collection_map.get(name)
-        seed = await coll.count_documents({}) if coll is not None else 0
+        seed = await _max_seq_from_collection(name)
         await db.counters.update_one(
             {"_id": name},
             {"$setOnInsert": {"seq": seed}},
@@ -164,27 +174,21 @@ async def startup_db_client():
     except Exception as e:
         print(f"⚠️ Index creation warning: {e}")
 
-    # Fix corrupted sequence counters — reset to actual collection counts
-    # This runs every startup but is a no-op if counters are already correct
+    # Verify sequence counters — ensure they never fall behind the highest existing number.
+    # Runs every startup; no-op when counters are already correct.
     try:
-        counter_sources = [
-            ("sales",            db.sales),
-            ("services",         db.services),
-            ("registrations",    db.registrations),
-            ("spare_part_bills", db.spare_part_bills),
-            ("service_bills",    db.service_bills),
-        ]
-        for counter_name, coll in counter_sources:
+        counter_names = ["sales", "services", "registrations", "spare_part_bills", "service_bills"]
+        for counter_name in counter_names:
             existing = await db.counters.find_one({"_id": counter_name})
-            real_count = await coll.count_documents({})
-            if existing is None or existing.get("seq", 0) > real_count + 10000:
-                # Counter is missing or wildly wrong — reset it to real count
+            current_seq = existing.get("seq", 0) if existing else 0
+            max_in_db = await _max_seq_from_collection(counter_name)
+            if max_in_db > current_seq:
                 await db.counters.update_one(
                     {"_id": counter_name},
-                    {"$set": {"seq": real_count}},
+                    {"$set": {"seq": max_in_db}},
                     upsert=True
                 )
-                print(f"✅ Reset {counter_name} counter to {real_count}")
+                print(f"✅ Advanced {counter_name} counter {current_seq} → {max_in_db}")
         print("✅ Sequence counters verified")
     except Exception as e:
         print(f"⚠️ Counter reset warning: {e}")
