@@ -314,11 +314,13 @@ const SalesOverview = () => {
         const m = (currentMonth - i + 12) % 12;
         const y = currentMonth - i < 0 ? currentYear - 1 : currentYear;
         const label = new Date(y, m, 1).toLocaleString('en-IN', { month: 'short' });
-        const total = revenue(sales.filter(s => {
+        const monthSales = sales.filter(s => {
           const d = new Date(s.sale_date);
           return d.getMonth() === m && d.getFullYear() === y;
-        }));
-        trend.push({ label, total });
+        });
+        const total = revenue(monthSales);
+        const count = monthSales.length;
+        trend.push({ label, total, count });
       }
       const maxTrend = Math.max(...trend.map(t => t.total), 1);
 
@@ -423,6 +425,8 @@ const SalesOverview = () => {
               {stats.trend.map((t, i) => {
                 const pct = stats.maxTrend > 0 ? (t.total / stats.maxTrend) * 100 : 0;
                 const isCurrentM = i === stats.trend.length - 1;
+                const barHeight = Math.max(pct, t.total > 0 ? 4 : 0);
+                const showCount = t.count > 0 && barHeight > 18; // only show if bar tall enough
                 return (
                   <div key={i} className="flex-1 flex flex-col items-center gap-1">
                     <span className="text-xs text-gray-500 hidden md:block">
@@ -430,10 +434,16 @@ const SalesOverview = () => {
                     </span>
                     <div className="w-full flex items-end" style={{ height: '90px' }}>
                       <div
-                        className={`w-full rounded-t-sm transition-all ${isCurrentM ? 'bg-blue-500' : 'bg-blue-200'}`}
-                        style={{ height: `${Math.max(pct, t.total > 0 ? 4 : 0)}%` }}
-                        title={`${t.label}: ₹${t.total.toLocaleString('en-IN')}`}
-                      />
+                        className={`w-full rounded-t-sm transition-all relative flex items-center justify-center ${isCurrentM ? 'bg-blue-500' : 'bg-blue-200'}`}
+                        style={{ height: `${barHeight}%` }}
+                        title={`${t.label}: ₹${t.total.toLocaleString('en-IN')} · ${t.count} vehicle${t.count !== 1 ? 's' : ''}`}
+                      >
+                        {showCount && (
+                          <span className={`text-xs font-semibold select-none ${isCurrentM ? 'text-white' : 'text-blue-700'}`}>
+                            {t.count}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <span className="text-xs text-gray-500">{t.label}</span>
                   </div>
